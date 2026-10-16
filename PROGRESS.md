@@ -1,14 +1,14 @@
-# Tilewright progress
+﻿# Tilewright progress
 
 Boxes are ticked only when the milestone's tests pass and the sample has been played.
 Spec: `ENGINE_BUILD_PROMPT.md`. Read `DECISIONS.md` and `KNOWN_ISSUES.md` before continuing.
 
-**Next up:** M1 runtime core - start with iso math (`packages/runtime/src/iso`), then scene/ECS, fixed timestep, input, PixiJS renderer with depth sort.
+**Next up:** M2 heights and collision - height-aware collision (`packages/runtime/src/physics`), stairs/ramps, cliffs, pits + falling, occlusion fade, then a multi-level room sample (`#sample-m2`). Also owed from M1: prefabs with overrides (planned M5), render interpolation and sort caching (M14).
 
 ## Milestones
 
 - [x] M0 Foundations (repo, workspaces, lint, typecheck, tests, CI, Electron window, state docs)
-- [ ] M1 Runtime core (iso math, scene/ECS, renderer + depth sort, camera, input, fixed timestep)
+- [x] M1 Runtime core (iso math, scene/ECS, renderer + depth sort, camera, input, fixed timestep)
 - [ ] M2 Heights and collision (stairs, cliffs, pits, falling, occlusion fade)
 - [ ] M3 Editor shell + world painter
 - [ ] M4 Sprite studio
@@ -34,3 +34,4 @@ Spec: `ENGINE_BUILD_PROMPT.md`. Read `DECISIONS.md` and `KNOWN_ISSUES.md` before
 - [x] Playwright smoke test launches the Electron window and sees the welcome screen (verified locally, screenshot checked)
 - [x] CI workflow written (ubuntu + windows-latest); not yet run, no remote repo
 - [x] First commit
+

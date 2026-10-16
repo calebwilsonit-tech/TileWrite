@@ -37,3 +37,33 @@ body {
 .muted {
   color: var(--muted);
 }
+
+a {
+  color: var(--accent);
+}
+
+.sample {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.sample-bar {
+  display: flex;
+  gap: 16px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--muted);
+  border-bottom: 1px solid #2a2d36;
+}
+
+.sample-host {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.sample-host canvas {
+  display: block;
+}

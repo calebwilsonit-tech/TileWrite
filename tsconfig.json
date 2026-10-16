@@ -1,5 +1,6 @@
-{
+﻿{
   "extends": "./tsconfig.base.json",
-  "include": ["packages/*/src/**/*", "e2e/**/*", "vitest.config.ts", "playwright.config.ts"],
+  "include": ["packages/*/src/**/*", "e2e/**/*", "samples/**/*", "vitest.config.ts", "playwright.config.ts"],
   "exclude": ["node_modules", "**/dist"]
 }
+

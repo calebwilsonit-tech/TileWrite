@@ -22,3 +22,16 @@ Note: PowerShell sessions started before the install need a PATH refresh.
 
 ## D005 - Project file format (2026-10-16)
 Plain JSON with `schemaVersion` and migrations, validated by Zod; PNG for images, OGG/WAV for audio. (Implemented from M1.)
+
+## D006 - M1 design and checklist (2026-10-16)
+Conventions: grid coords (gx, gy) in tile units, height `h` in levels (float ok). Cell (i,j) covers [i,i+1) x [j,j+1); entity "on cell centre" = i+0.5.
+Projection: `sx = (gx-gy)*tileW/2`, `sy = (gx+gy)*tileH/2 - h*heightPx`. Screen "down" = grid (+1,+1), screen "right" = grid (+1,-1).
+Movement intent is given in screen terms and converted to grid then normalised in grid space (consistent grid speed).
+Entities: ids are monotonically increasing and never reused, so a stale id can never alias a new entity. `world.get(id)` returns undefined once destroyed. Destroy/spawn during a tick are deferred to the end of the tick, so loops never see mutation.
+Depth sort: items are 3D boxes (min/max x,y,z). A is behind B if `A.maxX<=B.minX || A.maxY<=B.minY || A.maxZ<=B.minZ`; topological sort with a screen-overlap broadphase handles tall and multi-cell objects. Rejected: single scalar key `x+y+h` (breaks for multi-cell objects). Fallback to key order if a cycle appears.
+Simulation: fixed 60 Hz, accumulator with max catch-up of 5 steps; seeded RNG (mulberry32) lives in the simulation so replays are exact. Rendering interpolates nothing in M1 (revisit in M14).
+Input: actions not keys. Per tick the input layer produces a snapshot `{action: value}`; recorder stores snapshots only on change; playback feeds them back.
+Renderer: PixiJS v8, tiles are built once as Graphics (procedural diamonds + side faces, textures arrive with the sprite studio in M4), entities are Graphics boxes; zIndex is assigned from the sort each frame.
+Prefabs with overrides: deferred to M5 (needs the inspector); noted in PROGRESS.md.
+
+M1 checklist: iso math (grid/screen/world, height, neighbours 4/8, cell queries, line of sight) / fixed timestep + determinism test / seeded RNG / ECS world (components, tags, groups, safe refs, deferred spawn/destroy) / tilemap data / camera (follow, deadzone, bounds, zoom, shake) / box depth sort / input map + recorder + playback + DOM keyboard source / Pixi renderer / walking-square sample inside the editor (`#sample-m1`) / e2e screenshot / docs/runtime.md.
