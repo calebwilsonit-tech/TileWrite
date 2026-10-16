@@ -16,6 +16,8 @@ import { EventsPanel } from '../panels/EventsPanel';
 import { StoryPanel } from '../panels/StoryPanel';
 import { PlaybotPanel } from '../panels/PlaybotPanel';
 import { ConnectDialog } from './ConnectDialog';
+import { AssistantPanel } from '../assistant/AssistantPanel';
+import { assistant } from '../assistant/store';
 
 const components: Record<string, React.FunctionComponent<IDockviewPanelProps>> = {
   viewport: () => <ViewportPanel />,
@@ -28,22 +30,24 @@ const components: Record<string, React.FunctionComponent<IDockviewPanelProps>> =
   events: () => <EventsPanel />,
   story: () => <StoryPanel />,
   playbot: () => <PlaybotPanel />,
+  assistant: () => <AssistantPanel />,
   problems: () => <ProblemsPanel />,
   console: () => <ConsolePanel />,
 };
 
 const CodeView = lazy(() => import('../code/CodeView'));
 
-const LAYOUT_VERSION = 5;
+const LAYOUT_VERSION = 6;
 
 function buildDefault(api: DockviewApi): void {
   api.addPanel({ id: 'viewport', component: 'viewport', title: 'Viewport', renderer: 'always' });
   api.addPanel({ id: 'tools', component: 'tools', title: 'Tools', position: { referencePanel: 'viewport', direction: 'left' }, initialWidth: 250 });
   api.addPanel({ id: 'tiles', component: 'tiles', title: 'Tiles', position: { referencePanel: 'tools', direction: 'below' }, initialHeight: 230 });
   api.addPanel({ id: 'assets', component: 'assets', title: 'Assets', position: { referencePanel: 'tiles', direction: 'within' } });
-  api.addPanel({ id: 'inspector', component: 'inspector', title: 'Inspector', position: { referencePanel: 'viewport', direction: 'right' }, initialWidth: 290 });
+  api.addPanel({ id: 'inspector', component: 'inspector', title: 'Inspector', position: { referencePanel: 'viewport', direction: 'right' }, initialWidth: 340 });
   api.addPanel({ id: 'layers', component: 'layers', title: 'Layers', position: { referencePanel: 'inspector', direction: 'within' } });
   api.addPanel({ id: 'history', component: 'history', title: 'History', position: { referencePanel: 'inspector', direction: 'within' } });
+  api.addPanel({ id: 'assistant', component: 'assistant', title: 'Claude', position: { referencePanel: 'inspector', direction: 'within' } });
   api.addPanel({ id: 'problems', component: 'problems', title: 'Problems', position: { referencePanel: 'viewport', direction: 'below' }, initialHeight: 190 });
   api.addPanel({ id: 'console', component: 'console', title: 'Console', position: { referencePanel: 'problems', direction: 'within' } });
   api.addPanel({ id: 'events', component: 'events', title: 'Events', position: { referencePanel: 'problems', direction: 'within' } });
@@ -184,8 +188,18 @@ export function EditorShell() {
       buildDefault(api);
       void store.saveSetting('layout', null);
     };
+    const show = (e: Event): void => {
+      store.set({ workspace: 'world' });
+      const id = (e as CustomEvent<string>).detail;
+      window.setTimeout(() => apiRef.current?.getPanel(id)?.api.setActive(), 0);
+    };
     document.addEventListener('tw:reset-layout', reset);
-    return () => document.removeEventListener('tw:reset-layout', reset);
+    document.addEventListener('tw:show-panel', show);
+    void assistant.init();
+    return () => {
+      document.removeEventListener('tw:reset-layout', reset);
+      document.removeEventListener('tw:show-panel', show);
+    };
   }, []);
 
   const onReady = (e: DockviewReadyEvent): void => {

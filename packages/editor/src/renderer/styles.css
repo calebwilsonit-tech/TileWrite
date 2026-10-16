@@ -1203,3 +1203,162 @@ button.small {
 .tw-bp-glyph { background: #e5484d; border-radius: 50%; width: 10px !important; height: 10px !important; margin: 5px 0 0 5px; }
 .tw-hit-glyph { background: #ffd34a; clip-path: polygon(0 0, 100% 50%, 0 100%); width: 10px !important; height: 12px !important; margin: 4px 0 0 5px; }
 .tw-hit-line { background: rgba(255, 211, 74, 0.18); }
+/* ---- Claude assistant ---- */
+.panel.assistant {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow: hidden;
+}
+.assistant .head select {
+  flex: 1 1 110px;
+  min-width: 0;
+}
+.assistant .key-box,
+.assistant .key-row {
+  font-size: 12px;
+  color: var(--muted);
+}
+.assistant .key-box input {
+  flex: 1;
+  min-width: 0;
+}
+.assistant .more,
+.assistant .notes {
+  font-size: 12px;
+}
+.assistant .notes textarea {
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+  background: var(--panel-2);
+  color: var(--fg);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+.assistant .chat {
+  flex: 1 1 auto;
+  min-height: 80px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 2px;
+}
+.assistant .msg {
+  padding: 6px 8px;
+  border-radius: 6px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+}
+.assistant .msg.user {
+  background: var(--panel-2);
+  align-self: flex-end;
+  max-width: 92%;
+}
+.assistant .msg.assistant {
+  border: 1px solid var(--line);
+}
+.assistant .msg .mode {
+  color: var(--accent);
+  font-style: normal;
+}
+.assistant .thinking {
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.assistant .tool {
+  font-size: 11px;
+  color: var(--muted);
+}
+.assistant .tool.error {
+  color: var(--warn);
+}
+.assistant .working {
+  font-size: 12px;
+  color: var(--muted);
+}
+.assistant .notice {
+  font-size: 12px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+}
+.assistant .notice.warn {
+  border-color: var(--warn);
+}
+.assistant .proposal {
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 12px;
+}
+.assistant .proposal h4 {
+  margin: 0 0 4px;
+  font-size: 12px;
+}
+.assistant .proposal.applied {
+  border-color: var(--good);
+}
+.assistant .proposal.rejected,
+.assistant .proposal.undone {
+  border-color: var(--line);
+  opacity: 0.75;
+}
+.assistant .proposal.failed {
+  border-color: var(--bad);
+}
+.assistant .state.ok {
+  color: var(--good);
+}
+.assistant .state.bad {
+  color: var(--bad);
+}
+.assistant .diff pre {
+  margin: 4px 0;
+  max-height: 220px;
+  overflow: auto;
+  font-size: 11px;
+  background: var(--panel-2);
+  padding: 4px 6px;
+  border-radius: 4px;
+}
+.assistant .diff .add {
+  color: var(--good);
+}
+.assistant .diff .del {
+  color: var(--bad);
+}
+.assistant .diff .gap {
+  color: var(--muted);
+}
+.assistant .modes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.assistant .modes button {
+  padding: 2px 8px;
+  font-size: 12px;
+}
+.assistant .modes button.on {
+  background: var(--accent);
+  color: var(--accent-fg);
+}
+.assistant .compose textarea {
+  flex: 1;
+  min-width: 0;
+  resize: none;
+  background: var(--panel-2);
+  color: var(--fg);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 4px 6px;
+  font: inherit;
+}
+.assistant .usage {
+  font-size: 11px;
+  color: var(--muted);
+}

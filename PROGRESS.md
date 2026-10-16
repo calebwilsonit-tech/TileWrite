@@ -3,7 +3,7 @@
 Boxes are ticked only when the milestone's tests pass and the sample has been played.
 Spec: `ENGINE_BUILD_PROMPT.md`. Read `DECISIONS.md` and `KNOWN_ISSUES.md` before continuing.
 
-**Next up:** M11 Claude assistant - a chat panel using `@anthropic-ai/sdk` that sees the open scene/project and can propose edits (shown as a diff to approve), key storage in the OS keychain/safe storage, streaming, prompt caching, plain-English error handling, and enabling the Problems panel "Explain" and "Fix with Claude" buttons. Then M12 export/installer/CI (+ compile scripts in exports, crash log files), M13 acceptance game, M14 polish. Owed earlier: autotiling rules + Decoration/Walls/Lights layers, separate game window (M14), vector drawing in the studio (M14), a visual state-machine editor for enemies, an audio engine (M14), a dialogue graph canvas, localization string tables.
+**Next up:** M12 export and packaging - export a game to a Windows .exe (runtime + project + compiled scripts, same transpile path as the editor), editor installer (npm run dist:win), docs/BUILDING.md, crash log files and a friendly crash screen in exported games, project check before export, GitHub Actions windows-latest job. Then M13 acceptance game (The Last Storytender slice, built through the UI, playbot-verified), M14 polish. Owed: autotiling rules + Decoration/Walls/Lights layers, separate game window, vector drawing in the studio, visual state-machine editor, audio engine, dialogue graph canvas, localization string tables, assistant tools for story data/prefabs/regions.
 
 ## Milestones
 
@@ -18,7 +18,7 @@ Spec: `ENGINE_BUILD_PROMPT.md`. Read `DECISIONS.md` and `KNOWN_ISSUES.md` before
 - [x] M8 Story systems (see the M8 checklist)
 - [x] M9 Errors and debugging (see the M9 checklist)
 - [x] M10 Code window (see the M10 checklist)
-- [ ] M11 Claude assistant
+- [x] M11 Claude assistant (see the M11 checklist)
 - [ ] M12 Export and packaging
 - [ ] M13 The acceptance game
 - [ ] M14 Polish
@@ -128,6 +128,17 @@ Done and covered by tests (unit: `packages/runtime/src/story`, `packages/behavio
 Deferred:
 - [ ] Dialogue node-graph canvas and a visual cutscene timeline; localization string tables
 - [ ] Audio engine (volumes are stored only), video settings, minigames, cosmetic skins, hit-stop, drawn world map
+
+## M11 checklist
+
+Done and covered by tests (unit: `packages/assistant/src/assistant.test.ts`; e2e: `e2e/m11-assistant.spec.ts` against a mock Anthropic server, plus the optional `e2e/live-assistant.spec.ts`; docs: `docs/assistant.md`):
+- [x] Assistant panel: key box (keychain via safeStorage, never in files), model and effort pickers, modes (Ask / Explain / Fix / Build / Review), project notes file, streaming transcript, tool activity, usage and estimated cost
+- [x] Official SDK from the main process; adaptive thinking, effort, streaming with eager tool input streaming, prompt caching (stable prefix verified), Zod-validated tool inputs, stop_reason handling, parallel results returned together, typed error classes with Retry
+- [x] 25 tools: 16 read (scene, tiles, selection, event sheet, behaviours, prefabs, scripts, problems, puzzle check, playbot, screenshot, notes...) and 9 changing tools, all previewed as cards with diffs, approved or rejected, one undo step each
+- [x] Explain / Fix with Claude buttons on problems, event sheet problems and game errors
+- [x] Criterion 6 verified with the API mocked: (a) explain a deliberately broken event sheet, (b) fix it through an approved change, (c) build a plate-and-gate room from one sentence, then the puzzle check finds nothing and the playbot reaches the exit (screenshots inspected)
+
+Not verified: anything against the real API (needs a key: `npm run test:live`).
 
 ## M10 checklist
 

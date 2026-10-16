@@ -14,6 +14,7 @@ import {
 } from '@tilewright/behaviors';
 import { DEFAULT_INPUT_MAP, type EventRow } from '@tilewright/runtime';
 import { store, useApp } from '../app/store';
+import { assistant } from '../assistant/store';
 import { CheckField, NumberField, SelectField, TextField } from './fields';
 
 type Rows = EventRow[];
@@ -316,6 +317,14 @@ export function EventsPanel() {
               </li>
             ))}
           </ul>
+          <div className="row">
+            <button data-testid="events-explain" onClick={() => assistant.ask('explain', `The event sheet checker reports these problems in the open scene:\n${problems.map((p) => `- ${p.text}`).join('\n')}`)}>
+              Explain
+            </button>
+            <button data-testid="events-fix" onClick={() => assistant.ask('fix', `The event sheet checker reports these problems in the open scene:\n${problems.map((p) => `- ${p.text}`).join('\n')}`)}>
+              Fix with Claude
+            </button>
+          </div>
         </div>
       )}
     </div>

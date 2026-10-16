@@ -2,6 +2,7 @@ import { app, BrowserWindow, dialog, ipcMain } from 'electron';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { registerAssistant } from './assistant';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 
@@ -42,6 +43,7 @@ async function readJsonFile<T>(file: string, fallback: T): Promise<T> {
 }
 
 function registerIpc(): void {
+  registerAssistant();
   ipcMain.handle('app:info', () => ({
     version: app.getVersion(),
     userData: app.getPath('userData'),

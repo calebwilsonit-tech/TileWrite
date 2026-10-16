@@ -282,6 +282,18 @@ export class ViewportController {
     this.dirty = true;
   }
 
+  /** The viewport as a PNG (base64, no prefix), as the user sees it now. Null if it cannot be captured. */
+  async screenshot(): Promise<string | null> {
+    try {
+      const app = this.renderer.app;
+      const url = await app.renderer.extract.base64(app.stage);
+      const i = url.indexOf('base64,');
+      return i >= 0 ? url.slice(i + 7) : null;
+    } catch {
+      return null;
+    }
+  }
+
   // ---- store changes ----
 
   private snapshotStore() {

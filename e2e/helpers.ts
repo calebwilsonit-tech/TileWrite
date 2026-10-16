@@ -16,14 +16,14 @@ export interface Launched {
 }
 
 /** Start the editor with a throwaway user-data folder and a fixed answer for folder dialogs. */
-export async function launchEditor(reuseBase?: string): Promise<Launched & { base: string }> {
+export async function launchEditor(reuseBase?: string, extraEnv: Record<string, string> = {}): Promise<Launched & { base: string }> {
   const base = reuseBase ?? fs.mkdtempSync(path.join(os.tmpdir(), 'tilewright-e2e-'));
   const workDir = path.join(base, 'projects');
   const userData = path.join(base, 'userdata');
   fs.mkdirSync(workDir, { recursive: true });
   const app = await electron.launch({
     args: [path.join(root, 'packages', 'editor'), `--user-data-dir=${userData}`],
-    env: { ...process.env, TILEWRIGHT_TEST_DIR: workDir },
+    env: { ...process.env, TILEWRIGHT_TEST_DIR: workDir, ...extraEnv },
   });
   const page = await app.firstWindow();
   const errors: string[] = [];

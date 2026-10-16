@@ -25,6 +25,26 @@ contextBridge.exposeInMainWorld('tilewright', {
     get: () => invoke<Record<string, unknown>>('settings:get'),
     set: (s: Record<string, unknown>) => invoke<void>('settings:set', s),
   },
+  assistant: {
+    status: () => invoke('assistant:status'),
+    setKey: (key: string) => invoke('assistant:set-key', key),
+    clearKey: () => invoke('assistant:clear-key'),
+    send: (args: unknown) => invoke('assistant:send', args),
+    retry: (settings: unknown) => invoke('assistant:retry', settings),
+    cancel: () => invoke<void>('assistant:cancel'),
+    reset: () => invoke<void>('assistant:reset'),
+    toolResult: (callId: string, out: unknown) => invoke<void>('assistant:tool-result', callId, out),
+    onEvent: (fn: (ev: unknown) => void) => {
+      const l = (_e: unknown, ev: unknown): void => fn(ev);
+      ipcRenderer.on('assistant:event', l);
+      return () => ipcRenderer.removeListener('assistant:event', l);
+    },
+    onToolCall: (fn: (call: unknown) => void) => {
+      const l = (_e: unknown, call: unknown): void => fn(call);
+      ipcRenderer.on('assistant:tool-call', l);
+      return () => ipcRenderer.removeListener('assistant:tool-call', l);
+    },
+  },
   recent: {
     list: () => invoke<{ dir: string; name: string; opened: number }[]>('recent:list'),
     add: (dir: string, name: string) => invoke<void>('recent:add', dir, name),

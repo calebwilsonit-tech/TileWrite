@@ -1,3 +1,25 @@
+export interface AssistantStatus {
+  hasKey: boolean;
+  canStoreKey: boolean;
+  customEndpoint: boolean;
+  busy: boolean;
+  started: boolean;
+}
+
+export type AssistantEvent =
+  | { type: 'text'; delta: string }
+  | { type: 'thinking'; delta: string }
+  | { type: 'usage'; usage: { inputTokens: number; outputTokens: number; cacheWriteTokens: number; cacheReadTokens: number }; cost: number }
+  | { type: 'done'; result: { stopReason: string; text: string; notice?: string } }
+  | { type: 'error'; message: string; kind: string; retryable: boolean };
+
+export interface AssistantToolCall {
+  callId: string;
+  name: string;
+  kind: 'read' | 'act';
+  input: Record<string, unknown>;
+}
+
 /** Typed view of what the preload script exposes as `window.tilewright`. */
 export interface TilewrightApi {
   platform: string;
@@ -17,6 +39,18 @@ export interface TilewrightApi {
   settings: {
     get(): Promise<Record<string, unknown>>;
     set(s: Record<string, unknown>): Promise<void>;
+  };
+  assistant: {
+    status(): Promise<AssistantStatus>;
+    setKey(key: string): Promise<AssistantStatus>;
+    clearKey(): Promise<AssistantStatus>;
+    send(args: { text: string; mode: string; context: string; settings: unknown }): Promise<{ started: boolean; reason?: string }>;
+    retry(settings: unknown): Promise<{ started: boolean; reason?: string }>;
+    cancel(): Promise<void>;
+    reset(): Promise<void>;
+    toolResult(callId: string, out: unknown): Promise<void>;
+    onEvent(fn: (ev: AssistantEvent) => void): () => void;
+    onToolCall(fn: (call: AssistantToolCall) => void): () => void;
   };
   recent: {
     list(): Promise<{ dir: string; name: string; opened: number }[]>;

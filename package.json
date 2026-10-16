@@ -12,6 +12,7 @@
     "lint": "eslint packages samples e2e",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:live": "playwright test e2e/live-assistant.spec.ts",
     "test:e2e": "npm run build -w @tilewright/editor && playwright test",
     "build": "npm run build -ws --if-present",
     "dev": "npm run dev -w @tilewright/editor",

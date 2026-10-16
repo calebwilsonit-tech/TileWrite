@@ -5,6 +5,12 @@ import { viewportRef } from '../app/commands';
 import { validateScene, type Problem } from '../model/validate';
 import type { ProjectProblem } from '../project/check';
 import { studio, useStudio } from '../studio/store';
+import { assistant } from '../assistant/store';
+
+const problemText = (p: Pick<Problem, 'severity' | 'message' | 'target'>): string => {
+  const e = p.target?.kind === 'entity' ? store.doc?.getEntity(p.target.id) : undefined;
+  return `Problems panel (${p.severity}): ${p.message}${e ? ` (about the object "${e.name}" with id ${e.id})` : ''}`;
+};
 
 export function useProblems(): Problem[] {
   const version = useApp((s) => s.docVersion);
@@ -76,8 +82,11 @@ function RuntimeError() {
         >
           Copy report
         </button>
-        <button disabled title="Arrives with the Claude assistant (M11)">
+        <button data-testid="runtime-error-explain" onClick={() => assistant.ask('explain', `The game stopped with this error report:\n${text}`)} title="Ask Claude what went wrong">
           Explain
+        </button>
+        <button data-testid="runtime-error-fix" onClick={() => assistant.ask('fix', `The game stopped with this error report:\n${text}`)} title="Ask Claude to fix it (you approve each change)">
+          Fix with Claude
         </button>
         <button onClick={() => store.setRuntimeError(null)}>Dismiss</button>
       </div>
@@ -133,8 +142,11 @@ export function ProblemsPanel() {
                   Go to
                 </button>
               )}
-              <button disabled title="Arrives with the Claude assistant (M11)">
+              <button data-testid="problem-explain" onClick={() => assistant.ask('explain', problemText(p))} title="Ask Claude what this means">
                 Explain
+              </button>
+              <button data-testid="problem-fix" onClick={() => assistant.ask('fix', problemText(p))} title="Ask Claude to fix it (you approve each change)">
+                Fix with Claude
               </button>
             </li>
           ))}
