@@ -81,3 +81,4 @@ Occlusion fade: renderer-only (not simulation state). Tiles taller than the focu
 - **Text is a `label` component** drawn by the renderer above an object (no separate UI layer yet); sentence stones and text blocks are ordinary behaviours that set it.
 - **A bridge text block is a low solid collider two cells wide** (support is centre-based, so it must fully cover the pit cells it spans).
 - Behaviours can be `hidden` (not offered in the Add menu); the echo replay behaviour uses it.
+- Gotcha (e2e): specs that step the game by hand must pause through the store (`window.__store.set({ paused: true })`), not only `runner.paused`; the viewport re-applies the store's pause flag whenever the store changes (a toast appearing or expiring), which silently resumed the runner and added real-time ticks. This made M5/M6 specs flaky under load.

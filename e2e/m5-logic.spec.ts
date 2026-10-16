@@ -12,6 +12,8 @@ async function play(page: Page, snapshot: Snapshot, ticks: number): Promise<void
   await page.evaluate(
     ({ snapshot, ticks }) => {
       const r = window.__play!.runner;
+      // pausing through the store keeps the editor from resuming the runner when a toast comes or goes
+      window.__store!.set({ paused: true });
       r.paused = true;
       r.inputSource = () => snapshot;
       for (let i = 0; i < ticks; i++) r.step();
@@ -130,7 +132,9 @@ test('M5: build a plate-and-gate puzzle with wires and an event row, entirely in
   // ---- no problems; save ----
   await expect(page.getByTestId('problem-count')).toHaveText('No problems');
   await page.keyboard.press('Control+s');
-  const saved = JSON.parse(fs.readFileSync(path.join(workDir, 'Puzzle Game', 'scenes', 'main.scene.json'), 'utf8'));
+  const sceneFile = path.join(workDir, 'Puzzle Game', 'scenes', 'main.scene.json');
+  await expect.poll(() => fs.readFileSync(sceneFile, 'utf8').includes('isOpen'), { timeout: 5000 }).toBe(true);
+  const saved = JSON.parse(fs.readFileSync(sceneFile, 'utf8'));
   expect(saved.wires).toHaveLength(1);
   expect(saved.events).toHaveLength(1);
   expect(saved.events[0].conditions[0].params.name).toBe('isOpen');

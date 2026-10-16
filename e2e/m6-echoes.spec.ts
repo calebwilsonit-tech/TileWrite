@@ -10,6 +10,8 @@ async function play(page: Page, snapshot: Snapshot, ticks: number): Promise<void
   await page.evaluate(
     ({ snapshot, ticks }) => {
       const r = window.__play!.runner;
+      // pausing through the store keeps the editor from resuming the runner when a toast comes or goes
+      window.__store!.set({ paused: true });
       r.paused = true;
       r.inputSource = () => snapshot;
       for (let i = 0; i < ticks; i++) r.step();
