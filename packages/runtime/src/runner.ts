@@ -16,6 +16,11 @@ export interface RunnerOptions {
   follow?: EntityId;
   /** Called after every simulation step. */
   onTick?: (sim: Simulation) => void;
+  /**
+   * Called if a system throws. The runner pauses itself first, so a bug never kills the page
+   * or spams errors every frame; the editor shows the message in the Problems panel.
+   */
+  onError?: (error: unknown, sim: Simulation) => void;
 }
 
 /**
@@ -26,6 +31,8 @@ export class GameRunner {
   readonly timestep = new FixedTimestep();
   paused = false;
   recorder: InputRecorder | null = null;
+  /** Set when a system threw; cleared by `resume()`. */
+  failed: unknown = null;
   private raf = 0;
   private last = 0;
   private running = false;
@@ -46,7 +53,7 @@ export class GameRunner {
       this.last = now;
       if (!this.paused) {
         const steps = this.timestep.advance(elapsed);
-        for (let i = 0; i < steps; i++) this.stepOnce();
+        for (let i = 0; i < steps && !this.paused; i++) this.stepOnce();
       }
       this.draw();
       this.raf = requestAnimationFrame(frame);
@@ -65,18 +72,30 @@ export class GameRunner {
     this.draw();
   }
 
+  /** Continue after an error (the game state is whatever it was when the error happened). */
+  resume(): void {
+    this.failed = null;
+    this.paused = false;
+  }
+
   private stepOnce(): void {
-    const snap = this.inputSource();
-    this.recorder?.record(snap);
-    this.o.sim.step(snap);
-    const cam = this.o.renderer.camera;
-    if (this.o.follow !== undefined) {
-      const e = this.o.sim.world.get(this.o.follow);
-      const t = e?.get<TransformIso>(C.Transform);
-      if (t) cam.follow(gridToScreen(t.x, t.y, t.h, this.o.renderer.iso));
+    try {
+      const snap = this.inputSource();
+      this.recorder?.record(snap);
+      this.o.sim.step(snap);
+      const cam = this.o.renderer.camera;
+      if (this.o.follow !== undefined) {
+        const e = this.o.sim.world.get(this.o.follow);
+        const t = e?.get<TransformIso>(C.Transform);
+        if (t) cam.follow(gridToScreen(t.x, t.y, t.h, this.o.renderer.iso));
+      }
+      cam.update(TICK_DT);
+      this.o.onTick?.(this.o.sim);
+    } catch (error) {
+      this.failed = error;
+      this.paused = true;
+      this.o.onError?.(error, this.o.sim);
     }
-    cam.update(TICK_DT);
-    this.o.onTick?.(this.o.sim);
   }
 
   private draw(): void {

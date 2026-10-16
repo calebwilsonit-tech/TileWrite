@@ -13,6 +13,8 @@ function shade(color: number, f: number): number {
   return (r << 16) | (g << 8) | b;
 }
 
+/** Depth-sort ids at or above this are entities (id - base); below are tile views. */
+const ENTITY_ID_BASE = 2 ** 31;
 const MISSING_TILE: TileDef = { name: '?', top: 0xff00ff, left: 0xbb00bb, right: 0x880088 };
 const STAIR_STEPS = 4;
 
@@ -80,7 +82,18 @@ export class IsoRenderer {
   /** Alpha an occluding wall fades to. */
   fadeAlpha = 0.3;
 
-  private tileViews: TileView[] = [];
+  /** Overlay for editor gizmos; drawn above everything, in the same projected space as the world. */
+  readonly overlay = new Container();
+  /** Hide the ground (tiles, decks) - used by the editor's layer toggles. */
+  groundVisible = true;
+  /** Hide entities - used by the editor's layer toggles. */
+  entitiesVisible = true;
+
+  private cellViews = new Map<number, TileView[]>();
+  private viewById = new Map<number, TileView>();
+  private tileList: TileView[] = [];
+  private tileListDirty = true;
+  private nextTileId = 0;
   private readonly entityViews = new Map<number, EntityView>();
   private ready = false;
   private tileset: TileSet = DEFAULT_TILESET;
@@ -100,6 +113,8 @@ export class IsoRenderer {
       resizeTo: parent,
     });
     this.world.sortableChildren = true;
+    this.overlay.zIndex = 1e9;
+    this.world.addChild(this.overlay);
     this.app.stage.addChild(this.world);
     if (parent && !this.opts.canvas) parent.appendChild(this.app.canvas);
     this.camera.setViewport(this.app.screen.width, this.app.screen.height);
@@ -121,51 +136,96 @@ export class IsoRenderer {
     this.rebuildTiles();
   }
 
-  /** Rebuild tile graphics after the map was edited. */
+  /** Rebuild all tile graphics (after loading or swapping the map). */
   rebuildTiles(): void {
-    for (const v of this.tileViews) v.gfx.destroy();
-    this.tileViews = [];
+    for (const v of this.viewById.values()) v.gfx.destroy();
+    this.cellViews = new Map();
+    this.viewById = new Map();
+    this.tileListDirty = true;
     const map = this.tileMap;
     if (!map) return;
-    let id = 0;
-    const add = (gfx: Graphics, x: number, y: number, h: number, box: DepthBox, occluder: boolean): void => {
+    map.forEach((x, y) => this.buildCell(map, x, y));
+  }
+
+  /** Rebuild only these cells after an edit (the editor calls this per brush stroke). */
+  updateCells(cells: readonly { x: number; y: number }[]): void {
+    const map = this.tileMap;
+    if (!map) return;
+    for (const c of cells) {
+      this.clearCell(map, c.x, c.y);
+      if (map.inBounds(c.x, c.y) && map.getTile(c.x, c.y) !== 0) this.buildCell(map, c.x, c.y);
+    }
+  }
+
+  private clearCell(map: TileMap, x: number, y: number): void {
+    const key = y * map.width + x;
+    const views = this.cellViews.get(key);
+    if (!views) return;
+    for (const v of views) {
+      v.gfx.destroy();
+      this.viewById.delete(v.box.id);
+    }
+    this.cellViews.delete(key);
+    this.tileListDirty = true;
+  }
+
+  private buildCell(map: TileMap, x: number, y: number): void {
+    const tile = map.getTile(x, y);
+    const height = map.getHeight(x, y);
+    const def = this.tileset[tile] ?? MISSING_TILE;
+    const flags = map.getFlags(x, y);
+    const slope = map.getSlope(x, y);
+    const views: TileView[] = [];
+    const add = (gfx: Graphics, h: number, box: DepthBox, occluder: boolean): void => {
       const p = gridToScreen(x, y, h, this.iso);
       gfx.position.set(p.x, p.y);
+      gfx.visible = this.groundVisible;
       this.world.addChild(gfx);
-      box.id = id++;
-      this.tileViews.push({ gfx, box, occluder });
+      box.id = this.nextTileId++;
+      const view = { gfx, box, occluder };
+      views.push(view);
+      this.viewById.set(box.id, view);
     };
 
-    map.forEach((x, y, tile, height) => {
-      const def = this.tileset[tile] ?? MISSING_TILE;
-      const flags = map.getFlags(x, y);
-      const slope = map.getSlope(x, y);
-      const g = new Graphics();
-      const bottom = -(height + 1);
-      let box = map.boxFor(x, y, 0);
+    const g = new Graphics();
+    const bottom = -(height + 1);
+    let box = map.boxFor(x, y, 0);
+    if (flags & FLAG.PIT) {
+      this.drawPit(g);
+      box = { ...box, maxZ: height };
+    } else if (slope && slope.style === 'stairs') {
+      this.drawStairs(g, slope.dir, bottom, def);
+    } else if (slope) {
+      this.drawCell(g, slopeCorners(slope.dir), bottom, def);
+    } else {
+      this.drawCell(g, { n: 0, e: 0, s: 0, w: 0 }, bottom, def);
+    }
+    add(g, height, box, !(flags & FLAG.PIT));
 
-      if (flags & FLAG.PIT) {
-        this.drawPit(g);
-        box = { ...box, maxZ: height };
-      } else if (slope && slope.style === 'stairs') {
-        this.drawStairs(g, slope.dir, bottom, def);
-      } else if (slope) {
-        this.drawCell(g, slopeCorners(slope.dir), bottom, def);
-      } else {
-        this.drawCell(g, { n: 0, e: 0, s: 0, w: 0 }, bottom, def);
-      }
-      add(g, x, y, height, box, !(flags & FLAG.PIT));
+    const deck = map.getDeck(x, y);
+    if (deck > 0) {
+      const dg = new Graphics();
+      const deckDef = this.tileset[map.deckTiles[y * map.width + x]! || tile] ?? def;
+      // slab: 1 level thick, local origin at the deck's own level
+      this.drawCell(dg, { n: 0, e: 0, s: 0, w: 0 }, -1, deckDef);
+      add(dg, deck, { id: 0, minX: x, maxX: x + 1, minY: y, maxY: y + 1, minZ: deck - 1, maxZ: deck }, true);
+    }
+    this.cellViews.set(y * map.width + x, views);
+    this.tileListDirty = true;
+  }
 
-      const deck = map.getDeck(x, y);
-      if (deck > 0) {
-        const dg = new Graphics();
-        const deckDef = this.tileset[map.deckTiles[y * map.width + x]! || tile] ?? def;
-        // slab: 1 level thick, local origin at the deck's own level
-        this.drawCell(dg, { n: 0, e: 0, s: 0, w: 0 }, -1, deckDef);
-        const dbox: DepthBox = { id: 0, minX: x, maxX: x + 1, minY: y, maxY: y + 1, minZ: deck - 1, maxZ: deck };
-        add(dg, x, y, deck, dbox, true);
-      }
-    });
+  /** Show or hide the ground layer. */
+  setGroundVisible(v: boolean): void {
+    this.groundVisible = v;
+    for (const view of this.viewById.values()) view.gfx.visible = v;
+  }
+
+  private get tiles(): TileView[] {
+    if (this.tileListDirty) {
+      this.tileList = [...this.viewById.values()];
+      this.tileListDirty = false;
+    }
+    return this.tileList;
   }
 
   /** A column top with per-corner heights, plus the two camera-facing sides down to `bottom`. */
@@ -249,8 +309,9 @@ export class IsoRenderer {
   render(world: World): void {
     if (!this.ready) return;
     const t0 = performance.now();
-    const boxes: DepthBox[] = this.tileViews.map((v) => v.box);
-    const base = this.tileViews.length;
+    const tiles = this.tiles;
+    const boxes: DepthBox[] = tiles.map((v) => v.box);
+    const base = ENTITY_ID_BASE;
     const seen = new Set<number>();
     let focusBox: DepthBox | undefined;
 
@@ -259,7 +320,7 @@ export class IsoRenderer {
       const s = e.require<Sprite>(C.Sprite);
       seen.add(e.id);
       const view = this.viewFor(e, s);
-      view.gfx.visible = s.visible;
+      view.gfx.visible = s.visible && this.entitiesVisible;
       const p = gridToScreen(t.x, t.y, t.h, this.iso);
       view.gfx.position.set(p.x, p.y);
       const box = boxAt(base + e.id, t.x, t.y, t.h, s.w, s.d, s.height, s.sortOffset);
@@ -276,8 +337,13 @@ export class IsoRenderer {
     const order = sortBoxes(boxes, this.iso);
     for (let rank = 0; rank < order.length; rank++) {
       const id = order[rank]!;
-      if (id < base) this.tileViews[id]!.gfx.zIndex = rank;
-      else this.entityViews.get(id - base)!.gfx.zIndex = rank;
+      if (id < base) {
+        const v = this.viewById.get(id);
+        if (v) v.gfx.zIndex = rank;
+      } else {
+        const v = this.entityViews.get(id - base);
+        if (v) v.gfx.zIndex = rank;
+      }
     }
     this.lastSortMs = performance.now() - t0;
 
@@ -292,7 +358,7 @@ export class IsoRenderer {
   /** Walls in front of the focus entity (that rise above its feet) fade out so it stays visible. */
   private updateFade(focusBox: DepthBox | undefined): void {
     const focusRect = focusBox ? screenRect(focusBox, this.iso) : undefined;
-    for (const v of this.tileViews) {
+    for (const v of this.tiles) {
       let target = 1;
       if (this.occlusionFade && focusBox && focusRect && v.occluder && v.box.maxZ > focusBox.minZ + 0.5) {
         if (rectsOverlap(focusRect, screenRect(v.box, this.iso)) && isInFront(focusBox, v.box)) target = this.fadeAlpha;
@@ -304,7 +370,7 @@ export class IsoRenderer {
 
   /** Alpha of the tile view for a cell's column (for tests and the debugger). */
   tileAlpha(x: number, y: number): number | undefined {
-    return this.tileViews.find((v) => v.box.minX === x && v.box.minY === y && v.box.minZ === -1)?.gfx.alpha;
+    return this.cellViews.get(y * (this.tileMap?.width ?? 0) + x)?.find((v) => v.box.minZ === -1)?.gfx.alpha;
   }
 
   /** Cell under a viewport pixel, assuming the plane at height h. */

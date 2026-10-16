@@ -1,11 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { startWalkingSquare, type SampleHandle } from '../../../../samples/m1-walking-square/game';
 import { startMultilevelRoom, type M2Handle } from '../../../../samples/m2-multilevel-room/game';
+import { useApp, store } from './app/store';
+import { EditorShell } from './app/EditorShell';
+import { ProjectScreen } from './screens/ProjectScreen';
 
 declare global {
   interface Window {
     /** Exposed for end-to-end tests. */
     __sample?: SampleHandle | M2Handle;
+    __store?: typeof store;
   }
 }
 
@@ -39,9 +43,7 @@ function SampleView({ start, title, help }: { start: Starter; title: string; hel
         const player = h.sim.world.withTag('player')[0];
         const t = player?.get<{ h: number }>('transform');
         const st = (h as M2Handle).state;
-        setStatus(
-          `level ${t ? t.h.toFixed(2) : '-'}` + (st ? `  |  falls ${st.falls}  |  last landing ${st.lastLanding.toFixed(1)}` : ''),
-        );
+        setStatus(`level ${t ? t.h.toFixed(2) : '-'}` + (st ? `  |  falls ${st.falls}  |  last landing ${st.lastLanding.toFixed(1)}` : ''));
       }, 100);
     });
     return () => {
@@ -68,6 +70,14 @@ function SampleView({ start, title, help }: { start: Starter; title: string; hel
 
 export function App() {
   const hash = useHash();
+  const screen = useApp((s) => s.screen);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    window.__store = store;
+    void store.init().then(() => setReady(true));
+  }, []);
+
   if (hash === '#sample-m1') {
     return <SampleView start={startWalkingSquare} title="M1: walking square" help="WASD / arrows to move, Shift to run" />;
   }
@@ -80,21 +90,6 @@ export function App() {
       />
     );
   }
-  return (
-    <main className="welcome" data-testid="welcome">
-      <h1>Tilewright</h1>
-      <p>A no-code 2D isometric game engine.</p>
-      <p className="muted">Foundations (M0) - the editor shell opens. Project manager coming in M3.</p>
-      <p>
-        <a href="#sample-m1" data-testid="open-sample-m1">
-          Open the M1 sample (walking square)
-        </a>
-      </p>
-      <p>
-        <a href="#sample-m2" data-testid="open-sample-m2">
-          Open the M2 sample (multi-level room)
-        </a>
-      </p>
-    </main>
-  );
+  if (!ready) return <main className="welcome" data-testid="welcome"><h1>Tilewright</h1></main>;
+  return screen === 'editor' ? <EditorShell /> : <ProjectScreen />;
 }

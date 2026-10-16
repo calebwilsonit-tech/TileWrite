@@ -44,3 +44,15 @@ Pits: a PIT cell has no floor. A body over one falls until z <= PIT_KILL_Z (-3),
 Entity colliders: AABB in the ground plane with z range; layers/masks as bitmasks; `solid` blocks bodies, `trigger` emits trigger-enter/stay/exit. Bodies record `blockedBy` for pushables (M5).
 Events: `Simulation.events` (EventBus) - synchronous listeners plus a per-tick log for tests and the debugger.
 Occlusion fade: renderer-only (not simulation state). Tiles taller than the focus entity's feet + 0.5 that are drawn after it and overlap it on screen fade toward alpha 0.3.
+
+## D008 - Editor architecture (M3) (2026-10-16)
+- **Document model** (`renderer/model`): `EditorDoc` owns the mutable scene (TileMap + entity and region lists) and a `History`. Every change is a `Command` with `redo`/`undo`, pushed through the doc, so one Ctrl+Z always means "the last thing I did". Brush gestures use a `Stroke` that applies cells immediately (live feedback) and commits as one command whose cells remember their state from before the first touch.
+- **Tools** are plain objects (`down/move/up/cancel/hover`) driven by a `ToolEnv`, so they are tested headlessly with a fake env; the viewport only translates mouse events into `Pointer`s.
+- **Docking**: `dockview-react` (the `dockview` package is now the framework-free core). Rejected: hand-rolled split panes (no tabs/floating/serialisation), `flexlayout-react`.
+- **State**: a tiny external store (`useSyncExternalStore`) instead of Redux/Zustand; the document keeps its own events and bumps `docVersion` once per frame for React.
+- **Pick cell** scans planes from level 12 down and returns the first cell whose column reaches that plane, so clicking raised ground, cliff faces and bridges picks what you see.
+- **Security**: the renderer cannot touch files except inside folders the user chose in a native dialog (main-process allow-list); reopening a recent project is allowed only if the folder is in the saved recent list. Writes go to a temp file then rename. Autosave never overwrites the real scene.
+- **Play in editor** builds a fresh `Simulation` from `doc.toScene()` using the same `loadScene` the exported game will use, so what you play is what ships.
+- **Zod runs in `jitless` mode** because the editor's Content-Security-Policy forbids `new Function` (Zod's JIT probe logged a CSP error).
+- **Store reactions loop instead of re-entering** (`ViewportController.onStore`): a failed Play shows a message and calls Stop, which changes the store again; re-entering caused an infinite loop.
+- Gotcha: PowerShell 5.1 `Set-Content -Encoding utf8` writes a BOM, which breaks `package.json` parsing in tools. Use the Write/Edit tools or `[IO.File]::WriteAllText(..., UTF8Encoding($false))`.

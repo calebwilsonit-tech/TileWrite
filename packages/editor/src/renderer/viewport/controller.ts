@@ -1,0 +1,689 @@
+import { Graphics } from 'pixi.js';
+import {
+  C,
+  DEFAULT_INPUT_MAP,
+  DomInputSource,
+  GameRunner,
+  InputMap,
+  IsoRenderer,
+  Simulation,
+  World,
+  boxAt,
+  gridToScreen,
+  groundHeightAt,
+  loadScene,
+  physicsSystem,
+  screenRect,
+  screenToGrid,
+  teleportBody,
+  type Cell,
+  type TileSet,
+  type TransformIso,
+} from '@tilewright/runtime';
+import { addStandardSystems } from '@tilewright/behaviors';
+import type { EditorDoc, DocEvent } from '../model/doc';
+import { store, type ToolId } from '../app/store';
+import { TOOLS, toolMeta, type Pointer, type Preview, type ToolEnv } from '../tools/tools';
+import { prefabById } from '../tools/prefabs';
+import type { P } from '../tools/algorithms';
+import { OverlayDrawer, cellTopHeight } from './overlay';
+
+interface SpriteLike {
+  shape: 'box' | 'diamond';
+  color: number;
+  w: number;
+  d: number;
+  height: number;
+  sortOffset: number;
+  visible: boolean;
+}
+
+interface PlayState {
+  sim: Simulation;
+  runner: GameRunner;
+  source: DomInputSource;
+  saved: { x: number; y: number; zoom: number; dzw: number; dzh: number; smoothing: number };
+  stepToken: number;
+}
+
+const MIN_ZOOM = 0.25;
+const MAX_ZOOM = 3;
+
+/**
+ * Owns the viewport: the renderer, the editing camera, mouse handling, overlays and play-in-editor.
+ * React only mounts it and forwards keys; everything visual lives here so it stays testable and fast.
+ */
+export class ViewportController {
+  readonly renderer = new IsoRenderer({ antialias: true });
+  doc: EditorDoc | null = null;
+  hoverCell: P | null = null;
+
+  private host!: HTMLElement;
+  private overlay!: OverlayDrawer;
+  private ghostG = new Graphics();
+  private editWorld = new World();
+  private docIdOf = new Map<number, string>();
+  private previews: Preview[] = [];
+  private walk: Set<string> | null = null;
+  private marqueeEl!: HTMLDivElement;
+  private unsubDoc: (() => void) | null = null;
+  private unsubStore: (() => void) | null = null;
+  private dirty = true;
+  private raf = 0;
+  private spaceDown = false;
+  private panning: { x: number; y: number } | null = null;
+  private pointerDown = false;
+  private activeTool: ToolId | null = null;
+  private play: PlayState | null = null;
+  private lastStore = { tool: '', mode: '', paused: false, stepToken: 0, focus: 0 };
+  private disposed = false;
+  private reacting = false;
+  private tileset: TileSet | undefined;
+  private readonly cleanup: (() => void)[] = [];
+
+  async mount(host: HTMLElement): Promise<void> {
+    this.host = host;
+    await this.renderer.init(host);
+    if (this.disposed) {
+      this.renderer.destroy();
+      return;
+    }
+    this.renderer.camera.zoom = 1;
+    this.overlay = new OverlayDrawer(this.renderer.overlay);
+    this.renderer.overlay.addChild(this.ghostG);
+
+    this.marqueeEl = document.createElement('div');
+    Object.assign(this.marqueeEl.style, { position: 'absolute', border: '1px dashed #6aa8ff', background: 'rgba(106,168,255,0.12)', display: 'none', pointerEvents: 'none' });
+    host.appendChild(this.marqueeEl);
+
+    const c = this.renderer.canvas;
+    const on = <K extends keyof HTMLElementEventMap>(el: HTMLElement | Window, ev: K | string, fn: (e: never) => void, opts?: AddEventListenerOptions): void => {
+      el.addEventListener(ev, fn as EventListener, opts);
+      this.cleanup.push(() => el.removeEventListener(ev, fn as EventListener));
+    };
+    on(c, 'pointerdown', (e: PointerEvent) => this.onDown(e));
+    on(c, 'pointermove', (e: PointerEvent) => this.onMove(e));
+    on(window, 'pointerup', (e: PointerEvent) => this.onUp(e));
+    on(c, 'wheel', (e: WheelEvent) => this.onWheel(e), { passive: false });
+    on(c, 'contextmenu', (e: Event) => e.preventDefault());
+    on(c, 'pointerleave', () => {
+      this.hoverCell = null;
+      if (!this.pointerDown) this.setPreviews([]);
+      this.dirty = true;
+    });
+    on(window, 'keydown', (e: KeyboardEvent) => {
+      if (e.code === 'Space' && !isTyping(e)) this.spaceDown = true;
+    });
+    on(window, 'keyup', (e: KeyboardEvent) => {
+      if (e.code === 'Space') this.spaceDown = false;
+    });
+    const ro = new ResizeObserver(() => {
+      const w = host.clientWidth;
+      const h = host.clientHeight;
+      if (w > 0 && h > 0) {
+        this.renderer.resize(w, h);
+        this.dirty = true;
+      }
+    });
+    ro.observe(host);
+    this.cleanup.push(() => ro.disconnect());
+
+    this.unsubStore = store.subscribe(() => this.onStore());
+    this.lastStore = this.snapshotStore();
+    const loop = (): void => {
+      if (this.disposed) return;
+      if (!this.play && this.dirty) {
+        this.dirty = false;
+        this.redraw();
+      }
+      this.raf = requestAnimationFrame(loop);
+    };
+    this.raf = requestAnimationFrame(loop);
+    if (store.doc) this.setDoc(store.doc);
+  }
+
+  get camera() {
+    return this.renderer.camera;
+  }
+
+  get playing(): boolean {
+    return this.play !== null;
+  }
+
+  /** The running play session, for tests and the debugger. */
+  get session(): PlayState | null {
+    return this.play;
+  }
+
+  dispose(): void {
+    this.disposed = true;
+    cancelAnimationFrame(this.raf);
+    this.stopPlay();
+    this.unsubDoc?.();
+    this.unsubStore?.();
+    for (const c of this.cleanup) c();
+    this.marqueeEl?.remove();
+    try {
+      this.renderer.destroy();
+    } catch {
+      /* renderer may not have finished initialising */
+    }
+  }
+
+  // ---- document ----
+
+  setDoc(doc: EditorDoc): void {
+    this.unsubDoc?.();
+    this.doc = doc;
+    this.unsubDoc = doc.subscribe((e) => this.onDocEvent(e));
+    this.renderer.setTileMap(doc.map, this.tilesetFor());
+    this.syncEntities();
+    this.frameMap();
+    this.dirty = true;
+  }
+
+  private tilesetFor(): TileSet | undefined {
+    const p = store.state.project?.project.tileset;
+    if (!p || p.length === 0) return this.tileset;
+    const set: TileSet = {};
+    for (const t of p) set[t.id] = { name: t.name, top: t.top, left: t.left, right: t.right };
+    return set;
+  }
+
+  private onDocEvent(e: DocEvent): void {
+    if (e.type === 'cells') this.renderer.updateCells(e.cells);
+    else if (e.type === 'map' && this.doc) {
+      this.renderer.setTileMap(this.doc.map, this.tilesetFor());
+      this.frameMap();
+    } else if (e.type === 'entities') this.syncEntities();
+    this.dirty = true;
+  }
+
+  /** Rebuild the lightweight world used to draw entities while editing. */
+  private syncEntities(): void {
+    const doc = this.doc;
+    this.editWorld.clear();
+    this.docIdOf.clear();
+    if (!doc) return;
+    for (const e of doc.entities) {
+      const t = e.components.transform as TransformIso | undefined;
+      const s = e.components.sprite as SpriteLike | undefined;
+      if (!t || !s) continue;
+      const ent = this.editWorld.spawn({ name: e.name, components: { [C.Transform]: { ...t }, [C.Sprite]: { ...s } } });
+      this.docIdOf.set(ent.id, e.id);
+    }
+  }
+
+  /** Centre the camera on the middle of the map. */
+  frameMap(): void {
+    const m = this.doc?.map;
+    if (!m) return;
+    const c = gridToScreen(m.width / 2, m.height / 2, 0);
+    this.camera.snapTo(c);
+    const needW = (m.width + m.height) * 32 + 160;
+    const needH = (m.width + m.height) * 16 + 200;
+    this.camera.zoom = Math.max(MIN_ZOOM, Math.min(1, this.camera.viewW / needW, this.camera.viewH / needH));
+    this.dirty = true;
+  }
+
+  /** Page coordinates (for real mouse events) of the middle of a cell's top face. Used by end-to-end tests. */
+  cellToClient(cx: number, cy: number): { x: number; y: number } {
+    const map = this.doc?.map;
+    const h = map && map.inBounds(cx, cy) ? cellTopHeight(map, cx, cy) : 0;
+    const v = this.camera.worldToView(gridToScreen(cx + 0.5, cy + 0.5, h, this.renderer.iso));
+    const rect = this.renderer.canvas.getBoundingClientRect();
+    return { x: rect.left + v.x, y: rect.top + v.y };
+  }
+
+  /** Page coordinates of the middle of an object (for real mouse events in end-to-end tests). */
+  entityToClient(id: string): { x: number; y: number } | null {
+    const e = this.doc?.getEntity(id);
+    const t = e?.components.transform as TransformIso | undefined;
+    const s = e?.components.sprite as SpriteLike | undefined;
+    if (!t) return null;
+    const v = this.camera.worldToView(gridToScreen(t.x, t.y, t.h + (s?.height ?? 1) / 2, this.renderer.iso));
+    const rect = this.renderer.canvas.getBoundingClientRect();
+    return { x: rect.left + v.x, y: rect.top + v.y };
+  }
+
+  focusCell(x: number, y: number): void {
+    const h = this.doc?.map.inBounds(Math.floor(x), Math.floor(y)) ? cellTopHeight(this.doc.map, Math.floor(x), Math.floor(y)) : 0;
+    this.camera.snapTo(gridToScreen(x, y, h));
+    this.dirty = true;
+  }
+
+  requestRedraw(): void {
+    this.dirty = true;
+  }
+
+  // ---- store changes ----
+
+  private snapshotStore() {
+    const s = store.state;
+    return { tool: s.tool, mode: s.mode, paused: s.paused, stepToken: store.stepToken, focus: store.focusRequest?.token ?? 0 };
+  }
+
+  /**
+   * React to store changes. Our own reactions can change the store again (a failed Play calls Stop and
+   * shows a message), so changes made while we are busy are picked up by looping, not by re-entering.
+   */
+  private onStore(): void {
+    if (this.reacting) return;
+    this.reacting = true;
+    try {
+      for (let pass = 0; pass < 5; pass++) {
+        const s = store.state;
+        const last = this.lastStore;
+        this.lastStore = this.snapshotStore(); // remember first, so nested notifications cannot repeat the work
+        if (store.doc && store.doc !== this.doc) this.setDoc(store.doc);
+        if (s.tool !== last.tool) {
+          this.cancelGesture();
+          this.setPreviews([]);
+        }
+        if (s.mode !== last.mode) {
+          if (s.mode === 'play') this.startPlay();
+          else this.stopPlay();
+        }
+        if (this.play) {
+          this.play.runner.paused = s.paused;
+          if (store.stepToken !== this.play.stepToken) {
+            this.play.stepToken = store.stepToken;
+            this.play.runner.step();
+          }
+        }
+        if ((store.focusRequest?.token ?? 0) !== last.focus && store.focusRequest) this.focusCell(store.focusRequest.x, store.focusRequest.y);
+        this.renderer.setGroundVisible(s.view.ground);
+        this.renderer.entitiesVisible = s.view.objects;
+        this.dirty = true;
+        const now = this.snapshotStore();
+        const settled = now.tool === this.lastStore.tool && now.mode === this.lastStore.mode && now.paused === this.lastStore.paused && now.stepToken === this.lastStore.stepToken;
+        if (settled) break;
+      }
+    } finally {
+      this.reacting = false;
+    }
+  }
+
+  // ---- drawing ----
+
+  private redraw(): void {
+    const doc = this.doc;
+    if (!doc) return;
+    const s = store.state;
+    const cam = this.camera;
+    const tl = cam.viewToWorld({ x: 0, y: 0 });
+    const br = cam.viewToWorld({ x: cam.viewW, y: cam.viewH });
+    this.overlay.draw({
+      map: doc.map,
+      iso: this.renderer.iso,
+      grid: s.view.grid,
+      collision: s.view.collision || !!toolMeta(s.tool).showsCollision,
+      heightLabels: s.view.heightLabels,
+      regions: { list: doc.regions, visible: s.view.regions, selected: s.selectedRegion },
+      walk: this.walk,
+      previews: this.previews,
+      zoom: cam.zoom,
+      visible: { minX: tl.x - 40, minY: tl.y - 40, maxX: br.x + 40, maxY: br.y + 40 },
+    });
+    const boxes = doc.entities
+      .filter((e) => s.selection.includes(e.id))
+      .map((e) => {
+        const t = e.components.transform as TransformIso | undefined;
+        const sp = e.components.sprite as SpriteLike | undefined;
+        return t ? { x: t.x, y: t.y, h: t.h, w: sp?.w ?? 0.6, d: sp?.d ?? 0.6, height: sp?.height ?? 1 } : null;
+      })
+      .filter((b): b is NonNullable<typeof b> => b !== null);
+    this.overlay.outline(boxes, this.renderer.iso);
+
+    this.ghostG.clear();
+    for (const pv of this.previews) {
+      if (pv.kind === 'ghost') {
+        const prefab = prefabById(pv.prefab);
+        const data = prefab.make(pv.x, pv.y, pv.h);
+        const sp = data.components.sprite as SpriteLike | undefined;
+        if (sp) this.overlay.ghost(this.ghostG, pv.x, pv.y, pv.h, sp.w, sp.d, sp.height, sp.color, this.renderer.iso);
+      }
+    }
+    this.renderer.focus = undefined;
+    this.renderer.render(this.editWorld);
+  }
+
+  private setPreviews(p: Preview[]): void {
+    this.previews = p;
+    this.dirty = true;
+  }
+
+  // ---- picking ----
+
+  /** The cell under a screen point, taking raised ground into account (the nearest visible surface). */
+  pickCell(sx: number, sy: number): Cell {
+    const map = this.doc?.map;
+    const w = this.camera.viewToWorld({ x: sx, y: sy });
+    if (map) {
+      for (let h = 12; h >= 0; h--) {
+        const g = screenToGrid(w.x, w.y, h, this.renderer.iso);
+        const cx = Math.floor(g.x);
+        const cy = Math.floor(g.y);
+        if (!map.inBounds(cx, cy) || map.getTile(cx, cy) === 0) continue;
+        if (cellTopHeight(map, cx, cy) >= h) return { x: cx, y: cy };
+      }
+    }
+    const g = screenToGrid(w.x, w.y, 0, this.renderer.iso);
+    return { x: Math.floor(g.x), y: Math.floor(g.y) };
+  }
+
+  private entityScreenRect(t: TransformIso, s: SpriteLike) {
+    return screenRect(boxAt(0, t.x, t.y, t.h, s.w, s.d, s.height), this.renderer.iso);
+  }
+
+  pickEntity(screen: { x: number; y: number }): string | null {
+    const doc = this.doc;
+    if (!doc || store.state.locks.objects || !store.state.view.objects) return null;
+    const w = this.camera.viewToWorld(screen);
+    let best: { id: string; key: number } | null = null;
+    for (const e of doc.entities) {
+      const t = e.components.transform as TransformIso | undefined;
+      const s = e.components.sprite as SpriteLike | undefined;
+      if (!t || !s) continue;
+      const r = this.entityScreenRect(t, s);
+      if (w.x < r.left - 4 || w.x > r.right + 4 || w.y < r.top - 4 || w.y > r.bottom + 4) continue;
+      const key = t.x + t.y + t.h * 0.01;
+      if (!best || key > best.key) best = { id: e.id, key };
+    }
+    return best?.id ?? null;
+  }
+
+  private entitiesInRect(r: { x0: number; y0: number; x1: number; y1: number }): string[] {
+    const doc = this.doc;
+    if (!doc || store.state.locks.objects) return [];
+    const x0 = Math.min(r.x0, r.x1);
+    const x1 = Math.max(r.x0, r.x1);
+    const y0 = Math.min(r.y0, r.y1);
+    const y1 = Math.max(r.y0, r.y1);
+    const out: string[] = [];
+    for (const e of doc.entities) {
+      const t = e.components.transform as TransformIso | undefined;
+      if (!t) continue;
+      const v = this.camera.worldToView(gridToScreen(t.x, t.y, t.h, this.renderer.iso));
+      if (v.x >= x0 && v.x <= x1 && v.y >= y0 && v.y <= y1) out.push(e.id);
+    }
+    return out;
+  }
+
+  private pickRegion(cell: P): string | null {
+    const doc = this.doc;
+    if (!doc || store.state.locks.regions) return null;
+    const hits = doc.regions.filter((r) => cell.x >= r.x && cell.x < r.x + r.w && cell.y >= r.y && cell.y < r.y + r.h);
+    hits.sort((a, b) => a.w * a.h - b.w * b.h);
+    return hits[0]?.id ?? null;
+  }
+
+  // ---- tool environment ----
+
+  private env(): ToolEnv {
+    const doc = this.doc!;
+    const s = store.state;
+    return {
+      doc,
+      opts: s.options,
+      selection: s.selection,
+      setPreview: (p) => this.setPreviews(p),
+      select: (ids, region = null) => store.set({ selection: ids, selectedRegion: region }),
+      notify: (kind, text) => store.notify(kind, text),
+      setWalk: (cells) => {
+        this.walk = cells;
+        this.dirty = true;
+      },
+      setMarquee: (r) => this.showMarquee(r),
+      pickEntity: (sc) => this.pickEntity(sc),
+      pickRegion: (c) => this.pickRegion(c),
+      entitiesInRect: (r) => this.entitiesInRect(r),
+      worldAt: (sc, h) => {
+        const w = this.camera.viewToWorld(sc);
+        return screenToGrid(w.x, w.y, h, this.renderer.iso);
+      },
+    };
+  }
+
+  private showMarquee(r: { x0: number; y0: number; x1: number; y1: number } | null): void {
+    const el = this.marqueeEl;
+    if (!r) {
+      el.style.display = 'none';
+      return;
+    }
+    el.style.display = 'block';
+    el.style.left = `${Math.min(r.x0, r.x1)}px`;
+    el.style.top = `${Math.min(r.y0, r.y1)}px`;
+    el.style.width = `${Math.abs(r.x1 - r.x0)}px`;
+    el.style.height = `${Math.abs(r.y1 - r.y0)}px`;
+  }
+
+  private pointer(e: PointerEvent): Pointer {
+    const rect = this.renderer.canvas.getBoundingClientRect();
+    const screen = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    const cell = this.pickCell(screen.x, screen.y);
+    return { cell, screen, shift: e.shiftKey, alt: e.altKey, ctrl: e.ctrlKey || e.metaKey };
+  }
+
+  // ---- mouse ----
+
+  private onDown(e: PointerEvent): void {
+    if (this.play || !this.doc) return;
+    this.renderer.canvas.setPointerCapture?.(e.pointerId);
+    const panButton = e.button === 1 || e.button === 2 || (e.button === 0 && this.spaceDown);
+    if (panButton) {
+      this.panning = { x: e.clientX, y: e.clientY };
+      return;
+    }
+    if (e.button !== 0) return;
+    const meta = toolMeta(store.state.tool);
+    const locks = store.state.locks;
+    if ((meta.edits === 'ground' && locks.ground) || (meta.edits === 'objects' && locks.objects) || (meta.edits === 'regions' && locks.regions)) {
+      store.notify('warn', `The ${meta.edits} layer is locked. Unlock it in the Layers panel to use ${meta.label}.`);
+      return;
+    }
+    const p = this.pointer(e);
+    this.pointerDown = true;
+    this.activeTool = store.state.tool;
+    TOOLS[store.state.tool].down(p, this.env());
+    this.dirty = true;
+  }
+
+  private onMove(e: PointerEvent): void {
+    if (this.play || !this.doc) return;
+    if (this.panning) {
+      const dx = e.clientX - this.panning.x;
+      const dy = e.clientY - this.panning.y;
+      this.panning = { x: e.clientX, y: e.clientY };
+      this.camera.x -= dx / this.camera.zoom;
+      this.camera.y -= dy / this.camera.zoom;
+      this.dirty = true;
+      return;
+    }
+    const p = this.pointer(e);
+    this.hoverCell = p.cell;
+    const tool = TOOLS[store.state.tool];
+    if (this.pointerDown && this.activeTool === store.state.tool) tool.move(p, this.env());
+    else tool.hover(p, this.env());
+    store.set({ docVersion: store.state.docVersion }); // lets the status bar show the hover cell
+    this.dirty = true;
+  }
+
+  private onUp(e: PointerEvent): void {
+    if (this.panning) {
+      this.panning = null;
+      return;
+    }
+    if (this.play || !this.doc || !this.pointerDown) return;
+    this.pointerDown = false;
+    if (this.activeTool === store.state.tool) TOOLS[store.state.tool].up(this.pointer(e), this.env());
+    this.activeTool = null;
+    this.dirty = true;
+  }
+
+  private onWheel(e: WheelEvent): void {
+    if (this.play) return;
+    e.preventDefault();
+    const rect = this.renderer.canvas.getBoundingClientRect();
+    const sx = e.clientX - rect.left;
+    const sy = e.clientY - rect.top;
+    const before = this.camera.viewToWorld({ x: sx, y: sy });
+    const factor = Math.exp(-e.deltaY * 0.0015);
+    this.camera.zoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, this.camera.zoom * factor));
+    const after = this.camera.viewToWorld({ x: sx, y: sy });
+    this.camera.x += before.x - after.x;
+    this.camera.y += before.y - after.y;
+    this.dirty = true;
+  }
+
+  zoomBy(f: number): void {
+    this.camera.zoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, this.camera.zoom * f));
+    this.dirty = true;
+  }
+
+  cancelGesture(): void {
+    if (this.pointerDown && this.activeTool && this.doc) {
+      TOOLS[this.activeTool].cancel(this.env());
+    }
+    this.pointerDown = false;
+    this.activeTool = null;
+    this.showMarquee(null);
+  }
+
+  /** Keys the active tool wants (R to rotate, Esc to clear a pattern...). Returns true if it used the key. */
+  toolKey(key: string): boolean {
+    if (!this.doc || this.play) return false;
+    const handled = TOOLS[store.state.tool].key?.(key, this.env()) ?? false;
+    if (key.toLowerCase() === 'r' && (store.state.tool === 'stairs' || store.state.tool === 'ramp')) {
+      const order = [1, 2, 3, 4] as const;
+      const cur = store.state.options.slopeDir;
+      store.setOptions({ slopeDir: order[(order.indexOf(cur as 1 | 2 | 3 | 4) + 1) % 4]! });
+      return true;
+    }
+    if (key === 'Escape' && this.pointerDown) {
+      this.cancelGesture();
+      return true;
+    }
+    if (handled) this.dirty = true;
+    return handled;
+  }
+
+  // ---- play in editor ----
+
+  private startPlay(): void {
+    const doc = this.doc;
+    if (!doc || this.play) return;
+    const scene = doc.toScene();
+    const playerData = scene.entities.find((e) => e.tags.includes('player'));
+    if (!playerData || !playerData.components.transform) {
+      store.notify('error', 'This scene has no player start, so there is nothing to play. Use the Place tool to add a Player start, then press Play again.');
+      store.stop();
+      return;
+    }
+    const sim = new Simulation(1);
+    const byId = loadScene(sim, scene);
+    const player = byId.get(playerData.id)!;
+    const from = store.playFrom;
+    if (from) {
+      const t = player.require<TransformIso>(C.Transform);
+      const cx = Math.floor(from.x);
+      const cy = Math.floor(from.y);
+      const h = sim.map && sim.map.inBounds(cx, cy) ? Math.max(groundHeightAt(sim.map, from.x, from.y), sim.map.getDeck(cx, cy)) : 0;
+      t.x = from.x;
+      t.y = from.y;
+      t.h = h;
+      if (player.get(C.Body)) teleportBody({ map: sim.map } as never, player, from.x, from.y, h);
+    }
+    store.playFrom = null;
+    addStandardSystems(sim, physicsSystem);
+
+    const cam = this.camera;
+    const saved = { x: cam.x, y: cam.y, zoom: cam.zoom, dzw: cam.deadzoneW, dzh: cam.deadzoneH, smoothing: cam.smoothing };
+    cam.deadzoneW = 50;
+    cam.deadzoneH = 30;
+    cam.smoothing = 0.2;
+    cam.zoom = 1;
+    this.renderer.setGroundVisible(true);
+    this.renderer.entitiesVisible = true;
+    this.renderer.setTileMap(sim.map!, this.tilesetFor());
+    this.renderer.focus = player.id;
+    const t0 = player.require<TransformIso>(C.Transform);
+    cam.snapTo(gridToScreen(t0.x, t0.y, t0.h, this.renderer.iso));
+    this.renderer.overlay.visible = false;
+
+    const source = new DomInputSource();
+    const regions = scene.regions;
+    const runner = new GameRunner({
+      sim,
+      renderer: this.renderer,
+      inputMap: new InputMap(DEFAULT_INPUT_MAP),
+      readInput: () => source.read(),
+      follow: player.id,
+      onTick: () => {
+        const t = player.get<TransformIso>(C.Transform);
+        if (!t) return;
+        const r = regions.find((rg) => rg.cameraBounds && t.x >= rg.x && t.x < rg.x + rg.w && t.y >= rg.y && t.y < rg.y + rg.h);
+        if (r) {
+          const iso = this.renderer.iso;
+          const pts = [gridToScreen(r.x, r.y, 0, iso), gridToScreen(r.x + r.w, r.y, 0, iso), gridToScreen(r.x + r.w, r.y + r.h, 0, iso), gridToScreen(r.x, r.y + r.h, 0, iso)];
+          cam.bounds = {
+            minX: Math.min(...pts.map((p) => p.x)),
+            maxX: Math.max(...pts.map((p) => p.x)),
+            minY: Math.min(...pts.map((p) => p.y)),
+            maxY: Math.max(...pts.map((p) => p.y)) - 0,
+          };
+        } else cam.bounds = null;
+      },
+      onError: (error) => {
+        const msg = error instanceof Error ? error.message : String(error);
+        store.notify('error', `The game stopped because something went wrong while running: ${msg}. Press Stop, fix it, and play again.`);
+        store.set({ paused: true });
+      },
+    });
+    runner.start();
+    this.play = { sim, runner, source, saved, stepToken: store.stepToken };
+    window.__play = this.play;
+  }
+
+  private stopPlay(): void {
+    const p = this.play;
+    if (!p) return;
+    p.runner.stop();
+    p.source.dispose();
+    this.play = null;
+    window.__play = undefined;
+    const cam = this.camera;
+    cam.bounds = null;
+    cam.x = p.saved.x;
+    cam.y = p.saved.y;
+    cam.zoom = p.saved.zoom;
+    cam.deadzoneW = p.saved.dzw;
+    cam.deadzoneH = p.saved.dzh;
+    cam.smoothing = p.saved.smoothing;
+    this.renderer.focus = undefined;
+    this.renderer.overlay.visible = true;
+    if (this.doc) {
+      this.renderer.setTileMap(this.doc.map, this.tilesetFor());
+      this.renderer.setGroundVisible(store.state.view.ground);
+      this.renderer.entitiesVisible = store.state.view.objects;
+    }
+    this.dirty = true;
+  }
+
+  /** Which cell the mouse is over, for "Play from here". */
+  get playFromHere(): { x: number; y: number } | null {
+    return this.hoverCell ? { x: this.hoverCell.x + 0.5, y: this.hoverCell.y + 0.5 } : null;
+  }
+}
+
+declare global {
+  interface Window {
+    __play?: PlayState;
+    __viewport?: ViewportController;
+  }
+}
+
+export function isTyping(e: KeyboardEvent): boolean {
+  const t = e.target as HTMLElement | null;
+  return !!t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable);
+}

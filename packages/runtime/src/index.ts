@@ -6,6 +6,7 @@ export * from './core/timestep';
 export * from './core/simulation';
 export * from './core/events';
 export * from './physics';
+export * from './project';
 export * from './scene/world';
 export * from './scene/components';
 export * from './input/input';
