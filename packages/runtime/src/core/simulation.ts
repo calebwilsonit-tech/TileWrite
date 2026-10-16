@@ -10,6 +10,7 @@ import type { DialogueData, DialogueState } from '../story/dialogue';
 import type { ItemData } from '../story/items';
 import type { TileMap } from '../tilemap/tilemap';
 import { EventBus } from './events';
+import { Profiler, SystemError } from './profiler';
 import { Rng } from './rng';
 import { TICK_DT } from './timestep';
 
@@ -90,6 +91,8 @@ export interface SimContext {
   modal: Modal;
   /** Seconds per tick (always 1/60). */
   dt: number;
+  /** Timing of systems and behaviours (when switched on). */
+  profiler?: Profiler;
   /** Ticks completed before this one. */
   tick: number;
 }
@@ -136,6 +139,7 @@ export class Simulation {
   readonly assets: Assets = { sprites: new Map(), prefabs: new Map(), dialogues: new Map(), items: new Map(), cutscenes: new Map() };
   readonly runtime: SceneRuntime = newSceneRuntime();
   readonly rng: Rng;
+  readonly profiler = new Profiler();
   /** Terrain used by physics and AI. Set it before the first step. */
   map: TileMap | null = null;
   tick = 0;
@@ -189,16 +193,23 @@ export class Simulation {
       modal,
       dt: TICK_DT,
       tick: this.tick,
+      profiler: this.profiler,
     };
     this.world.beginTick();
+    this.profiler.beginTick();
     try {
       if (modal !== 'freeze') this.tweens.update(TICK_DT);
       for (const s of this.systems) {
         if (s.mode === 'gameplay' && modal === 'freeze') continue;
         if (s.mode === 'player' && modal !== 'none') continue;
-        s.fn(ctx);
+        try {
+          this.profiler.system(s.name, () => s.fn(ctx));
+        } catch (e) {
+          throw e instanceof SystemError ? e : new SystemError(s.name, e);
+        }
       }
     } finally {
+      this.profiler.endTick();
       this.world.endTick();
     }
     this.tick++;

@@ -111,6 +111,11 @@ export class IsoRenderer {
   entitiesVisible = true;
   /** Pixels of screen shake this frame (set by the game runner). */
   shake = 0;
+  /** Draw each object's depth-sort position as a number above it (a debugging aid). */
+  debugDepth = false;
+  /** Milliseconds the last frame took to draw. */
+  lastRenderMs = 0;
+  private readonly depthLabels = new Map<number, Text>();
   /** Darkness and lights to draw this frame (null = none). Set by the game runner from the simulation. */
   lighting: LightingModel | null = null;
   private readonly lightLayer = new LightingLayer();
@@ -388,6 +393,7 @@ export class IsoRenderer {
       }
     }
     this.lastSortMs = performance.now() - t0;
+    this.syncDepthLabels();
 
     this.updateFade(focusBox);
 
@@ -401,7 +407,40 @@ export class IsoRenderer {
     } else {
       this.lightLayer.hide();
     }
+    const r0 = performance.now();
     this.app.renderer.render(this.app.stage);
+    this.lastRenderMs = performance.now() - r0;
+  }
+
+  /** How much there is to draw, for the profiler. */
+  stats(): { objects: number; tiles: number; lights: number; sortMs: number; renderMs: number } {
+    return { objects: this.entityViews.size, tiles: this.tiles.length, lights: this.lighting?.lights.length ?? 0, sortMs: this.lastSortMs, renderMs: this.lastRenderMs };
+  }
+
+  /** Numbers showing the draw order of every object, when switched on. */
+  private syncDepthLabels(): void {
+    if (!this.debugDepth) {
+      for (const t of this.depthLabels.values()) t.visible = false;
+      return;
+    }
+    for (const [id, v] of this.entityViews) {
+      let t = this.depthLabels.get(id);
+      if (!t) {
+        t = new Text({ text: '', style: { fontSize: 11, fill: 0xffffff, stroke: { color: 0x000000, width: 3 } } });
+        t.anchor.set(0.5, 1);
+        this.labelLayer.addChild(t);
+        this.depthLabels.set(id, t);
+      }
+      t.visible = v.gfx.visible;
+      t.text = String(Math.round(v.gfx.zIndex));
+      t.position.set(v.gfx.position.x, v.gfx.position.y - 4);
+    }
+    for (const [id, t] of this.depthLabels) {
+      if (!this.entityViews.has(id)) {
+        t.destroy();
+        this.depthLabels.delete(id);
+      }
+    }
   }
 
   /** Create, update or remove the floating text for an object with a Label component. */

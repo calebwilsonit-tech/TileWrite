@@ -5,5 +5,9 @@
   "description": "Automated player and puzzle solver",
   "type": "module",
   "main": "./src/index.ts",
-  "types": "./src/index.ts"
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@tilewright/runtime": "*",
+    "@tilewright/behaviors": "*"
+  }
 }

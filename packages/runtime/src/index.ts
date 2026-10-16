@@ -25,3 +25,5 @@ export * from './story/dialogue';
 export * from './story/cutscene';
 export * from './story/save';
 export * from './story/settings';
+export * from './core/profiler';
+export * from './core/crash';

@@ -14,6 +14,7 @@ import { StudioView } from '../studio/StudioView';
 import { AssetsPanel } from '../panels/AssetsPanel';
 import { EventsPanel } from '../panels/EventsPanel';
 import { StoryPanel } from '../panels/StoryPanel';
+import { PlaybotPanel } from '../panels/PlaybotPanel';
 import { ConnectDialog } from './ConnectDialog';
 
 const components: Record<string, React.FunctionComponent<IDockviewPanelProps>> = {
@@ -26,11 +27,12 @@ const components: Record<string, React.FunctionComponent<IDockviewPanelProps>> =
   history: () => <HistoryPanel />,
   events: () => <EventsPanel />,
   story: () => <StoryPanel />,
+  playbot: () => <PlaybotPanel />,
   problems: () => <ProblemsPanel />,
   console: () => <ConsolePanel />,
 };
 
-const LAYOUT_VERSION = 4;
+const LAYOUT_VERSION = 5;
 
 function buildDefault(api: DockviewApi): void {
   api.addPanel({ id: 'viewport', component: 'viewport', title: 'Viewport', renderer: 'always' });
@@ -44,6 +46,7 @@ function buildDefault(api: DockviewApi): void {
   api.addPanel({ id: 'console', component: 'console', title: 'Console', position: { referencePanel: 'problems', direction: 'within' } });
   api.addPanel({ id: 'events', component: 'events', title: 'Events', position: { referencePanel: 'problems', direction: 'within' } });
   api.addPanel({ id: 'story', component: 'story', title: 'Story', position: { referencePanel: 'problems', direction: 'within' } });
+  api.addPanel({ id: 'playbot', component: 'playbot', title: 'Playbot', position: { referencePanel: 'problems', direction: 'within' } });
   api.getPanel('tiles')?.api.setActive();
   api.getPanel('inspector')?.api.setActive();
   api.getPanel('problems')?.api.setActive();

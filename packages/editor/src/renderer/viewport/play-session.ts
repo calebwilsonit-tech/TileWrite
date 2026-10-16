@@ -1,9 +1,11 @@
+import { Container, Graphics } from 'pixi.js';
 import {
   C,
   DEFAULT_INPUT_MAP,
   DomInputSource,
   GameRunner,
   InputMap,
+  InputRecorder,
   IsoRenderer,
   SLOT_NAMES,
   SaveManager,
@@ -21,6 +23,7 @@ import {
   serializeGame,
   teleportBody,
   type GameSettings,
+  type InputRecording,
   type PrefabData,
   type SaveData,
   type SceneData,
@@ -38,6 +41,7 @@ import {
   playCutscene,
   type GameUiHost,
 } from '@tilewright/behaviors';
+import { drawCone, drawFootprint, drawLightRadius, drawPath, shapesOf } from './debug-draw';
 import { assetFs } from '../project/assetFs';
 import { joinPath } from '../project/api';
 import { loadScene as loadSceneFile } from '../project/io';
@@ -63,6 +67,10 @@ export interface PlayOptions {
   /** Quit the game (back to editing). */
   quit(): void;
   autoPlay: { cutscene?: string; dialogue?: string } | null;
+  /** Which debugging aids are on right now (read every frame). */
+  flags: () => { ai: boolean; triggers: boolean; lights: boolean; depth: boolean; profiler: boolean };
+  /** Record the buttons pressed, to save as a playthrough. */
+  record: boolean;
 }
 
 /**
@@ -83,6 +91,8 @@ export class PlaySession {
   private traveling = false;
   private startedAt = 0;
   private disposed = false;
+  private readonly debugLayer = new Container();
+  private readonly debugG = new Graphics();
 
   constructor(private readonly o: PlayOptions) {
     const { sim } = this;
@@ -147,6 +157,11 @@ export class PlaySession {
       onError: (e) => o.onError(e),
     });
     this.runner.shakeEnabled = this.settings.screenShake;
+    this.debugLayer.zIndex = 9e8;
+    this.debugLayer.addChild(this.debugG);
+    this.debugLayer.visible = false;
+    renderer.world.addChild(this.debugLayer);
+    if (o.record) this.runner.recorder = new InputRecorder();
     this.ui = new GameUi(o.uiParent, this.uiHost());
     this.startedAt = performance.now();
     if (o.autoPlay?.cutscene) playCutscene(contextOf(sim), o.autoPlay.cutscene);
@@ -155,6 +170,7 @@ export class PlaySession {
     const loop = (): void => {
       if (this.disposed) return;
       this.ui.update();
+      this.drawDebug();
       this.raf = requestAnimationFrame(loop);
     };
     this.raf = requestAnimationFrame(loop);
@@ -238,6 +254,81 @@ export class PlaySession {
     void this.saveTo('autosave');
   }
 
+  // ---------- debugging aids: overlays and the profiler ----------
+
+  private frames = 0;
+  private lastStats = 0;
+  private fps = 0;
+  private profilerEl: HTMLElement | null = null;
+
+  private drawDebug(): void {
+    const flags = this.o.flags();
+    const { sim, o } = this;
+    o.renderer.debugDepth = flags.depth;
+    const g = this.debugG.clear();
+    const iso = o.renderer.iso;
+    if (flags.ai || flags.triggers) {
+      for (const e of sim.world.all()) {
+        const comps = Object.fromEntries(e.components) as Record<string, unknown>;
+        const shapes = shapesOf(comps);
+        if (flags.triggers && shapes.footprint) drawFootprint(g, shapes.footprint, iso);
+        if (flags.ai) {
+          if (shapes.cone) drawCone(g, { ...shapes.cone, hot: true }, iso);
+          const t = comps.transform as { h: number } | undefined;
+          const live = [comps['state:chase'], comps['state:patrol']] as ({ nav?: { path?: { x: number; y: number }[] } } | undefined)[];
+          for (const s of live) {
+            const path = s?.nav?.path;
+            if (path && path.length > 0 && t) drawPath(g, { points: path.map((p) => ({ x: p.x, y: p.y, h: t.h + 0.05 })), loop: false, hot: true }, iso);
+          }
+        }
+      }
+    }
+    if (flags.lights) for (const l of sim.runtime.lighting?.lights ?? []) drawLightRadius(g, { x: l.x, y: l.y, h: l.h, radius: l.radius }, iso);
+    this.debugLayer.visible = flags.ai || flags.triggers || flags.lights;
+
+    // profiler: switched on only while it is shown
+    sim.profiler.enabled = flags.profiler;
+    this.frames++;
+    const now = performance.now();
+    if (now - this.lastStats >= 700) {
+      this.fps = (this.frames * 1000) / (now - this.lastStats || 1);
+      this.frames = 0;
+      this.lastStats = now;
+      if (flags.profiler) this.showProfile();
+      else if (this.profilerEl) {
+        this.profilerEl.remove();
+        this.profilerEl = null;
+      }
+    }
+  }
+
+  private showProfile(): void {
+    const snap = this.sim.profiler.snapshot();
+    this.sim.profiler.reset();
+    const st = this.o.renderer.stats();
+    if (!this.profilerEl) {
+      this.profilerEl = document.createElement('div');
+      this.profilerEl.setAttribute('data-testid', 'tw-profiler');
+      Object.assign(this.profilerEl.style, { position: 'absolute', left: '10px', bottom: '10px', background: '#0b0c10dd', color: '#9fe6a0', font: '12px/1.4 monospace', padding: '8px 10px', borderRadius: '6px', pointerEvents: 'none', whiteSpace: 'pre', zIndex: '5' });
+      this.o.uiParent.appendChild(this.profilerEl);
+    }
+    const slow = [...snap.behaviours.slice(0, 3).map((b) => `${b.name} ${b.avgMs.toFixed(2)} ms (${b.calls.toFixed(0)} per tick)`), ...snap.systems.slice(0, 2).map((s) => `[${s.name}] ${s.avgMs.toFixed(2)} ms`)];
+    this.profilerEl.textContent = [
+      `${this.fps.toFixed(0)} frames per second`,
+      `game step ${snap.avgTickMs.toFixed(2)} ms (worst ${snap.maxTickMs.toFixed(2)})`,
+      `drawing ${st.renderMs.toFixed(2)} ms, sorting ${st.sortMs.toFixed(2)} ms`,
+      `${this.sim.world.count} objects, ${st.tiles} tiles, ${st.lights} lights`,
+      slow.length ? 'slowest:' : '',
+      ...slow.map((s) => `  ${s}`),
+    ]
+      .filter(Boolean)
+      .join('\n');
+  }
+
+  /** Everything pressed so far, if this run is being recorded as a playthrough. */
+  recording(): InputRecording | null {
+    return this.runner.recorder ? this.runner.recorder.finish() : null;
+  }
   // ---------- the game's screens ----------
 
   private hostObj!: GameUiHost;
@@ -322,5 +413,9 @@ export class PlaySession {
     this.source.dispose();
     this.ui.dispose();
     this.o.renderer.shake = 0;
+    this.o.renderer.debugDepth = false;
+    this.sim.profiler.enabled = false;
+    this.profilerEl?.remove();
+    this.debugLayer.destroy({ children: true });
   }
 }

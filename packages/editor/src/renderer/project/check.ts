@@ -1,0 +1,122 @@
+import { checkDialogue } from '@tilewright/runtime';
+import { checkCutscene, expandEntities, type CutsceneData, type DialogueData, type EventRow, type ItemData, type PrefabData, type ProjectData, type SceneData } from '@tilewright/runtime';
+import { analyseLevel, analysePushPuzzles } from '@tilewright/playbot';
+import { EditorDoc } from '../model/doc';
+import { validateScene } from '../model/validate';
+import { loadScene, type ProjectFs } from './io';
+
+export interface ProjectProblem {
+  id: string;
+  severity: 'error' | 'warning';
+  /** Scene file the problem is in ("" for project-wide things such as dialogues). */
+  scene: string;
+  message: string;
+  entity?: string;
+  x?: number;
+  y?: number;
+}
+
+export interface StoryData {
+  items: readonly ItemData[];
+  dialogues: ReadonlyMap<string, DialogueData>;
+  cutscenes: ReadonlyMap<string, CutsceneData>;
+}
+
+const POINT = /^\s*-?\d+(\.\d+)?\s*,\s*-?\d+(\.\d+)?\s*$/;
+
+function* allRows(rows: readonly EventRow[]): Generator<EventRow> {
+  for (const r of rows) {
+    yield r;
+    yield* allRows(r.children);
+  }
+}
+
+/**
+ * Everything wrong with a project, in one list: each scene's own problems, puzzles that can be bypassed or
+ * soft-locked, doors that lead nowhere, characters and cutscenes that name things that do not exist, and the
+ * dialogues and cutscenes themselves. Run before export.
+ */
+export async function checkProject(
+  fs: ProjectFs,
+  dir: string,
+  project: ProjectData,
+  prefabs: ReadonlyMap<string, PrefabData>,
+  story: StoryData,
+  spriteNames: ReadonlySet<string> = new Set(),
+): Promise<ProjectProblem[]> {
+  const out: ProjectProblem[] = [];
+  const scenes = new Map<string, SceneData>();
+  for (const path of project.scenes) {
+    try {
+      scenes.set(path, await loadScene(fs, dir, path));
+    } catch (e) {
+      out.push({ id: `scene-unreadable-${path}`, severity: 'error', scene: path, message: e instanceof Error ? e.message : `The scene "${path}" could not be opened.` });
+    }
+  }
+  if (!project.scenes.includes(project.startScene)) {
+    out.push({ id: 'start-scene', severity: 'error', scene: '', message: `The project starts in "${project.startScene}", which is not one of its scenes. Pick a starting scene.` });
+  }
+  const itemIds = new Set(story.items.map((i) => i.id));
+  const prefabNames = new Set(prefabs.keys());
+
+  for (const [path, scene] of scenes) {
+    const doc = EditorDoc.fromScene(scene, prefabs);
+    for (const p of validateScene(doc, spriteNames, prefabNames)) {
+      out.push({ id: `${path}:${p.id}`, severity: p.severity, scene: path, message: p.message, entity: p.target?.kind === 'entity' ? p.target.id : undefined, x: p.target?.x, y: p.target?.y });
+    }
+    for (const i of [...analyseLevel(scene, prefabs), ...analysePushPuzzles(scene, prefabs)]) {
+      out.push({ id: `${path}:${i.id}`, severity: i.severity, scene: path, message: i.message, entity: i.entity, x: i.x, y: i.y });
+    }
+    const { entities } = expandEntities(scene.entities, prefabs);
+    const at = (e: { components: Record<string, unknown> }): { x?: number; y?: number } => {
+      const t = e.components.transform as { x: number; y: number } | undefined;
+      return t ? { x: Math.floor(t.x), y: Math.floor(t.y) } : {};
+    };
+    for (const e of entities) {
+      const portal = e.components.portal as { scene?: string; spawn?: string } | undefined;
+      if (portal) {
+        const dest = portal.scene || path;
+        const spawn = portal.spawn ?? '';
+        if (!portal.scene && spawn === '') {
+          out.push({ id: `${path}:portal-nowhere-${e.id}`, severity: 'warning', scene: path, entity: e.id, ...at(e), message: `The portal "${e.name}" has no destination: choose a scene or a place to appear at.` });
+        } else if (!project.scenes.includes(dest)) {
+          out.push({ id: `${path}:portal-scene-${e.id}`, severity: 'error', scene: path, entity: e.id, ...at(e), message: `The portal "${e.name}" leads to the scene "${dest}", which is not part of this project.` });
+        } else if (spawn !== '' && !POINT.test(spawn)) {
+          const target = scenes.get(dest);
+          if (target && !expandEntities(target.entities, prefabs).entities.some((x) => x.name === spawn)) {
+            out.push({ id: `${path}:portal-spawn-${e.id}`, severity: 'warning', scene: path, entity: e.id, ...at(e), message: `The portal "${e.name}" sends the player to "${spawn}" in ${dest}, but there is no object with that name there, so they will appear at that scene's player start.` });
+          }
+        }
+      }
+      const npc = e.components.npcTalk as { dialogue?: string } | undefined;
+      if (npc) {
+        if (!npc.dialogue) out.push({ id: `${path}:npc-empty-${e.id}`, severity: 'warning', scene: path, entity: e.id, ...at(e), message: `"${e.name}" has no conversation chosen, so talking to it does nothing.` });
+        else if (!story.dialogues.has(npc.dialogue)) out.push({ id: `${path}:npc-missing-${e.id}`, severity: 'error', scene: path, entity: e.id, ...at(e), message: `"${e.name}" talks using the dialogue "${npc.dialogue}", which does not exist (check the Story panel).` });
+      }
+      const trig = e.components.cutsceneTrigger as { cutscene?: string } | undefined;
+      if (trig && (!trig.cutscene || !story.cutscenes.has(trig.cutscene))) {
+        out.push({ id: `${path}:cut-missing-${e.id}`, severity: 'error', scene: path, entity: e.id, ...at(e), message: trig.cutscene ? `"${e.name}" plays the cutscene "${trig.cutscene}", which does not exist.` : `"${e.name}" has no cutscene chosen.` });
+      }
+      const pickup = e.components.pickup as { item?: string } | undefined;
+      if (pickup?.item && !itemIds.has(pickup.item)) {
+        out.push({ id: `${path}:pickup-item-${e.id}`, severity: 'error', scene: path, entity: e.id, ...at(e), message: `"${e.name}" gives the item "${pickup.item}", which is not in the Items list.` });
+      }
+    }
+    for (const row of allRows(scene.events)) {
+      for (const a of row.actions) {
+        const p = a.params;
+        const name = (k: string): string => String(p[k] ?? '');
+        if (a.type === 'startDialogue' && !story.dialogues.has(name('dialogue'))) out.push({ id: `${path}:row-${row.id}-dlg`, severity: 'warning', scene: path, message: `An event row starts the dialogue "${name('dialogue')}", which does not exist.` });
+        if (a.type === 'playCutscene' && !story.cutscenes.has(name('cutscene'))) out.push({ id: `${path}:row-${row.id}-cut`, severity: 'warning', scene: path, message: `An event row plays the cutscene "${name('cutscene')}", which does not exist.` });
+        if ((a.type === 'giveItem' || a.type === 'takeItem') && !itemIds.has(name('item'))) out.push({ id: `${path}:row-${row.id}-item`, severity: 'warning', scene: path, message: `An event row uses the item "${name('item')}", which is not in the Items list.` });
+        if (a.type === 'travel' && name('scene') !== '' && !project.scenes.includes(name('scene'))) out.push({ id: `${path}:row-${row.id}-travel`, severity: 'warning', scene: path, message: `An event row goes to the scene "${name('scene')}", which is not part of this project.` });
+      }
+    }
+  }
+
+  const known = { items: itemIds, variables: new Set<string>() };
+  for (const [name, d] of story.dialogues) for (const p of checkDialogue(d, known)) out.push({ id: `dialogue:${name}:${p.text}`, severity: 'warning', scene: '', message: `Dialogue "${name}": ${p.text}` });
+  const cknown = { dialogues: new Set(story.dialogues.keys()), items: itemIds };
+  for (const [name, c] of story.cutscenes) for (const p of checkCutscene(c, cknown)) out.push({ id: `cutscene:${name}:${p.text}`, severity: 'warning', scene: '', message: `Cutscene "${name}": ${p.text}` });
+  return out;
+}

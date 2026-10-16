@@ -198,6 +198,32 @@ describe('M7 validation', () => {
     expect(PREFABS.find((p) => p.id === 'spikes')!.make(1.5, 1.5, 0).components).toHaveProperty('damageOnTouch');
   });
 });
+describe('M9 validation: switches and gates that are connected to nothing', () => {
+  it('warns about a plate that does nothing and a gate that can never open, and is quiet once they are wired', () => {
+    const d = doc();
+    const [p, g] = d.addEntities([plate(4.5, 4.5), gate(6.5, 4.5)]);
+    const ids = (): string[] => validateScene(d).map((x) => x.id);
+    expect(ids().some((i) => i.startsWith(`unused-${p!.id}-pressurePlate`))).toBe(true);
+    expect(validateScene(d).find((x) => x.id.startsWith('unused-'))!.message).toMatch(/not connected to anything/);
+    expect(ids().some((i) => i.startsWith(`gate-shut-${g!.id}`))).toBe(true);
+    d.addWire({ entity: p!.id, output: 'active' }, { entity: g!.id, input: 'open' });
+    expect(ids().filter((i) => i.startsWith('unused-') || i.startsWith('gate-shut-'))).toEqual([]);
+  });
+
+  it('an inverted gate, or one an event row opens, is fine on its own', () => {
+    const d = doc();
+    const [g] = d.addEntities([{ ...gate(6.5, 4.5), components: { ...gate(6.5, 4.5).components, gate: { openWhen: 'any', invert: true } } }]);
+    expect(validateScene(d).some((x) => x.id.startsWith('gate-shut-'))).toBe(false);
+    d.updateEntities([g!.id], 'no invert', (e) => {
+      (e.components.gate as { invert: boolean }).invert = false;
+    });
+    expect(validateScene(d).some((x) => x.id.startsWith('gate-shut-'))).toBe(true);
+    const row = newRow('r1');
+    row.actions = [{ id: 'a1', type: 'setEnabled', params: { who: `id:${g!.id}`, state: 'off' } } as never];
+    d.setEvents('row', [row]);
+    expect(validateScene(d).some((x) => x.id.startsWith('gate-shut-'))).toBe(false);
+  });
+});
 describe('prefab instances in the editor document', () => {
   const crate = (): EntityData => crateEntity('c', 3.5, 3.5);
   const prefab = (): PrefabData => extractPrefab(crate(), 'Crate');

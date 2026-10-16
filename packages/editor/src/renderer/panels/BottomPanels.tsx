@@ -1,18 +1,33 @@
 import { useDeferredValue, useMemo } from 'react';
+import { formatCrashReport } from '@tilewright/runtime';
 import { useApp, store } from '../app/store';
 import { viewportRef } from '../app/commands';
 import { validateScene, type Problem } from '../model/validate';
+import type { ProjectProblem } from '../project/check';
 import { studio, useStudio } from '../studio/store';
 
 export function useProblems(): Problem[] {
   const version = useApp((s) => s.docVersion);
   const assets = useStudio((s) => s.assetsVersion);
   const prefabs = useApp((s) => s.prefabNames);
+  const analysis = useApp((s) => s.analysis);
   const deferred = useDeferredValue(version);
-  return useMemo(() => (store.doc ? validateScene(store.doc, new Set(studio.assets.keys()), new Set(prefabs)) : []), [deferred, assets, prefabs]);
+  const scene = useMemo(() => (store.doc ? validateScene(store.doc, new Set(studio.assets.keys()), new Set(prefabs)) : []), [deferred, assets, prefabs]);
+  // puzzle checks (bypasses, soft-locks) come from the last time they were run
+  const puzzles = useMemo<Problem[]>(
+    () =>
+      (analysis?.issues ?? []).map((i) => ({
+        id: `puzzle-${i.id}`,
+        severity: i.severity,
+        message: i.message,
+        target: i.entity && i.x !== undefined ? { kind: 'entity' as const, id: i.entity, x: i.x + 0.5, y: i.y! + 0.5 } : i.x !== undefined ? { kind: 'cell' as const, x: i.x, y: i.y! } : undefined,
+      })),
+    [analysis],
+  );
+  return useMemo(() => [...scene, ...puzzles], [scene, puzzles]);
 }
 
-export function goTo(p: Problem): void {
+export function goTo(p: Pick<Problem, 'target'>): void {
   const t = p.target;
   if (!t) return;
   if (t.kind === 'entity') store.select([t.id]);
@@ -22,10 +37,85 @@ export function goTo(p: Problem): void {
   else viewportRef.current?.focusCell(t.x, t.y);
 }
 
+async function openAndGo(p: ProjectProblem): Promise<void> {
+  if (p.scene && p.scene !== store.state.scenePath) await store.guard('Opening the scene', () => store.openScene(p.scene));
+  if (p.x === undefined || p.y === undefined) return;
+  goTo({ target: p.entity ? { kind: 'entity', id: p.entity, x: p.x + 0.5, y: p.y + 0.5 } : { kind: 'cell', x: p.x, y: p.y } });
+}
+
+function RuntimeError() {
+  const err = useApp((s) => s.runtimeError);
+  if (!err) return null;
+  const text = formatCrashReport(err);
+  return (
+    <section className="runtime-error" data-testid="runtime-error">
+      <p className="msg">
+        <strong>The game stopped.</strong> <span data-testid="runtime-error-headline">{err.headline}</span>
+      </p>
+      <details>
+        <summary>Details for finding the cause</summary>
+        <pre data-testid="runtime-error-details">{text}</pre>
+      </details>
+      <div className="row">
+        {err.entity?.sceneId && (
+          <button
+            data-testid="runtime-error-goto"
+            onClick={() => {
+              store.stop();
+              const e = err.entity!;
+              goTo({ target: e.x !== undefined ? { kind: 'entity', id: e.sceneId!, x: e.x, y: e.y! } : undefined });
+            }}
+          >
+            Go to that object
+          </button>
+        )}
+        <button
+          onClick={() => {
+            void navigator.clipboard?.writeText(text).then(() => store.notify('info', 'Copied the report.'), () => store.notify('warn', 'The report could not be copied.'));
+          }}
+        >
+          Copy report
+        </button>
+        <button disabled title="Arrives with the Claude assistant (M11)">
+          Explain
+        </button>
+        <button onClick={() => store.setRuntimeError(null)}>Dismiss</button>
+      </div>
+    </section>
+  );
+}
+
 export function ProblemsPanel() {
   const problems = useProblems();
+  const analysis = useApp((s) => s.analysis);
+  const project = useApp((s) => s.projectCheck);
+  const busy = useApp((s) => s.busy);
   return (
     <div className="panel problems" data-testid="problems-panel">
+      <RuntimeError />
+      <div className="row wrap">
+        <button
+          data-testid="check-puzzles"
+          onClick={() => {
+            const n = store.runAnalysis(true).length;
+            store.notify('info', n === 0 ? 'No puzzle problems found.' : `Puzzle check found ${n} thing${n === 1 ? '' : 's'} to look at.`);
+          }}
+          title="Can a gate be bypassed? Is the goal reachable? Can the crates get stuck?"
+        >
+          Check puzzles
+        </button>
+        <button
+          data-testid="check-project"
+          disabled={busy}
+          onClick={() => {
+            void store.checkWholeProject().then((r) => store.notify('info', r.length === 0 ? 'The whole project checks out.' : `The project check found ${r.length} problem${r.length === 1 ? '' : 's'}.`));
+          }}
+          title="Every scene, door, conversation and cutscene. Run this before you export."
+        >
+          Check the whole project
+        </button>
+        {analysis && <small className="hint">Puzzle check: {analysis.deep ? 'full' : 'quick'}, run after {analysis.version === store.state.docVersion ? 'the latest change' : 'an earlier change'}.</small>}
+      </div>
       {problems.length === 0 ? (
         <p className="hint ok" data-testid="no-problems">
           No problems found.
@@ -49,6 +139,31 @@ export function ProblemsPanel() {
             </li>
           ))}
         </ul>
+      )}
+      {project && (
+        <section data-testid="project-check">
+          <h4>
+            Whole project ({new Date(project.at).toLocaleTimeString()}): {project.problems.length === 0 ? 'all clear' : `${project.problems.length} problem${project.problems.length === 1 ? '' : 's'}`}
+          </h4>
+          <ul className="problem-list">
+            {project.problems.map((p) => (
+              <li key={p.id} className={p.severity} data-testid="project-problem">
+                <span className="badge" aria-label={p.severity}>
+                  {p.severity === 'error' ? '✕' : '!'}
+                </span>
+                <span className="msg">
+                  {p.scene ? <em>{p.scene.replace(/^scenes\//, '').replace('.scene.json', '')}: </em> : null}
+                  {p.message}
+                </span>
+                {p.scene && (
+                  <button onClick={() => void openAndGo(p)} title="Open that scene and show the problem">
+                    Open
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
     </div>
   );

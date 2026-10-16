@@ -69,7 +69,40 @@ export function LayersPanel() {
             <span>Height numbers</span>
           </label>
         </li>
-      </ul>
+        <li>
+          <label>
+            <input data-testid="view-triggers" type="checkbox" checked={view.triggers} onChange={(e) => store.setView({ triggers: e.target.checked })} />
+            <span>Trigger areas and solid objects</span>
+          </label>
+          <small>purple walk-through areas, red solid things</small>
+        </li>
+        <li>
+          <label>
+            <input data-testid="view-ai" type="checkbox" checked={view.ai} onChange={(e) => store.setView({ ai: e.target.checked })} />
+            <span>Guard routes and view cones</span>
+          </label>
+          <small>orange cone = what it sees, yellow ring = what it hears, teal line = its route</small>
+        </li>
+        <li>
+          <label>
+            <input data-testid="view-lights" type="checkbox" checked={view.lights} onChange={(e) => store.setView({ lights: e.target.checked })} />
+            <span>How far lights reach</span>
+          </label>
+        </li>
+        <li>
+          <label>
+            <input data-testid="view-depth" type="checkbox" checked={view.depth} onChange={(e) => store.setView({ depth: e.target.checked })} />
+            <span>Draw order numbers</span>
+          </label>
+          <small>higher numbers are drawn in front</small>
+        </li>
+        <li>
+          <label>
+            <input data-testid="view-profiler" type="checkbox" checked={view.profiler} onChange={(e) => store.setView({ profiler: e.target.checked })} />
+            <span>Speed meter (while playing)</span>
+          </label>
+          <small>frames per second, time per step, what is slowest</small>
+        </li>      </ul>
     </div>
   );
 }

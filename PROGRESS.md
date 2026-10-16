@@ -3,7 +3,7 @@
 Boxes are ticked only when the milestone's tests pass and the sample has been played.
 Spec: `ENGINE_BUILD_PROMPT.md`. Read `DECISIONS.md` and `KNOWN_ISSUES.md` before continuing.
 
-**Next up:** M9 errors and debugging - a proper Problems panel with severity, Go to and 'Explain' hooks, debug overlays (collision, paths, vision, lights, signals), a profiler overlay with budgets, the bypass and soft-lock validators (can the player skip a gate? can the game get stuck?), and the playbot (record/replay and scripted play-through of a scene). Owed earlier: autotiling rules + Decoration/Walls/Lights layers, hot reload while playing and a separate game window (M10 / M14), vector drawing in the studio (M14), a visual state-machine editor for enemies (M9/M14), an audio engine (M14), dialogue graph canvas.
+**Next up:** M10 code window - Monaco editor inside the app with the engine's API as TypeScript types, script components (a script is a behaviour written in code: settings, update, signals) that can do everything the no-code layer does, running them safely in the game, breakpoints and a console, and showing script errors in the Problems panel with Go to. Owed earlier: autotiling rules + Decoration/Walls/Lights layers, hot reload while playing and a separate game window (M10 / M14), vector drawing in the studio (M14), a visual state-machine editor for enemies, an audio engine (M14), a dialogue graph canvas, localization string tables.
 
 ## Milestones
 
@@ -16,7 +16,7 @@ Spec: `ENGINE_BUILD_PROMPT.md`. Read `DECISIONS.md` and `KNOWN_ISSUES.md` before
 - [x] M6 Echoes, light, puzzle parts (see the M6 checklist)
 - [x] M7 AI and combat (see the M7 checklist)
 - [x] M8 Story systems (see the M8 checklist)
-- [ ] M9 Errors and debugging (problems panel, overlays, profiler, validators, playbot)
+- [x] M9 Errors and debugging (see the M9 checklist)
 - [ ] M10 Code window
 - [ ] M11 Claude assistant
 - [ ] M12 Export and packaging
@@ -128,3 +128,16 @@ Done and covered by tests (unit: `packages/runtime/src/story`, `packages/behavio
 Deferred:
 - [ ] Dialogue node-graph canvas and a visual cutscene timeline; localization string tables
 - [ ] Audio engine (volumes are stored only), video settings, minigames, cosmetic skins, hit-stop, drawn world map
+
+## M9 checklist
+
+Done and covered by tests (unit: `packages/playbot/src`, `packages/behaviors/src/{m9,crash}.test.ts`, `packages/editor/src/renderer/project/check.test.ts`, `model/logic.test.ts`; e2e: `e2e/m9-checks.spec.ts`; docs: `docs/checks-and-playbot.md`):
+- [x] Problems panel with plain-English problems and Go to for the scene, puzzle checks (bypassed gates incl. jumps, unreachable goals, useless gates, unsolvable and soft-lockable crate puzzles), connection checks (plates/gates connected to nothing) and a whole-project check (doors to nowhere, missing conversations/cutscenes/items, dialogue and cutscene problems)
+- [x] Runtime errors never crash the editor: the game pauses, the panel shows which step and object failed, a state snapshot and the stack, with Go to / Copy / Dismiss
+- [x] Debug overlays (trigger areas and solid objects, guard routes and cones, light reach, draw order) in the editor and while playing; speed meter with slowest behaviours; a performance budget test (5,000 tiles, 200 objects)
+- [x] The playbot: button-only walking with A*, stuck/blocked/time-out reports, switches, talking, pushing, a crate-puzzle solver that it carries out, echo plates, playthroughs recorded by playing or by the bot and replayed with expectations
+- [x] Sample built in the UI and checked by the bot: a walled room whose gate leaves a gap (found by the check and proved by the bot), fixed with a second gate, solved by the bot after using the switch, run kept and replayed (`e2e/m9-checks.spec.ts`, screenshots inspected)
+
+Deferred:
+- [ ] A search-based puzzle solver for echo/crate combinations beyond the fixed recipes; soft-lock analysis beyond crate puzzles; a bot that fights and uses items
+- [ ] "Explain" / "Fix with Claude" buttons (M11); crash log files and screen in exported games (M12)

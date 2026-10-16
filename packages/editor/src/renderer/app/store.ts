@@ -1,9 +1,13 @@
 import { useSyncExternalStore } from 'react';
-import { SLOPE, extractPrefab, resolveInstance, type CutsceneData, type DialogueData, type EntityData, type ItemData, type PrefabData, type SlopeDir } from '@tilewright/runtime';
+import { SLOPE, extractPrefab, type CrashReport, type InputRecording, resolveInstance, type CutsceneData, type DialogueData, type EntityData, type ItemData, type PrefabData, type SlopeDir } from '@tilewright/runtime';
 import { EditorDoc } from '../model/doc';
 import { api } from '../project/api';
 import { assetFs } from '../project/assetFs';
 import { deletePrefab, loadAllPrefabs, prefabNameProblem, savePrefab } from '../project/prefabs';
+import { analyseLevel, analysePushPuzzles, type LevelIssue } from '@tilewright/playbot';
+import { checkProject, type ProjectProblem } from '../project/check';
+import { deletePlaythrough, listPlaythroughs, loadPlaythrough, nextPlaythroughName, savePlaythrough } from '../project/playthroughs';
+import { Game, newPlaythrough, replayPlaythrough } from '@tilewright/playbot';
 import { deleteCutscene, deleteDialogue, loadCutscenes, loadDialogues, loadItems, saveCutscene, saveDialogue, saveItems } from '../project/story';
 import {
   UserError,
@@ -67,6 +71,16 @@ export interface ViewOptions {
   grid: boolean;
   collision: boolean;
   heightLabels: boolean;
+  /** Trigger areas and solid objects. */
+  triggers: boolean;
+  /** Guard routes and view cones. */
+  ai: boolean;
+  /** How far lights reach. */
+  lights: boolean;
+  /** Draw order numbers. */
+  depth: boolean;
+  /** Frame time and what is slow, while playing. */
+  profiler: boolean;
   ground: boolean;
   objects: boolean;
   regions: boolean;
@@ -104,6 +118,16 @@ export interface AppState {
   prefabNames: string[];
   /** Bumped when items, dialogues or cutscenes change, so the Story panel re-renders. */
   storyVersion: number;
+  /** Puzzle problems from the last check of the open scene. */
+  analysis: { issues: LevelIssue[]; version: number; deep: boolean } | null;
+  /** Problems from the last whole-project check. */
+  projectCheck: { problems: ProjectProblem[]; at: number } | null;
+  /** Why the game stopped, when it did. */
+  runtimeError: CrashReport | null;
+  /** Saved playthroughs (recorded by playing or by the bot). */
+  playthroughs: string[];
+  /** What the bot and the checks reported, newest first. */
+  botLog: { kind: 'info' | 'warn' | 'error'; text: string; time: number }[];
   /** Set while the wire dialog is open (two objects were just connected). */
   connect: { from: string; to: string } | null;
   testMode: boolean;
@@ -130,7 +154,7 @@ const initial: AppState = {
     outline: false,
     edge: 1,
   },
-  view: { grid: true, collision: false, heightLabels: false, ground: true, objects: true, regions: true },
+  view: { grid: true, collision: false, heightLabels: false, triggers: false, ai: true, lights: false, depth: false, profiler: false, ground: true, objects: true, regions: true },
   locks: { ground: false, objects: false, regions: false },
   selection: [],
   selectedRegion: null,
@@ -143,6 +167,11 @@ const initial: AppState = {
   busy: false,
   prefabNames: [],
   storyVersion: 0,
+  analysis: null,
+  projectCheck: null,
+  runtimeError: null,
+  playthroughs: [],
+  botLog: [],
   connect: null,
   testMode: false,
   docVersion: 0,
@@ -281,6 +310,7 @@ class AppStore {
     this.set({ project: p, workspace: 'world', recent: await api().recent.list() });
     await this.loadPrefabs();
     await this.loadStory();
+    await this.loadPlaythroughNames();
     await this.openScene(p.project.startScene);
     this.set({ screen: 'editor' });
     this.startAutosave();
@@ -340,7 +370,10 @@ class AppStore {
       this.bumpDoc();
       return true;
     });
-    if (ok) this.notify('info', 'Saved.');
+    if (ok) {
+      this.notify('info', 'Saved.');
+      window.setTimeout(() => void this.runAnalysis(false), 0); // quick puzzle check after every save
+    }
     return ok === true;
   }
 
@@ -467,6 +500,92 @@ class AppStore {
     window.clearTimeout(this.storyTimers.get(`c:${name}`));
     this.set({ storyVersion: this.state.storyVersion + 1 });
     if (p) await deleteCutscene(assetFs, p.dir, name).catch(() => undefined);
+  }
+  // ---- checking and the playbot ----
+
+  /** Set for the next Play: record the buttons pressed and save them as a playthrough when it stops. */
+  recordNext = false;
+
+  async saveRecording(rec: InputRecording, scenePath: string, endNear: string | null): Promise<void> {
+    const p = this.state.project;
+    if (!p) return;
+    const name = nextPlaythroughName(this.state.playthroughs);
+    try {
+      await savePlaythrough(assetFs, p.dir, newPlaythrough(name, scenePath, rec, 1, endNear ? { near: endNear, within: 2 } : {}));
+      await this.loadPlaythroughNames();
+      this.notify('info', `Saved the playthrough "${name}"${endNear ? ' (it must end near the goal)' : ''}. Replay it from the Playbot panel.`);
+    } catch (e) {
+      this.notify('error', e instanceof Error ? e.message : 'The playthrough could not be saved.');
+    }
+  }
+
+  /** The game, headless, from the open scene as it is now (unsaved edits included). */
+  newHeadlessGame(): Game | null {
+    const doc = this.doc;
+    if (!doc) return null;
+    return new Game({
+      scene: doc.toScene(),
+      scenePath: this.state.scenePath ?? '',
+      prefabs: this.prefabs,
+      items: this.story.items,
+      dialogues: this.story.dialogues,
+      cutscenes: this.story.cutscenes,
+    });
+  }
+
+  async runPlaythrough(name: string): Promise<void> {
+    const p = this.state.project;
+    if (!p) return;
+    try {
+      const pt = await loadPlaythrough(assetFs, p.dir, name);
+      const game = this.newHeadlessGame();
+      if (!game) return;
+      const r = replayPlaythrough(game, pt);
+      this.botSay(r.ok ? 'info' : 'warn', r.ok ? `Playthrough "${name}" still works: it ends as expected after ${r.seconds.toFixed(1)}s.` : `Playthrough "${name}" no longer works: ${r.problems.join(' ')}`);
+    } catch (e) {
+      this.botSay('error', e instanceof Error ? e.message : 'The playthrough could not be run.');
+    }
+  }
+
+  async removePlaythrough(name: string): Promise<void> {
+    const p = this.state.project;
+    if (!p) return;
+    await deletePlaythrough(assetFs, p.dir, name).catch(() => undefined);
+    await this.loadPlaythroughNames();
+  }
+
+  /** Puzzle analysis (bypasses, unreachable goals, useless gates, and with `deep` crate puzzles) of the open scene. */
+  runAnalysis(deep = false): LevelIssue[] {
+    const doc = this.doc;
+    if (!doc) return [];
+    const scene = doc.toScene();
+    const issues = [...analyseLevel(scene, this.prefabs), ...(deep ? analysePushPuzzles(scene, this.prefabs) : [])];
+    this.set({ analysis: { issues, version: this.state.docVersion, deep } });
+    return issues;
+  }
+
+  /** Check every scene, dialogue and cutscene in the project (what Export will insist on). */
+  async checkWholeProject(): Promise<ProjectProblem[]> {
+    const p = this.state.project;
+    if (!p) return [];
+    await this.flushStory().catch(() => undefined);
+    const { studio } = await import('../studio/store');
+    const problems = await checkProject(realFs, p.dir, p.project, this.prefabs, this.story, new Set(studio.assets.keys()));
+    this.set({ projectCheck: { problems, at: Date.now() } });
+    return problems;
+  }
+
+  setRuntimeError(report: CrashReport | null): void {
+    this.set({ runtimeError: report });
+  }
+
+  async loadPlaythroughNames(): Promise<void> {
+    const p = this.state.project;
+    this.set({ playthroughs: p ? await listPlaythroughs(assetFs, p.dir) : [] });
+  }
+
+  botSay(kind: 'info' | 'warn' | 'error', text: string): void {
+    this.set({ botLog: [{ kind, text, time: Date.now() }, ...this.state.botLog].slice(0, 30) });
   }
   // ---- prefabs ----
 

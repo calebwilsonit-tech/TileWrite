@@ -129,6 +129,24 @@ export function validateScene(doc: EditorDoc, sprites?: ReadonlySet<string>, pre
       out.push({ id: `enemy-nohealth-${e.id}`, severity: 'warning', message: `"${e.name}" hurts on touch but has no Health, so it cannot be defeated.`, target });
     }
   }
+  // switches and gates that are not connected to anything
+  const sheetText = JSON.stringify(doc.events);
+  for (const e of doc.entities) {
+    const t = e.components.transform as T | undefined;
+    const target = t ? pos('entity', e.id, t) : undefined;
+    const talks = (id: string): boolean => sheetText.includes(`id:${id}`) || sheetText.includes(`name:${e.name}`);
+    const sends = doc.wires.some((w) => w.from.entity === e.id) || talks(e.id);
+    const kinds: [string, string][] = [['pressurePlate', 'pressure plate'], ['lever', 'lever'], ['lightSensor', 'light sensor'], ['triggerZone', 'trigger zone'], ['timer', 'timer']];
+    for (const [id, label] of kinds) {
+      if (e.components[id] !== undefined && !sends) {
+        out.push({ id: `unused-${e.id}-${id}`, severity: 'warning', message: `The ${label} "${e.name}" is not connected to anything, so using it does nothing. Use the Wire tool to connect it to a gate or another object (or use it in an event row).`, target });
+      }
+    }
+    const gate = e.components.gate as { invert?: boolean } | undefined;
+    if (gate && !gate.invert && !doc.wires.some((w) => w.to.entity === e.id && w.to.input === 'open') && !talks(e.id)) {
+      out.push({ id: `gate-shut-${e.id}`, severity: 'warning', message: `The gate "${e.name}" has nothing connected to open it, so it will stay shut for ever. Wire a plate, lever or logic gate to it.`, target });
+    }
+  }
   // wires must join real objects through signals they really have
   const signalsOf = (entityId: string, side: 'inputs' | 'outputs'): Set<string> => {
     const e = doc.getEntity(entityId);

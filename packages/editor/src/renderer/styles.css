@@ -1179,3 +1179,9 @@ button.small {
 .story-problems { margin: 8px 0; padding-left: 18px; color: #e5a23d; font-size: 13px; }
 .story-panel .row.wrap { flex-wrap: wrap; gap: 4px; }
 .story-panel .hint.ok { color: #6bc28a; }
+/* checks and the playbot */
+.runtime-error { margin-bottom: 10px; padding: 8px 10px; border: 1px solid #e5484d; border-radius: 6px; background: #2a1517; }
+.runtime-error pre { max-height: 220px; overflow: auto; font-size: 11px; white-space: pre-wrap; }
+.playbot h4, .problems h4 { margin: 12px 0 4px; font-size: 13px; }
+.playbot .row.wrap, .problems .row.wrap { flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
+.playbot li.warn, .playbot li.error { color: #e5a23d; }

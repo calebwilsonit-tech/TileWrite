@@ -1,4 +1,4 @@
-import type { Entity, SimContext, System } from '@tilewright/runtime';
+import { SystemError, type Entity, type SimContext, type System } from '@tilewright/runtime';
 
 export type FieldType = 'number' | 'boolean' | 'text' | 'select' | 'prefab';
 
@@ -102,9 +102,16 @@ export function behaviorPhase(phase: Phase): System {
   return (ctx) => {
     for (const def of registry.values()) {
       if (def.phase !== phase) continue;
+      const prof = ctx.profiler;
       for (const e of ctx.world.query(def.id)) {
         if (!e.alive) continue;
-        def.update(ctx, e, settingsOf(e, def));
+        try {
+          if (prof?.enabled) prof.behaviour(def.name, () => def.update(ctx, e, settingsOf(e, def)));
+          else def.update(ctx, e, settingsOf(e, def));
+        } catch (err) {
+          if (err instanceof SystemError) throw err;
+          throw new SystemError(`behaviours:${phase}`, err, e.id, `The ${def.name} behaviour on "${e.name}" failed: ${err instanceof Error ? err.message : String(err)}`);
+        }
       }
     }
   };

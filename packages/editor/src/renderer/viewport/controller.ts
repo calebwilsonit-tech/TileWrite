@@ -15,6 +15,7 @@ import {
   type TransformIso,
 } from '@tilewright/runtime';
 import { parsePoints } from '@tilewright/behaviors';
+import { crashReport } from '@tilewright/runtime';
 import type { EditorDoc, DocEvent } from '../model/doc';
 import { store, type ToolId } from '../app/store';
 import { studio } from '../studio/store';
@@ -23,6 +24,7 @@ import { prefabById } from '../tools/prefabs';
 import type { P } from '../tools/algorithms';
 import { OverlayDrawer, cellTopHeight } from './overlay';
 import { PlaySession } from './play-session';
+import { shapesOf } from './debug-draw';
 
 interface SpriteLike {
   shape: 'box' | 'diamond';
@@ -395,23 +397,28 @@ export class ViewportController {
     }
     return out;
   }
-  /** Patrol routes and guard view cones for the overlay (every guard faintly, the selected ones brightly). */
-  private aiGizmos(): Pick<Parameters<OverlayDrawer['draw']>[0], 'paths' | 'cones'> {
+  /** Debug shapes for the overlay: patrol routes and view cones, trigger areas and solid things, light reach. */
+  private aiGizmos(): Pick<Parameters<OverlayDrawer['draw']>[0], 'paths' | 'cones' | 'footprints' | 'lights'> {
     const doc = this.doc;
-    const out: Pick<Parameters<OverlayDrawer['draw']>[0], 'paths' | 'cones'> = { paths: [], cones: [] };
+    const out: Pick<Parameters<OverlayDrawer['draw']>[0], 'paths' | 'cones' | 'footprints' | 'lights'> = { paths: [], cones: [], footprints: [], lights: [] };
     if (!doc) return out;
     const sel = store.state.selection;
+    const view = store.state.view;
     for (const e of doc.entities) {
       const t = e.components.transform as TransformIso | undefined;
       if (!t) continue;
       const hot = sel.includes(e.id);
-      const pat = e.components.patrol as { points?: string; mode?: string } | undefined;
-      if (pat) {
-        const pts = parsePoints(pat.points ?? '').map((p) => ({ x: p.x, y: p.y, h: t.h + 0.05 }));
-        if (pts.length > 0) out.paths.push({ points: pts, loop: pat.mode !== 'pingpong', hot });
+      const shapes = shapesOf(e.components);
+      if (view.ai) {
+        const pat = e.components.patrol as { points?: string; mode?: string } | undefined;
+        if (pat) {
+          const pts = parsePoints(pat.points ?? '').map((p) => ({ x: p.x, y: p.y, h: t.h + 0.05 }));
+          if (pts.length > 0) out.paths.push({ points: pts, loop: pat.mode !== 'pingpong', hot });
+        }
+        if (shapes.cone) out.cones.push({ ...shapes.cone, hot });
       }
-      const vis = e.components.vision as { range?: number; angle?: number; hearing?: number } | undefined;
-      if (vis) out.cones.push({ x: t.x, y: t.y, h: t.h + 0.05, facing: t.facing, range: vis.range ?? 6, angle: vis.angle ?? 100, hearing: vis.hearing ?? 0, hot });
+      if (view.triggers && shapes.footprint) out.footprints.push(shapes.footprint);
+      if (view.lights && shapes.light) out.lights.push(shapes.light);
     }
     return out;
   }
@@ -655,6 +662,9 @@ export class ViewportController {
     const saved = { x: cam.x, y: cam.y, zoom: cam.zoom, dzw: cam.deadzoneW, dzh: cam.deadzoneH, smoothing: cam.smoothing };
     const autoPlay = store.autoPlay;
     store.autoPlay = null;
+    const record = store.recordNext;
+    store.recordNext = false;
+    store.setRuntimeError(null);
     const from = store.playFrom;
     store.playFrom = null;
     let session: PlaySession;
@@ -673,12 +683,15 @@ export class ViewportController {
         currentScene: (path) => (path === store.state.scenePath && this.doc ? this.doc.toScene() : null),
         notify: (kind, text) => store.notify(kind, text),
         onError: (error) => {
-          const msg = error instanceof Error ? error.message : String(error);
-          store.notify('error', `The game stopped because something went wrong while running: ${msg}. Press Stop, fix it, and play again.`);
+          const report = crashReport(session.sim, error);
+          store.notify('error', report.headline);
+          store.setRuntimeError(report);
           store.set({ paused: true });
         },
         quit: () => store.stop(),
         autoPlay,
+        flags: () => store.state.view,
+        record,
       });
     } catch (e) {
       store.notify('error', `The game could not start: ${e instanceof Error ? e.message : String(e)}`);
@@ -693,7 +706,13 @@ export class ViewportController {
   private stopPlay(): void {
     const p = this.play;
     if (!p) return;
+    const recording = p.session.recording();
+    const near = p.session.sim.world.withTag('goal')[0] ?? p.session.sim.world.withTag('exit')[0];
+    const me = p.session.sim.world.withTag('player')[0]?.get<TransformIso>('transform');
+    const nt = near?.get<TransformIso>('transform');
+    const endNear = near && me && nt && Math.hypot(nt.x - me.x, nt.y - me.y) <= 2 ? (near.tags.has('goal') ? 'tag:goal' : 'tag:exit') : null;
     p.session.dispose();
+    if (recording && recording.length > 30) void store.saveRecording(recording, store.state.scenePath ?? '', endNear);
     this.play = null;
     window.__play = undefined;
     const cam = this.camera;

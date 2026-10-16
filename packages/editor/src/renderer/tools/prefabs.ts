@@ -82,6 +82,12 @@ export const PREFABS: Prefab[] = [
     make: (x, y, h) => thing('Marker', ['marker'], { shape: 'diamond', color: 0x4ad1c8, w: 0.5, d: 0.5, height: 0.05 }, x, y, h),
   },
   {
+    id: 'goal',
+    label: 'Goal / exit',
+    group: 'Puzzle',
+    hint: 'Marks where a puzzle ends. The checks warn if it can be reached without opening a gate, or cannot be reached at all, and the playbot walks to it.',
+    make: (x, y, h) => thing('Exit', ['goal'], { shape: 'diamond', color: 0xffd34a, w: 1, d: 1, height: 0.06 }, x, y, h),
+  },  {
     id: 'plate',
     label: 'Pressure plate',
     group: 'Puzzle',
