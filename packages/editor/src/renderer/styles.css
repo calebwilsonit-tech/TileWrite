@@ -1170,3 +1170,12 @@ button.small {
 .play-hud .hud-boss { align-self: center; width: min(60%, 480px); text-align: center; font-size: 13px; text-shadow: 0 1px 3px #000; }
 .play-hud .hud-boss .bar { height: 10px; background: #1b1d24; border: 1px solid #000; border-radius: 6px; overflow: hidden; margin-top: 3px; }
 .play-hud .hud-boss .fill { height: 100%; background: linear-gradient(90deg, #b3366e, #e0566b); transition: width 0.15s; }
+/* story panel */
+.story-panel { padding: 6px 10px; overflow: auto; height: 100%; }
+.story-panel .seg { margin-bottom: 8px; }
+.story-card { margin: 8px 0; padding: 6px 10px; border: 1px solid var(--border, #3a3d46); border-radius: 6px; }
+.story-card legend { font-size: 12px; opacity: .85; padding: 0 4px; }
+.story-sub { margin: 4px 0 4px 12px; padding-left: 8px; border-left: 2px solid var(--border, #3a3d46); }
+.story-problems { margin: 8px 0; padding-left: 18px; color: #e5a23d; font-size: 13px; }
+.story-panel .row.wrap { flex-wrap: wrap; gap: 4px; }
+.story-panel .hint.ok { color: #6bc28a; }

@@ -30,6 +30,11 @@ export interface RunnerOptions {
 export class GameRunner {
   readonly timestep = new FixedTimestep();
   paused = false;
+  /** Entity the camera follows (can change when the game moves to another scene). */
+  follow: EntityId | undefined;
+  /** Apply screen shake from the simulation (the player can turn it off). */
+  shakeEnabled = true;
+  private baseZoom: number | null = null;
   recorder: InputRecorder | null = null;
   /** Set when a system threw; cleared by `resume()`. */
   failed: unknown = null;
@@ -41,6 +46,7 @@ export class GameRunner {
 
   constructor(private readonly o: RunnerOptions) {
     this.inputSource = () => o.inputMap.resolve(o.readInput());
+    this.follow = o.follow;
   }
 
   start(): void {
@@ -84,11 +90,22 @@ export class GameRunner {
       this.recorder?.record(snap);
       this.o.sim.step(snap);
       const cam = this.o.renderer.camera;
-      if (this.o.follow !== undefined) {
-        const e = this.o.sim.world.get(this.o.follow);
+      const view = this.o.sim.runtime.view;
+      if (view.cameraTarget) {
+        cam.follow(gridToScreen(view.cameraTarget.x, view.cameraTarget.y, 0, this.o.renderer.iso)); // a cutscene is directing the camera
+      } else if (this.follow !== undefined) {
+        const e = this.o.sim.world.get(this.follow);
         const t = e?.get<TransformIso>(C.Transform);
         if (t) cam.follow(gridToScreen(t.x, t.y, t.h, this.o.renderer.iso));
       }
+      if (view.cameraZoom !== null) {
+        this.baseZoom ??= cam.zoom;
+        cam.zoom = this.baseZoom * view.cameraZoom;
+      } else if (this.baseZoom !== null) {
+        cam.zoom = this.baseZoom;
+        this.baseZoom = null;
+      }
+      this.o.renderer.shake = this.shakeEnabled ? view.shake : 0;
       cam.update(TICK_DT);
       this.o.onTick?.(this.o.sim);
     } catch (error) {

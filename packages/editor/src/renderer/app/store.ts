@@ -1,9 +1,10 @@
 import { useSyncExternalStore } from 'react';
-import { SLOPE, extractPrefab, resolveInstance, type EntityData, type PrefabData, type SlopeDir } from '@tilewright/runtime';
+import { SLOPE, extractPrefab, resolveInstance, type CutsceneData, type DialogueData, type EntityData, type ItemData, type PrefabData, type SlopeDir } from '@tilewright/runtime';
 import { EditorDoc } from '../model/doc';
 import { api } from '../project/api';
 import { assetFs } from '../project/assetFs';
 import { deletePrefab, loadAllPrefabs, prefabNameProblem, savePrefab } from '../project/prefabs';
+import { deleteCutscene, deleteDialogue, loadCutscenes, loadDialogues, loadItems, saveCutscene, saveDialogue, saveItems } from '../project/story';
 import {
   UserError,
   autosaveScene,
@@ -101,6 +102,8 @@ export interface AppState {
   busy: boolean;
   /** Names of the project's prefabs. */
   prefabNames: string[];
+  /** Bumped when items, dialogues or cutscenes change, so the Story panel re-renders. */
+  storyVersion: number;
   /** Set while the wire dialog is open (two objects were just connected). */
   connect: { from: string; to: string } | null;
   testMode: boolean;
@@ -139,6 +142,7 @@ const initial: AppState = {
   recent: [],
   busy: false,
   prefabNames: [],
+  storyVersion: 0,
   connect: null,
   testMode: false,
   docVersion: 0,
@@ -276,6 +280,7 @@ class AppStore {
     await api().recent.add(p.dir, p.project.name);
     this.set({ project: p, workspace: 'world', recent: await api().recent.list() });
     await this.loadPrefabs();
+    await this.loadStory();
     await this.openScene(p.project.startScene);
     this.set({ screen: 'editor' });
     this.startAutosave();
@@ -381,6 +386,88 @@ class AppStore {
     }
   }
 
+  // ---- story: items, dialogues, cutscenes ----
+
+  story = { items: [] as ItemData[], dialogues: new Map<string, DialogueData>(), cutscenes: new Map<string, CutsceneData>() };
+  /** Something to start as soon as the next Play begins (the Story panel's "Test" buttons). */
+  autoPlay: { cutscene?: string; dialogue?: string } | null = null;
+  private storyTimers = new Map<string, number>();
+
+  async loadStory(): Promise<void> {
+    const p = this.state.project;
+    if (!p) {
+      this.story = { items: [], dialogues: new Map(), cutscenes: new Map() };
+      return;
+    }
+    const [items, dialogues, cutscenes] = await Promise.all([loadItems(assetFs, p.dir), loadDialogues(assetFs, p.dir), loadCutscenes(assetFs, p.dir)]);
+    this.story = { items: items.items, dialogues: dialogues.items, cutscenes: cutscenes.items };
+    this.set({ storyVersion: this.state.storyVersion + 1 });
+    for (const problem of [...items.problems, ...dialogues.problems, ...cutscenes.problems]) this.notify('warn', problem);
+  }
+
+  /** Save a story file a moment after the last edit (typing in a field must not write a file per keystroke). */
+  private persistLater(key: string, write: () => Promise<void>): void {
+    window.clearTimeout(this.storyTimers.get(key));
+    this.storyTimers.set(
+      key,
+      window.setTimeout(() => {
+        this.storyTimers.delete(key);
+        void write().catch((e) => this.notify('error', e instanceof UserError ? e.message : `Could not save: ${(e as Error).message}`));
+      }, 350),
+    );
+  }
+
+  /** Write any story edits that are still waiting (before playing, saving or closing). */
+  async flushStory(): Promise<void> {
+    for (const t of this.storyTimers.values()) window.clearTimeout(t);
+    this.storyTimers.clear();
+    const p = this.state.project;
+    if (!p) return;
+    await saveItems(assetFs, p.dir, this.story.items);
+    for (const d of this.story.dialogues.values()) await saveDialogue(assetFs, p.dir, d);
+    for (const c of this.story.cutscenes.values()) await saveCutscene(assetFs, p.dir, c);
+  }
+
+  setItems(items: ItemData[]): void {
+    this.story = { ...this.story, items };
+    this.set({ storyVersion: this.state.storyVersion + 1 });
+    const p = this.state.project;
+    if (p) this.persistLater('items', () => saveItems(assetFs, p.dir, this.story.items));
+  }
+
+  putDialogue(d: DialogueData): void {
+    this.story = { ...this.story, dialogues: new Map(this.story.dialogues).set(d.name, d) };
+    this.set({ storyVersion: this.state.storyVersion + 1 });
+    const p = this.state.project;
+    if (p) this.persistLater(`d:${d.name}`, () => saveDialogue(assetFs, p.dir, d));
+  }
+
+  async removeDialogue(name: string): Promise<void> {
+    const p = this.state.project;
+    const next = new Map(this.story.dialogues);
+    next.delete(name);
+    this.story = { ...this.story, dialogues: next };
+    window.clearTimeout(this.storyTimers.get(`d:${name}`));
+    this.set({ storyVersion: this.state.storyVersion + 1 });
+    if (p) await deleteDialogue(assetFs, p.dir, name).catch(() => undefined);
+  }
+
+  putCutscene(c: CutsceneData): void {
+    this.story = { ...this.story, cutscenes: new Map(this.story.cutscenes).set(c.name, c) };
+    this.set({ storyVersion: this.state.storyVersion + 1 });
+    const p = this.state.project;
+    if (p) this.persistLater(`c:${c.name}`, () => saveCutscene(assetFs, p.dir, c));
+  }
+
+  async removeCutscene(name: string): Promise<void> {
+    const p = this.state.project;
+    const next = new Map(this.story.cutscenes);
+    next.delete(name);
+    this.story = { ...this.story, cutscenes: next };
+    window.clearTimeout(this.storyTimers.get(`c:${name}`));
+    this.set({ storyVersion: this.state.storyVersion + 1 });
+    if (p) await deleteCutscene(assetFs, p.dir, name).catch(() => undefined);
+  }
   // ---- prefabs ----
 
   async loadPrefabs(): Promise<void> {

@@ -3,7 +3,7 @@
 Boxes are ticked only when the milestone's tests pass and the sample has been played.
 Spec: `ENGINE_BUILD_PROMPT.md`. Read `DECISIONS.md` and `KNOWN_ISSUES.md` before continuing.
 
-**Next up:** M8 story systems - NPC dialogue with choices, conditions and flags, cutscenes on a timeline, inventory/items/quick slots, checkpoints (lantern posts) and respawn at the last one, scene portals, hub overworld/world map, save/load slots, pause menu and HUD. Owed earlier: autotiling rules + Decoration/Walls/Lights layers, hot reload while playing and a separate game window (M10 / M14), vector drawing in the studio (M14), bypass/soft-lock validators (M9), a visual state-machine editor for enemies (M9/M14).
+**Next up:** M9 errors and debugging - a proper Problems panel with severity, Go to and 'Explain' hooks, debug overlays (collision, paths, vision, lights, signals), a profiler overlay with budgets, the bypass and soft-lock validators (can the player skip a gate? can the game get stuck?), and the playbot (record/replay and scripted play-through of a scene). Owed earlier: autotiling rules + Decoration/Walls/Lights layers, hot reload while playing and a separate game window (M10 / M14), vector drawing in the studio (M14), a visual state-machine editor for enemies (M9/M14), an audio engine (M14), dialogue graph canvas.
 
 ## Milestones
 
@@ -15,7 +15,7 @@ Spec: `ENGINE_BUILD_PROMPT.md`. Read `DECISIONS.md` and `KNOWN_ISSUES.md` before
 - [x] M5 No-code logic (see the M5 checklist for what is deferred)
 - [x] M6 Echoes, light, puzzle parts (see the M6 checklist)
 - [x] M7 AI and combat (see the M7 checklist)
-- [ ] M8 Story systems
+- [x] M8 Story systems (see the M8 checklist)
 - [ ] M9 Errors and debugging (problems panel, overlays, profiler, validators, playbot)
 - [ ] M10 Code window
 - [ ] M11 Claude assistant
@@ -113,3 +113,18 @@ Done and covered by tests (unit: `packages/runtime/src/ai`, `packages/behaviors/
 Deferred:
 - [ ] Visual state-machine editor for enemies and bosses; behaviour trees; ranged enemy attacks; guards avoiding each other; hearing blocked by walls
 - [ ] Light/resource bar and lantern fuel; art and animation for the quill and dodge
+
+## M8 checklist
+
+Done and covered by tests (unit: `packages/runtime/src/story`, `packages/behaviors/src/m8.test.ts`, `packages/editor/src/renderer/project/story.test.ts`; e2e: `e2e/m8-story.spec.ts`; docs: `docs/story-systems.md`):
+- [x] Items and inventory (variables), quick slots 1-4, using items, pickups that give items
+- [x] Dialogue graphs (lines, choices with conditions, set, give/take, branch) with a plain-English checker, the NPC Talk behaviour, conversation box with mouse and keyboard choices, world frozen during talk
+- [x] Cutscene timeline (camera, walks, speech, dialogue, fades, shake, animation, sound, variables, items; "keep going" steps; skippable) with Cutscene Trigger; Story panel editors for items, dialogues and cutscenes with Test buttons
+- [x] Lantern posts (light, rest, respawn at the last one, fast travel list), scene portals, scene changes that keep flags/items/health, hub-and-areas by portals
+- [x] Save/load: three slots plus autosave, persistent objects, versioned format, backups and corrupted-save recovery
+- [x] The game's own HUD and menus (hearts, slots, boss bars, messages, pause menu with inventory/travel/save/load/settings/restart), difficulty, remappable controls with keyboard, mouse and gamepad support
+- [x] Sample built in the UI and played: a hub (keeper, lantern, bread, portal, intro cutscene) and a cave, including saving, loading, remapping and fast travel (`e2e/m8-story.spec.ts`, screenshots inspected)
+
+Deferred:
+- [ ] Dialogue node-graph canvas and a visual cutscene timeline; localization string tables
+- [ ] Audio engine (volumes are stored only), video settings, minigames, cosmetic skins, hit-stop, drawn world map

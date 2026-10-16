@@ -6,7 +6,7 @@ export interface Prefab {
   id: string;
   label: string;
   hint: string;
-  group: 'Basics' | 'Puzzle' | 'Story puzzles' | 'Light' | 'Enemies' | 'Logic' | 'World' | 'Your prefabs';
+  group: 'Basics' | 'Puzzle' | 'Story puzzles' | 'Story' | 'Light' | 'Enemies' | 'Logic' | 'World' | 'Your prefabs';
   /** Build entity data (without an id) standing at (x, y) on a floor at height h. */
   make(x: number, y: number, h: number): Omit<EntityData, 'id'>;
 }
@@ -117,6 +117,33 @@ export const PREFABS: Prefab[] = [
     make: (x, y, h) => thing('Trigger zone', ['zone'], { shape: 'diamond', color: 0x4ad1c8, w: 2, d: 2, height: 0.05 }, x, y, h, ['triggerZone']),
   },
   {
+    id: 'npc',
+    label: 'NPC (talks)',
+    group: 'Story',
+    hint: 'A character the player talks to with Interact. Choose its conversation in the Inspector; write conversations in the Story panel.',
+    make: (x, y, h) => thing('Villager', ['npc'], { color: 0x3d8fe8, w: 0.6, d: 0.6, height: 1.2 }, x, y, h, ['npcTalk']),
+  },
+  {
+    id: 'lanternpost',
+    label: 'Lantern post (checkpoint)',
+    group: 'Story',
+    hint: 'The player lights it and rests with Interact. Defeat returns them to the last post they rested at, and lit posts are in the Travel menu.',
+    make: (x, y, h) => thing('Lantern post', ['lantern-post'], { color: 0x6b6f7a, w: 0.4, d: 0.4, height: 1.4 }, x, y, h, ['checkpoint']),
+  },
+  {
+    id: 'portal',
+    label: 'Scene portal (door)',
+    group: 'Story',
+    hint: 'A doorway to another scene (or another spot in this one). Say where it leads in the Inspector.',
+    make: (x, y, h) => thing('Portal', ['portal'], { shape: 'diamond', color: 0xb18cff, w: 1, d: 1, height: 0.05 }, x, y, h, ['portal']),
+  },
+  {
+    id: 'cutscene',
+    label: 'Cutscene trigger',
+    group: 'Story',
+    hint: 'Plays a cutscene when the player walks into it. Write cutscenes in the Story panel.',
+    make: (x, y, h) => thing('Cutscene trigger', ['cutscene'], { shape: 'diamond', color: 0xffd34a, w: 2, d: 2, height: 0.05 }, x, y, h, ['cutsceneTrigger']),
+  },  {
     id: 'stone',
     label: 'Sentence stone',
     group: 'Story puzzles',

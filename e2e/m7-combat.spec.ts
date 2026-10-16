@@ -176,7 +176,7 @@ test('M7: a stealth guard with a patrol route and a two-phase boss with an arena
   await page.getByTestId('btn-play').click();
   await page.waitForFunction(() => window.__play !== undefined);
   await play(page, {}, 5);
-  await expect(page.getByTestId('hud-hearts')).toBeVisible();
+  await expect(page.getByTestId('tw-hearts')).toBeVisible();
   let st = await status(page);
   expect(st.player.hp).toBe(20);
   expect(st.boss!.active).toBe(false); // the player is not in the arena: the boss is idle

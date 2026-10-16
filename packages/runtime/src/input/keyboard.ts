@@ -65,22 +65,37 @@ export class DomInputSource {
     return { ...this.raw, ...readGamepads(this.pads()) };
   }
 
-  /** The next key or button the player presses, for "press a key to rebind". Resolves with the binding id. */
+  /**
+   * The next key, mouse button or gamepad button the player presses, for "press a key to rebind". Resolves with the
+   * binding id, or null if nothing was pressed in time or Escape was pressed (which cancels).
+   */
   captureNext(timeoutMs = 10000): Promise<string | null> {
     return new Promise((resolve) => {
-      const start = this.read();
-      const t0 = Date.now();
-      const poll = (): void => {
-        const now = this.read();
-        const fresh = Object.keys(now).find((k) => !(k in start));
-        if (fresh) return resolve(fresh);
-        if (Date.now() - t0 > timeoutMs) return resolve(null);
-        setTimeout(poll, 30);
+      const held = readGamepads(this.pads());
+      let finished = false;
+      const finish = (id: string | null): void => {
+        if (finished) return;
+        finished = true;
+        this.target.removeEventListener('keydown', onKey, true);
+        this.target.removeEventListener('mousedown', onMouse, true);
+        clearInterval(poll);
+        clearTimeout(timer);
+        resolve(id);
       };
-      poll();
+      const onKey = (e: KeyboardEvent): void => {
+        e.preventDefault();
+        finish(e.code === 'Escape' ? null : `key:${e.code}`);
+      };
+      const onMouse = (e: MouseEvent): void => finish(`mouse:${e.button}`);
+      this.target.addEventListener('keydown', onKey, true);
+      this.target.addEventListener('mousedown', onMouse, true);
+      const poll = setInterval(() => {
+        const fresh = Object.keys(readGamepads(this.pads())).find((k) => k.startsWith('pad:button') && !(k in held));
+        if (fresh) finish(fresh);
+      }, 30);
+      const timer = setTimeout(() => finish(null), timeoutMs);
     });
   }
-
   dispose(): void {
     this.target.removeEventListener('keydown', this.onKeyDown);
     this.target.removeEventListener('keyup', this.onKeyUp);

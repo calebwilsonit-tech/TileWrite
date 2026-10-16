@@ -15,7 +15,7 @@ Tick an item when the engine can make it **without code**, verified by a test or
 - [x] Dodge
 - [x] Melee weapon (quill)
 - [ ] Health, light/resource bar - hearts and Health done (M7); no light/resource bar yet
-- [ ] Interact button, quick-slot items
+- [x] Interact button, quick-slot items
 
 ## Echoes
 - [x] Record movement for up to N seconds, replay as ghost
@@ -45,29 +45,29 @@ Tick an item when the engine can make it **without code**, verified by a test or
 - [x] Boss fights with phases; boss active only in certain rooms
 
 ## Story
-- [ ] NPC dialogue with choices, conditions, flags
-- [ ] Cutscenes on a timeline (camera, characters, dialogue, fades)
-- [ ] Hub overworld with several dungeons
-- [ ] World map with fast travel
+- [x] NPC dialogue with choices, conditions, flags
+- [x] Cutscenes on a timeline (camera, characters, dialogue, fades)
+- [x] Hub overworld with several dungeons
+- [x] World map with fast travel
 
 ## Checkpoints
-- [ ] Lantern posts you light or rest at
-- [ ] Death sends you to the most recent post
-- [ ] Dungeon pause menu with Restart and Travel-to-lit-lantern
+- [x] Lantern posts you light or rest at
+- [x] Death sends you to the most recent post
+- [x] Dungeon pause menu with Restart and Travel-to-lit-lantern
 
 ## Systems
-- [ ] Inventory, items, quick slots
-- [ ] Save/load with multiple slots and autosave
-- [ ] Story flags and counters
-- [ ] Settings menu (audio, video, controls)
-- [ ] Full input remapping, gamepad support
-- [ ] Pause menu, HUD
+- [x] Inventory, items, quick slots
+- [x] Save/load with multiple slots and autosave
+- [x] Story flags and counters
+- [ ] Settings menu (audio, video, controls) - volumes (stored, no audio engine yet), difficulty, screen shake and controls done (M8); video options not done
+- [x] Full input remapping, gamepad support
+- [x] Pause menu, HUD
 - [ ] Minigames inside the game
-- [ ] Cosmetic skins, difficulty options
+- [ ] Cosmetic skins, difficulty options - difficulty done (M8); skins not done
 
 ## Feel
 - [ ] Screen shake, hit-stop
 - [ ] Particles, tweens
 - [ ] Sound effects with variation
 - [ ] Music with crossfades
-- [ ] Camera follow with deadzone and room bounds
+- [x] Camera follow with deadzone and room bounds

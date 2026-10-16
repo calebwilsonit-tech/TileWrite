@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import '../project/schema'; // sets up Zod before the schemas below are built
 import { CURRENT_SCHEMA_VERSION, VariableValueSchema, type VariableValue } from '../project/schema';
-import { addItem, itemCount, type ItemData } from './items';
+import { addItem, autoSlot, itemCount, type ItemData } from './items';
 
 /**
  * Dialogue graphs: lines, choices (with conditions), set a variable, give or take an item, branch on a
@@ -132,6 +132,7 @@ function settle(d: DialogueData, nodeId: string | undefined, host: DialogueHost)
       }
       case 'give': {
         const got = addItem(host.vars, n.item, n.amount, host.items.get(n.item));
+        if (got > 0) autoSlot(host.vars, n.item);
         host.emit?.(n.amount >= 0 ? 'item-given' : 'item-taken', { item: n.item, amount: got });
         id = n.next;
         break;

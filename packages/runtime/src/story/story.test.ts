@@ -93,6 +93,7 @@ describe('dialogue', () => {
     s = chooseDialogue(talk, s, 0, h)!; // give key, set flag, branch -> "Take care."
     expect(s.view).toMatchObject({ kind: 'line', text: 'Take care.' });
     expect(itemCount(h.vars, 'key')).toBe(1);
+    expect(h.vars['slot:1']).toBe('key'); // a new item goes in the first free quick slot
     expect(h.vars.metKeeper).toBe(true);
     expect(h.events).toEqual(['item-given', 'variable-set']);
     expect(advanceDialogue(talk, s, h)).toBeNull(); // to the end node

@@ -1,26 +1,20 @@
 import { Graphics } from 'pixi.js';
 import {
   C,
-  DEFAULT_INPUT_MAP,
   DomInputSource,
   GameRunner,
-  InputMap,
   IsoRenderer,
   Simulation,
   World,
   boxAt,
   gridToScreen,
-  groundHeightAt,
-  loadScene,
-  physicsSystem,
   screenRect,
   screenToGrid,
-  teleportBody,
   type Cell,
   type TileSet,
   type TransformIso,
 } from '@tilewright/runtime';
-import { addStandardSystems, parsePoints } from '@tilewright/behaviors';
+import { parsePoints } from '@tilewright/behaviors';
 import type { EditorDoc, DocEvent } from '../model/doc';
 import { store, type ToolId } from '../app/store';
 import { studio } from '../studio/store';
@@ -28,6 +22,7 @@ import { TOOLS, toolMeta, type Pointer, type Preview, type ToolEnv } from '../to
 import { prefabById } from '../tools/prefabs';
 import type { P } from '../tools/algorithms';
 import { OverlayDrawer, cellTopHeight } from './overlay';
+import { PlaySession } from './play-session';
 
 interface SpriteLike {
   shape: 'box' | 'diamond';
@@ -43,6 +38,7 @@ interface PlayState {
   sim: Simulation;
   runner: GameRunner;
   source: DomInputSource;
+  session: PlaySession;
   saved: { x: number; y: number; zoom: number; dzw: number; dzh: number; smoothing: number };
   stepToken: number;
 }
@@ -654,88 +650,50 @@ export class ViewportController {
       store.stop();
       return;
     }
-    const sim = new Simulation(1);
-    for (const [name, data] of studio.assets) sim.assets.sprites.set(name, data);
-    for (const [name, data] of store.prefabs) sim.assets.prefabs.set(name, data);
-    const byId = loadScene(sim, scene, { prefabs: store.prefabs });
-    for (const problem of byId.problems) store.notify('warn', problem);
-    const player = byId.get(playerData.id)!;
-    const from = store.playFrom;
-    if (from) {
-      const t = player.require<TransformIso>(C.Transform);
-      const cx = Math.floor(from.x);
-      const cy = Math.floor(from.y);
-      const h = sim.map && sim.map.inBounds(cx, cy) ? Math.max(groundHeightAt(sim.map, from.x, from.y), sim.map.getDeck(cx, cy)) : 0;
-      t.x = from.x;
-      t.y = from.y;
-      t.h = h;
-      if (player.get(C.Body)) teleportBody({ map: sim.map } as never, player, from.x, from.y, h);
-    }
-    store.playFrom = null;
-    addStandardSystems(sim, physicsSystem);
-    const warned = new Set<string>();
-    sim.events.on('message', (e) => store.notify('info', String(e.text ?? '')));
-    sim.events.on('problem', (e) => {
-      const text = String(e.text ?? '');
-      if (!warned.has(text)) {
-        warned.add(text);
-        store.notify('warn', text);
-      }
-    });
-
+    const project = store.state.project;
     const cam = this.camera;
     const saved = { x: cam.x, y: cam.y, zoom: cam.zoom, dzw: cam.deadzoneW, dzh: cam.deadzoneH, smoothing: cam.smoothing };
-    cam.deadzoneW = 50;
-    cam.deadzoneH = 30;
-    cam.smoothing = 0.2;
-    cam.zoom = 1;
-    this.renderer.setGroundVisible(true);
-    this.renderer.entitiesVisible = true;
-    this.renderer.setTileMap(sim.map!, this.tilesetFor());
-    this.renderer.focus = player.id;
-    const t0 = player.require<TransformIso>(C.Transform);
-    cam.snapTo(gridToScreen(t0.x, t0.y, t0.h, this.renderer.iso));
-    this.renderer.overlay.visible = false;
-
-    const source = new DomInputSource();
-    const regions = scene.regions;
-    const runner = new GameRunner({
-      sim,
-      renderer: this.renderer,
-      inputMap: new InputMap(DEFAULT_INPUT_MAP),
-      readInput: () => source.read(),
-      follow: player.id,
-      onTick: () => {
-        const t = player.get<TransformIso>(C.Transform);
-        if (!t) return;
-        const r = regions.find((rg) => rg.cameraBounds && t.x >= rg.x && t.x < rg.x + rg.w && t.y >= rg.y && t.y < rg.y + rg.h);
-        if (r) {
-          const iso = this.renderer.iso;
-          const pts = [gridToScreen(r.x, r.y, 0, iso), gridToScreen(r.x + r.w, r.y, 0, iso), gridToScreen(r.x + r.w, r.y + r.h, 0, iso), gridToScreen(r.x, r.y + r.h, 0, iso)];
-          cam.bounds = {
-            minX: Math.min(...pts.map((p) => p.x)),
-            maxX: Math.max(...pts.map((p) => p.x)),
-            minY: Math.min(...pts.map((p) => p.y)),
-            maxY: Math.max(...pts.map((p) => p.y)) - 0,
-          };
-        } else cam.bounds = null;
-      },
-      onError: (error) => {
-        const msg = error instanceof Error ? error.message : String(error);
-        store.notify('error', `The game stopped because something went wrong while running: ${msg}. Press Stop, fix it, and play again.`);
-        store.set({ paused: true });
-      },
-    });
-    runner.start();
-    this.play = { sim, runner, source, saved, stepToken: store.stepToken };
+    const autoPlay = store.autoPlay;
+    store.autoPlay = null;
+    const from = store.playFrom;
+    store.playFrom = null;
+    let session: PlaySession;
+    try {
+      session = new PlaySession({
+        renderer: this.renderer,
+        uiParent: this.host.parentElement ?? this.host,
+        scene,
+        scenePath: store.state.scenePath ?? '',
+        projectDir: project?.dir ?? '',
+        from,
+        prefabs: store.prefabs,
+        sprites: studio.assets,
+        story: store.story,
+        tileset: () => this.tilesetFor(),
+        currentScene: (path) => (path === store.state.scenePath && this.doc ? this.doc.toScene() : null),
+        notify: (kind, text) => store.notify(kind, text),
+        onError: (error) => {
+          const msg = error instanceof Error ? error.message : String(error);
+          store.notify('error', `The game stopped because something went wrong while running: ${msg}. Press Stop, fix it, and play again.`);
+          store.set({ paused: true });
+        },
+        quit: () => store.stop(),
+        autoPlay,
+      });
+    } catch (e) {
+      store.notify('error', `The game could not start: ${e instanceof Error ? e.message : String(e)}`);
+      store.stop();
+      return;
+    }
+    const { sim, runner, source } = session;
+    this.play = { sim, runner, source, session, saved, stepToken: store.stepToken };
     window.__play = this.play;
   }
 
   private stopPlay(): void {
     const p = this.play;
     if (!p) return;
-    p.runner.stop();
-    p.source.dispose();
+    p.session.dispose();
     this.play = null;
     window.__play = undefined;
     const cam = this.camera;
@@ -756,7 +714,6 @@ export class ViewportController {
     }
     this.dirty = true;
   }
-
   /** Which cell the mouse is over, for "Play from here". */
   get playFromHere(): { x: number; y: number } | null {
     return this.hoverCell ? { x: this.hoverCell.x + 0.5, y: this.hoverCell.y + 0.5 } : null;

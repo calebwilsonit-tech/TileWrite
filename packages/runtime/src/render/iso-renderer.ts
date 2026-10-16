@@ -109,6 +109,8 @@ export class IsoRenderer {
   groundVisible = true;
   /** Hide entities - used by the editor's layer toggles. */
   entitiesVisible = true;
+  /** Pixels of screen shake this frame (set by the game runner). */
+  shake = 0;
   /** Darkness and lights to draw this frame (null = none). Set by the game runner from the simulation. */
   lighting: LightingModel | null = null;
   private readonly lightLayer = new LightingLayer();
@@ -390,7 +392,9 @@ export class IsoRenderer {
     this.updateFade(focusBox);
 
     const off = this.camera.offset;
-    this.world.position.set(Math.round(off.x), Math.round(off.y));
+    const jx = this.shake > 0 ? (Math.random() - 0.5) * 2 * this.shake : 0;
+    const jy = this.shake > 0 ? (Math.random() - 0.5) * 2 * this.shake : 0;
+    this.world.position.set(Math.round(off.x + jx), Math.round(off.y + jy));
     this.world.scale.set(this.camera.zoom);
     if (this.lighting) {
       this.lightLayer.update(this.app.renderer, this.lighting, this.iso, { x: Math.round(off.x), y: Math.round(off.y), zoom: this.camera.zoom }, this.app.screen.width, this.app.screen.height);
