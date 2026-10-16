@@ -9,7 +9,6 @@ type Snapshot = Record<string, number>;
 
 // Grid-axis moves expressed as the WASD keys a player would press (screen space):
 const GRID_PLUS_X: Snapshot = { move_right: 1, move_down: 1 }; // screen down-right
-const GRID_MINUS_X: Snapshot = { move_left: 1, move_up: 1 };
 const GRID_MINUS_Y: Snapshot = { move_right: 1, move_up: 1 }; // screen up-right
 const GRID_PLUS_Y: Snapshot = { move_left: 1, move_down: 1 };
 
