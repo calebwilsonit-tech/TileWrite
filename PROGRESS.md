@@ -3,11 +3,11 @@
 Boxes are ticked only when the milestone's tests pass and the sample has been played.
 Spec: `ENGINE_BUILD_PROMPT.md`. Read `DECISIONS.md` and `KNOWN_ISSUES.md` before continuing.
 
-**Next up:** finish M0 (verify `npm test`, `npm run typecheck`, Electron smoke test, first commit), then M1.
+**Next up:** M1 runtime core - start with iso math (`packages/runtime/src/iso`), then scene/ECS, fixed timestep, input, PixiJS renderer with depth sort.
 
 ## Milestones
 
-- [ ] M0 Foundations (repo, workspaces, lint, typecheck, tests, CI, Electron window, state docs)
+- [x] M0 Foundations (repo, workspaces, lint, typecheck, tests, CI, Electron window, state docs)
 - [ ] M1 Runtime core (iso math, scene/ECS, renderer + depth sort, camera, input, fixed timestep)
 - [ ] M2 Heights and collision (stairs, cliffs, pits, falling, occlusion fade)
 - [ ] M3 Editor shell + world painter
@@ -28,9 +28,9 @@ Spec: `ENGINE_BUILD_PROMPT.md`. Read `DECISIONS.md` and `KNOWN_ISSUES.md` before
 - [x] npm workspaces layout (`packages/*`)
 - [x] TypeScript base config, ESLint flat config, Vitest config
 - [x] Electron + Vite + React editor shell skeleton
-- [ ] `npm test` green
-- [ ] `npm run typecheck` green
-- [ ] `npm run lint` green
-- [ ] Playwright smoke test launches the Electron window and sees the welcome screen
-- [ ] CI workflow (ubuntu + windows-latest)
-- [ ] First commit
+- [x] `npm test` green (5 placeholder tests)
+- [x] `npm run typecheck` green
+- [x] `npm run lint` green
+- [x] Playwright smoke test launches the Electron window and sees the welcome screen (verified locally, screenshot checked)
+- [x] CI workflow written (ubuntu + windows-latest); not yet run, no remote repo
+- [x] First commit
