@@ -56,6 +56,11 @@ export function defineBehavior<S extends object>(def: BehaviorDef<S>): BehaviorD
   return def;
 }
 
+/** Take a behaviour out of the registry (scripts being reloaded or deleted). */
+export function undefineBehavior(id: string): void {
+  registry.delete(id);
+}
+
 export function getBehavior(id: string): BehaviorDef | undefined {
   return registry.get(id);
 }

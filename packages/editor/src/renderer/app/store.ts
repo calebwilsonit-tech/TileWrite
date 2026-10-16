@@ -8,6 +8,10 @@ import { analyseLevel, analysePushPuzzles, type LevelIssue } from '@tilewright/p
 import { checkProject, type ProjectProblem } from '../project/check';
 import { deletePlaythrough, listPlaythroughs, loadPlaythrough, nextPlaythroughName, savePlaythrough } from '../project/playthroughs';
 import { Game, newPlaythrough, replayPlaythrough } from '@tilewright/playbot';
+import { eventsToScript } from '@tilewright/behaviors';
+import { reloadScripts, type BreakHit, type ScriptProblemEntry } from '../code/script-manager';
+import { deleteScript as deleteScriptFile, loadScripts as loadScriptFiles, saveScript as saveScriptFile } from '../project/scripts';
+import { storyNameProblem } from '../project/story';
 import { deleteCutscene, deleteDialogue, loadCutscenes, loadDialogues, loadItems, saveCutscene, saveDialogue, saveItems } from '../project/story';
 import {
   UserError,
@@ -87,7 +91,7 @@ export interface ViewOptions {
 }
 
 export type Mode = 'edit' | 'play';
-export type Workspace = 'world' | 'sprites';
+export type Workspace = 'world' | 'sprites' | 'code';
 
 export interface Notice {
   id: number;
@@ -124,6 +128,16 @@ export interface AppState {
   projectCheck: { problems: ProjectProblem[]; at: number } | null;
   /** Why the game stopped, when it did. */
   runtimeError: CrashReport | null;
+  /** Bumped when scripts change, so the Code panel and menus update. */
+  scriptVersion: number;
+  /** Scripts that did not compile, in plain English. */
+  scriptProblems: ScriptProblemEntry[];
+  /** Lines with breakpoints, by script name. */
+  breakpoints: Record<string, number[]>;
+  /** Set while the game is stopped at a breakpoint. */
+  debugHit: { script: string; line: number } | null;
+  /** The script the Code panel should show. */
+  openScript: string | null;
   /** Saved playthroughs (recorded by playing or by the bot). */
   playthroughs: string[];
   /** What the bot and the checks reported, newest first. */
@@ -170,6 +184,11 @@ const initial: AppState = {
   analysis: null,
   projectCheck: null,
   runtimeError: null,
+  scriptVersion: 0,
+  scriptProblems: [],
+  breakpoints: {},
+  debugHit: null,
+  openScript: null,
   playthroughs: [],
   botLog: [],
   connect: null,
@@ -311,6 +330,7 @@ class AppStore {
     await this.loadPrefabs();
     await this.loadStory();
     await this.loadPlaythroughNames();
+    await this.loadScripts();
     await this.openScene(p.project.startScene);
     this.set({ screen: 'editor' });
     this.startAutosave();
@@ -500,6 +520,132 @@ class AppStore {
     window.clearTimeout(this.storyTimers.get(`c:${name}`));
     this.set({ storyVersion: this.state.storyVersion + 1 });
     if (p) await deleteCutscene(assetFs, p.dir, name).catch(() => undefined);
+  }
+  // ---- scripts (code) ----
+
+  scripts = new Map<string, string>();
+  /** Where the game is stopped at a breakpoint: the script object and the game, for the watch window. */
+  hitContext: BreakHit | null = null;
+  private scriptTimers = new Map<string, number>();
+  private recompileTimer: number | undefined;
+
+  async loadScripts(): Promise<void> {
+    const p = this.state.project;
+    if (!p) {
+      this.scripts = new Map();
+      return;
+    }
+    const { scripts, problems } = await loadScriptFiles(assetFs, p.dir);
+    this.scripts = scripts;
+    for (const problem of problems) this.notify('warn', problem);
+    // (kept in the settings file, not localStorage: the first localStorage read after a crash can stall for seconds)
+    const saved = ((await api().settings.get()).breakpoints ?? {}) as Record<string, Record<string, number[]>>;
+    this.set({ breakpoints: saved[p.dir] ?? {} });
+    await this.recompileScripts();
+  }
+
+  /** Compile every script and register it as a behaviour (the running game picks up the new code at once). */
+  async recompileScripts(): Promise<void> {
+    const r = await reloadScripts(this.scripts, this.state.breakpoints, {
+      log: (kind, text) => this.logLine(kind === 'log' ? 'info' : kind === 'warn' ? 'warn' : 'error', text),
+      onBreak: (hit) => {
+        this.hitContext = hit;
+        this.set({ paused: true, debugHit: { script: hit.script, line: hit.line } });
+      },
+    });
+    this.set({ scriptProblems: r.problems, scriptVersion: this.state.scriptVersion + 1, docVersion: this.state.docVersion + 1 });
+    for (const [script, lines] of Object.entries(r.unplaced)) this.logLine('warn', `Breakpoint${lines.length === 1 ? '' : 's'} on line${lines.length === 1 ? '' : 's'} ${lines.join(', ')} of "${script}" could not be placed: a breakpoint must be on the first line of a statement.`);
+  }
+
+  /** A line in the Console without a pop-up (script output). */
+  logLine(kind: Notice['kind'], text: string): void {
+    this.set({ log: [...this.state.log, { time: Date.now(), kind, text }].slice(-300) });
+  }
+
+  putScript(name: string, source: string): void {
+    this.scripts = new Map(this.scripts).set(name, source);
+    this.set({ scriptVersion: this.state.scriptVersion + 1 });
+    const p = this.state.project;
+    window.clearTimeout(this.scriptTimers.get(name));
+    this.scriptTimers.set(
+      name,
+      window.setTimeout(() => {
+        this.scriptTimers.delete(name);
+        if (p) void saveScriptFile(assetFs, p.dir, name, source).catch((e) => this.notify('error', e instanceof Error ? e.message : 'The script could not be saved.'));
+        window.clearTimeout(this.recompileTimer);
+        this.recompileTimer = window.setTimeout(() => void this.recompileScripts(), 150);
+      }, 450),
+    );
+  }
+
+  async newScript(name: string, source: string): Promise<boolean> {
+    const problem = storyNameProblem(name, [...this.scripts.keys()], 'script');
+    if (problem) {
+      this.notify('warn', problem);
+      return false;
+    }
+    const p = this.state.project;
+    if (!p) return false;
+    this.scripts = new Map(this.scripts).set(name.trim(), source);
+    await saveScriptFile(assetFs, p.dir, name.trim(), source);
+    this.set({ scriptVersion: this.state.scriptVersion + 1 });
+    await this.recompileScripts();
+    return true;
+  }
+
+  async removeScript(name: string): Promise<void> {
+    const p = this.state.project;
+    const next = new Map(this.scripts);
+    next.delete(name);
+    this.scripts = next;
+    window.clearTimeout(this.scriptTimers.get(name));
+    if (p) await deleteScriptFile(assetFs, p.dir, name).catch(() => undefined);
+    const bps = { ...this.state.breakpoints };
+    delete bps[name];
+    this.set({ breakpoints: bps });
+    await this.recompileScripts();
+  }
+
+  /** Write script edits that are still waiting (before playing or closing). */
+  async flushScripts(): Promise<void> {
+    for (const t of this.scriptTimers.values()) window.clearTimeout(t);
+    this.scriptTimers.clear();
+    const p = this.state.project;
+    if (!p) return;
+    for (const [name, source] of this.scripts) await saveScriptFile(assetFs, p.dir, name, source).catch(() => undefined);
+  }
+
+  toggleBreakpoint(script: string, line: number): void {
+    const cur = this.state.breakpoints[script] ?? [];
+    const next = cur.includes(line) ? cur.filter((l) => l !== line) : [...cur, line].sort((a, b) => a - b);
+    const breakpoints = { ...this.state.breakpoints, [script]: next };
+    this.set({ breakpoints });
+    const dir = this.state.project?.dir;
+    if (dir) {
+      void api()
+        .settings.get()
+        .then((cur) => api().settings.set({ ...cur, breakpoints: { ...((cur.breakpoints as Record<string, unknown> | undefined) ?? {}), [dir]: breakpoints } }))
+        .catch(() => undefined); // breakpoints just will not be remembered
+    }
+    window.clearTimeout(this.recompileTimer);
+    this.recompileTimer = window.setTimeout(() => void this.recompileScripts(), 150);
+  }
+
+  /** Turn the open scene's event sheet into a script file and open it. Returns the script's name. */
+  async convertEventsToScript(): Promise<string | null> {
+    const doc = this.doc;
+    if (!doc) return null;
+    if (doc.events.length === 0) {
+      this.notify('warn', 'The event sheet has no rows to convert.');
+      return null;
+    }
+    let name = 'Event sheet';
+    for (let i = 2; this.scripts.has(name); i++) name = `Event sheet ${i}`;
+    const names = { entity: (id: string): string | undefined => doc.getEntity(id)?.name };
+    if (!(await this.newScript(name, eventsToScript(doc.events, names, name)))) return null;
+    this.set({ openScript: name });
+    this.notify('info', `Made the script "${name}". Attach it to an object (Behaviours -> Add) and delete the event rows to run the code instead.`);
+    return name;
   }
   // ---- checking and the playbot ----
 
@@ -697,11 +843,15 @@ class AppStore {
   }
 
   stop(): void {
-    this.set({ mode: 'edit', paused: false });
+    this.hitContext = null;
+    this.set({ mode: 'edit', paused: false, debugHit: null });
   }
 
   togglePause(): void {
-    if (this.state.mode === 'play') this.set({ paused: !this.state.paused });
+    if (this.state.mode === 'play') {
+      this.hitContext = null;
+      this.set({ paused: !this.state.paused, debugHit: null });
+    }
   }
 
   step(): void {

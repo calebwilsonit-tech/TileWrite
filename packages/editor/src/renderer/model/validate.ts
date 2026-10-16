@@ -1,4 +1,4 @@
-import { behaviorList, checkSheet, parsePoints } from '@tilewright/behaviors';
+import { behaviorList, checkSheet, getBehavior, parsePoints } from '@tilewright/behaviors';
 import { EMPTY_TILE, FLAG, SLOPE_RISE, findPath, groundHeightAt, reachableCells } from '@tilewright/runtime';
 import { highSide, lowSide, meetsTop } from '../tools/algorithms';
 import type { EditorDoc } from './doc';
@@ -84,6 +84,15 @@ export function validateScene(doc: EditorDoc, sprites?: ReadonlySet<string>, pre
     }
   }
 
+  // scripts that were deleted or no longer compile
+  for (const e of doc.entities) {
+    for (const key of Object.keys(e.components)) {
+      if (key.startsWith('script_') && !getBehavior(key)) {
+        const t = e.components.transform as T | undefined;
+        out.push({ id: `script-missing-${e.id}-${key}`, severity: 'error', message: `"${e.name}" uses the script "${key.slice(7).replace(/_/g, ' ')}", which does not exist (it was deleted, renamed, or has a mistake and cannot start). Open the Code editor to fix it, or remove the behaviour from the object.`, target: t ? pos('entity', e.id, t) : undefined });
+      }
+    }
+  }
   // story-puzzle and echo settings that cannot work
   for (const e of doc.entities) {
     const t = e.components.transform as T | undefined;

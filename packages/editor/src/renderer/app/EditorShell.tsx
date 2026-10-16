@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { Suspense, lazy, useEffect, useRef } from 'react';
 import { DockviewReact, type DockviewApi, type DockviewReadyEvent, type IDockviewPanelProps } from 'dockview-react';
 import 'dockview-react/dist/styles/dockview.css';
 import { useApp, store } from './store';
@@ -31,6 +31,8 @@ const components: Record<string, React.FunctionComponent<IDockviewPanelProps>> =
   problems: () => <ProblemsPanel />,
   console: () => <ConsolePanel />,
 };
+
+const CodeView = lazy(() => import('../code/CodeView'));
 
 const LAYOUT_VERSION = 5;
 
@@ -86,6 +88,9 @@ function Toolbar() {
         <button data-testid="btn-ws-sprites" className={ws === 'sprites' ? 'on' : ''} aria-pressed={ws === 'sprites'} onClick={() => store.set({ workspace: 'sprites' })} title="Draw and animate sprites (Ctrl+2)" disabled={mode === 'play'}>
           Sprites
         </button>
+        <button data-testid="btn-ws-code" className={ws === 'code' ? 'on' : ''} aria-pressed={ws === 'code'} onClick={() => store.set({ workspace: 'code' })} title="Write scripts in code (Ctrl+3)">
+          Code
+        </button>
       </nav>
       {ws === 'world' && (
         <>
@@ -109,29 +114,43 @@ function Toolbar() {
       <button data-testid="btn-save" className={doc?.dirty ? 'primary' : ''} onClick={run('file.save')} disabled={mode === 'play'} title="Save the scene (Ctrl+S)">
         Save
       </button>
-      <span className="sep" />
-      {mode === 'edit' ? (
-        <>
-          <button data-testid="btn-play" className="play" onClick={() => store.play()} title="Play the scene in the editor (F5)">
-            ▶ Play
-          </button>
-          <button data-testid="btn-play-here" onClick={run('play.fromHere')} title="Play starting at the cell under the mouse (Ctrl+Enter)">
-            ▶ From here
-          </button>
-        </>
-      ) : (
-        <>
-          <button data-testid="btn-pause" onClick={() => store.togglePause()} aria-pressed={paused} title="Pause or resume (F6)">
-            {paused ? '▶ Resume' : '❚❚ Pause'}
-          </button>
-          <button data-testid="btn-step" onClick={() => store.step()} title="Advance one frame (F10)">
-            ⏭ Step
-          </button>
-          <button data-testid="btn-stop" className="stop" onClick={() => store.stop()} title="Stop and return to editing (Shift+F5 or Esc)">
-            ■ Stop
-          </button>
         </>
       )}
+      {(ws === 'world' || ws === 'code') && (
+        <>
+          <span className="sep" />
+          {mode === 'edit' ? (
+            <>
+              <button
+                data-testid="btn-play"
+                className="play"
+                onClick={() => {
+                  if (ws !== 'world') store.set({ workspace: 'world' });
+                  store.play();
+                }}
+                title="Play the scene in the editor (F5)"
+              >
+                ▶ Play
+              </button>
+              {ws === 'world' && (
+                <button data-testid="btn-play-here" onClick={run('play.fromHere')} title="Play starting at the cell under the mouse (Ctrl+Enter)">
+                  ▶ From here
+                </button>
+              )}
+            </>
+          ) : (
+            <>
+              <button data-testid="btn-pause" onClick={() => store.togglePause()} aria-pressed={paused} title="Pause or resume (F6)">
+                {paused ? '▶ Resume' : '❚❚ Pause'}
+              </button>
+              <button data-testid="btn-step" onClick={() => store.step()} title="Advance one frame (F10)">
+                ⏭ Step
+              </button>
+              <button data-testid="btn-stop" className="stop" onClick={() => store.stop()} title="Stop and return to editing (Shift+F5 or Esc)">
+                ■ Stop
+              </button>
+            </>
+          )}
         </>
       )}
       <span className="grow" />
@@ -200,6 +219,11 @@ export function EditorShell() {
         <DockviewReact className={`dockview-theme-${theme}`} components={components} onReady={onReady} />
       </div>
       {ws === 'sprites' && <StudioView />}
+      {ws === 'code' && (
+        <Suspense fallback={<p className="hint">Loading the code editor...</p>}>
+          <CodeView />
+        </Suspense>
+      )}
       <StatusBar />
       <Toasts />
       <CommandPalette overrides={overrides} />

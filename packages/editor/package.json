@@ -45,6 +45,7 @@
   },
   "dependencies": {
     "dockview-react": "^8.5.1",
+    "monaco-editor": "^0.57.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
   }

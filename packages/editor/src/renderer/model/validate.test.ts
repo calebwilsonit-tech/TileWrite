@@ -17,6 +17,14 @@ describe('validateScene', () => {
     expect(validateScene(doc())).toEqual([]);
   });
 
+  it('reports an object that uses a script which no longer exists', () => {
+    const d = doc();
+    d.addEntities([{ name: 'Orphan', tags: [], components: { transform: { x: 6.5, y: 6.5, h: 0, facing: 2 }, script_Gone: {} } }]);
+    const p = validateScene(d).find((x) => x.id.startsWith('script-missing-'))!;
+    expect(p.severity).toBe('error');
+    expect(p.message).toMatch(/uses the script "Gone", which does not exist/);
+  });
+
   it('requires a player start, in plain English', () => {
     const d = EditorDoc.fromScene(newScene('T', 4, 4));
     const p = validateScene(d)[0]!;

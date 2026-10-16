@@ -16,3 +16,7 @@ export * from './story/director';
 export * from './story/inventory';
 export * from './story/context';
 export * from './ui/game-ui';
+export * from './scripting/script';
+export * from './scripting/loader';
+export * from './scripting/convert';
+export type * from './scripting/api';

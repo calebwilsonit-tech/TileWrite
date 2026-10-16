@@ -114,6 +114,8 @@ export function buildCommands(): Command[] {
     { id: 'edit.redo2', label: 'Redo (alternate)', category: 'Edit', keys: 'Ctrl+Shift+Z', run: () => (store.state.workspace === 'sprites' ? redoStudio() : void store.doc?.redo()), enabled: () => editing() || inStudio() },
     { id: 'workspace.world', label: 'Go to the World editor', category: 'App', keys: 'Ctrl+1', run: () => store.set({ workspace: 'world' }), enabled: inEditor },
     { id: 'workspace.sprites', label: 'Go to the Sprite studio', category: 'App', keys: 'Ctrl+2', run: () => store.set({ workspace: 'sprites' }), enabled: inEditor },
+    { id: 'workspace.code', label: 'Go to the Code editor', category: 'App', keys: 'Ctrl+3', run: () => store.set({ workspace: 'code' }), enabled: inEditor },
+    { id: 'events.toCode', label: 'Convert the event sheet to a script', category: 'Scripts', keys: '', run: () => void store.convertEventsToScript().then((n) => n && store.set({ workspace: 'code' })), enabled: editing },
     { id: 'edit.delete', label: 'Delete selection', category: 'Edit', keys: 'Delete', run: deleteSelection, enabled: editing },
     { id: 'edit.delete2', label: 'Delete selection (Backspace)', category: 'Edit', keys: 'Backspace', run: deleteSelection, enabled: editing },
     { id: 'edit.copy', label: 'Copy', category: 'Edit', keys: 'Ctrl+C', run: copySelection, enabled: editing },

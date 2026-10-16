@@ -1,9 +1,9 @@
-# Tilewright progress
+﻿# Tilewright progress
 
 Boxes are ticked only when the milestone's tests pass and the sample has been played.
 Spec: `ENGINE_BUILD_PROMPT.md`. Read `DECISIONS.md` and `KNOWN_ISSUES.md` before continuing.
 
-**Next up:** M10 code window - Monaco editor inside the app with the engine's API as TypeScript types, script components (a script is a behaviour written in code: settings, update, signals) that can do everything the no-code layer does, running them safely in the game, breakpoints and a console, and showing script errors in the Problems panel with Go to. Owed earlier: autotiling rules + Decoration/Walls/Lights layers, hot reload while playing and a separate game window (M10 / M14), vector drawing in the studio (M14), a visual state-machine editor for enemies, an audio engine (M14), a dialogue graph canvas, localization string tables.
+**Next up:** M11 Claude assistant - a chat panel using `@anthropic-ai/sdk` that sees the open scene/project and can propose edits (shown as a diff to approve), key storage in the OS keychain/safe storage, streaming, prompt caching, plain-English error handling, and enabling the Problems panel "Explain" and "Fix with Claude" buttons. Then M12 export/installer/CI (+ compile scripts in exports, crash log files), M13 acceptance game, M14 polish. Owed earlier: autotiling rules + Decoration/Walls/Lights layers, separate game window (M14), vector drawing in the studio (M14), a visual state-machine editor for enemies, an audio engine (M14), a dialogue graph canvas, localization string tables.
 
 ## Milestones
 
@@ -17,7 +17,7 @@ Spec: `ENGINE_BUILD_PROMPT.md`. Read `DECISIONS.md` and `KNOWN_ISSUES.md` before
 - [x] M7 AI and combat (see the M7 checklist)
 - [x] M8 Story systems (see the M8 checklist)
 - [x] M9 Errors and debugging (see the M9 checklist)
-- [ ] M10 Code window
+- [x] M10 Code window (see the M10 checklist)
 - [ ] M11 Claude assistant
 - [ ] M12 Export and packaging
 - [ ] M13 The acceptance game
@@ -129,6 +129,17 @@ Deferred:
 - [ ] Dialogue node-graph canvas and a visual cutscene timeline; localization string tables
 - [ ] Audio engine (volumes are stored only), video settings, minigames, cosmetic skins, hit-stop, drawn world map
 
+## M10 checklist
+
+Done and covered by tests (unit: `packages/behaviors/src/scripting/scripting.test.ts`, `packages/editor/src/renderer/project/scripts.test.ts`, `model/validate.test.ts`; e2e: `e2e/m10-code.spec.ts`; docs: `docs/code-window.md`):
+- [x] Code window with Monaco: the engine API as TypeScript types (completions, hover docs, underlined mistakes - verified under Electron/file:// including the TS worker), script list, templates, delete, autosave, compile errors with line numbers
+- [x] Scripts are behaviours (`script_<Name>`): Add menu, Inspector settings, wires, prefabs; live reload while playing keeping `me.state`; missing-script problem on objects
+- [x] `game.do/test` give code every event-sheet action and condition; "Convert to code" turns an event sheet into an equivalent script
+- [x] Breakpoints (gutter click), pause after the step with the line highlighted, Resume/Step/Stop, watch window, console
+- [x] Play/Pause/Step/Stop available in the Code window
+- [x] Sample built in the UI: a Spinner script written in the editor, attached to a crate, hot-changed during play, stopped at a breakpoint, event sheet converted (`e2e/m10-code.spec.ts`, screenshots inspected)
+
+Deferred (see KNOWN_ISSUES): sandboxing, line-by-line stepping/call stack, scene Problems panel entries for script compile errors, script imports, compiling scripts in exported games (M12).
 ## M9 checklist
 
 Done and covered by tests (unit: `packages/playbot/src`, `packages/behaviors/src/{m9,crash}.test.ts`, `packages/editor/src/renderer/project/check.test.ts`, `model/logic.test.ts`; e2e: `e2e/m9-checks.spec.ts`; docs: `docs/checks-and-playbot.md`):
@@ -141,3 +152,4 @@ Done and covered by tests (unit: `packages/playbot/src`, `packages/behaviors/src
 Deferred:
 - [ ] A search-based puzzle solver for echo/crate combinations beyond the fixed recipes; soft-lock analysis beyond crate puzzles; a bot that fights and uses items
 - [ ] "Explain" / "Fix with Claude" buttons (M11); crash log files and screen in exported games (M12)
+

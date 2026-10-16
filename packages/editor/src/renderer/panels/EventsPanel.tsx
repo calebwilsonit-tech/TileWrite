@@ -298,6 +298,9 @@ export function EventsPanel() {
         <button data-testid="add-row" className="primary" onClick={() => update('Add event row', (rows) => void rows.push(newRow(doc.newId('ev'))))}>
           + Event row
         </button>
+        <button data-testid="events-to-code" disabled={doc.events.length === 0} onClick={() => void store.convertEventsToScript().then((n) => n && store.set({ workspace: 'code' }))} title="See the event sheet written as code, to learn from or carry on in code">
+          Convert to code
+        </button>
       </div>
       {doc.events.length === 0 && <p className="hint">An event row reads like a sentence: “When the player is inside the door area, show a message.” Add a row, then pick what it waits for and what it does.</p>}
       {doc.events.map((row, i) => (
