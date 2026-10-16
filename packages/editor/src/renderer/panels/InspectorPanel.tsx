@@ -1,4 +1,6 @@
-import { FACING_NAMES, type EntityData, type RegionData } from '@tilewright/runtime';
+import { FACING_NAMES, type Animator, type EntityData, type RegionData } from '@tilewright/runtime';
+import { applySprite, setLocomotionClips, setPlainClip } from '../studio/apply';
+import { studio, useStudio } from '../studio/store';
 import { useApp, store } from '../app/store';
 import { copySelection, deleteSelection, pasteClipboard, rotateSelection } from '../app/commands';
 import { CheckField, NumberField, SelectField, TextField, hexToNumber, numberToHex } from './fields';
@@ -10,12 +12,62 @@ const SHAPES = [
   { value: 'box', label: 'Box' },
   { value: 'diamond', label: 'Flat diamond' },
 ];
-const KNOWN = new Set(['transform', 'sprite', 'collider', 'playerController', 'body']);
+const KNOWN = new Set(['transform', 'sprite', 'collider', 'playerController', 'body', 'animator']);
 
 function comp<T extends Rec>(e: EntityData, name: string): T | undefined {
   return e.components[name] as T | undefined;
 }
 
+/** Pick a drawn sprite for the object and the animations it uses. */
+function SpriteAssetFields({ e, edit }: { e: EntityData; edit: (label: string, fn: (x: EntityData) => void) => void }) {
+  const names = useStudio((s) => s.names);
+  useStudio((s) => s.assetsVersion);
+  const sprite = e.components.sprite as { asset?: string } | undefined;
+  const asset = sprite?.asset ?? '';
+  const data = asset ? studio.assets.get(asset) : undefined;
+  const anim = e.components.animator as Animator | undefined;
+  const clipNames = data?.clips.map((c) => c.name) ?? [];
+  const clipOptions = (withNone: boolean): { value: string; label: string }[] => [
+    ...(withNone ? [{ value: '', label: '(none)' }] : []),
+    ...clipNames.map((n) => ({ value: n, label: n })),
+  ];
+  const states = anim?.controller?.states;
+  return (
+    <fieldset data-testid="insp-sprite">
+      <legend>Drawn sprite</legend>
+      <SelectField<string>
+        testId="insp-sprite-asset"
+        label="Sprite"
+        value={asset}
+        options={[{ value: '', label: '(none: simple shape)' }, ...names.map((n) => ({ value: n, label: n }))]}
+        onChange={(v) => edit(v ? 'Use sprite' : 'Clear sprite', (x) => applySprite(x, v ? studio.assets.get(v) : undefined))}
+      />
+      {asset && !data && <p className="warn-text">This sprite is not in the project any more. Pick another.</p>}
+      {data && clipNames.length === 0 && <p className="hint">This sprite has no animations yet; it shows its first frame. Add animations in the Sprite studio.</p>}
+      {data && clipNames.length > 0 && states && (
+        <>
+          <SelectField<string> testId="insp-clip-idle" label="Standing" value={states.idle?.clip ?? ''} options={clipOptions(false)} onChange={(v) => edit('Change animation', (x) => setLocomotionClips(x, data, { idle: v, walk: states.walk?.clip ?? v, air: states.air?.clip ?? '' }))} />
+          <SelectField<string> testId="insp-clip-walk" label="Walking" value={states.walk?.clip ?? ''} options={clipOptions(false)} onChange={(v) => edit('Change animation', (x) => setLocomotionClips(x, data, { idle: states.idle?.clip ?? v, walk: v, air: states.air?.clip ?? '' }))} />
+          <SelectField<string> testId="insp-clip-air" label="In the air" value={states.air?.clip ?? ''} options={clipOptions(true)} onChange={(v) => edit('Change animation', (x) => setLocomotionClips(x, data, { idle: states.idle?.clip ?? '', walk: states.walk?.clip ?? '', air: v }))} />
+          <p className="hint">Switches by itself: walking while moving, the air animation while jumping or falling.</p>
+        </>
+      )}
+      {data && clipNames.length > 0 && !states && (
+        <SelectField<string> testId="insp-clip" label="Plays" value={anim?.clip ?? ''} options={clipOptions(false)} onChange={(v) => edit('Change animation', (x) => setPlainClip(x, data, v))} />
+      )}
+      <div className="row">
+        <button
+          onClick={() => {
+            store.set({ workspace: 'sprites' });
+            if (data) studio.openSprite(data.name);
+          }}
+        >
+          {data ? 'Edit in Sprite studio' : 'Open Sprite studio'}
+        </button>
+      </div>
+    </fieldset>
+  );
+}
 function EntityInspector({ ids }: { ids: string[] }) {
   const doc = store.doc!;
   const ents = ids.map((id) => doc.getEntity(id)).filter((e): e is EntityData => !!e);
@@ -78,6 +130,7 @@ function EntityInspector({ ids }: { ids: string[] }) {
           <CheckField label="Visible" value={s.visible} onChange={(v) => setC('sprite', 'visible', v, 'Toggle visible')} />
         </fieldset>
       )}
+      {s && <SpriteAssetFields e={e} edit={edit} />}
       {c && (
         <fieldset>
           <legend>Collision</legend>

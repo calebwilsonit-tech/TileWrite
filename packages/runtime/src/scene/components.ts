@@ -33,6 +33,8 @@ export interface Sprite {
   /** Added to the depth ordering tie-break; push a sprite in front of / behind equals. */
   sortOffset: number;
   visible: boolean;
+  /** Name of a sprite asset to draw instead of the procedural shape (drawn in the sprite studio). */
+  asset?: string;
 }
 
 export function makeTransform(x = 0, y = 0, h = 0, facing = 2): TransformIso {

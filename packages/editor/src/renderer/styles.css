@@ -786,3 +786,269 @@ legend {
   font-variant-numeric: tabular-nums;
   color: var(--fg);
 }
+
+/* ---------- workspace tabs ---------- */
+
+.workspaces {
+  display: flex;
+}
+
+.workspaces button {
+  border-radius: 0;
+}
+
+.workspaces button:first-child {
+  border-radius: 6px 0 0 6px;
+}
+
+.workspaces button:last-child {
+  border-radius: 0 6px 6px 0;
+}
+
+.workspaces button.on {
+  background: var(--accent);
+  color: var(--accent-fg);
+  border-color: var(--accent);
+}
+
+/* ---------- sprite studio ---------- */
+
+.studio {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 250px minmax(0, 1fr) 320px;
+  background: var(--bg);
+}
+
+.studio-left,
+.studio-right {
+  overflow: auto;
+  background: var(--panel);
+  border-right: 1px solid var(--line);
+}
+
+.studio-right {
+  border-right: none;
+  border-left: 1px solid var(--line);
+}
+
+.studio-center {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.studio-section {
+  padding: 8px 10px;
+}
+
+.studio-section h3 {
+  margin: 10px 0 6px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.studio-details > summary {
+  cursor: pointer;
+  padding: 6px 10px;
+  background: var(--panel-2);
+  border-top: 1px solid var(--line);
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.studio-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+}
+
+.studio-canvas-wrap {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  background: #1a1c22;
+}
+
+.studio-canvas-wrap.empty {
+  display: grid;
+  place-items: center;
+}
+
+.studio-canvas-wrap canvas {
+  display: block;
+}
+
+.studio-status {
+  position: absolute;
+  left: 8px;
+  bottom: 6px;
+  font-size: 12px;
+  color: var(--muted);
+  background: rgba(0, 0, 0, 0.45);
+  padding: 2px 8px;
+  border-radius: 10px;
+  pointer-events: none;
+}
+
+.timeline {
+  background: var(--panel);
+  border-top: 1px solid var(--line);
+  padding: 4px 10px 8px;
+}
+
+.timeline .frames {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 4px 0;
+}
+
+button.frame {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 3px;
+  font-size: 11px;
+  flex: none;
+}
+
+button.frame canvas {
+  background: repeating-conic-gradient(#3a3d48 0 25%, #2f323c 0 50%) 0 / 8px 8px;
+  image-rendering: pixelated;
+}
+
+button.frame.on {
+  border-color: var(--focus);
+  box-shadow: 0 0 0 2px var(--focus);
+}
+
+.swatches {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 4px;
+}
+
+button.swatch {
+  aspect-ratio: 1;
+  padding: 0;
+  border-radius: 4px;
+}
+
+button.swatch.clear {
+  background: repeating-conic-gradient(#888 0 25%, #555 0 50%) 0 / 8px 8px;
+}
+
+button.swatch.on {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+
+.layer-rows {
+  list-style: none;
+  margin: 0 0 6px;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.layer-rows li {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 2px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+}
+
+.layer-rows li.on {
+  border-color: var(--accent);
+  background: var(--panel-2);
+}
+
+.layer-rows .field {
+  flex: 1;
+  margin: 0;
+  grid-template-columns: 1fr;
+}
+
+.sprite-rows {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+
+button.sprite-row {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+}
+
+button.sprite-row.on {
+  border-color: var(--accent);
+  background: var(--panel-2);
+}
+
+.thumb {
+  image-rendering: pixelated;
+  background: repeating-conic-gradient(#3a3d48 0 25%, #2f323c 0 50%) 0 / 8px 8px;
+  border-radius: 3px;
+}
+
+.tag {
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0 6px;
+  color: var(--muted);
+}
+
+.preview-box {
+  display: grid;
+  place-items: center;
+  min-height: 120px;
+  background: #1a1c22;
+  border-radius: 8px;
+  overflow: auto;
+  padding: 8px;
+}
+
+.preview-box canvas {
+  image-rendering: pixelated;
+}
+
+label.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.asset-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 6px;
+  margin-top: 8px;
+}
+
+button.asset {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 4px;
+  font-size: 11px;
+}

@@ -4,8 +4,11 @@ export interface TilewrightApi {
   versions: { electron: string; chrome: string };
   info(): Promise<{ version: string; userData: string; testMode: boolean; platform: string }>;
   chooseFolder(title: string): Promise<string | null>;
+  importFile(title: string, extensions: string[]): Promise<{ name: string; bytes: Uint8Array } | null>;
   fs: {
     read(file: string): Promise<string>;
+    readBinary(file: string): Promise<Uint8Array>;
+    writeBinary(file: string, bytes: Uint8Array): Promise<void>;
     write(file: string, text: string): Promise<void>;
     exists(file: string): Promise<boolean>;
     remove(file: string): Promise<void>;

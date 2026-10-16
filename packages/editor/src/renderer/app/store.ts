@@ -68,6 +68,7 @@ export interface ViewOptions {
 }
 
 export type Mode = 'edit' | 'play';
+export type Workspace = 'world' | 'sprites';
 
 export interface Notice {
   id: number;
@@ -77,6 +78,8 @@ export interface Notice {
 
 export interface AppState {
   screen: 'projects' | 'editor';
+  /** Which editor is showing: the world, or the sprite studio. */
+  workspace: Workspace;
   project: OpenProject | null;
   scenePath: string | null;
   tool: ToolId;
@@ -101,6 +104,7 @@ export interface AppState {
 
 const initial: AppState = {
   screen: 'projects',
+  workspace: 'world',
   project: null,
   scenePath: null,
   tool: 'select',
@@ -258,10 +262,13 @@ class AppStore {
 
   private async openLoaded(p: OpenProject): Promise<void> {
     await api().recent.add(p.dir, p.project.name);
-    this.set({ project: p, recent: await api().recent.list() });
+    this.set({ project: p, workspace: 'world', recent: await api().recent.list() });
     await this.openScene(p.project.startScene);
     this.set({ screen: 'editor' });
     this.startAutosave();
+    const { studio } = await import('../studio/store');
+    await studio.loadAssets();
+    for (const problem of studio.state.problems) this.notify('warn', problem);
   }
 
   async openScene(scenePath: string): Promise<void> {
@@ -337,7 +344,10 @@ class AppStore {
     window.clearInterval(this.autosaveTimer);
     this.unsubDoc?.();
     this.doc = null;
-    this.set({ screen: 'projects', project: null, scenePath: null, selection: [], mode: 'edit', recent: await api().recent.list() });
+    const { studio } = await import('../studio/store');
+    if (studio.isDirty()) await studio.save(); // leaving the project never silently drops drawing work
+    studio.closeSprite();
+    this.set({ screen: 'projects', workspace: 'world', project: null, scenePath: null, selection: [], mode: 'edit', recent: await api().recent.list() });
   }
 
   private startAutosave(): void {

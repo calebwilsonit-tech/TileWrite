@@ -10,11 +10,14 @@ import { TilesPanel } from '../panels/TilesPanel';
 import { InspectorPanel } from '../panels/InspectorPanel';
 import { LayersPanel } from '../panels/LayersPanel';
 import { ConsolePanel, HistoryPanel, ProblemsPanel, useProblems } from '../panels/BottomPanels';
+import { StudioView } from '../studio/StudioView';
+import { AssetsPanel } from '../panels/AssetsPanel';
 
 const components: Record<string, React.FunctionComponent<IDockviewPanelProps>> = {
   viewport: () => <ViewportPanel />,
   tools: () => <ToolsPanel />,
   tiles: () => <TilesPanel />,
+  assets: () => <AssetsPanel />,
   inspector: () => <InspectorPanel />,
   layers: () => <LayersPanel />,
   history: () => <HistoryPanel />,
@@ -22,17 +25,19 @@ const components: Record<string, React.FunctionComponent<IDockviewPanelProps>> =
   console: () => <ConsolePanel />,
 };
 
-const LAYOUT_VERSION = 1;
+const LAYOUT_VERSION = 2;
 
 function buildDefault(api: DockviewApi): void {
   api.addPanel({ id: 'viewport', component: 'viewport', title: 'Viewport', renderer: 'always' });
   api.addPanel({ id: 'tools', component: 'tools', title: 'Tools', position: { referencePanel: 'viewport', direction: 'left' }, initialWidth: 250 });
   api.addPanel({ id: 'tiles', component: 'tiles', title: 'Tiles', position: { referencePanel: 'tools', direction: 'below' }, initialHeight: 230 });
+  api.addPanel({ id: 'assets', component: 'assets', title: 'Assets', position: { referencePanel: 'tiles', direction: 'within' } });
   api.addPanel({ id: 'inspector', component: 'inspector', title: 'Inspector', position: { referencePanel: 'viewport', direction: 'right' }, initialWidth: 290 });
   api.addPanel({ id: 'layers', component: 'layers', title: 'Layers', position: { referencePanel: 'inspector', direction: 'within' } });
   api.addPanel({ id: 'history', component: 'history', title: 'History', position: { referencePanel: 'inspector', direction: 'within' } });
   api.addPanel({ id: 'problems', component: 'problems', title: 'Problems', position: { referencePanel: 'viewport', direction: 'below' }, initialHeight: 190 });
   api.addPanel({ id: 'console', component: 'console', title: 'Console', position: { referencePanel: 'problems', direction: 'within' } });
+  api.getPanel('tiles')?.api.setActive();
   api.getPanel('inspector')?.api.setActive();
   api.getPanel('problems')?.api.setActive();
 }
@@ -43,6 +48,7 @@ function Toolbar() {
   const mode = useApp((s) => s.mode);
   const paused = useApp((s) => s.paused);
   const theme = useApp((s) => s.theme);
+  const ws = useApp((s) => s.workspace);
   useApp((s) => s.docVersion);
   const doc = store.doc;
   const problems = useProblems();
@@ -63,6 +69,16 @@ function Toolbar() {
       <span className="project-name" data-testid="project-name">
         {project?.project.name}
       </span>
+      <nav className="workspaces" aria-label="Editors">
+        <button data-testid="btn-ws-world" className={ws === 'world' ? 'on' : ''} aria-pressed={ws === 'world'} onClick={() => store.set({ workspace: 'world' })} title="Build the world (Ctrl+1)" disabled={mode === 'play'}>
+          World
+        </button>
+        <button data-testid="btn-ws-sprites" className={ws === 'sprites' ? 'on' : ''} aria-pressed={ws === 'sprites'} onClick={() => store.set({ workspace: 'sprites' })} title="Draw and animate sprites (Ctrl+2)" disabled={mode === 'play'}>
+          Sprites
+        </button>
+      </nav>
+      {ws === 'world' && (
+        <>
       <select data-testid="scene-select" aria-label="Scene" value={scenePath ?? ''} onChange={(e) => void switchScene(e.target.value)} disabled={mode === 'play'}>
         {project?.project.scenes.map((s) => (
           <option key={s} value={s}>
@@ -106,6 +122,8 @@ function Toolbar() {
           </button>
         </>
       )}
+        </>
+      )}
       <span className="grow" />
       <span className={`problem-count${errors > 0 ? ' bad' : ''}`} data-testid="problem-count" title="Problems found in this scene">
         {problems.length === 0 ? 'No problems' : `${problems.length} problem${problems.length > 1 ? 's' : ''}`}
@@ -123,6 +141,7 @@ function Toolbar() {
 
 export function EditorShell() {
   const theme = useApp((s) => s.theme);
+  const ws = useApp((s) => s.workspace);
   const [overrides, setKeys] = useShortcuts();
   useKeyDispatcher(overrides);
   const apiRef = useRef<DockviewApi | null>(null);
@@ -167,9 +186,10 @@ export function EditorShell() {
   return (
     <div className="shell" data-testid="editor-shell">
       <Toolbar />
-      <div className="dock">
+      <div className="dock" style={ws === 'world' ? undefined : { display: 'none' }}>
         <DockviewReact className={`dockview-theme-${theme}`} components={components} onReady={onReady} />
       </div>
+      {ws === 'sprites' && <StudioView />}
       <StatusBar />
       <Toasts />
       <CommandPalette overrides={overrides} />

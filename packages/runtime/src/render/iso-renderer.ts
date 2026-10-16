@@ -1,6 +1,9 @@
-import { Application, Container, Graphics } from 'pixi.js';
+import { Application, Container, Graphics, Rectangle, Sprite as PixiSprite, Texture } from 'pixi.js';
+import { ANIMATOR, type Animator } from '../anim/animator';
 import { DEFAULT_ISO, gridToScreen, screenToCell, type Cell, type IsoConfig } from '../iso/math';
 import { C, type Sprite, type TransformIso } from '../scene/components';
+import type { SpriteData } from '../sprites/format';
+import { exportSheet, type Atlas } from '../sprites/sheet';
 import type { Entity, EntityId, World } from '../scene/world';
 import { DEFAULT_TILESET, FLAG, SLOPE, TileMap, type TileDef, type TileSet } from '../tilemap/tilemap';
 import { Camera } from './camera';
@@ -28,9 +31,19 @@ export interface RendererOptions {
   antialias?: boolean;
 }
 
+/** A drawn sprite uploaded to the GPU: one texture per frame cut from a packed sheet. */
+interface SpriteSheetTextures {
+  atlas: Atlas;
+  textures: Texture[];
+  version: number;
+}
+
 interface EntityView {
-  gfx: Graphics;
+  /** Graphics for procedural shapes, a Container (shadow + sprite) for drawn sprites. */
+  gfx: Container;
   signature: string;
+  spr?: PixiSprite;
+  sheet?: SpriteSheetTextures;
 }
 
 interface TileView {
@@ -95,6 +108,8 @@ export class IsoRenderer {
   private tileListDirty = true;
   private nextTileId = 0;
   private readonly entityViews = new Map<number, EntityView>();
+  private readonly sprites = new Map<string, SpriteSheetTextures>();
+  private spriteVersion = 0;
   private ready = false;
   private tileset: TileSet = DEFAULT_TILESET;
   private tileMap: TileMap | null = null;
@@ -379,17 +394,74 @@ export class IsoRenderer {
     return screenToCell(w.x, w.y, h, this.iso);
   }
 
+  /**
+   * Make a drawn sprite available to entities whose Sprite component names it (`asset`).
+   * Call again after the sprite is edited; views using it refresh on the next frame.
+   */
+  registerSprite(data: SpriteData): void {
+    this.unregisterSprite(data.name);
+    const sheet = exportSheet(data, { powerOfTwo: false, padding: 1, png: false });
+    const canvas = document.createElement('canvas');
+    canvas.width = sheet.width;
+    canvas.height = sheet.height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('This computer cannot draw 2D canvases, so sprites cannot be shown.');
+    ctx.putImageData(new ImageData(new Uint8ClampedArray(sheet.rgba), sheet.width, sheet.height), 0, 0);
+    const base = Texture.from(canvas);
+    base.source.scaleMode = 'nearest';
+    const textures = sheet.atlas.frames.map((f) => new Texture({ source: base.source, frame: new Rectangle(f.x, f.y, f.w, f.h) }));
+    this.sprites.set(data.name, { atlas: sheet.atlas, textures, version: ++this.spriteVersion });
+  }
+
+  unregisterSprite(name: string): void {
+    const old = this.sprites.get(name);
+    if (!old) return;
+    for (const t of old.textures) t.destroy(false);
+    this.sprites.delete(name);
+  }
+
+  hasSprite(name: string): boolean {
+    return this.sprites.has(name);
+  }
+
   private viewFor(e: Entity, s: Sprite): EntityView {
-    const signature = `${s.shape}|${s.color}|${s.w}|${s.d}|${s.height}`;
+    const sheet = s.asset ? this.sprites.get(s.asset) : undefined;
+    const signature = sheet ? `asset|${s.asset}|${sheet.version}|${s.w}|${s.d}` : `${s.shape}|${s.color}|${s.w}|${s.d}|${s.height}`;
     let v = this.entityViews.get(e.id);
-    if (v && v.signature === signature) return v;
-    if (v) v.gfx.destroy();
-    const gfx = new Graphics();
-    this.drawSprite(gfx, s);
-    this.world.addChild(gfx);
-    v = { gfx, signature };
-    this.entityViews.set(e.id, v);
+    if (!v || v.signature !== signature) {
+      v?.gfx.destroy({ children: true });
+      if (sheet) {
+        const node = new Container();
+        const shadow = new Graphics();
+        shadow.ellipse(0, 0, Math.max(6, s.w * this.iso.tileW * 0.3), Math.max(3, s.d * this.iso.tileH * 0.3)).fill({ color: 0x000000, alpha: 0.28 });
+        const spr = new PixiSprite();
+        node.addChild(shadow, spr);
+        v = { gfx: node, signature, spr, sheet };
+      } else {
+        const gfx = new Graphics();
+        this.drawSprite(gfx, s);
+        v = { gfx, signature };
+      }
+      this.world.addChild(v.gfx);
+      this.entityViews.set(e.id, v);
+    }
+    if (v.spr && v.sheet) {
+      const anim = e.get<Animator>(ANIMATOR);
+      this.showFrame(v, anim?.frame ?? 0, anim?.flip ?? false);
+    }
     return v;
+  }
+
+  /** Point the view's sprite at a frame, mirrored left-to-right around the feet if asked. */
+  private showFrame(v: EntityView, frame: number, flip: boolean): void {
+    const sheet = v.sheet!;
+    const idx = frame >= 0 && frame < sheet.textures.length ? frame : 0;
+    const f = sheet.atlas.frames[idx]!;
+    const spr = v.spr!;
+    spr.texture = sheet.textures[idx]!;
+    const ox = f.trimX - sheet.atlas.origin.x;
+    spr.scale.x = flip ? -1 : 1;
+    spr.position.set(flip ? -ox : ox, f.trimY - sheet.atlas.origin.y);
   }
 
   /** Geometry is relative to the feet point (the entity's grid position at its height). */

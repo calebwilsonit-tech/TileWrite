@@ -1,15 +1,24 @@
+import { Tweens } from '../anim/tween';
 import { InputState, type ActionSnapshot } from '../input/input';
 import { World } from '../scene/world';
+import type { SpriteData } from '../sprites/format';
 import type { TileMap } from '../tilemap/tilemap';
 import { EventBus } from './events';
 import { Rng } from './rng';
 import { TICK_DT } from './timestep';
+
+/** Game data systems may read (sprite definitions for animation, later audio and strings). */
+export interface Assets {
+  sprites: Map<string, SpriteData>;
+}
 
 export interface SimContext {
   world: World;
   input: InputState;
   rng: Rng;
   events: EventBus;
+  tweens: Tweens;
+  assets: Assets;
   /** The terrain, or null for scenes without tiles. */
   map: TileMap | null;
   /** Seconds per tick (always 1/60). */
@@ -29,6 +38,8 @@ export class Simulation {
   readonly world = new World();
   readonly input = new InputState();
   readonly events = new EventBus();
+  readonly tweens = new Tweens();
+  readonly assets: Assets = { sprites: new Map() };
   readonly rng: Rng;
   /** Terrain used by physics and AI. Set it before the first step. */
   map: TileMap | null = null;
@@ -53,12 +64,15 @@ export class Simulation {
       input: this.input,
       rng: this.rng,
       events: this.events,
+      tweens: this.tweens,
+      assets: this.assets,
       map: this.map,
       dt: TICK_DT,
       tick: this.tick,
     };
     this.world.beginTick();
     try {
+      this.tweens.update(TICK_DT);
       for (const s of this.systems) s.fn(ctx);
     } finally {
       this.world.endTick();

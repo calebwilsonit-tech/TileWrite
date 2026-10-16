@@ -11,8 +11,11 @@ contextBridge.exposeInMainWorld('tilewright', {
   versions: { electron: process.versions.electron, chrome: process.versions.chrome },
   info: () => invoke('app:info'),
   chooseFolder: (title: string) => invoke<string | null>('dialog:chooseFolder', title),
+  importFile: (title: string, extensions: string[]) => invoke<{ name: string; bytes: Uint8Array } | null>('dialog:importFile', title, extensions),
   fs: {
     read: (file: string) => invoke<string>('fs:read', file),
+    readBinary: (file: string) => invoke<Uint8Array>('fs:readBinary', file),
+    writeBinary: (file: string, bytes: Uint8Array) => invoke<void>('fs:writeBinary', file, bytes),
     write: (file: string, text: string) => invoke<void>('fs:write', file, text),
     exists: (file: string) => invoke<boolean>('fs:exists', file),
     remove: (file: string) => invoke<void>('fs:remove', file),

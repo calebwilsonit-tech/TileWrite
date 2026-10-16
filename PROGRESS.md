@@ -3,7 +3,7 @@
 Boxes are ticked only when the milestone's tests pass and the sample has been played.
 Spec: `ENGINE_BUILD_PROMPT.md`. Read `DECISIONS.md` and `KNOWN_ISSUES.md` before continuing.
 
-**Next up:** M4 sprite studio - pixel drawing with layers and palettes, iso guide grid + iso-box helper, onion skin, timeline with frame durations, 8-direction sets with mirroring, origin/feet point, per-frame hitboxes, sprite-sheet export with packing, PNG import; an asset browser; then replace the procedural boxes in the renderer with real sprites and make the sample (a drawn, animated character walking the room) through the UI. Owed earlier: entities as platforms (M5), pit damage (M7), autotiling rules + Decoration/Walls layers (M4), hot reload while playing and a separate game window (M10 / M14).
+**Next up:** M5 no-code logic - the behaviour framework (a behaviour = named settings + a system, shown in the inspector), the built-in behaviours (Pushable, Pressure Plate, Gate/Door, Lever, Timer, Spawner, Pickup, Patrol, Health, Damage on Touch, ...), event sheets (When condition -> do action, in plain English), wires with logic nodes, prefabs with overrides, entities as platforms (crates you can stand on, moving platforms), and the sample: a plate opens a gate, a crate can be pushed onto the plate. Owed earlier: pit damage (M7), autotiling rules + Decoration/Walls layers (needs art; revisit in M5/M14), hot reload while playing and a separate game window (M10 / M14), vector drawing in the studio (M14).
 
 ## Milestones
 
@@ -11,7 +11,7 @@ Spec: `ENGINE_BUILD_PROMPT.md`. Read `DECISIONS.md` and `KNOWN_ISSUES.md` before
 - [x] M1 Runtime core (iso math, scene/ECS, renderer + depth sort, camera, input, fixed timestep)
 - [x] M2 Heights and collision (stairs, cliffs, pits, falling, occlusion fade)
 - [x] M3 Editor shell + world painter (see the M3 checklist: what is done and what was deliberately deferred)
-- [ ] M4 Sprite studio
+- [x] M4 Sprite studio (see the M4 checklist for what is deferred)
 - [ ] M5 No-code logic (behaviours, inspector, event sheets, wires)
 - [ ] M6 Echoes, light, puzzle parts
 - [ ] M7 AI and combat
@@ -53,3 +53,22 @@ Deliberately deferred (so the box above is honest):
 - [ ] Hot reload while the game is running; game in a separate window (M10 / M14)
 - [ ] Asset import and asset browser (M4); "Explain / Fix with Claude" buttons (M11)
 - [ ] Bypass and soft-lock validators (M9)
+
+## M4 checklist
+
+Done and covered by tests (unit: `packages/runtime/src/sprites`, `anim`, `packages/editor/src/renderer/studio`; e2e: `e2e/m4-studio.spec.ts`, which draws with the real mouse):
+- [x] Sprite file format (Zod, RLE pixels, one frame per line), PNG encoder/decoder, sheet packer with trimming, Aseprite reader (layers, frames, durations, palette, tags)
+- [x] Drawing: pencil, eraser, line, rectangle, ellipse, fill, picker, select/move/copy, flip/rotate/nudge, brush size, mirror drawing, **iso box helper**, **iso guide grid**, onion skin, pixel grid, zoom/pan
+- [x] Layers (add, rename, hide, reorder, merge), palette management, undo/redo for every stroke and edit
+- [x] Timeline with frame durations, add/duplicate/delete/reorder with animations following
+- [x] **8-direction animation sets** with **mirror left/right**, per-animation loop, events, live preview facing any direction
+- [x] Feet point, hitboxes and hurtboxes per frame
+- [x] Parametric shapes with sliders baked to pixels
+- [x] Export to packed sprite sheet + atlas, import PNG / sprite sheets / Aseprite, asset browser with search and tags, find uses, missing-sprite problem
+- [x] Runtime: textured sprites in the renderer, animator state machine (conditions, wait-for-end), clip events, tweens with 11 easings (deterministic, simulation-driven)
+- [x] Sample made in the UI and played: a character drawn and animated in the studio walks the room, turning and mirroring (`e2e/m4-studio.spec.ts`)
+
+Deferred:
+- [ ] Autotiling rules and editor, Decoration / Walls layers (tile art arrives with M5/M14)
+- [ ] Vector drawing mode, free rotate/scale of selections, tile-art editing (the studio draws sprites; terrain is still procedural)
+- [ ] Aseprite import is covered by unit tests with a hand-built file, not yet by a real Aseprite-made file

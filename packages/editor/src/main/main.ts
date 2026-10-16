@@ -65,6 +65,31 @@ function registerIpc(): void {
     await fs.writeFile(tmp, text, 'utf8');
     await fs.rename(tmp, target);
   });
+  ipcMain.handle('fs:readBinary', async (_e, file: string) => new Uint8Array(await fs.readFile(resolveInside(file))));
+  ipcMain.handle('fs:writeBinary', async (_e, file: string, bytes: Uint8Array) => {
+    const target = resolveInside(file);
+    await fs.mkdir(path.dirname(target), { recursive: true });
+    const tmp = `${target}.tmp`;
+    await fs.writeFile(tmp, bytes);
+    await fs.rename(tmp, target);
+  });
+
+  /**
+   * "Import a file": the user picks any file in a native dialog and only its bytes and name come back.
+   * (Tests set TILEWRIGHT_TEST_IMPORT to skip the dialog.)
+   */
+  ipcMain.handle('dialog:importFile', async (_e, title: string, extensions: string[]) => {
+    let file: string | undefined = process.env.TILEWRIGHT_TEST_IMPORT;
+    if (!file) {
+      const r = await dialog.showOpenDialog({ title, properties: ['openFile'], filters: [{ name: 'Images and sprites', extensions }] });
+      if (r.canceled || r.filePaths.length === 0) return null;
+      file = r.filePaths[0]!;
+    }
+    const stat = await fs.stat(file);
+    if (stat.size > 32 * 1024 * 1024) throw new Error('That file is larger than 32 MB, which is too big to import.');
+    return { name: path.basename(file), bytes: new Uint8Array(await fs.readFile(file)) };
+  });
+
   ipcMain.handle('fs:exists', async (_e, file: string) => {
     try {
       await fs.access(resolveInside(file));

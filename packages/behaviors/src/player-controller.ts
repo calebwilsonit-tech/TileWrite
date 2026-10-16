@@ -1,5 +1,6 @@
 import {
   C,
+  animationSystem,
   facingOfScreenDir,
   jumpBody,
   screenIntentToGrid,
@@ -45,4 +46,5 @@ export function playerControllerSystem({ world, input }: SimContext): void {
 export function addStandardSystems(sim: Simulation, physics: (ctx: SimContext) => void): void {
   sim.addSystem('player-controller', playerControllerSystem);
   sim.addSystem('physics', physics);
+  sim.addSystem('animation', animationSystem);
 }

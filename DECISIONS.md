@@ -56,3 +56,13 @@ Occlusion fade: renderer-only (not simulation state). Tiles taller than the focu
 - **Zod runs in `jitless` mode** because the editor's Content-Security-Policy forbids `new Function` (Zod's JIT probe logged a CSP error).
 - **Store reactions loop instead of re-entering** (`ViewportController.onStore`): a failed Play shows a message and calls Stop, which changes the store again; re-entering caused an infinite loop.
 - Gotcha: PowerShell 5.1 `Set-Content -Encoding utf8` writes a BOM, which breaks `package.json` parsing in tools. Use the Write/Edit tools or `[IO.File]::WriteAllText(..., UTF8Encoding($false))`.
+
+## D009 - Sprites and animation (M4) (2026-10-16)
+- **Pixels are palette indices (0 = transparent) stored as run-length text per layer per frame.** Small and diff-friendly. Rejected: base64 PNG per cel (opaque diffs), RGBA arrays (huge).
+- **PNG and Aseprite handled by our own small decoders on `fflate`** instead of canvas/`createImageBitmap`, so import/export is identical and unit-testable in Node. Rejected: canvas-based decoding (browser-only, untestable headlessly).
+- **Directions**: a clip lists frames per direction plus an "every direction" list; with `mirror`, W/SW/NW reuse E/SE/NE flipped (the renderer sets `scale.x = -1` around the feet point; no extra textures). Facing indexes match the iso maths (0 = East, clockwise).
+- **Animator is a component + a system** that reads sprite data from `ctx.assets`, so animation is deterministic and replays exactly (echoes, playbot). Body parameters (`speed`, `airborne`, ...) are filled automatically; the "locomotion" controller preset is generated from clip names.
+- **Rendering sprites**: each sprite is packed into one sheet texture (`exportSheet` with trimming) and cut into frame textures; entity views switch texture per frame. Missing sprites fall back to the procedural shape (never crash).
+- **Studio edits a decoded copy** (`SpriteDoc`) with cheap per-cel undo for strokes and whole-sprite snapshots for structural edits; saving writes the sprite file and re-registers it so the world editor and play mode pick it up immediately.
+- **Unsaved work is never dropped silently**: switching/creating/importing a sprite asks; closing the project saves the open sprite.
+- Tween manager lives in the Simulation and updates first each tick.

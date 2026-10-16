@@ -16,3 +16,5 @@ export * from './render/camera';
 export * from './render/depth';
 export * from './render/iso-renderer';
 export * from './runner';
+export * from './sprites';
+export * from './anim';

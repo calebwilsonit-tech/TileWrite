@@ -23,6 +23,7 @@ import {
 import { addStandardSystems } from '@tilewright/behaviors';
 import type { EditorDoc, DocEvent } from '../model/doc';
 import { store, type ToolId } from '../app/store';
+import { studio } from '../studio/store';
 import { TOOLS, toolMeta, type Pointer, type Preview, type ToolEnv } from '../tools/tools';
 import { prefabById } from '../tools/prefabs';
 import type { P } from '../tools/algorithms';
@@ -78,6 +79,8 @@ export class ViewportController {
   private lastStore = { tool: '', mode: '', paused: false, stepToken: 0, focus: 0 };
   private disposed = false;
   private reacting = false;
+  private unsubStudio: (() => void) | null = null;
+  private registeredSprites = new Map<string, unknown>();
   private tileset: TileSet | undefined;
   private readonly cleanup: (() => void)[] = [];
 
@@ -129,6 +132,8 @@ export class ViewportController {
     this.cleanup.push(() => ro.disconnect());
 
     this.unsubStore = store.subscribe(() => this.onStore());
+    this.unsubStudio = studio.subscribe(() => this.syncSprites());
+    this.syncSprites();
     this.lastStore = this.snapshotStore();
     const loop = (): void => {
       if (this.disposed) return;
@@ -161,6 +166,7 @@ export class ViewportController {
     this.stopPlay();
     this.unsubDoc?.();
     this.unsubStore?.();
+    this.unsubStudio?.();
     for (const c of this.cleanup) c();
     this.marqueeEl?.remove();
     try {
@@ -168,6 +174,27 @@ export class ViewportController {
     } catch {
       /* renderer may not have finished initialising */
     }
+  }
+
+  /** Make the project's saved sprites available to the renderer (and refresh ones that were just saved). */
+  private syncSprites(): void {
+    for (const [name, data] of studio.assets) {
+      if (this.registeredSprites.get(name) === data) continue;
+      try {
+        this.renderer.registerSprite(data);
+        this.registeredSprites.set(name, data);
+      } catch (e) {
+        store.notify('error', `Sprite "${name}" could not be shown: ${(e as Error).message}`);
+        this.registeredSprites.set(name, data);
+      }
+    }
+    for (const name of [...this.registeredSprites.keys()]) {
+      if (!studio.assets.has(name)) {
+        this.renderer.unregisterSprite(name);
+        this.registeredSprites.delete(name);
+      }
+    }
+    this.dirty = true;
   }
 
   // ---- document ----
@@ -581,6 +608,7 @@ export class ViewportController {
       return;
     }
     const sim = new Simulation(1);
+    for (const [name, data] of studio.assets) sim.assets.sprites.set(name, data);
     const byId = loadScene(sim, scene);
     const player = byId.get(playerData.id)!;
     const from = store.playFrom;

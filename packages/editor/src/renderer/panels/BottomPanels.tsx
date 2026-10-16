@@ -2,11 +2,13 @@ import { useDeferredValue, useMemo } from 'react';
 import { useApp, store } from '../app/store';
 import { viewportRef } from '../app/commands';
 import { validateScene, type Problem } from '../model/validate';
+import { studio, useStudio } from '../studio/store';
 
 export function useProblems(): Problem[] {
   const version = useApp((s) => s.docVersion);
+  const assets = useStudio((s) => s.assetsVersion);
   const deferred = useDeferredValue(version);
-  return useMemo(() => (store.doc ? validateScene(store.doc) : []), [deferred]);
+  return useMemo(() => (store.doc ? validateScene(store.doc, new Set(studio.assets.keys())) : []), [deferred, assets]);
 }
 
 export function goTo(p: Problem): void {

@@ -20,7 +20,7 @@ interface T {
  * Checks a scene for mistakes a designer can fix, in plain English.
  * (M3 covers the basics; M9 adds bypass and soft-lock detection.)
  */
-export function validateScene(doc: EditorDoc): Problem[] {
+export function validateScene(doc: EditorDoc, sprites?: ReadonlySet<string>): Problem[] {
   const out: Problem[] = [];
   const map = doc.map;
 
@@ -38,6 +38,15 @@ export function validateScene(doc: EditorDoc): Problem[] {
 
   for (const e of doc.entities) {
     const t = e.components.transform as T | undefined;
+    const asset = (e.components.sprite as { asset?: string } | undefined)?.asset;
+    if (sprites && asset && !sprites.has(asset)) {
+      out.push({
+        id: `sprite-missing-${e.id}`,
+        severity: 'warning',
+        message: `"${e.name}" uses the sprite "${asset}", which is not in this project (it was deleted or renamed). It is drawn as a plain shape until you pick a sprite again.`,
+        target: t ? pos('entity', e.id, t) : undefined,
+      });
+    }
     if (!t) continue;
     const cx = Math.floor(t.x);
     const cy = Math.floor(t.y);

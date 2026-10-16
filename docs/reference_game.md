@@ -11,7 +11,7 @@ Tick an item when the engine can make it **without code**, verified by a test or
 - [x] Correct depth sorting of tall objects, characters, props at every height
 
 ## Player
-- [ ] 8-direction movement, walk/run
+- [x] 8-direction movement, walk/run (with drawn, animated, mirrored sprites)
 - [ ] Dodge
 - [ ] Melee weapon (quill)
 - [ ] Health, light/resource bar

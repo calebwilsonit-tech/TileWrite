@@ -3,6 +3,17 @@ import { TOOL_META, uniqueName } from '../tools/tools';
 import type { ViewportController } from '../viewport/controller';
 import { matches, parseKeySpec, formatKeySpec } from './keys';
 import { store, type ToolId } from './store';
+import { studio } from '../studio/store';
+
+function undoStudio(): void {
+  const d = studio.doc;
+  if (d?.history.undo()) d.markChanged();
+}
+
+function redoStudio(): void {
+  const d = studio.doc;
+  if (d?.history.redo()) d.markChanged();
+}
 
 export const viewportRef: { current: ViewportController | null } = { current: null };
 
@@ -18,7 +29,8 @@ export interface Command {
 }
 
 const inEditor = (): boolean => store.state.screen === 'editor' && store.doc !== null;
-const editing = (): boolean => inEditor() && store.state.mode === 'edit';
+const editing = (): boolean => inEditor() && store.state.mode === 'edit' && store.state.workspace === 'world';
+const inStudio = (): boolean => inEditor() && store.state.workspace === 'sprites';
 
 export function copySelection(): void {
   const doc = store.doc;
@@ -73,12 +85,35 @@ export function rotateSelection(): void {
 
 export function buildCommands(): Command[] {
   const cmds: Command[] = [
-    { id: 'file.save', label: 'Save scene', category: 'File', keys: 'Ctrl+S', run: () => void store.save(), enabled: inEditor },
+    {
+      id: 'file.save',
+      label: 'Save (scene or sprite)',
+      category: 'File',
+      keys: 'Ctrl+S',
+      run: () => void (store.state.workspace === 'sprites' ? studio.save() : store.save()),
+      enabled: inEditor,
+    },
     { id: 'file.newScene', label: 'New scene…', category: 'File', keys: '', run: () => document.dispatchEvent(new CustomEvent('tw:new-scene')), enabled: inEditor },
     { id: 'file.close', label: 'Close project', category: 'File', keys: '', run: () => void store.closeProject(), enabled: inEditor },
-    { id: 'edit.undo', label: 'Undo', category: 'Edit', keys: 'Ctrl+Z', run: () => void store.doc?.undo(), enabled: () => editing() && !!store.doc?.history.canUndo },
-    { id: 'edit.redo', label: 'Redo', category: 'Edit', keys: 'Ctrl+Y', run: () => void store.doc?.redo(), enabled: () => editing() && !!store.doc?.history.canRedo },
-    { id: 'edit.redo2', label: 'Redo (alternate)', category: 'Edit', keys: 'Ctrl+Shift+Z', run: () => void store.doc?.redo(), enabled: editing },
+    {
+      id: 'edit.undo',
+      label: 'Undo',
+      category: 'Edit',
+      keys: 'Ctrl+Z',
+      run: () => (store.state.workspace === 'sprites' ? undoStudio() : void store.doc?.undo()),
+      enabled: () => (editing() && !!store.doc?.history.canUndo) || (inStudio() && !!studio.doc?.history.canUndo),
+    },
+    {
+      id: 'edit.redo',
+      label: 'Redo',
+      category: 'Edit',
+      keys: 'Ctrl+Y',
+      run: () => (store.state.workspace === 'sprites' ? redoStudio() : void store.doc?.redo()),
+      enabled: () => (editing() && !!store.doc?.history.canRedo) || (inStudio() && !!studio.doc?.history.canRedo),
+    },
+    { id: 'edit.redo2', label: 'Redo (alternate)', category: 'Edit', keys: 'Ctrl+Shift+Z', run: () => (store.state.workspace === 'sprites' ? redoStudio() : void store.doc?.redo()), enabled: () => editing() || inStudio() },
+    { id: 'workspace.world', label: 'Go to the World editor', category: 'App', keys: 'Ctrl+1', run: () => store.set({ workspace: 'world' }), enabled: inEditor },
+    { id: 'workspace.sprites', label: 'Go to the Sprite studio', category: 'App', keys: 'Ctrl+2', run: () => store.set({ workspace: 'sprites' }), enabled: inEditor },
     { id: 'edit.delete', label: 'Delete selection', category: 'Edit', keys: 'Delete', run: deleteSelection, enabled: editing },
     { id: 'edit.delete2', label: 'Delete selection (Backspace)', category: 'Edit', keys: 'Backspace', run: deleteSelection, enabled: editing },
     { id: 'edit.copy', label: 'Copy', category: 'Edit', keys: 'Ctrl+C', run: copySelection, enabled: editing },

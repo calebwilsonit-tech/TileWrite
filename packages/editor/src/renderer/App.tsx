@@ -4,6 +4,7 @@ import { startMultilevelRoom, type M2Handle } from '../../../../samples/m2-multi
 import { useApp, store } from './app/store';
 import { EditorShell } from './app/EditorShell';
 import { ProjectScreen } from './screens/ProjectScreen';
+import { studio } from './studio/store';
 
 declare global {
   interface Window {
@@ -75,6 +76,7 @@ export function App() {
 
   useEffect(() => {
     window.__store = store;
+    window.__studio = studio;
     void store.init().then(() => setReady(true));
   }, []);
 

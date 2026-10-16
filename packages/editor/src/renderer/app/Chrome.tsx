@@ -40,7 +40,7 @@ export function useKeyDispatcher(overrides: Record<string, string>): void {
         return;
       }
       const vp = viewportRef.current;
-      if (!e.ctrlKey && !e.metaKey && !e.altKey && vp?.toolKey(e.key)) {
+      if (store.state.workspace === 'world' && !e.ctrlKey && !e.metaKey && !e.altKey && vp?.toolKey(e.key)) {
         e.preventDefault();
         return;
       }
@@ -75,13 +75,14 @@ export function StatusBar() {
   const doc = store.doc;
   const vp = viewportRef.current;
   const cell = vp?.hoverCell;
+  const workspace = useApp((s) => s.workspace);
   const info =
     doc && cell && doc.map.inBounds(cell.x, cell.y)
       ? `Cell (${cell.x}, ${cell.y})  level ${doc.map.getHeight(cell.x, cell.y)}${doc.map.getSlope(cell.x, cell.y) ? ' (stairs/ramp)' : ''}`
       : '';
   return (
     <footer className="statusbar" data-testid="statusbar">
-      <span>{mode === 'play' ? 'Playing' : `Tool: ${tool}`}</span>
+      <span>{workspace === 'sprites' ? 'Sprite studio' : mode === 'play' ? 'Playing' : `Tool: ${tool}`}</span>
       <span>{info}</span>
       <span className="grow" />
       <span>{doc ? `${doc.map.width} x ${doc.map.height} cells` : ''}</span>
