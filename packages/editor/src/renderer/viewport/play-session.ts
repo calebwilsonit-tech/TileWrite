@@ -54,6 +54,8 @@ export interface PlayOptions {
   scene: SceneData;
   scenePath: string;
   projectDir: string;
+  /** Where save files go (default: a `saves` folder in the project; an exported game uses its own writable folder). */
+  savesDir?: string;
   /** Start here instead of at the player start ("Play from here"). */
   from: { x: number; y: number } | null;
   prefabs: ReadonlyMap<string, PrefabData>;
@@ -113,7 +115,7 @@ export class PlaySession {
         exists: (p) => assetFs.exists(p),
         remove: (p) => assetFs.remove(p),
       },
-      joinPath(o.projectDir, 'saves'),
+      o.savesDir ?? joinPath(o.projectDir, 'saves'),
       (d, n) => joinPath(d, n),
     );
 

@@ -27,3 +27,26 @@ jobs:
       - name: E2E
         if: runner.os != 'Linux'
         run: npm run test:e2e
+
+  windows-build:
+    # builds the editor installer exactly as docs/BUILDING.md describes, and keeps it as a download
+    runs-on: windows-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+      - run: npm ci
+      - run: npm run dist:win
+      - name: Export a game from the packaged editor and run it
+        run: npx playwright test e2e/packaged-export.spec.ts
+        env:
+          TILEWRIGHT_PACKAGED_EXE: packages/editor/release/win-unpacked/Tilewright.exe
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tilewright-windows
+          path: |
+            packages/editor/release/*.exe
+            packages/editor/release/*.zip

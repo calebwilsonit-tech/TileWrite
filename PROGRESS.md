@@ -3,7 +3,7 @@
 Boxes are ticked only when the milestone's tests pass and the sample has been played.
 Spec: `ENGINE_BUILD_PROMPT.md`. Read `DECISIONS.md` and `KNOWN_ISSUES.md` before continuing.
 
-**Next up:** M12 export and packaging - export a game to a Windows .exe (runtime + project + compiled scripts, same transpile path as the editor), editor installer (npm run dist:win), docs/BUILDING.md, crash log files and a friendly crash screen in exported games, project check before export, GitHub Actions windows-latest job. Then M13 acceptance game (The Last Storytender slice, built through the UI, playbot-verified), M14 polish. Owed: autotiling rules + Decoration/Walls/Lights layers, separate game window, vector drawing in the studio, visual state-machine editor, audio engine, dialogue graph canvas, localization string tables, assistant tools for story data/prefabs/regions.
+**Next up:** M13 the acceptance game - rebuild a vertical slice of The Last Storytender using only the editor UI (hub area, a dungeon with height levels and stairs, an echo puzzle with two plates and a gate, a crate puzzle, a sentence stone that changes a bridge, a lantern post checkpoint with death-respawn, a pause menu with Restart/Travel, a stealth enemy with a vision cone, a two-phase boss, an NPC conversation with a choice that sets a flag, save/load, a settings menu with input remapping), driven through Playwright, then check it with the validators and finish it with the playbot, and export it to an .exe (see docs/reference_game.md). Then M14 polish (onboarding tutorial, docs pass, templates, performance, accessibility, audio engine, autotiling, particles, hit-stop...). Owed: autotiling rules + Decoration/Walls/Lights layers, separate game window, vector drawing in the studio, visual state-machine editor, audio engine, dialogue graph canvas, localization string tables, assistant tools for story data/prefabs/regions.
 
 ## Milestones
 
@@ -19,7 +19,7 @@ Spec: `ENGINE_BUILD_PROMPT.md`. Read `DECISIONS.md` and `KNOWN_ISSUES.md` before
 - [x] M9 Errors and debugging (see the M9 checklist)
 - [x] M10 Code window (see the M10 checklist)
 - [x] M11 Claude assistant (see the M11 checklist)
-- [ ] M12 Export and packaging
+- [x] M12 Export and packaging (see the M12 checklist; the NSIS installer itself is unverified)
 - [ ] M13 The acceptance game
 - [ ] M14 Polish
 
@@ -129,6 +129,19 @@ Deferred:
 - [ ] Dialogue node-graph canvas and a visual cutscene timeline; localization string tables
 - [ ] Audio engine (volumes are stored only), video settings, minigames, cosmetic skins, hit-stop, drawn world map
 
+## M12 checklist
+
+Done and covered by tests (unit: `packages/exporter/src/exporter.test.ts`; e2e: `e2e/m12-export.spec.ts` (the editor exports a game, the exported .exe is launched and driven), `e2e/packaged-export.spec.ts` (optional, against a packaged editor); docs: `docs/export.md`, `docs/BUILDING.md`):
+- [x] Export dialog (toolbar / Commands): game name, version, window size, full screen, splash text, icon; settings remembered in `export-settings.json`
+- [x] Export saves the scene, runs the whole-project check, settings, icon and script compile checks, and refuses on errors (verified: deleting the player blocks it with a plain-English message)
+- [x] Makes `<Name>-<version>-windows/` with `<Name>.exe` and a zip: Electron runtime copied from the running editor, no editor code, no download, nothing needed at run time
+- [x] Exported game runs the same PlaySession as Play: the real keyboard moves the player, the script made the crate turn, the window has the chosen size, saves go to the game's own folder, the file bridge refuses anything outside the game's folders
+- [x] A failing script gives a friendly screen with the cause and a crash log file in the game's logs folder (screenshots inspected)
+- [x] Packaged editor (app.asar) exports correctly (found and fixed: `fs.cp` does not work inside asar)
+- [x] `electron-builder` zip/unpacked build of the editor works (160 MB zip); `docs/BUILDING.md` written; CI `windows-build` job added
+
+Not verified: the NSIS installer (`npm run dist:win` downloads helper tools that stalled here), the CI jobs (never run), Linux export, exe icon/file properties.
+
 ## M11 checklist
 
 Done and covered by tests (unit: `packages/assistant/src/assistant.test.ts`; e2e: `e2e/m11-assistant.spec.ts` against a mock Anthropic server, plus the optional `e2e/live-assistant.spec.ts`; docs: `docs/assistant.md`):
@@ -163,5 +176,5 @@ Done and covered by tests (unit: `packages/playbot/src`, `packages/behaviors/src
 Deferred:
 - [ ] A search-based puzzle solver for echo/crate combinations beyond the fixed recipes; soft-lock analysis beyond crate puzzles; a bot that fights and uses items
 - [x] "Explain" / "Fix with Claude" buttons (M11)
-- [ ] Crash log files and screen in exported games (M12)
+- [x] Crash log files and screen in exported games (M12)
 

@@ -16,6 +16,7 @@ import { EventsPanel } from '../panels/EventsPanel';
 import { StoryPanel } from '../panels/StoryPanel';
 import { PlaybotPanel } from '../panels/PlaybotPanel';
 import { ConnectDialog } from './ConnectDialog';
+import { ExportDialog } from '../export/ExportDialog';
 import { AssistantPanel } from '../assistant/AssistantPanel';
 import { assistant } from '../assistant/store';
 
@@ -117,6 +118,9 @@ function Toolbar() {
       </button>
       <button data-testid="btn-save" className={doc?.dirty ? 'primary' : ''} onClick={run('file.save')} disabled={mode === 'play'} title="Save the scene (Ctrl+S)">
         Save
+      </button>
+      <button data-testid="btn-export" onClick={run('file.export')} disabled={mode === 'play'} title="Make the game into a program you can give to other people">
+        Export…
       </button>
         </>
       )}
@@ -245,6 +249,7 @@ export function EditorShell() {
       <NewSceneDialog />
       <RecoveryDialog />
       <ConnectDialog />
+      <ExportDialog />
     </div>
   );
 }

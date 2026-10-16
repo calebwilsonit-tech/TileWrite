@@ -45,6 +45,15 @@ contextBridge.exposeInMainWorld('tilewright', {
       return () => ipcRenderer.removeListener('assistant:tool-call', l);
     },
   },
+  exporter: {
+    info: () => invoke('export:info'),
+    build: (job: unknown) => invoke('export:build', job),
+    onProgress: (fn: (text: string) => void) => {
+      const l = (_e: unknown, text: string): void => fn(text);
+      ipcRenderer.on('export:progress', l);
+      return () => ipcRenderer.removeListener('export:progress', l);
+    },
+  },
   recent: {
     list: () => invoke<{ dir: string; name: string; opened: number }[]>('recent:list'),
     add: (dir: string, name: string) => invoke<void>('recent:add', dir, name),

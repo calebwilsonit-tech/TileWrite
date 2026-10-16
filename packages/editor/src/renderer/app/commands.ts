@@ -94,6 +94,7 @@ export function buildCommands(): Command[] {
       enabled: inEditor,
     },
     { id: 'file.newScene', label: 'New scene…', category: 'File', keys: '', run: () => document.dispatchEvent(new CustomEvent('tw:new-scene')), enabled: inEditor },
+    { id: 'file.export', label: 'Export the game…', category: 'File', keys: '', run: () => document.dispatchEvent(new CustomEvent('tw:export')), enabled: inEditor },
     { id: 'file.close', label: 'Close project', category: 'File', keys: '', run: () => void store.closeProject(), enabled: inEditor },
     {
       id: 'edit.undo',

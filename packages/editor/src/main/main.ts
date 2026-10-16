@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { registerAssistant } from './assistant';
+import { registerExport } from './export';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 
@@ -44,6 +45,7 @@ async function readJsonFile<T>(file: string, fallback: T): Promise<T> {
 
 function registerIpc(): void {
   registerAssistant();
+  registerExport({ resolveInside, distDir: path.join(here, '..') });
   ipcMain.handle('app:info', () => ({
     version: app.getVersion(),
     userData: app.getPath('userData'),

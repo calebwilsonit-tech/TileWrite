@@ -1,3 +1,5 @@
+import type { ExportJob, ExportResult } from '@tilewright/exporter';
+
 export interface AssistantStatus {
   hasKey: boolean;
   canStoreKey: boolean;
@@ -51,6 +53,11 @@ export interface TilewrightApi {
     toolResult(callId: string, out: unknown): Promise<void>;
     onEvent(fn: (ev: AssistantEvent) => void): () => void;
     onToolCall(fn: (call: AssistantToolCall) => void): () => void;
+  };
+  exporter: {
+    info(): Promise<{ platform: string; canExport: boolean; version: string }>;
+    build(job: ExportJob): Promise<ExportResult>;
+    onProgress(fn: (text: string) => void): () => void;
   };
   recent: {
     list(): Promise<{ dir: string; name: string; opened: number }[]>;
