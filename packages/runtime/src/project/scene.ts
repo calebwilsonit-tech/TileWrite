@@ -2,6 +2,7 @@ import { Simulation } from '../core/simulation';
 import { C } from '../scene/components';
 import type { Entity } from '../scene/world';
 import { TileMap } from '../tilemap/tilemap';
+import { newView } from '../story/cutscene';
 import { expandEntities, type PrefabMap } from './prefab';
 import {
   CURRENT_SCHEMA_VERSION,
@@ -107,6 +108,10 @@ export function instantiateEntity(sim: Simulation, data: EntityData): Entity {
 export interface LoadOptions {
   /** Prefabs available to instances in the scene. */
   prefabs?: PrefabMap;
+  /** Path of the scene file (checkpoints and saves remember it). */
+  scene?: string;
+  /** Changing scene in a running game: empty the world first and keep the flags and inventory the player has. */
+  travel?: boolean;
 }
 
 /**
@@ -116,6 +121,7 @@ export interface LoadOptions {
  * that could not be loaded (such as a missing prefab).
  */
 export function loadScene(sim: Simulation, scene: SceneData, opts: LoadOptions = {}): Map<string, Entity> & { problems: string[] } {
+  if (opts.travel) sim.world.clear();
   sim.map = tileMapFromRows(scene.map);
   const { entities, problems } = expandEntities(scene.entities, opts.prefabs ?? new Map());
   const byId = new Map<string, Entity>() as Map<string, Entity> & { problems: string[] };
@@ -130,10 +136,17 @@ export function loadScene(sim: Simulation, scene: SceneData, opts: LoadOptions =
   }
   sim.runtime.wires = structuredClone(scene.wires);
   sim.runtime.sheet = structuredClone(scene.events);
-  sim.runtime.vars = Object.fromEntries(scene.variables.map((v) => [v.name, v.value]));
+  const defaults = Object.fromEntries(scene.variables.map((v) => [v.name, v.value]));
+  sim.runtime.vars = opts.travel ? { ...defaults, ...sim.runtime.vars } : defaults;
   sim.runtime.rowState = {};
   sim.runtime.regions = structuredClone(scene.regions);
   sim.runtime.lighting = undefined;
+  sim.runtime.scene = opts.scene ?? sim.runtime.scene;
+  sim.runtime.persistentIds = entities.filter((e) => e.tags.includes('persistent')).map((e) => e.id);
+  sim.runtime.dialogue = null;
+  sim.runtime.cutscene = null;
+  sim.runtime.travel = null;
+  sim.runtime.view = newView();
   return byId;
 }
 

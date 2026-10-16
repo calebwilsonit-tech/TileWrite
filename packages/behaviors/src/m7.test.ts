@@ -107,7 +107,7 @@ describe('health and damage', () => {
 });
 
 function ctxOf(r: Rig): Parameters<typeof damage>[0] {
-  return { world: r.sim.world, events: r.sim.events, runtime: r.sim.runtime, input: r.sim.input, rng: r.sim.rng, tweens: r.sim.tweens, assets: r.sim.assets, map: r.sim.map, dt: 1 / 60, tick: r.sim.tick };
+  return { world: r.sim.world, events: r.sim.events, runtime: r.sim.runtime, input: r.sim.input, uiInput: r.sim.uiInput, modal: 'none' as const, rng: r.sim.rng, tweens: r.sim.tweens, assets: r.sim.assets, map: r.sim.map, dt: 1 / 60, tick: r.sim.tick };
 }
 
 describe('melee attack and dodge', () => {

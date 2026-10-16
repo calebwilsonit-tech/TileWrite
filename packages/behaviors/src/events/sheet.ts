@@ -1,4 +1,7 @@
 import {
+  addItem,
+  autoSlot,
+  itemCount,
   C,
   expandEntities,
   teleportBody,
@@ -14,6 +17,7 @@ import {
 } from '@tilewright/runtime';
 import { input, output, setOutput } from '../signals';
 import { damage, heal, healthOf } from '../builtins/combat';
+import { beginDialogue, playCutscene } from '../story/director';
 
 /**
  * Event sheets: "When [conditions] do [actions]" rows in plain English, with sub-events, AND/OR,
@@ -239,6 +243,13 @@ export const CONDITIONS: ConditionDef[] = [
         return !!h && compare(h.hp, str(p, 'op'), num(p, 'value', 1));
       }),
   },  {
+    id: 'hasItem',
+    label: 'The player carries an item',
+    category: 'Story',
+    params: [{ key: 'item', label: 'Item (id)', type: 'text', default: '' }, { key: 'atLeast', label: 'At least how many', type: 'number', default: 1, min: 1, step: 1 }],
+    describe: (p) => `the player has at least ${num(p, 'atLeast', 1)} of "${str(p, 'item') || '(item)'}"`,
+    test: (ctx, p) => itemCount(ctx.runtime.vars, str(p, 'item')) >= num(p, 'atLeast', 1),
+  },  {
     id: 'inside',
     label: 'Something is inside an area',
     category: 'Objects',
@@ -307,6 +318,14 @@ export const CONDITIONS: ConditionDef[] = [
           { value: 'echo-made', label: 'an echo is recorded' },
           { value: 'sentence-changed', label: 'a sentence stone changes its word' },
           { value: 'text-formatted', label: 'a text block is reformatted' },
+          { value: 'dialogue-started', label: 'a conversation starts' },
+          { value: 'dialogue-ended', label: 'a conversation ends' },
+          { value: 'cutscene-started', label: 'a cutscene starts' },
+          { value: 'cutscene-ended', label: 'a cutscene ends' },
+          { value: 'lantern-lit', label: 'a lantern is lit' },
+          { value: 'rested', label: 'the player rests at a lantern' },
+          { value: 'item-given', label: 'the player receives an item' },
+          { value: 'portal', label: 'the player walks through a portal' },
         ],
       },
     ],
@@ -335,6 +354,14 @@ const COND_EVENT_TEXT: Record<string, string> = {
   'echo-made': 'an echo is recorded',
   'sentence-changed': 'a sentence stone changes its word',
   'text-formatted': 'a text block is reformatted',
+  'dialogue-started': 'a conversation starts',
+  'dialogue-ended': 'a conversation ends',
+  'cutscene-started': 'a cutscene starts',
+  'cutscene-ended': 'a cutscene ends',
+  'lantern-lit': 'a lantern is lit',
+  rested: 'the player rests at a lantern',
+  'item-given': 'the player receives an item',
+  portal: 'the player walks through a portal',
 };
 
 const onOff = [{ value: 'on', label: 'on' }, { value: 'off', label: 'off' }, { value: 'toggle', label: 'the other way (toggle)' }];
@@ -477,6 +504,62 @@ export const ACTIONS: ActionDef[] = [
     run(ctx, p, row) {
       for (const e of resolveRef(ctx, str(p, 'who'), row.picked)) heal(ctx, e, num(p, 'amount', 1));
     },
+  },  {
+    id: 'giveItem',
+    label: 'Give the player an item',
+    category: 'Story',
+    params: [{ key: 'item', label: 'Item (id)', type: 'text', default: '' }, { key: 'amount', label: 'How many', type: 'number', default: 1, min: 1, step: 1 }],
+    describe: (p) => `give the player ${num(p, 'amount', 1)} of "${str(p, 'item') || '(item)'}"`,
+    run(ctx, p) {
+      const got = addItem(ctx.runtime.vars, str(p, 'item'), num(p, 'amount', 1), ctx.assets.items.get(str(p, 'item')));
+      if (got > 0) autoSlot(ctx.runtime.vars, str(p, 'item'));
+      ctx.events.emit('item-given', { item: str(p, 'item'), amount: got });
+    },
+  },
+  {
+    id: 'takeItem',
+    label: 'Take an item from the player',
+    category: 'Story',
+    params: [{ key: 'item', label: 'Item (id)', type: 'text', default: '' }, { key: 'amount', label: 'How many', type: 'number', default: 1, min: 1, step: 1 }],
+    describe: (p) => `take ${num(p, 'amount', 1)} of "${str(p, 'item') || '(item)'}" from the player`,
+    run(ctx, p) {
+      addItem(ctx.runtime.vars, str(p, 'item'), -num(p, 'amount', 1));
+      ctx.events.emit('item-taken', { item: str(p, 'item') });
+    },
+  },
+  {
+    id: 'startDialogue',
+    label: 'Start a conversation',
+    category: 'Story',
+    params: [{ key: 'dialogue', label: 'Dialogue (name)', type: 'text', default: '' }],
+    describe: (p) => `start the conversation "${str(p, 'dialogue') || '(dialogue)'}"`,
+    run: (ctx, p) => void beginDialogue(ctx, str(p, 'dialogue')),
+  },
+  {
+    id: 'playCutscene',
+    label: 'Play a cutscene',
+    category: 'Story',
+    params: [{ key: 'cutscene', label: 'Cutscene (name)', type: 'text', default: '' }],
+    describe: (p) => `play the cutscene "${str(p, 'cutscene') || '(cutscene)'}"`,
+    run: (ctx, p) => void playCutscene(ctx, str(p, 'cutscene')),
+  },
+  {
+    id: 'travel',
+    label: 'Go to another scene',
+    category: 'Story',
+    params: [{ key: 'scene', label: 'Scene file (empty = this one)', type: 'text', default: '' }, { key: 'spawn', label: 'Appear at (object name, or "x,y")', type: 'text', default: '' }],
+    describe: (p) => `go to ${str(p, 'scene') || 'this scene'}${str(p, 'spawn') ? ` at "${str(p, 'spawn')}"` : ''}`,
+    run(ctx, p) {
+      if (!ctx.runtime.travel) ctx.runtime.travel = { scene: str(p, 'scene') || ctx.runtime.scene, spawn: str(p, 'spawn') };
+    },
+  },
+  {
+    id: 'saveGame',
+    label: 'Save the game (autosave)',
+    category: 'Story',
+    params: [],
+    describe: () => 'save the game',
+    run: (ctx) => void ctx.events.emit('save-request', { slot: 'autosave' }),
   },  {
     id: 'message',
     label: 'Show a message',

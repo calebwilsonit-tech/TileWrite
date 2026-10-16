@@ -20,3 +20,7 @@ export * from './runner';
 export * from './sprites';
 export * from './anim';
 export * from './ai/pathfinding';
+export * from './story/items';
+export * from './story/dialogue';
+export * from './story/cutscene';
+export * from './story/save';

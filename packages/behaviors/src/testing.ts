@@ -11,6 +11,7 @@ import {
   type SceneData,
   type WireData,
   type EventRow,
+  type SimContext,
 } from '@tilewright/runtime';
 import { addStandardSystems, attachBehavior } from './index';
 
@@ -90,3 +91,21 @@ export const GRID_MINUS_Y = { move_right: 1, move_up: 1 };
 
 export { C };
 export type { EventRow };
+
+/** A system context for a rig (to call helpers like `damage` or `beginDialogue` directly from a test). */
+export function ctxOf(r: Rig): SimContext {
+  return {
+    world: r.sim.world,
+    events: r.sim.events,
+    runtime: r.sim.runtime,
+    input: r.sim.input,
+    uiInput: r.sim.uiInput,
+    modal: r.sim.modal,
+    rng: r.sim.rng,
+    tweens: r.sim.tweens,
+    assets: r.sim.assets,
+    map: r.sim.map,
+    dt: 1 / 60,
+    tick: r.sim.tick,
+  };
+}

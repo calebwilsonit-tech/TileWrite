@@ -11,3 +11,6 @@ export * from './builtins/light';
 export * from './builtins/text';
 export * from './builtins/combat';
 export * from './builtins/ai';
+export * from './builtins/story';
+export * from './story/director';
+export * from './story/inventory';

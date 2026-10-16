@@ -64,6 +64,9 @@ export interface HealthState {
   blinking: boolean;
 }
 
+/** How much damage the player takes on each difficulty. */
+export const DIFFICULTY_DAMAGE: Record<string, number> = { easy: 0.5, normal: 1, hard: 1.5 };
+
 export function teamOf(e: Entity): Exclude<Team, 'auto'> {
   const s = e.get<Health>('health');
   if (s && s.team && s.team !== 'auto') return s.team;
@@ -105,6 +108,8 @@ export function damage(ctx: SimContext, target: Entity, amount: number, opts: Da
   const st = stateFor(target, s);
   if (st.dead) return false;
   if (st.iframes > 0 && !opts.ignoreIframes) return false;
+  // difficulty only changes what the player takes
+  if (teamOf(target) === 'player') amount *= DIFFICULTY_DAMAGE[ctx.runtime.difficulty] ?? 1;
   st.hp = Math.max(0, st.hp - amount);
   st.iframes = Math.max(st.iframes, s.invulnerableSeconds);
   if (opts.source && opts.knockback) {
@@ -228,7 +233,12 @@ export const health = defineBehavior<Health>({
         return;
       }
       if (s.onDeath === 'respawn') {
-        const at = st.spawn ?? { x: t.x, y: t.y, h: t.h };
+        let at = st.spawn ?? { x: t.x, y: t.y, h: t.h };
+        const cp = e.tags.has('player') ? ctx.runtime.checkpoint : null;
+        if (cp) {
+          if (cp.scene === ctx.runtime.scene || cp.scene === '') at = { x: cp.x, y: cp.y, h: cp.h };
+          else ctx.runtime.travel = { scene: cp.scene, spawn: '', x: cp.x, y: cp.y }; // the game host takes us there
+        }
         if (b) teleportBody(ctx, e, at.x, at.y, at.h);
         else {
           t.x = at.x;

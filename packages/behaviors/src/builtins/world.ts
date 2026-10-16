@@ -1,5 +1,7 @@
 import {
   C,
+  addItem,
+  autoSlot,
   expandEntities,
   instantiateEntity,
   surfaceAt,
@@ -122,6 +124,8 @@ export interface Pickup {
   amount: number;
   /** Text to show when picked up. */
   message: string;
+  /** Item (from your items list) to put in the inventory (optional). */
+  item: string;
 }
 
 export const pickup = defineBehavior<Pickup>({
@@ -130,12 +134,13 @@ export const pickup = defineBehavior<Pickup>({
   category: 'World',
   description: 'Disappears when the player touches it and adds to a counter (coins, keys, gems...).',
   phase: 'actuator',
-  defaults: { who: 'player', variable: 'coins', amount: 1, message: '' },
+  defaults: { who: 'player', variable: 'coins', amount: 1, message: '', item: '' },
   fields: [
     { key: 'who', label: 'Picked up by', type: 'select', options: WHO_OPTIONS },
     { key: 'variable', label: 'Counter to add to', type: 'text' },
     { key: 'amount', label: 'Amount', type: 'number', min: -999, max: 999, step: 1 },
     { key: 'message', label: 'Message to show', type: 'text' },
+    { key: 'item', label: 'Item to add to the inventory (optional)', type: 'text', help: 'The id of an item from the Items panel. Leave the counter empty if you only want the item.' },
   ],
   inputs: [],
   outputs: [],
@@ -148,6 +153,11 @@ export const pickup = defineBehavior<Pickup>({
     if (s.variable) {
       const cur = ctx.runtime.vars[s.variable];
       ctx.runtime.vars[s.variable] = (typeof cur === 'number' ? cur : 0) + s.amount;
+    }
+    if (s.item) {
+      const got = addItem(ctx.runtime.vars, s.item, Math.max(1, s.amount), ctx.assets.items.get(s.item));
+      if (got > 0) autoSlot(ctx.runtime.vars, s.item);
+      ctx.events.emit('item-given', { item: s.item, amount: got });
     }
     if (s.message) ctx.events.emit('message', { text: s.message });
     ctx.events.emit('pickup', { entity: e.id, by: hit.id, variable: s.variable, amount: s.amount });

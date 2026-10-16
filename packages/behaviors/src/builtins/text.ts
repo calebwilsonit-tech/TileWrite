@@ -8,7 +8,7 @@ const sprite = (e: Entity): Sprite | undefined => e.get<Sprite>(C.Sprite);
 const transform = (e: Entity): TransformIso => e.require<TransformIso>(C.Transform);
 
 /** True when the player just pressed interact and this is the nearest object of its kind within reach. */
-function interactedBy(ctx: SimContext, e: Entity, reach: number, behaviourId: string): boolean {
+export function interactedBy(ctx: SimContext, e: Entity, reach: number, behaviourId: string): boolean {
   if (!ctx.input.pressed('interact')) return false;
   let best: Entity | undefined;
   let bestD = Infinity;

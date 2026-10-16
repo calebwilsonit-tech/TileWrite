@@ -11,6 +11,8 @@ import {
   type TransformIso,
 } from '@tilewright/runtime';
 import { eventSheetSystem } from './events/sheet';
+import { cutsceneSystem, dialogueSystem } from './story/director';
+import { quickSlotSystem } from './story/inventory';
 import { behaviorSystems } from './signals';
 
 export const PLAYER_CONTROLLER = 'playerController';
@@ -52,9 +54,13 @@ export function driveBody(cfg: PlayerController, b: Body, t: TransformIso, input
  * (control, sources, wires and logic, actuators), the event sheet, then physics and animation.
  */
 export function addStandardSystems(sim: Simulation, physics: (ctx: SimContext) => void): void {
-  sim.addSystem('player-controller', playerControllerSystem);
-  for (const s of behaviorSystems()) sim.addSystem(s.name, s.fn);
-  sim.addSystem('event-sheet', eventSheetSystem);
-  sim.addSystem('physics', physics);
-  sim.addSystem('animation', animationSystem);
+  // conversations and cutscenes listen to the real buttons and run even while the world is frozen
+  sim.addSystem('dialogue', dialogueSystem, 'always');
+  sim.addSystem('cutscene', cutsceneSystem, 'always');
+  sim.addSystem('player-controller', playerControllerSystem, 'player');
+  sim.addSystem('quick-slots', quickSlotSystem, 'player');
+  for (const s of behaviorSystems()) sim.addSystem(s.name, s.fn, 'gameplay');
+  sim.addSystem('event-sheet', eventSheetSystem, 'gameplay');
+  sim.addSystem('physics', physics, 'gameplay');
+  sim.addSystem('animation', animationSystem, 'gameplay');
 }
