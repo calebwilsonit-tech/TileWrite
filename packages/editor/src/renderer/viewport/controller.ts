@@ -726,6 +726,7 @@ export class ViewportController {
     cam.deadzoneH = p.saved.dzh;
     cam.smoothing = p.saved.smoothing;
     this.renderer.focus = undefined;
+    this.renderer.lighting = null;
     this.renderer.overlay.visible = true;
     if (this.doc) {
       this.renderer.setTileMap(this.doc.map, this.tilesetFor());

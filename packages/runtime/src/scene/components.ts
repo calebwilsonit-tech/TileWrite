@@ -35,6 +35,28 @@ export interface Sprite {
   visible: boolean;
   /** Name of a sprite asset to draw instead of the procedural shape (drawn in the sprite studio). */
   asset?: string;
+  /** 0..1, for ghosts and fades (default 1). */
+  alpha?: number;
+}
+
+/** A line of text drawn above an object (signs, sentence stones, text blocks). */
+export const LABEL = 'label';
+
+export interface Label {
+  text: string;
+  /** 0xRRGGBB */
+  color: number;
+  /** Pixels at zoom 1. */
+  size: number;
+  bold: boolean;
+  italic: boolean;
+  underline: boolean;
+  /** How high above the object's top it floats, in levels. */
+  lift: number;
+}
+
+export function makeLabel(partial: Partial<Label> = {}): Label {
+  return { text: '', color: 0xffffff, size: 14, bold: false, italic: false, underline: false, lift: 0.4, ...partial };
 }
 
 export function makeTransform(x = 0, y = 0, h = 0, facing = 2): TransformIso {

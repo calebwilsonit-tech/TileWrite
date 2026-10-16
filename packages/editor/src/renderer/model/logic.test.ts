@@ -131,6 +131,35 @@ describe('logic validation', () => {
   });
 });
 
+describe('M6 validation', () => {
+  it('explains a sentence stone with nothing to swap and an echo recorder that can never record', () => {
+    const d = doc();
+    d.addEntities([
+      { name: 'Stone', tags: [], components: { transform: { x: 4.5, y: 4.5, h: 0, facing: 2 }, collider: { w: 0.7, d: 0.7, height: 1, solid: true, trigger: false, layer: 16, mask: 65535, enabled: true, inside: [] }, sentenceStone: { before: 'x', words: 'only', after: '', selected: 0, reach: 1.5, variable: '' } } },
+    ]);
+    d.updateEntities([d.entities.find((e) => e.name === 'Player')!.id], 'echo', (e) => {
+      e.components.echoRecorder = { seconds: 8, capacity: 0, capacityVariable: '', ending: 'hold', ghostAlpha: 0.5 };
+    });
+    const found = validateScene(d);
+    expect(found.some((p) => p.id.startsWith('stone-words-') && /fewer than two/.test(p.message))).toBe(true);
+    expect(found.some((p) => p.id.startsWith('echo-capacity-') && /0 echoes/.test(p.message))).toBe(true);
+    d.updateEntities([d.entities.find((e) => e.name === 'Player')!.id], 'echo', (e) => {
+      (e.components.echoRecorder as { capacityVariable: string }).capacityVariable = 'slots';
+    });
+    expect(validateScene(d).some((p) => p.id.startsWith('echo-capacity-'))).toBe(false);
+  });
+
+  it('the new objects in the Place tool carry their behaviours', async () => {
+    const { PREFABS } = await import('../tools/prefabs');
+    const make = (id: string) => PREFABS.find((p) => p.id === id)!.make(3.5, 3.5, 0);
+    expect(make('stone').components).toHaveProperty('sentenceStone');
+    expect(make('text').components).toHaveProperty('textBlock');
+    expect(make('lantern').components).toHaveProperty('light');
+    expect(make('lightsensor').components).toHaveProperty('lightSensor');
+    expect(make('dough').components).toHaveProperty('growing');
+    expect(make('dough').components).toHaveProperty('collider');
+  });
+});
 describe('prefab instances in the editor document', () => {
   const crate = (): EntityData => crateEntity('c', 3.5, 3.5);
   const prefab = (): PrefabData => extractPrefab(crate(), 'Crate');

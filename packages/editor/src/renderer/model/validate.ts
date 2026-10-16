@@ -84,6 +84,19 @@ export function validateScene(doc: EditorDoc, sprites?: ReadonlySet<string>, pre
     }
   }
 
+  // story-puzzle and echo settings that cannot work
+  for (const e of doc.entities) {
+    const t = e.components.transform as T | undefined;
+    const stone = e.components.sentenceStone as { words?: string } | undefined;
+    if (stone && (stone.words ?? '').split(',').filter((w) => w.trim()).length < 2) {
+      out.push({ id: `stone-words-${e.id}`, severity: 'warning', message: `The sentence stone "${e.name}" has fewer than two swappable words, so there is nothing for the player to swap. Type words separated by commas.`, target: t ? pos('entity', e.id, t) : undefined });
+    }
+    const rec = e.components.echoRecorder as { capacity?: number; capacityVariable?: string } | undefined;
+    if (rec && (rec.capacity ?? 0) <= 0 && !rec.capacityVariable) {
+      out.push({ id: `echo-capacity-${e.id}`, severity: 'warning', message: `"${e.name}" can hold 0 echoes and has no variable to add more, so the Echo button will do nothing.`, target: t ? pos('entity', e.id, t) : undefined });
+    }
+  }
+
   // wires must join real objects through signals they really have
   const signalsOf = (entityId: string, side: 'inputs' | 'outputs'): Set<string> => {
     const e = doc.getEntity(entityId);

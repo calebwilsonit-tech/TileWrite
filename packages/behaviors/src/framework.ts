@@ -34,6 +34,8 @@ export interface BehaviorDef<S extends object = Record<string, unknown>> {
   /** What it does, in plain English. */
   description: string;
   phase: Phase;
+  /** Made and removed by the engine (echoes); not offered in the inspector's Add menu. */
+  hidden?: boolean;
   defaults: S;
   fields: FieldSpec[];
   inputs: SignalSpec[];

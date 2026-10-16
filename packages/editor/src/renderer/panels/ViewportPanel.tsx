@@ -30,7 +30,7 @@ export function ViewportPanel() {
       <div ref={host} className="viewport-host" data-testid="viewport" tabIndex={0} />
       {mode === 'play' && (
         <div className="play-badge" data-testid="play-badge">
-          {paused ? 'Paused' : 'Playing'}: WASD / arrows move, Shift runs, Space jumps. Esc stops.
+          {paused ? 'Paused' : 'Playing'}: WASD / arrows move, Shift runs, Space jumps, E interacts, R records an echo. Esc stops.
         </div>
       )}
     </div>

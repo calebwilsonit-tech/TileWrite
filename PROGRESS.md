@@ -3,7 +3,7 @@
 Boxes are ticked only when the milestone's tests pass and the sample has been played.
 Spec: `ENGINE_BUILD_PROMPT.md`. Read `DECISIONS.md` and `KNOWN_ISSUES.md` before continuing.
 
-**Next up:** M6 echoes, light, puzzle parts - recording and replaying the player as ghost echoes (stand on plates, pass some gates), light sources and darkness regions, sentence stones, formattable text blocks (underline = bridge, bold = wall, italic = slide), growing dough; plus a sample built through the UI. Owed earlier: pit damage (M7), autotiling rules + Decoration/Walls/Lights layers, hot reload while playing and a separate game window (M10 / M14), vector drawing in the studio (M14), bypass/soft-lock validators (M9).
+**Next up:** M7 AI and combat - A* pathfinding on the iso grid with heights, patrols, vision cones and hearing, chase/search/return states, Health, Damage on Touch, melee (the quill), dodge, boss phases and room-limited bosses, pit damage; sample: a stealth room and a small boss. Owed earlier: autotiling rules + Decoration/Walls/Lights layers, hot reload while playing and a separate game window (M10 / M14), vector drawing in the studio (M14), bypass/soft-lock validators (M9).
 
 ## Milestones
 
@@ -13,7 +13,7 @@ Spec: `ENGINE_BUILD_PROMPT.md`. Read `DECISIONS.md` and `KNOWN_ISSUES.md` before
 - [x] M3 Editor shell + world painter (see the M3 checklist: what is done and what was deliberately deferred)
 - [x] M4 Sprite studio (see the M4 checklist for what is deferred)
 - [x] M5 No-code logic (see the M5 checklist for what is deferred)
-- [ ] M6 Echoes, light, puzzle parts
+- [x] M6 Echoes, light, puzzle parts (see the M6 checklist)
 - [ ] M7 AI and combat
 - [ ] M8 Story systems
 - [ ] M9 Errors and debugging (problems panel, overlays, profiler, validators, playbot)
@@ -86,3 +86,17 @@ Done and covered by tests (unit: `packages/behaviors/src`, `packages/editor/src/
 Deferred:
 - [ ] Health, Damage on Touch, Patrol, Chase, Vision, Boss (M7); Pickup inventory, NPC, Checkpoint, Portal (M8); echo, light, sentence-stone behaviours (M6)
 - [ ] Prefab children shown individually in the editor; visual state machines for enemies/bosses; non-OR wire combination without a Logic Gate
+
+## M6 checklist
+
+Done and covered by tests (unit: `packages/runtime/src/lighting`, `packages/behaviors/src/m6.test.ts`, `packages/editor/src/renderer/model/logic.test.ts`; e2e: `e2e/m6-echoes.spec.ts`, `e2e/m6-words.spec.ts`; docs: `docs/echoes-light-words.md`):
+- [x] Echo recorder (record up to N seconds, ghosts replay input deterministically, several at once, capacity from a story variable, hold/loop/vanish, ghosts press plates, gates can let ghosts through)
+- [x] Lighting model and renderer: regions' darkness, `darkness` variable, lights with radius/colour/flicker/switch wire, shadows from walls and tall objects, light queries (`isLit`/`lightLevel`), Light Sensor, soft-edged darkness drawn in play (screenshots inspected)
+- [x] Growing objects (rising dough: grows over time, faster in light, becomes a taller solid block, Shrink signal)
+- [x] Sentence stones (swappable word, per-word signals, variable) and formattable text blocks (underline bridge, bold wall, italic slides; player or wires format them); `label` text rendering
+- [x] Editor: new objects in the Place tool (Sentence stone, Text block, Lantern, Light sensor, Rising dough), region Darkness slider, validators for stones/echoes
+- [x] Samples built in the UI and played: a two-echo puzzle room in the dark (two plates, AND, gate), a sentence stone that opens a gate and an underlined text block that bridges a pit
+
+Deferred:
+- [ ] Lantern fuel / light resource bar (M7/M8); light tinting of tiles; soft region borders; edit-mode lighting preview; shadows from decks and slopes
+- [ ] Event-sheet conditions/actions specific to echoes and words (they work today through variables and wires)

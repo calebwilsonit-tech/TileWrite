@@ -408,43 +408,59 @@ export const pushable = defineBehavior<Pushable>({
   outputs: [],
   requires: { collider: { w: 0.9, d: 0.9, height: 1, solid: true, trigger: false, layer: 16, mask: 65535, enabled: true, inside: [] } },
   update(ctx, e, s) {
-    const t = transform(e);
-    const c = collider(e)!;
-    const st = stateOf<{ target: { x: number; y: number } | null }>(e, 'pushable', () => ({ target: null }));
-    if (st.target) {
-      const dx = st.target.x - t.x;
-      const dy = st.target.y - t.y;
-      const dist = Math.hypot(dx, dy);
-      const step = s.slideSpeed * ctx.dt;
-      if (dist <= step) {
-        t.x = st.target.x;
-        t.y = st.target.y;
-        st.target = null;
-        const map = ctx.map;
-        if (map) {
-          const surf = surfaceAt(map, t.x, t.y, t.h + 0.35, { stepUp: 0.35, bodyHeight: 1 });
-          if (surf.kind === 'ground' || surf.kind === 'deck') t.h = surf.z;
-        }
-      } else {
-        t.x += (dx / dist) * step;
-        t.y += (dy / dist) * step;
-      }
-      return;
-    }
-    for (const p of ctx.world.query(C.Transform, C.Body)) {
-      const b = p.require<Body>(C.Body);
-      if (!b.blockedBy.includes(e.id)) continue;
-      const major = Math.abs(b.vx) >= Math.abs(b.vy) ? 'x' : 'y';
-      const v = major === 'x' ? b.vx : b.vy;
-      if (Math.abs(v) < 0.5) continue;
-      const dir = Math.sign(v);
-      const tx = Math.floor(t.x) + 0.5 + (major === 'x' ? dir : 0);
-      const ty = Math.floor(t.y) + 0.5 + (major === 'y' ? dir : 0);
-      if (spotIsFree(ctx, e, tx, ty, t.h, c.w, c.d)) {
-        st.target = { x: tx, y: ty };
-        ctx.events.emit('pushed', { entity: e.id, by: p.id });
-        return;
-      }
-    }
+    pushStep(ctx, e, stateOf<PushState>(e, 'pushable', () => ({ target: null, dx: 0, dy: 0 })), s.slideSpeed, false);
   },
 });
+
+export interface PushState {
+  target: { x: number; y: number } | null;
+  dx: number;
+  dy: number;
+}
+
+/**
+ * One tick of "slides one cell when walked into". With `slide`, it keeps going in the same direction
+ * (like on ice) until the next cell is not free.
+ */
+export function pushStep(ctx: SimContext, e: Entity, st: PushState, slideSpeed: number, slide: boolean): void {
+  const t = transform(e);
+  const c = collider(e)!;
+  if (st.target) {
+    const dx = st.target.x - t.x;
+    const dy = st.target.y - t.y;
+    const dist = Math.hypot(dx, dy);
+    const step = slideSpeed * ctx.dt;
+    if (dist <= step) {
+      t.x = st.target.x;
+      t.y = st.target.y;
+      st.target = null;
+      const map = ctx.map;
+      if (map) {
+        const surf = surfaceAt(map, t.x, t.y, t.h + 0.35, { stepUp: 0.35, bodyHeight: 1 });
+        if (surf.kind === 'ground' || surf.kind === 'deck') t.h = surf.z;
+      }
+      if (slide && spotIsFree(ctx, e, t.x + st.dx, t.y + st.dy, t.h, c.w, c.d)) st.target = { x: t.x + st.dx, y: t.y + st.dy };
+    } else {
+      t.x += (dx / dist) * step;
+      t.y += (dy / dist) * step;
+    }
+    return;
+  }
+  for (const p of ctx.world.query(C.Transform, C.Body)) {
+    const b = p.require<Body>(C.Body);
+    if (!b.blockedBy.includes(e.id)) continue;
+    const major = Math.abs(b.vx) >= Math.abs(b.vy) ? 'x' : 'y';
+    const v = major === 'x' ? b.vx : b.vy;
+    if (Math.abs(v) < 0.5) continue;
+    const dir = Math.sign(v);
+    const tx = Math.floor(t.x) + 0.5 + (major === 'x' ? dir : 0);
+    const ty = Math.floor(t.y) + 0.5 + (major === 'y' ? dir : 0);
+    if (spotIsFree(ctx, e, tx, ty, t.h, c.w, c.d)) {
+      st.target = { x: tx, y: ty };
+      st.dx = major === 'x' ? dir : 0;
+      st.dy = major === 'y' ? dir : 0;
+      ctx.events.emit('pushed', { entity: e.id, by: p.id });
+      return;
+    }
+  }
+}

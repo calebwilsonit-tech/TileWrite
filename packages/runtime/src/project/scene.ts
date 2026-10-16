@@ -132,6 +132,8 @@ export function loadScene(sim: Simulation, scene: SceneData, opts: LoadOptions =
   sim.runtime.sheet = structuredClone(scene.events);
   sim.runtime.vars = Object.fromEntries(scene.variables.map((v) => [v.name, v.value]));
   sim.runtime.rowState = {};
+  sim.runtime.regions = structuredClone(scene.regions);
+  sim.runtime.lighting = undefined;
   return byId;
 }
 

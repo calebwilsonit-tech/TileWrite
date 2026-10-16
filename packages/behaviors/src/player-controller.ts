@@ -4,6 +4,7 @@ import {
   facingOfScreenDir,
   jumpBody,
   screenIntentToGrid,
+  type InputState,
   type Body,
   type Simulation,
   type SimContext,
@@ -31,17 +32,19 @@ export function makePlayerController(partial: Partial<PlayerController> = {}): P
 /** 8-direction movement from the move_* actions, plus run and jump. Replaced by the behaviour framework in M5. */
 export function playerControllerSystem({ world, input }: SimContext): void {
   for (const e of world.query(C.Transform, C.Body, PLAYER_CONTROLLER)) {
-    const cfg = e.require<PlayerController>(PLAYER_CONTROLLER);
-    const b = e.require<Body>(C.Body);
-    const t = e.require<TransformIso>(C.Transform);
-    const v = input.vector('move_left', 'move_right', 'move_up', 'move_down');
-    const g = screenIntentToGrid(v.x, v.y);
-    const speed = cfg.speed * (input.down('run') ? cfg.runMultiplier : 1);
-    b.vx = g.x * speed;
-    b.vy = g.y * speed;
-    if (v.x !== 0 || v.y !== 0) t.facing = facingOfScreenDir(v.x, v.y);
-    if (cfg.jumpSpeed > 0 && input.pressed('jump')) jumpBody(b, cfg.jumpSpeed);
+    driveBody(e.require<PlayerController>(PLAYER_CONTROLLER), e.require<Body>(C.Body), e.require<TransformIso>(C.Transform), input);
   }
+}
+
+/** Turn one tick of actions into movement; the player uses live input, echoes use their recording. */
+export function driveBody(cfg: PlayerController, b: Body, t: TransformIso, input: InputState): void {
+  const v = input.vector('move_left', 'move_right', 'move_up', 'move_down');
+  const g = screenIntentToGrid(v.x, v.y);
+  const speed = cfg.speed * (input.down('run') ? cfg.runMultiplier : 1);
+  b.vx = g.x * speed;
+  b.vy = g.y * speed;
+  if (v.x !== 0 || v.y !== 0) t.facing = facingOfScreenDir(v.x, v.y);
+  if (cfg.jumpSpeed > 0 && input.pressed('jump')) jumpBody(b, cfg.jumpSpeed);
 }
 
 /**

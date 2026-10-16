@@ -1,5 +1,6 @@
 import { Tweens } from '../anim/tween';
-import type { EventRow, PrefabData, VariableValue, WireData } from '../project/schema';
+import type { LightingModel } from '../lighting/lighting';
+import type { EventRow, PrefabData, RegionData, VariableValue, WireData } from '../project/schema';
 import { InputState, type ActionSnapshot } from '../input/input';
 import { World } from '../scene/world';
 import type { SpriteData } from '../sprites/format';
@@ -24,6 +25,10 @@ export interface SceneRuntime {
   rowState: Record<string, { prev: boolean; timer: number }>;
   /** Scene object id (like "e3") to the id of the live entity. */
   ids: Map<string, number>;
+  /** The scene's regions (darkness, ...). */
+  regions: RegionData[];
+  /** Rebuilt every tick by the lighting system: what is lit and what casts shadows. The renderer draws from it. */
+  lighting?: LightingModel;
 }
 
 export interface SimContext {
@@ -55,7 +60,7 @@ export class Simulation {
   readonly events = new EventBus();
   readonly tweens = new Tweens();
   readonly assets: Assets = { sprites: new Map(), prefabs: new Map() };
-  readonly runtime: SceneRuntime = { wires: [], sheet: [], vars: {}, rowState: {}, ids: new Map() };
+  readonly runtime: SceneRuntime = { wires: [], sheet: [], vars: {}, rowState: {}, ids: new Map(), regions: [] };
   readonly rng: Rng;
   /** Terrain used by physics and AI. Set it before the first step. */
   map: TileMap | null = null;

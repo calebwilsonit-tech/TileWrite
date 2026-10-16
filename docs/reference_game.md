@@ -18,24 +18,24 @@ Tick an item when the engine can make it **without code**, verified by a test or
 - [ ] Interact button, quick-slot items
 
 ## Echoes
-- [ ] Record movement for up to N seconds, replay as ghost
-- [ ] Ghost stands on pressure plates
-- [ ] Several echoes at once; capacity upgradable by story flag
-- [ ] Ghosts pass through some gates
+- [x] Record movement for up to N seconds, replay as ghost
+- [x] Ghost stands on pressure plates
+- [x] Several echoes at once; capacity upgradable by story flag
+- [x] Ghosts pass through some gates
 
 ## Puzzle parts
 - [x] Pressure plates (momentary / latched)
 - [x] Gates/doors linked to plates or logic
 - [x] Pushable crates
 - [x] Levers, timers
-- [ ] Sentence stones (swappable word changes the world)
-- [ ] Formattable text blocks (underline = bridge, bold = wall, italic = slide)
-- [ ] Rising dough that grows over time, faster near light
+- [x] Sentence stones (swappable word changes the world)
+- [x] Formattable text blocks (underline = bridge, bold = wall, italic = slide)
+- [x] Rising dough that grows over time, faster near light
 
 ## Light
-- [ ] Lantern lighting a radius, dark areas
-- [ ] Lights affecting puzzle objects
-- [ ] Dynamic 2D lighting with shadows
+- [x] Lantern lighting a radius, dark areas
+- [x] Lights affecting puzzle objects
+- [x] Dynamic 2D lighting with shadows
 
 ## Enemies and bosses
 - [ ] Patrol paths

@@ -83,7 +83,7 @@ export function BehaviorsSection({ entity, edit }: { entity: EntityData; edit: E
   const prefabNames = useApp((s) => s.prefabNames);
   const [choice, setChoice] = useState('');
   const attached = behaviorList().filter((b) => entity.components[b.id] !== undefined);
-  const available = behaviorList().filter((b) => entity.components[b.id] === undefined);
+  const available = behaviorList().filter((b) => entity.components[b.id] === undefined && !b.hidden);
   const categories = [...new Set(available.map((b) => b.category))];
   return (
     <fieldset data-testid="insp-behaviors">

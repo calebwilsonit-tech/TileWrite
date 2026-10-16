@@ -1,7 +1,9 @@
-import { Application, Container, Graphics, Rectangle, Sprite as PixiSprite, Texture } from 'pixi.js';
+import { Application, Container, Graphics, Rectangle, Sprite as PixiSprite, Text, Texture } from 'pixi.js';
 import { ANIMATOR, type Animator } from '../anim/animator';
 import { DEFAULT_ISO, gridToScreen, screenToCell, type Cell, type IsoConfig } from '../iso/math';
-import { C, type Sprite, type TransformIso } from '../scene/components';
+import type { LightingModel } from '../lighting/lighting';
+import { C, LABEL, type Label, type Sprite, type TransformIso } from '../scene/components';
+import { LightingLayer } from './lighting-layer';
 import type { SpriteData } from '../sprites/format';
 import { exportSheet, type Atlas } from '../sprites/sheet';
 import type { Entity, EntityId, World } from '../scene/world';
@@ -44,6 +46,12 @@ interface EntityView {
   signature: string;
   spr?: PixiSprite;
   sheet?: SpriteSheetTextures;
+}
+
+interface LabelView {
+  text: Text;
+  underline: Graphics;
+  signature: string;
 }
 
 interface TileView {
@@ -101,6 +109,11 @@ export class IsoRenderer {
   groundVisible = true;
   /** Hide entities - used by the editor's layer toggles. */
   entitiesVisible = true;
+  /** Darkness and lights to draw this frame (null = none). Set by the game runner from the simulation. */
+  lighting: LightingModel | null = null;
+  private readonly lightLayer = new LightingLayer();
+  private readonly labelLayer = new Container();
+  private readonly labelViews = new Map<number, LabelView>();
 
   private cellViews = new Map<number, TileView[]>();
   private viewById = new Map<number, TileView>();
@@ -130,7 +143,9 @@ export class IsoRenderer {
     this.world.sortableChildren = true;
     this.overlay.zIndex = 1e9;
     this.world.addChild(this.overlay);
-    this.app.stage.addChild(this.world);
+    this.labelLayer.zIndex = 1e8;
+    this.world.addChild(this.labelLayer);
+    this.app.stage.addChild(this.world, this.lightLayer.glow, this.lightLayer.darkness);
     if (parent && !this.opts.canvas) parent.appendChild(this.app.canvas);
     this.camera.setViewport(this.app.screen.width, this.app.screen.height);
     this.ready = true;
@@ -336,8 +351,10 @@ export class IsoRenderer {
       seen.add(e.id);
       const view = this.viewFor(e, s);
       view.gfx.visible = s.visible && this.entitiesVisible;
+      view.gfx.alpha = s.alpha ?? 1;
       const p = gridToScreen(t.x, t.y, t.h, this.iso);
       view.gfx.position.set(p.x, p.y);
+      this.syncLabel(e, t, s);
       const box = boxAt(base + e.id, t.x, t.y, t.h, s.w, s.d, s.height, s.sortOffset);
       boxes.push(box);
       if (e.id === this.focus) focusBox = box;
@@ -346,6 +363,14 @@ export class IsoRenderer {
       if (!seen.has(id)) {
         v.gfx.destroy();
         this.entityViews.delete(id);
+      }
+    }
+
+    for (const [id, l] of this.labelViews) {
+      if (!seen.has(id)) {
+        l.text.destroy();
+        l.underline.destroy();
+        this.labelViews.delete(id);
       }
     }
 
@@ -367,7 +392,49 @@ export class IsoRenderer {
     const off = this.camera.offset;
     this.world.position.set(Math.round(off.x), Math.round(off.y));
     this.world.scale.set(this.camera.zoom);
+    if (this.lighting) {
+      this.lightLayer.update(this.app.renderer, this.lighting, this.iso, { x: Math.round(off.x), y: Math.round(off.y), zoom: this.camera.zoom }, this.app.screen.width, this.app.screen.height);
+    } else {
+      this.lightLayer.hide();
+    }
     this.app.renderer.render(this.app.stage);
+  }
+
+  /** Create, update or remove the floating text for an object with a Label component. */
+  private syncLabel(e: Entity, t: TransformIso, s: Sprite): void {
+    const label = e.get<Label>(LABEL);
+    const existing = this.labelViews.get(e.id);
+    if (!label || label.text === '') {
+      if (existing) existing.text.visible = existing.underline.visible = false;
+      return;
+    }
+    const signature = `${label.text}|${label.color}|${label.size}|${label.bold}|${label.italic}|${label.underline}`;
+    let v = existing;
+    if (!v || v.signature !== signature) {
+      v?.text.destroy();
+      v?.underline.destroy();
+      const text = new Text({
+        text: label.text,
+        style: {
+          fontSize: label.size,
+          fill: label.color,
+          fontFamily: 'Georgia, serif',
+          fontWeight: label.bold ? '700' : '400',
+          fontStyle: label.italic ? 'italic' : 'normal',
+          stroke: { color: 0x000000, width: 3 },
+        },
+      });
+      text.anchor.set(0.5, 1);
+      const underline = new Graphics();
+      if (label.underline) underline.moveTo(-text.width / 2, 3).lineTo(text.width / 2, 3).stroke({ width: 2, color: label.color });
+      this.labelLayer.addChild(underline, text);
+      v = { text, underline, signature };
+      this.labelViews.set(e.id, v);
+    }
+    const p = gridToScreen(t.x, t.y, t.h + s.height + label.lift, this.iso);
+    v.text.visible = v.underline.visible = s.visible && this.entitiesVisible;
+    v.text.position.set(p.x, p.y);
+    v.underline.position.set(p.x, p.y);
   }
 
   /** Walls in front of the focus entity (that rise above its feet) fade out so it stays visible. */

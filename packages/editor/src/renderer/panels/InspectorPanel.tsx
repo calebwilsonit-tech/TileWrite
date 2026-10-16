@@ -197,7 +197,7 @@ function RegionInspector({ id }: { id: string }) {
       <TextField label="Music (file name, optional)" value={r.music} onCommit={(v) => edit('Set music', (x) => (x.music = v.trim()))} />
       <label className="field">
         <span>Darkness {Math.round(r.darkness * 100)}%</span>
-        <input type="range" min={0} max={1} step={0.05} value={r.darkness} onChange={(e) => edit('Set darkness', (x) => (x.darkness = Number(e.target.value)))} />
+        <input data-testid="insp-darkness" type="range" min={0} max={1} step={0.05} value={r.darkness} onChange={(e) => edit('Set darkness', (x) => (x.darkness = Number(e.target.value)))} />
       </label>
       <CheckField label="Bosses here only act while the player is inside" value={r.bossActive} onChange={(v) => edit('Toggle boss area', (x) => (x.bossActive = v))} />
       <div className="row">

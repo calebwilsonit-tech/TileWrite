@@ -99,6 +99,7 @@ export class GameRunner {
   }
 
   private draw(): void {
+    this.o.renderer.lighting = this.o.sim.runtime.lighting ?? null;
     this.o.renderer.render(this.o.sim.world);
   }
 }

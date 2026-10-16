@@ -11,3 +11,4 @@
 
 - M5 deferred: prefab children are not shown/edited individually in the editor; wires only combine with OR (use a Logic Gate for anything else); no visual state machine editor for enemy/boss behaviour (M7); echo/light/sentence-stone parts are M6; Health/Damage/Patrol/Chase/Vision/Boss are M7; inventory/NPC/Checkpoint/Portal are M8.
 - Wire-tool and event-sheet UI are covered by one e2e plus unit tests, not by exhaustive interaction tests.
+- M6 deferred: lights do not tint tiles (only a faint additive glow); region darkness has hard edges at the region border; shadows ignore decks/slopes; no edit-mode lighting preview (only in Play); sentence stones expose only the first four words as wire signals; no lantern fuel or light resource bar (M7/M8); echo/light/word objects have only procedural (box) art.
