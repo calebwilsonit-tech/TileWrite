@@ -1,4 +1,4 @@
-import { EMPTY_TILE, FLAG, SLOPE, groundHeightAt, reachableCells, type SlopeDir } from '@tilewright/runtime';
+import { EMPTY_TILE, FLAG, SLOPE, groundHeightAt, reachableCells, type PrefabData, type SlopeDir } from '@tilewright/runtime';
 import type { CellData } from '../model/cells';
 import type { EditorDoc, Stroke } from '../model/doc';
 import type { ToolId, ToolOptions } from '../app/store';
@@ -27,6 +27,7 @@ export interface Pointer {
 }
 
 export type Preview =
+  | { kind: 'wire'; from: { x: number; y: number; h: number }; to: { x: number; y: number } }
   | { kind: 'cells'; cells: P[]; color: number; alpha?: number }
   | { kind: 'ghost'; x: number; y: number; h: number; prefab: string };
 
@@ -41,6 +42,12 @@ export interface ToolEnv {
   setMarquee(r: { x0: number; y0: number; x1: number; y1: number } | null): void;
   pickEntity(screen: { x: number; y: number }): string | null;
   pickRegion(cell: P): string | null;
+  /** Two objects were just wired together by dragging; the app asks which signals to connect. */
+  connect(from: string, to: string): void;
+  /** The object's id and where it is, for drawing a wire from it. */
+  entityAnchor(id: string): { x: number; y: number; h: number } | null;
+  /** The project's prefabs, for the Place tool. */
+  prefabs: ReadonlyMap<string, PrefabData>;
   /** Entities whose on-screen position lies inside a screen rectangle. */
   entitiesInRect(r: { x0: number; y0: number; x1: number; y1: number }): string[];
   /** Grid position under a screen point, on the plane at height h. */
@@ -60,7 +67,7 @@ export interface ToolImpl {
 export interface ToolMeta {
   id: ToolId;
   label: string;
-  group: 'Select' | 'Paint' | 'Height' | 'Terrain' | 'Collision' | 'Objects' | 'Helpers';
+  group: 'Select' | 'Paint' | 'Height' | 'Terrain' | 'Collision' | 'Objects' | 'Logic' | 'Helpers';
   hotkey?: string;
   hint: string;
   /** Which layer this tool edits (so a locked layer can refuse it). */
@@ -97,6 +104,7 @@ export const TOOL_META: ToolMeta[] = [
   { id: 'region', label: 'Region', group: 'Objects', hotkey: 'M', hint: 'Drag a rectangle to mark a room: camera bounds, music, darkness, boss area.', edits: 'regions', options: [] },
   { id: 'room', label: 'Room', group: 'Helpers', hint: 'Drag a rectangle to build a room: floor in the chosen tile, brick walls around it, flattened inside.', edits: 'ground', options: ['tile', 'height'] },
   { id: 'corridor', label: 'Corridor', group: 'Helpers', hint: 'Drag from one point to another to carve a two-cell-wide corridor of the chosen tile between them.', edits: 'ground', options: ['tile'] },
+  { id: 'wire', label: 'Wire', group: 'Logic', hotkey: 'Y', hint: 'Drag from one object to another to connect them: a pressure plate to a gate, a lever to a spawner, anything to a logic gate.', edits: 'objects', options: [] },
   { id: 'props', label: 'Scatter props', group: 'Helpers', hint: 'Drag a rectangle to sprinkle the chosen object around it, keeping clear of walls, water and stairs. Density sets how many.', edits: 'objects', options: ['prefab', 'density'] },
 ];
 
@@ -465,7 +473,7 @@ const placeTool = (): ToolImpl => ({
     const x = p.cell.x + 0.5;
     const y = p.cell.y + 0.5;
     const h = Math.max(groundHeightAt(map, x, y), map.getDeck(p.cell.x, p.cell.y));
-    const prefab = prefabById(env.opts.prefab);
+    const prefab = prefabById(env.opts.prefab, env.prefabs);
     const data = prefab.make(x, y, h);
     (data.components.transform as { facing: number }).facing = toolState.ghostFacing;
     if (prefab.id === 'player') {
@@ -618,7 +626,40 @@ const propsTool = (): ToolImpl =>
     0x8e7cc3,
   );
 
+const wireTool = (): ToolImpl => {
+  let from: string | null = null;
+  return {
+    down(p, env) {
+      from = env.pickEntity(p.screen);
+      if (!from) env.notify('info', 'Start the wire on an object: drag from it to another object.');
+    },
+    move(p, env) {
+      if (!from) return;
+      const a = env.entityAnchor(from);
+      if (!a) return;
+      const w = env.worldAt(p.screen, a.h);
+      env.setPreview([{ kind: 'wire', from: a, to: w }]);
+    },
+    up(p, env) {
+      const start = from;
+      from = null;
+      env.setPreview([]);
+      if (!start) return;
+      const end = env.pickEntity(p.screen);
+      if (!end) return;
+      if (end === start) env.notify('info', 'Drag to a different object to connect them.');
+      else env.connect(start, end);
+    },
+    cancel(env) {
+      from = null;
+      env.setPreview([]);
+    },
+    hover() {},
+  };
+};
+
 export const TOOLS: Record<ToolId, ToolImpl> = {
+  wire: wireTool(),
   room: roomTool(),
   corridor: corridorTool(),
   props: propsTool(),

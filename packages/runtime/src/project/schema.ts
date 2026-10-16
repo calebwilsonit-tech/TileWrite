@@ -40,10 +40,93 @@ export const EntitySchema = z.object({
   id: z.string().min(1),
   name: z.string(),
   tags: z.array(z.string()).default([]),
-  /** Component data by name. Known components are checked by the engine; unknown ones are kept as-is. */
+  /**
+   * Component data by name. Known components are checked by the engine; unknown ones are kept as-is.
+   * For an instance of a prefab this holds only the OVERRIDES (what differs from the prefab).
+   */
   components: z.record(z.string(), z.unknown()).default({}),
+  /** Name of the prefab this object is an instance of, if any. */
+  prefab: z.string().min(1).optional(),
 });
 export type EntityData = z.infer<typeof EntitySchema>;
+
+/** A connection from one object's output signal to another object's input. */
+export const WireSchema = z.object({
+  id: z.string().min(1),
+  from: z.object({ entity: z.string().min(1), output: z.string().min(1) }),
+  to: z.object({ entity: z.string().min(1), input: z.string().min(1) }),
+});
+export type WireData = z.infer<typeof WireSchema>;
+
+export const VariableValueSchema = z.union([z.number(), z.string(), z.boolean()]);
+export type VariableValue = z.infer<typeof VariableValueSchema>;
+
+export const VariableSchema = z.object({
+  name: z.string().min(1),
+  value: VariableValueSchema.default(0),
+});
+export type VariableData = z.infer<typeof VariableSchema>;
+
+const EventConditionSchema = z.object({
+  type: z.string().min(1),
+  params: z.record(z.string(), z.unknown()).default({}),
+  negate: z.boolean().default(false),
+});
+const EventActionSchema = z.object({
+  type: z.string().min(1),
+  params: z.record(z.string(), z.unknown()).default({}),
+});
+
+/** One row of an event sheet: "when [conditions] do [actions]", with sub-events that run only if it holds. */
+export const EventRowSchema = z.object({
+  id: z.string().min(1),
+  enabled: z.boolean().default(true),
+  comment: z.string().default(''),
+  /** 'all' = every condition must hold (AND); 'any' = at least one (OR). */
+  mode: z.enum(['all', 'any']).default('all'),
+  /** Run the actions only on the tick the row becomes true, not on every tick it stays true. */
+  once: z.boolean().default(false),
+  /** Loop: check the row once for each object matching this reference (like 	ag:enemy); picked then means that object. */
+  forEach: z.string().default(''),
+  /** Run the actions this many times each time the row fires. */
+  repeat: z.number().int().min(1).max(100).default(1),
+  conditions: z.array(EventConditionSchema).default([]),
+  actions: z.array(EventActionSchema).default([]),
+  get children() {
+    return z.array(EventRowSchema).default([]);
+  },
+});
+export type EventRow = z.infer<typeof EventRowSchema>;
+export type EventCondition = z.infer<typeof EventConditionSchema>;
+export type EventAction = z.infer<typeof EventActionSchema>;
+
+export interface PrefabNode {
+  name: string;
+  tags: string[];
+  components: Record<string, unknown>;
+  /** Another prefab this node is an instance of (nested prefabs). */
+  prefab?: string | undefined;
+  /** Parts that come with it; their positions are offsets from the parent. */
+  children: PrefabNode[];
+}
+
+const PrefabNodeSchema: z.ZodType<PrefabNode, unknown> = z.lazy(() =>
+  z.object({
+    name: z.string(),
+    tags: z.array(z.string()).default([]),
+    components: z.record(z.string(), z.unknown()).default({}),
+    prefab: z.string().min(1).optional(),
+    children: z.array(PrefabNodeSchema).default([]),
+  }),
+) as z.ZodType<PrefabNode, unknown>;
+
+/** A reusable object (`assets/prefabs/<name>.prefab.json`). Instances in scenes follow it, except for their overrides. */
+export const PrefabSchema = z.object({
+  schemaVersion: z.number().int().min(1),
+  name: z.string().min(1),
+  root: PrefabNodeSchema,
+});
+export type PrefabData = z.infer<typeof PrefabSchema>;
 
 export const RegionSchema = z.object({
   id: z.string().min(1),
@@ -68,6 +151,12 @@ export const SceneSchema = z.object({
   map: TileMapRowsSchema,
   entities: z.array(EntitySchema).default([]),
   regions: z.array(RegionSchema).default([]),
+  /** Connections between objects' signals (plate -> gate). */
+  wires: z.array(WireSchema).default([]),
+  /** Variables the scene starts with (counters, flags, text). */
+  variables: z.array(VariableSchema).default([]),
+  /** The scene's event sheet. */
+  events: z.array(EventRowSchema).default([]),
 });
 export type SceneData = z.infer<typeof SceneSchema>;
 

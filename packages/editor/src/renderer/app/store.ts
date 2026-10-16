@@ -1,7 +1,9 @@
 import { useSyncExternalStore } from 'react';
-import { SLOPE, type EntityData, type SlopeDir } from '@tilewright/runtime';
+import { SLOPE, extractPrefab, resolveInstance, type EntityData, type PrefabData, type SlopeDir } from '@tilewright/runtime';
 import { EditorDoc } from '../model/doc';
 import { api } from '../project/api';
+import { assetFs } from '../project/assetFs';
+import { deletePrefab, loadAllPrefabs, prefabNameProblem, savePrefab } from '../project/prefabs';
 import {
   UserError,
   autosaveScene,
@@ -44,7 +46,8 @@ export type ToolId =
   | 'region'
   | 'room'
   | 'corridor'
-  | 'props';
+  | 'props'
+  | 'wire';
 
 export interface ToolOptions {
   tile: number;
@@ -95,6 +98,10 @@ export interface AppState {
   log: { time: number; kind: Notice['kind']; text: string }[];
   recent: { dir: string; name: string; opened: number }[];
   busy: boolean;
+  /** Names of the project's prefabs. */
+  prefabNames: string[];
+  /** Set while the wire dialog is open (two objects were just connected). */
+  connect: { from: string; to: string } | null;
   testMode: boolean;
   /** Bumped whenever the document changes, so React panels re-render. */
   docVersion: number;
@@ -130,6 +137,8 @@ const initial: AppState = {
   log: [],
   recent: [],
   busy: false,
+  prefabNames: [],
+  connect: null,
   testMode: false,
   docVersion: 0,
   recovery: null,
@@ -152,6 +161,8 @@ class AppStore {
   state: AppState = initial;
   doc: EditorDoc | null = null;
   clipboard: EntityData[] = [];
+  /** The project's prefabs (reusable objects). */
+  prefabs = new Map<string, PrefabData>();
   /** Where the camera should look next (set by "go to" links in the Problems panel). */
   focusRequest: { x: number; y: number; token: number } | null = null;
   /** "Play from here" start position. */
@@ -263,6 +274,7 @@ class AppStore {
   private async openLoaded(p: OpenProject): Promise<void> {
     await api().recent.add(p.dir, p.project.name);
     this.set({ project: p, workspace: 'world', recent: await api().recent.list() });
+    await this.loadPrefabs();
     await this.openScene(p.project.startScene);
     this.set({ screen: 'editor' });
     this.startAutosave();
@@ -276,7 +288,7 @@ class AppStore {
     if (!p) return;
     const scene = await loadScene(realFs, p.dir, scenePath);
     const recovered = await readAutosave(realFs, p.dir, scenePath);
-    this.attachDoc(EditorDoc.fromScene(scene), scenePath);
+    this.attachDoc(EditorDoc.fromScene(scene, this.prefabs), scenePath);
     if (recovered && JSON.stringify(recovered) !== JSON.stringify(scene)) this.set({ recovery: { scene: recovered } });
   }
 
@@ -284,7 +296,7 @@ class AppStore {
   acceptRecovery(): void {
     const r = this.state.recovery;
     if (!r || !this.state.scenePath) return;
-    this.attachDoc(EditorDoc.fromScene(r.scene), this.state.scenePath);
+    this.attachDoc(EditorDoc.fromScene(r.scene, this.prefabs), this.state.scenePath);
     if (this.doc) this.doc.dirty = true;
     this.set({ recovery: null, docVersion: this.state.docVersion + 1 });
     this.notify('info', 'Recovered your unsaved changes. Save to keep them.');
@@ -368,6 +380,96 @@ class AppStore {
     }
   }
 
+  // ---- prefabs ----
+
+  async loadPrefabs(): Promise<void> {
+    const p = this.state.project;
+    if (!p) {
+      this.prefabs = new Map();
+      this.set({ prefabNames: [] });
+      return;
+    }
+    const { prefabs, problems } = await loadAllPrefabs(assetFs, p.dir);
+    this.prefabs = prefabs;
+    this.set({ prefabNames: [...prefabs.keys()] });
+    for (const problem of problems) this.notify('warn', problem);
+  }
+
+  private setPrefabs(next: Map<string, PrefabData>): void {
+    this.prefabs = next;
+    if (this.doc) this.doc.setPrefabs(next);
+    this.set({ prefabNames: [...next.keys()].sort((a, b) => a.localeCompare(b)), docVersion: this.state.docVersion + 1 });
+  }
+
+  /** Turn an object in the scene into a prefab (it becomes the first instance). */
+  async createPrefab(entityId: string, name: string): Promise<boolean> {
+    const p = this.state.project;
+    const doc = this.doc;
+    const e = doc?.getEntity(entityId);
+    if (!p || !doc || !e) return false;
+    const problem = prefabNameProblem(name, this.state.prefabNames);
+    if (problem) {
+      this.notify('warn', problem);
+      return false;
+    }
+    const prefab = extractPrefab(e, name.trim());
+    const ok = await this.guard('Making the prefab', async () => {
+      await savePrefab(assetFs, p.dir, prefab);
+      return true;
+    });
+    if (!ok) return false;
+    this.setPrefabs(new Map(this.prefabs).set(prefab.name, prefab));
+    doc.updateEntities([entityId], `Make prefab "${prefab.name}"`, (x) => {
+      x.prefab = prefab.name;
+    });
+    this.notify('info', `Made the prefab "${prefab.name}". Objects made from it follow it, except for settings you change on them.`);
+    return true;
+  }
+
+  /** Copy this instance's settings back into its prefab, so every instance (that has not overridden them) follows. */
+  async applyToPrefab(entityId: string): Promise<void> {
+    const p = this.state.project;
+    const e = this.doc?.getEntity(entityId);
+    const old = e?.prefab ? this.prefabs.get(e.prefab) : undefined;
+    if (!p || !e || !old) return;
+    const fresh = extractPrefab(e, old.name);
+    const next: PrefabData = { ...old, root: { ...old.root, components: fresh.root.components, tags: fresh.root.tags } };
+    await this.guard('Updating the prefab', async () => {
+      await savePrefab(assetFs, p.dir, next);
+      this.setPrefabs(new Map(this.prefabs).set(next.name, next));
+    });
+    this.notify('info', `Updated the prefab "${next.name}" from this object.`);
+  }
+
+  revertInstance(entityId: string): void {
+    const doc = this.doc;
+    const e = doc?.getEntity(entityId);
+    if (!doc || !e?.prefab) return;
+    const t = e.components.transform as Record<string, unknown> | undefined;
+    const base = resolveInstance({ id: e.id, name: e.name, tags: [], prefab: e.prefab, components: t ? { transform: { x: t.x, y: t.y, h: t.h } } : {} }, this.prefabs);
+    if (!base) return;
+    doc.updateEntities([entityId], 'Revert to prefab', (x) => {
+      x.components = base.components;
+      x.tags = base.tags;
+    });
+  }
+
+  unlinkInstance(entityId: string): void {
+    this.doc?.updateEntities([entityId], 'Unlink from prefab', (x) => {
+      delete x.prefab;
+    });
+  }
+
+  async removePrefab(name: string): Promise<void> {
+    const p = this.state.project;
+    if (!p) return;
+    await this.guard('Deleting the prefab', async () => {
+      await deletePrefab(assetFs, p.dir, name);
+      const next = new Map(this.prefabs);
+      next.delete(name);
+      this.setPrefabs(next);
+    });
+  }
   // ---- selection and clipboard ----
 
   select(ids: string[]): void {

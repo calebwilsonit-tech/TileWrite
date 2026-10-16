@@ -66,3 +66,10 @@ Occlusion fade: renderer-only (not simulation state). Tiles taller than the focu
 - **Studio edits a decoded copy** (`SpriteDoc`) with cheap per-cel undo for strokes and whole-sprite snapshots for structural edits; saving writes the sprite file and re-registers it so the world editor and play mode pick it up immediately.
 - **Unsaved work is never dropped silently**: switching/creating/importing a sprite asks; closing the project saves the open sprite.
 - Tween manager lives in the Simulation and updates first each tick.
+
+## D010 - No-code logic (M5) (2026-10-16)
+- **A behaviour is a registry entry** (id, settings schema with labels/help, required components, input/output signals, one system). The inspector, validators and the wire dialog are all generated from the registry, so adding a behaviour needs no editor code.
+- **Signals are plain booleans on a `signals` component** (inputs/outputs), copied along wires each tick with OR semantics; logic nodes handle AND/NOT/XOR/toggle/delay. Wires and logic settle in a fixpoint before actuators run, so a chain of nodes reacts in the same tick. Rejected: event-bus messages for puzzle wiring (order-dependent, hard to replay).
+- **Event sheets are data** (conditions/actions registered with a describe function), so every row can be shown in plain English and checked (`checkSheet`) without running it. Time and edge conditions fire once per tick.
+- **Prefab instances store overrides only** (`diffOverrides` against the resolved prefab); the editor holds resolved copies so every setting is visible, and collapses on save. Prefab changes follow files on disk (`setPrefabs`), not undo history.
+- **Ctrl+S works inside text fields** (it blurs the field first so the pending edit commits); other shortcuts remain suppressed while typing.

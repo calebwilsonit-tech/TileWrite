@@ -24,10 +24,10 @@ Tick an item when the engine can make it **without code**, verified by a test or
 - [ ] Ghosts pass through some gates
 
 ## Puzzle parts
-- [ ] Pressure plates (momentary / latched)
-- [ ] Gates/doors linked to plates or logic
-- [ ] Pushable crates
-- [ ] Levers, timers
+- [x] Pressure plates (momentary / latched)
+- [x] Gates/doors linked to plates or logic
+- [x] Pushable crates
+- [x] Levers, timers
 - [ ] Sentence stones (swappable word changes the world)
 - [ ] Formattable text blocks (underline = bridge, bold = wall, italic = slide)
 - [ ] Rising dough that grows over time, faster near light

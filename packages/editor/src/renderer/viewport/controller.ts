@@ -219,6 +219,7 @@ export class ViewportController {
 
   private onDocEvent(e: DocEvent): void {
     if (e.type === 'cells') this.renderer.updateCells(e.cells);
+    else if (e.type === 'wires') this.dirty = true;
     else if (e.type === 'map' && this.doc) {
       this.renderer.setTileMap(this.doc.map, this.tilesetFor());
       this.frameMap();
@@ -348,6 +349,7 @@ export class ViewportController {
       heightLabels: s.view.heightLabels,
       regions: { list: doc.regions, visible: s.view.regions, selected: s.selectedRegion },
       walk: this.walk,
+      wires: this.wirePoints(),
       previews: this.previews,
       zoom: cam.zoom,
       visible: { minX: tl.x - 40, minY: tl.y - 40, maxX: br.x + 40, maxY: br.y + 40 },
@@ -365,7 +367,7 @@ export class ViewportController {
     this.ghostG.clear();
     for (const pv of this.previews) {
       if (pv.kind === 'ghost') {
-        const prefab = prefabById(pv.prefab);
+        const prefab = prefabById(pv.prefab, store.prefabs);
         const data = prefab.make(pv.x, pv.y, pv.h);
         const sp = data.components.sprite as SpriteLike | undefined;
         if (sp) this.overlay.ghost(this.ghostG, pv.x, pv.y, pv.h, sp.w, sp.d, sp.height, sp.color, this.renderer.iso);
@@ -375,6 +377,27 @@ export class ViewportController {
     this.renderer.render(this.editWorld);
   }
 
+  /** Where wires attach to an object: its position, a little above the floor so lines clear the shape. */
+  private anchorOf(id: string): { x: number; y: number; h: number } | null {
+    const e = this.doc?.getEntity(id);
+    const t = e?.components.transform as TransformIso | undefined;
+    const s = e?.components.sprite as SpriteLike | undefined;
+    if (!t) return null;
+    return { x: t.x, y: t.y, h: t.h + Math.min(1, (s?.height ?? 0.5) / 2) };
+  }
+
+  private wirePoints(): { a: { x: number; y: number; h: number }; b: { x: number; y: number; h: number }; hot: boolean }[] {
+    const doc = this.doc;
+    if (!doc) return [];
+    const sel = store.state.selection;
+    const out: { a: { x: number; y: number; h: number }; b: { x: number; y: number; h: number }; hot: boolean }[] = [];
+    for (const w of doc.wires) {
+      const a = this.anchorOf(w.from.entity);
+      const b = this.anchorOf(w.to.entity);
+      if (a && b) out.push({ a, b, hot: sel.includes(w.from.entity) || sel.includes(w.to.entity) });
+    }
+    return out;
+  }
   private setPreviews(p: Preview[]): void {
     this.previews = p;
     this.dirty = true;
@@ -464,6 +487,9 @@ export class ViewportController {
       setMarquee: (r) => this.showMarquee(r),
       pickEntity: (sc) => this.pickEntity(sc),
       pickRegion: (c) => this.pickRegion(c),
+      prefabs: store.prefabs,
+      connect: (from, to) => store.set({ connect: { from, to } }),
+      entityAnchor: (id) => this.anchorOf(id),
       entitiesInRect: (r) => this.entitiesInRect(r),
       worldAt: (sc, h) => {
         const w = this.camera.viewToWorld(sc);
@@ -609,7 +635,9 @@ export class ViewportController {
     }
     const sim = new Simulation(1);
     for (const [name, data] of studio.assets) sim.assets.sprites.set(name, data);
-    const byId = loadScene(sim, scene);
+    for (const [name, data] of store.prefabs) sim.assets.prefabs.set(name, data);
+    const byId = loadScene(sim, scene, { prefabs: store.prefabs });
+    for (const problem of byId.problems) store.notify('warn', problem);
     const player = byId.get(playerData.id)!;
     const from = store.playFrom;
     if (from) {
@@ -624,6 +652,15 @@ export class ViewportController {
     }
     store.playFrom = null;
     addStandardSystems(sim, physicsSystem);
+    const warned = new Set<string>();
+    sim.events.on('message', (e) => store.notify('info', String(e.text ?? '')));
+    sim.events.on('problem', (e) => {
+      const text = String(e.text ?? '');
+      if (!warned.has(text)) {
+        warned.add(text);
+        store.notify('warn', text);
+      }
+    });
 
     const cam = this.camera;
     const saved = { x: cam.x, y: cam.y, zoom: cam.zoom, dzw: cam.deadzoneW, dzh: cam.deadzoneH, smoothing: cam.smoothing };

@@ -2,6 +2,7 @@ import { Simulation } from '../core/simulation';
 import { C } from '../scene/components';
 import type { Entity } from '../scene/world';
 import { TileMap } from '../tilemap/tilemap';
+import { expandEntities, type PrefabMap } from './prefab';
 import {
   CURRENT_SCHEMA_VERSION,
   ProjectSchema,
@@ -63,6 +64,9 @@ export function newScene(name: string, width = 32, height = 32, tile = 1): Scene
     map: tileMapToRows(map),
     entities: [],
     regions: [],
+    wires: [],
+    variables: [],
+    events: [],
   };
 }
 
@@ -94,23 +98,40 @@ export function stringifyScene(scene: SceneData): string {
 
 /** Default components for things the editor places, so a fresh entity just works. */
 export function instantiateEntity(sim: Simulation, data: EntityData): Entity {
-  return sim.world.spawn({ name: data.name, tags: data.tags, components: structuredClone(data.components) });
+  const e = sim.world.spawn({ name: data.name, tags: data.tags, components: structuredClone(data.components) });
+  e.set('meta', { sceneId: data.id });
+  sim.runtime.ids.set(data.id, e.id);
+  return e;
+}
+
+export interface LoadOptions {
+  /** Prefabs available to instances in the scene. */
+  prefabs?: PrefabMap;
 }
 
 /**
- * Fill a simulation from scene data: terrain on `sim.map`, one entity per scene entity.
- * Returns the entities by scene id so callers can find the player, cameras, etc.
+ * Fill a simulation from scene data: terrain on `sim.map`, one entity per scene entity (prefab instances
+ * expanded), plus the scene's wires, variables and event sheet.
+ * Returns the entities by scene id so callers can find the player, cameras, etc.; `problems` lists things
+ * that could not be loaded (such as a missing prefab).
  */
-export function loadScene(sim: Simulation, scene: SceneData): Map<string, Entity> {
+export function loadScene(sim: Simulation, scene: SceneData, opts: LoadOptions = {}): Map<string, Entity> & { problems: string[] } {
   sim.map = tileMapFromRows(scene.map);
-  const byId = new Map<string, Entity>();
-  for (const e of scene.entities) {
+  const { entities, problems } = expandEntities(scene.entities, opts.prefabs ?? new Map());
+  const byId = new Map<string, Entity>() as Map<string, Entity> & { problems: string[] };
+  byId.problems = problems;
+  sim.runtime.ids.clear();
+  for (const e of entities) {
     const entity = instantiateEntity(sim, e);
     // physics collider state is runtime-only; make sure it starts clean
     const collider = entity.get<{ inside?: number[] }>(C.Collider);
     if (collider) collider.inside = [];
     byId.set(e.id, entity);
   }
+  sim.runtime.wires = structuredClone(scene.wires);
+  sim.runtime.sheet = structuredClone(scene.events);
+  sim.runtime.vars = Object.fromEntries(scene.variables.map((v) => [v.name, v.value]));
+  sim.runtime.rowState = {};
   return byId;
 }
 

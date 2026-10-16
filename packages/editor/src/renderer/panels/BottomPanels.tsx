@@ -7,8 +7,9 @@ import { studio, useStudio } from '../studio/store';
 export function useProblems(): Problem[] {
   const version = useApp((s) => s.docVersion);
   const assets = useStudio((s) => s.assetsVersion);
+  const prefabs = useApp((s) => s.prefabNames);
   const deferred = useDeferredValue(version);
-  return useMemo(() => (store.doc ? validateScene(store.doc, new Set(studio.assets.keys())) : []), [deferred, assets]);
+  return useMemo(() => (store.doc ? validateScene(store.doc, new Set(studio.assets.keys()), new Set(prefabs)) : []), [deferred, assets, prefabs]);
 }
 
 export function goTo(p: Problem): void {

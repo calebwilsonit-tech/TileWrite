@@ -20,6 +20,7 @@ const baseOpts: ToolOptions = {
 function setup(w = 12, h = 12, opts: Partial<ToolOptions> = {}) {
   const doc = EditorDoc.fromScene(newScene('T', w, h));
   const log: { kind: string; text: string }[] = [];
+  const connected: [string, string][] = [];
   const state = { selection: [] as string[], region: null as string | null, preview: [] as Preview[], walk: null as Set<string> | null, picks: new Map<string, string>() };
   const env: ToolEnv = {
     doc,
@@ -37,6 +38,9 @@ function setup(w = 12, h = 12, opts: Partial<ToolOptions> = {}) {
     setMarquee: () => {},
     pickEntity: (s) => state.picks.get(`${s.x},${s.y}`) ?? null,
     pickRegion: () => null,
+    prefabs: new Map(),
+    connect: (a, b) => connected.push([a, b]),
+    entityAnchor: () => ({ x: 0, y: 0, h: 0 }),
     entitiesInRect: () => [],
     worldAt: (s) => ({ x: s.x / 10, y: s.y / 10 }),
   };
@@ -55,7 +59,7 @@ function setup(w = 12, h = 12, opts: Partial<ToolOptions> = {}) {
     t.up(ptr(...to, extra), env);
   };
   const click = (tool: ToolId, at: [number, number], extra: Partial<Pointer> = {}): void => drag(tool, at, at, extra);
-  return { doc, env, state, log, ptr, drag, click };
+  return { doc, env, state, log, ptr, drag, click, connected };
 }
 
 describe('paint tools', () => {

@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import type { SpriteData } from '@tilewright/runtime';
-import { store, realFs } from '../app/store';
+import { store } from '../app/store';
+import { assetFs } from '../project/assetFs';
 import { api } from '../project/api';
 import {
   blankSprite,
@@ -12,7 +13,6 @@ import {
   saveMeta,
   saveSprite,
   spriteNameProblem,
-  type AssetFs,
   type AssetMeta,
 } from './assets';
 import { SpriteDoc } from './doc';
@@ -68,11 +68,6 @@ const initial: StudioState = {
   query: '',
 };
 
-export const assetFs: AssetFs = {
-  ...realFs,
-  list: (d) => api().fs.list(d),
-  writeBinary: (f, b) => api().fs.writeBinary(f, b),
-};
 
 type Listener = () => void;
 
@@ -245,6 +240,8 @@ class StudioStore {
 }
 
 export const studio = new StudioStore();
+
+export { assetFs };
 
 export function useStudio<T>(selector: (s: StudioState) => T): T {
   return useSyncExternalStore(studio.subscribe, () => selector(studio.getState()));

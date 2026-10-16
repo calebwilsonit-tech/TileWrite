@@ -1052,3 +1052,113 @@ button.asset {
   padding: 4px;
   font-size: 11px;
 }
+/* ---------- behaviours, prefabs, events ---------- */
+
+.behavior {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 4px 8px;
+  margin: 6px 0;
+  background: var(--panel-2);
+}
+
+.behavior > summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+}
+
+button.small {
+  padding: 0 6px;
+  line-height: 1.4;
+}
+
+.hint.summary {
+  font-style: italic;
+}
+
+.prefab-banner {
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  padding: 4px 8px;
+  margin: 6px 0;
+}
+
+.prefab-make {
+  margin: 6px 0;
+  font-size: 13px;
+}
+
+.events-panel details {
+  margin-bottom: 8px;
+}
+
+.event-row {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 6px 8px;
+  margin: 8px 0;
+  background: var(--panel-2);
+}
+
+.event-row.off {
+  opacity: 0.55;
+}
+
+.event-head {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.event-head .sentence {
+  flex: 1;
+  margin: 0;
+  font-weight: 600;
+}
+
+.row-tools {
+  display: flex;
+  gap: 4px;
+}
+
+.event-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.event-col h4 {
+  margin: 4px 0;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.event-item {
+  border-left: 3px solid var(--accent);
+  padding-left: 8px;
+  margin: 6px 0;
+}
+
+.event-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  align-items: center;
+  margin-top: 6px;
+  border-top: 1px dashed var(--line);
+  padding-top: 6px;
+}
+
+.event-options .field {
+  margin: 0;
+  grid-template-columns: auto 1fr;
+}
+
+.event-problems h4 {
+  margin: 12px 0 4px;
+}

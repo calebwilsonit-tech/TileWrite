@@ -60,6 +60,8 @@ export interface Body {
   blockedBy: EntityId[];
   /** True if terrain stopped movement this tick. */
   blockedTerrain: boolean;
+  /** The solid object (crate, moving platform...) this body is standing on, if any. */
+  standingOn: EntityId | null;
 }
 
 export interface Collider {
@@ -75,6 +77,8 @@ export interface Collider {
   /** Layers this collider interacts with. */
   mask: number;
   enabled: boolean;
+  /** Bodies can stand on top of a solid collider (default true). */
+  platform?: boolean;
   /** Triggers only: ids currently inside (managed by physics). */
   inside: EntityId[];
 }
@@ -99,6 +103,7 @@ export function makeBody(partial: Partial<Body> = {}): Body {
     noclip: false,
     blockedBy: [],
     blockedTerrain: false,
+    standingOn: null,
     ...partial,
   };
 }
@@ -179,7 +184,8 @@ function stepBody(ctx: SimContext, e: Entity, t: TransformIso, b: Body, solids: 
   b.blockedTerrain = false;
   if (b.state === 'pit') return;
 
-  if (b.state === 'ground') settle(ctx, t, b);
+  if (b.state === 'ground') settle(ctx, t, b, solids, e);
+  else b.standingOn = null;
 
   const dx = b.vx * dt;
   const dy = b.vy * dt;
@@ -190,7 +196,7 @@ function stepBody(ctx: SimContext, e: Entity, t: TransformIso, b: Body, solids: 
       moveAxis(ctx, e, t, b, solids, 0, dy / n);
     }
   }
-  if (b.state === 'air') fall(ctx, e, t, b, dt);
+  if (b.state === 'air') fall(ctx, e, t, b, dt, solids);
 }
 
 function query(b: Body, airborne: boolean): SurfaceQuery {
@@ -221,14 +227,14 @@ function moveAxis(ctx: SimContext, e: Entity, t: TransformIso, b: Body, solids: 
     b.blockedTerrain = true;
     return;
   }
-  const blockers = solidBlockers(e, b, nx, ny, z, solids);
+  const blockers = solidBlockers(e, b, t.x, t.y, nx, ny, z, solids);
   if (blockers.length > 0) {
     for (const id of blockers) if (!b.blockedBy.includes(id)) b.blockedBy.push(id);
     return;
   }
   t.x = nx;
   t.y = ny;
-  if (b.state === 'ground') settle(ctx, t, b);
+  if (b.state === 'ground') settle(ctx, t, b, solids, e);
 }
 
 /** Would a footprint corner at (cx, cy) be inside something the body cannot occupy? */
@@ -274,59 +280,103 @@ function terrainAllows(ctx: SimContext, b: Body, ox: number, oy: number, nx: num
   return true;
 }
 
-function solidBlockers(self: Entity, b: Body, x: number, y: number, z: number, solids: SolidRef[]): EntityId[] {
+/**
+ * Solid objects the body would overlap at (x, y, z). Low ones (within the body's step height) can be stepped
+ * onto, and a body already overlapping something (it just stepped off it, or was dropped on it) may always
+ * move AWAY from it, so nothing can trap a body.
+ */
+function solidBlockers(self: Entity, b: Body, ox: number, oy: number, x: number, y: number, z: number, solids: SolidRef[]): EntityId[] {
   const out: EntityId[] = [];
+  const up = b.state === 'ground' ? b.stepUp : AIR_STEP_UP;
   for (const s of solids) {
     if (s.e === self || !s.e.alive) continue;
     if (!layersMatch(b.layer, b.mask, s.c.layer, s.c.mask)) continue;
-    if (Math.abs(x - s.t.x) >= b.radius + s.c.w / 2) continue;
-    if (Math.abs(y - s.t.y) >= b.radius + s.c.d / 2) continue;
-    if (z >= s.t.h + s.c.height - 0.01 || z + b.height <= s.t.h + 0.01) continue;
+    const reachX = b.radius + s.c.w / 2;
+    const reachY = b.radius + s.c.d / 2;
+    if (Math.abs(x - s.t.x) >= reachX || Math.abs(y - s.t.y) >= reachY) continue;
+    const top = s.t.h + s.c.height;
+    if (z >= top - 0.01 || z + b.height <= s.t.h + 0.01) continue;
+    if (s.c.platform !== false && top - z <= up) continue; // low enough to step onto
+    const wasInside = Math.abs(ox - s.t.x) < reachX && Math.abs(oy - s.t.y) < reachY;
+    if (wasInside && (Math.abs(x - s.t.x) > Math.abs(ox - s.t.x) || Math.abs(y - s.t.y) > Math.abs(oy - s.t.y))) continue; // moving away
     out.push(s.e.id);
   }
   return out;
 }
+/** The highest solid object whose top a body at (x, y, z) could stand on, within the given reach. */
+function platformUnder(solids: SolidRef[], self: Entity, b: Body, x: number, y: number, z: number, up: number, down: number): { z: number; id: EntityId } | null {
+  let best: { z: number; id: EntityId } | null = null;
+  for (const s of solids) {
+    if (s.e === self || !s.e.alive || s.c.platform === false) continue;
+    if (!layersMatch(b.layer, b.mask, s.c.layer, s.c.mask)) continue;
+    if (Math.abs(x - s.t.x) > s.c.w / 2 || Math.abs(y - s.t.y) > s.c.d / 2) continue;
+    const top = s.t.h + s.c.height;
+    if (top - z > up || z - top > down) continue;
+    if (!best || top > best.z) best = { z: top, id: s.e.id };
+  }
+  return best;
+}
 
-/** Snap a grounded body to the surface under its centre, or send it airborne if there's nothing close. */
-function settle(ctx: SimContext, t: TransformIso, b: Body): void {
+/** Snap a grounded body to the surface under its centre (terrain or a platform), or send it airborne if there's nothing close. */
+function settle(ctx: SimContext, t: TransformIso, b: Body, solids: SolidRef[], self: Entity): void {
   const s = surfaceAt(ctx.map!, t.x, t.y, t.h, query(b, false));
   const standable = s.kind === 'ground' || s.kind === 'deck' || (s.kind === 'water' && b.wade);
+  let best = -Infinity;
+  let on: EntityId | null = null;
   if (standable) {
     const diff = s.z - t.h;
-    if (diff <= b.stepUp && -diff <= b.stepDown) {
-      t.h = s.z;
-      return;
-    }
+    if (diff <= b.stepUp && -diff <= b.stepDown) best = s.z;
   }
+  const p = platformUnder(solids, self, b, t.x, t.y, t.h, b.stepUp, b.stepDown);
+  if (p && p.z >= best - 1e-9) {
+    best = p.z;
+    on = p.id;
+  }
+  if (best > -Infinity) {
+    t.h = best;
+    b.standingOn = on;
+    return;
+  }
+  b.standingOn = null;
   b.state = 'air';
   b.vz = 0;
   b.peakZ = t.h;
 }
 
-function fall(ctx: SimContext, e: Entity, t: TransformIso, b: Body, dt: number): void {
+function fall(ctx: SimContext, e: Entity, t: TransformIso, b: Body, dt: number, solids: SolidRef[]): void {
   b.peakZ = Math.max(b.peakZ, t.h);
   b.vz -= GRAVITY * b.gravity * dt;
   const nz = t.h + b.vz * dt;
   const s = surfaceAt(ctx.map!, t.x, t.y, t.h, query(b, true));
   const standable = s.kind === 'ground' || s.kind === 'deck' || (s.kind === 'water' && b.wade);
-  if (standable && b.vz <= 0 && nz <= s.z) {
-    const distance = b.peakZ - s.z;
-    t.h = s.z;
+  let landZ = standable ? s.z : -Infinity;
+  let on: EntityId | null = null;
+  if (b.vz <= 0) {
+    // coming down onto something solid: only things whose top we are already above count
+    const p = platformUnder(solids, e, b, t.x, t.y, t.h, AIR_STEP_UP, 1e9);
+    if (p && p.z > landZ) {
+      landZ = p.z;
+      on = p.id;
+    }
+  }
+  if (landZ > -Infinity && b.vz <= 0 && nz <= landZ) {
+    const distance = b.peakZ - landZ;
+    t.h = landZ;
     b.vz = 0;
     b.state = 'ground';
+    b.standingOn = on;
     ctx.events.emit('landed', { entity: e.id, distance });
     b.peakZ = t.h;
     return;
   }
   t.h = nz;
-  if (!standable && t.h <= PIT_KILL_Z) {
+  if (!standable && landZ === -Infinity && t.h <= PIT_KILL_Z) {
     t.h = PIT_KILL_Z;
     b.vx = b.vy = b.vz = 0;
     b.state = 'pit';
     ctx.events.emit('fell', { entity: e.id, cause: s.kind });
   }
 }
-
 function overlapsTrigger(tt: TransformIso, c: Collider, ot: TransformIso, radius: number, height: number): boolean {
   if (Math.abs(ot.x - tt.x) >= radius + c.w / 2) return false;
   if (Math.abs(ot.y - tt.y) >= radius + c.d / 2) return false;

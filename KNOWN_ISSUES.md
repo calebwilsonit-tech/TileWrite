@@ -8,3 +8,6 @@
 - M3 deferred (listed in PROGRESS.md): hot reload during play, separate game window, Decoration/Walls/Lights layers, autotiling rules, per-height collision painting, bypass/soft-lock validators (M9), asset import (M4).
 - The "Explain" button in the Problems panel is disabled until the Claude assistant exists (M11).
 - Dock panels can be closed with their X; use Commands -> Reset panel layout to bring them back.
+
+- M5 deferred: prefab children are not shown/edited individually in the editor; wires only combine with OR (use a Logic Gate for anything else); no visual state machine editor for enemy/boss behaviour (M7); echo/light/sentence-stone parts are M6; Health/Damage/Patrol/Chase/Vision/Boss are M7; inventory/NPC/Checkpoint/Portal are M8.
+- Wire-tool and event-sheet UI are covered by one e2e plus unit tests, not by exhaustive interaction tests.

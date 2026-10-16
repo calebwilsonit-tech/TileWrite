@@ -12,6 +12,8 @@ import { LayersPanel } from '../panels/LayersPanel';
 import { ConsolePanel, HistoryPanel, ProblemsPanel, useProblems } from '../panels/BottomPanels';
 import { StudioView } from '../studio/StudioView';
 import { AssetsPanel } from '../panels/AssetsPanel';
+import { EventsPanel } from '../panels/EventsPanel';
+import { ConnectDialog } from './ConnectDialog';
 
 const components: Record<string, React.FunctionComponent<IDockviewPanelProps>> = {
   viewport: () => <ViewportPanel />,
@@ -21,11 +23,12 @@ const components: Record<string, React.FunctionComponent<IDockviewPanelProps>> =
   inspector: () => <InspectorPanel />,
   layers: () => <LayersPanel />,
   history: () => <HistoryPanel />,
+  events: () => <EventsPanel />,
   problems: () => <ProblemsPanel />,
   console: () => <ConsolePanel />,
 };
 
-const LAYOUT_VERSION = 2;
+const LAYOUT_VERSION = 3;
 
 function buildDefault(api: DockviewApi): void {
   api.addPanel({ id: 'viewport', component: 'viewport', title: 'Viewport', renderer: 'always' });
@@ -37,6 +40,7 @@ function buildDefault(api: DockviewApi): void {
   api.addPanel({ id: 'history', component: 'history', title: 'History', position: { referencePanel: 'inspector', direction: 'within' } });
   api.addPanel({ id: 'problems', component: 'problems', title: 'Problems', position: { referencePanel: 'viewport', direction: 'below' }, initialHeight: 190 });
   api.addPanel({ id: 'console', component: 'console', title: 'Console', position: { referencePanel: 'problems', direction: 'within' } });
+  api.addPanel({ id: 'events', component: 'events', title: 'Events', position: { referencePanel: 'problems', direction: 'within' } });
   api.getPanel('tiles')?.api.setActive();
   api.getPanel('inspector')?.api.setActive();
   api.getPanel('problems')?.api.setActive();
@@ -196,6 +200,7 @@ export function EditorShell() {
       <ShortcutsDialog overrides={overrides} setKeys={setKeys} />
       <NewSceneDialog />
       <RecoveryDialog />
+      <ConnectDialog />
     </div>
   );
 }

@@ -9,6 +9,8 @@ import {
   type SimContext,
   type TransformIso,
 } from '@tilewright/runtime';
+import { eventSheetSystem } from './events/sheet';
+import { behaviorSystems } from './signals';
 
 export const PLAYER_CONTROLLER = 'playerController';
 
@@ -42,9 +44,14 @@ export function playerControllerSystem({ world, input }: SimContext): void {
   }
 }
 
-/** Add the engine's standard systems in the right order: behaviours first, then physics. */
+/**
+ * Add the engine's standard systems in the right order: the player controller, the behaviour phases
+ * (control, sources, wires and logic, actuators), the event sheet, then physics and animation.
+ */
 export function addStandardSystems(sim: Simulation, physics: (ctx: SimContext) => void): void {
   sim.addSystem('player-controller', playerControllerSystem);
+  for (const s of behaviorSystems()) sim.addSystem(s.name, s.fn);
+  sim.addSystem('event-sheet', eventSheetSystem);
   sim.addSystem('physics', physics);
   sim.addSystem('animation', animationSystem);
 }

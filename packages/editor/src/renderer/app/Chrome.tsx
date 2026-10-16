@@ -29,7 +29,16 @@ export function useKeyDispatcher(overrides: Record<string, string>): void {
   useEffect(() => {
     const onKey = (e: KeyboardEvent): void => {
       if (store.state.screen !== 'editor') return;
-      if (isTyping(e)) return;
+      if (isTyping(e)) {
+        // Saving works from inside a field too: leave the field first so its pending edit is committed.
+        if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === 's') {
+          e.preventDefault();
+          (e.target as HTMLElement).blur();
+          const save = commandForKey(e, overrides);
+          if (save) setTimeout(() => save.run(), 0);
+        }
+        return;
+      }
       if (e.repeat && e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
       if (store.state.mode === 'play') {
         const play = commandForKey(e, overrides);

@@ -23,6 +23,8 @@ export interface OverlayInput {
   heightLabels: boolean;
   regions: { list: RegionData[]; visible: boolean; selected: string | null };
   walk: Set<string> | null;
+  /** Wires between objects, as points in grid space; hot ones belong to the selected object. */
+  wires: { a: { x: number; y: number; h: number }; b: { x: number; y: number; h: number }; hot: boolean }[];
   previews: Preview[];
   zoom: number;
   /** World-space bounds currently visible, to avoid drawing labels off screen. */
@@ -102,8 +104,11 @@ export class OverlayDrawer {
       }
     }
 
+    for (const w of o.wires) this.wireLine(g, w.a, w.b, w.hot ? 0xffd34a : 0xe8b84a, w.hot ? 3 : 2, iso);
     for (const pv of o.previews) {
-      if (pv.kind === 'cells') {
+      if (pv.kind === 'wire') {
+        this.wireLine(g, pv.from, { ...pv.to, h: pv.from.h }, 0xffffff, 2, iso);
+      } else if (pv.kind === 'cells') {
         for (const c of pv.cells) {
           if (!map.inBounds(c.x, c.y)) continue;
           this.diamond(g, c.x, c.y, cellTopHeight(map, c.x, c.y), iso);
@@ -117,6 +122,16 @@ export class OverlayDrawer {
     this.drawLabels(o);
   }
 
+  /** A line with an arrowhead from one object to another (both in grid space). */
+  private wireLine(g: Graphics, a: { x: number; y: number; h: number }, b: { x: number; y: number; h: number }, color: number, width: number, iso: IsoConfig): void {
+    const pa = gridToScreen(a.x, a.y, a.h, iso);
+    const pb = gridToScreen(b.x, b.y, b.h, iso);
+    g.moveTo(pa.x, pa.y).lineTo(pb.x, pb.y).stroke({ width, color, alpha: 0.95 });
+    g.circle(pa.x, pa.y, width + 1).fill({ color, alpha: 0.95 });
+    const angle = Math.atan2(pb.y - pa.y, pb.x - pa.x);
+    const head = 10;
+    g.poly([pb.x, pb.y, pb.x - head * Math.cos(angle - 0.45), pb.y - head * Math.sin(angle - 0.45), pb.x - head * Math.cos(angle + 0.45), pb.y - head * Math.sin(angle + 0.45)]).fill({ color, alpha: 0.95 });
+  }
   /** Per-cell height numbers and region names, only for what is on screen. */
   private drawLabels(o: OverlayInput): void {
     const wanted: { text: string; x: number; y: number; color: number }[] = [];

@@ -7,6 +7,7 @@ import { applySprite } from '../studio/apply';
 /** Every sprite in the project: search by name or tag, edit, tag, and use on the selected object. */
 export function AssetsPanel() {
   useStudio((s) => s.assetsVersion);
+  const prefabNames = useApp((s) => s.prefabNames);
   const names = useStudio((s) => s.names);
   const query = useStudio((s) => s.query);
   const selection = useApp((s) => s.selection);
@@ -40,7 +41,28 @@ export function AssetsPanel() {
           </button>
         ))}
       </div>
-      {names.length === 0 && <p className="hint">No sprites yet. Open the Sprites tab to draw one or import a PNG.</p>}
+      <h3>Prefabs</h3>
+      {prefabNames.length === 0 && <p className="hint">No prefabs yet. Select an object, then “Make a prefab from this object” in the Inspector.</p>}
+      <ul className="plain prefab-list" data-testid="prefab-list">
+        {prefabNames.map((n) => (
+          <li key={n} className="row">
+            <span>{n}</span>
+            <button
+              data-testid={`prefab-place-${n}`}
+              onClick={() => {
+                store.setOptions({ prefab: `prefab:${n}` });
+                store.set({ tool: 'place' });
+              }}
+              title="Choose the Place tool with this prefab"
+            >
+              Place
+            </button>
+            <button aria-label={`Delete prefab ${n}`} onClick={() => void store.removePrefab(n)}>
+              ✕
+            </button>
+          </li>
+        ))}
+      </ul>      {names.length === 0 && <p className="hint">No sprites yet. Open the Sprites tab to draw one or import a PNG.</p>}
       {data && (
         <div className="asset-detail">
           <h3>{data.name}</h3>

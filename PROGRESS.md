@@ -3,7 +3,7 @@
 Boxes are ticked only when the milestone's tests pass and the sample has been played.
 Spec: `ENGINE_BUILD_PROMPT.md`. Read `DECISIONS.md` and `KNOWN_ISSUES.md` before continuing.
 
-**Next up:** M5 no-code logic - the behaviour framework (a behaviour = named settings + a system, shown in the inspector), the built-in behaviours (Pushable, Pressure Plate, Gate/Door, Lever, Timer, Spawner, Pickup, Patrol, Health, Damage on Touch, ...), event sheets (When condition -> do action, in plain English), wires with logic nodes, prefabs with overrides, entities as platforms (crates you can stand on, moving platforms), and the sample: a plate opens a gate, a crate can be pushed onto the plate. Owed earlier: pit damage (M7), autotiling rules + Decoration/Walls layers (needs art; revisit in M5/M14), hot reload while playing and a separate game window (M10 / M14), vector drawing in the studio (M14).
+**Next up:** M6 echoes, light, puzzle parts - recording and replaying the player as ghost echoes (stand on plates, pass some gates), light sources and darkness regions, sentence stones, formattable text blocks (underline = bridge, bold = wall, italic = slide), growing dough; plus a sample built through the UI. Owed earlier: pit damage (M7), autotiling rules + Decoration/Walls/Lights layers, hot reload while playing and a separate game window (M10 / M14), vector drawing in the studio (M14), bypass/soft-lock validators (M9).
 
 ## Milestones
 
@@ -12,7 +12,7 @@ Spec: `ENGINE_BUILD_PROMPT.md`. Read `DECISIONS.md` and `KNOWN_ISSUES.md` before
 - [x] M2 Heights and collision (stairs, cliffs, pits, falling, occlusion fade)
 - [x] M3 Editor shell + world painter (see the M3 checklist: what is done and what was deliberately deferred)
 - [x] M4 Sprite studio (see the M4 checklist for what is deferred)
-- [ ] M5 No-code logic (behaviours, inspector, event sheets, wires)
+- [x] M5 No-code logic (see the M5 checklist for what is deferred)
 - [ ] M6 Echoes, light, puzzle parts
 - [ ] M7 AI and combat
 - [ ] M8 Story systems
@@ -72,3 +72,17 @@ Deferred:
 - [ ] Autotiling rules and editor, Decoration / Walls layers (tile art arrives with M5/M14)
 - [ ] Vector drawing mode, free rotate/scale of selections, tile-art editing (the studio draws sprites; terrain is still procedural)
 - [ ] Aseprite import is covered by unit tests with a hand-built file, not yet by a real Aseprite-made file
+## M5 checklist
+
+Done and covered by tests (unit: `packages/behaviors/src`, `packages/editor/src/renderer/model/logic.test.ts`; e2e: `e2e/m5-logic.spec.ts`, real window, real mouse; docs: `docs/logic.md`):
+- [x] Behaviour framework with registry; inspector Behaviours section with plain-English settings and help; required-part check in Problems
+- [x] Built-ins: Pushable, Pressure Plate (momentary/latched), Trigger Zone, Lever, Timer, Logic Gate, Gate/Door, Spawner, Pickup, Moving Platform, Falling Floor, Projectile, Follow Camera
+- [x] Signals, wires (Wire tool + connect dialog + viewport lines + inspector list), logic nodes
+- [x] Event sheets (conditions/actions, AND/OR/NOT, once, repeat, for-each, sub-events, plain-English sentences, error list)
+- [x] Prefabs with overrides, nesting, apply/revert/unlink, saved as overrides only, Assets panel
+- [x] Solid objects as platforms; moving platforms carry riders
+- [x] Sample built in the UI and played: crate pushed onto a plate opens a gate, an event row fires, player walks through (`e2e/m5-logic.spec.ts`)
+
+Deferred:
+- [ ] Health, Damage on Touch, Patrol, Chase, Vision, Boss (M7); Pickup inventory, NPC, Checkpoint, Portal (M8); echo, light, sentence-stone behaviours (M6)
+- [ ] Prefab children shown individually in the editor; visual state machines for enemies/bosses; non-OR wire combination without a Logic Gate

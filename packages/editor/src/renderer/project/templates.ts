@@ -47,6 +47,7 @@ export function crateEntity(id: string, x: number, y: number): EntityData {
       transform: { x, y, h: 0, facing: 2 },
       sprite: { shape: 'box', color: 0xc9964a, w: 0.9, d: 0.9, height: 1, sortOffset: 0, visible: true },
       collider: { w: 0.9, d: 0.9, height: 1, solid: true, trigger: false, layer: 16, mask: 65535, enabled: true, inside: [] },
+      pushable: { slideSpeed: 6 },
     },
   };
 }
@@ -63,7 +64,7 @@ function baseProject(name: string): ProjectData {
 }
 
 function sceneFrom(map: TileMap, entities: EntityData[]): SceneData {
-  return { schemaVersion: CURRENT_SCHEMA_VERSION, name: 'Main', map: tileMapToRows(map), entities, regions: [] };
+  return { schemaVersion: CURRENT_SCHEMA_VERSION, name: 'Main', map: tileMapToRows(map), entities, regions: [], wires: [], variables: [], events: [] };
 }
 
 const emptyIso: Template = {

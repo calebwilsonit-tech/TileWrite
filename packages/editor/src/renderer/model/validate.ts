@@ -1,3 +1,4 @@
+import { behaviorList, checkSheet } from '@tilewright/behaviors';
 import { EMPTY_TILE, FLAG, SLOPE_RISE, groundHeightAt, reachableCells } from '@tilewright/runtime';
 import { highSide, lowSide, meetsTop } from '../tools/algorithms';
 import type { EditorDoc } from './doc';
@@ -20,7 +21,7 @@ interface T {
  * Checks a scene for mistakes a designer can fix, in plain English.
  * (M3 covers the basics; M9 adds bypass and soft-lock detection.)
  */
-export function validateScene(doc: EditorDoc, sprites?: ReadonlySet<string>): Problem[] {
+export function validateScene(doc: EditorDoc, sprites?: ReadonlySet<string>, prefabNames?: ReadonlySet<string>): Problem[] {
   const out: Problem[] = [];
   const map = doc.map;
 
@@ -70,6 +71,47 @@ export function validateScene(doc: EditorDoc, sprites?: ReadonlySet<string>): Pr
     }
   }
 
+  // behaviours that need something the object does not have
+  for (const e of doc.entities) {
+    const t = e.components.transform as T | undefined;
+    for (const b of behaviorList()) {
+      if (e.components[b.id] === undefined) continue;
+      for (const need of Object.keys(b.requires)) {
+        if (e.components[need] === undefined) {
+          out.push({ id: `needs-${e.id}-${b.id}-${need}`, severity: 'warning', message: `"${e.name}" has the ${b.name} behaviour but is missing its ${need}, so it will not work. Remove and add the behaviour again.`, target: t ? pos('entity', e.id, t) : undefined });
+        }
+      }
+    }
+  }
+
+  // wires must join real objects through signals they really have
+  const signalsOf = (entityId: string, side: 'inputs' | 'outputs'): Set<string> => {
+    const e = doc.getEntity(entityId);
+    const names = new Set<string>();
+    if (!e) return names;
+    for (const b of behaviorList()) if (e.components[b.id] !== undefined) for (const s of b[side]) names.add(s.name);
+    return names;
+  };
+  for (const w of doc.wires) {
+    const from = doc.getEntity(w.from.entity);
+    const to = doc.getEntity(w.to.entity);
+    if (!from || !to) {
+      out.push({ id: `wire-gone-${w.id}`, severity: 'warning', message: 'A wire connects to an object that no longer exists.' });
+      continue;
+    }
+    const ft = from.components.transform as T | undefined;
+    if (!signalsOf(from.id, 'outputs').has(w.from.output)) {
+      out.push({ id: `wire-out-${w.id}`, severity: 'warning', message: `"${from.name}" does not send a signal called "${w.from.output}" (its behaviour was removed?), so the wire to "${to.name}" does nothing.`, target: ft ? pos('entity', from.id, ft) : undefined });
+    } else if (!signalsOf(to.id, 'inputs').has(w.to.input)) {
+      out.push({ id: `wire-in-${w.id}`, severity: 'warning', message: `"${to.name}" does not receive a signal called "${w.to.input}" (its behaviour was removed?), so the wire from "${from.name}" does nothing.`, target: ft ? pos('entity', from.id, ft) : undefined });
+    }
+  }
+
+  // the event sheet
+  const names = { entity: (id: string): string | undefined => doc.getEntity(id)?.name };
+  for (const p of checkSheet(doc.events, { entityIds: new Set(doc.entities.map((e) => e.id)), tags: new Set(doc.entities.flatMap((e) => e.tags)), variables: new Set([...doc.variables.map((v) => v.name), ...doc.entities.map((e) => (e.components.pickup as { variable?: string } | undefined)?.variable ?? '').filter(Boolean)]), prefabs: prefabNames ?? new Set<string>() }, names)) {
+    out.push({ id: `events-${p.rowId}-${out.length}`, severity: 'warning', message: `Event sheet: ${p.text}` });
+  }
   for (let y = 0; y < map.height; y++) {
     for (let x = 0; x < map.width; x++) {
       const slope = map.getSlope(x, y);

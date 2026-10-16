@@ -456,6 +456,78 @@ describe('solid colliders and layers', () => {
   });
 });
 
+describe('solid objects as platforms', () => {
+  function crateWorld(height = 1) {
+    const w = world(flat(), 2.5, 5.5);
+    const crate = w.sim.world.spawn({
+      name: 'crate',
+      components: { [C.Transform]: makeTransform(5.5, 5.5, 0), [C.Collider]: makeCollider({ w: 1, d: 1, height, layer: LAYER.PROP }) },
+    });
+    return { ...w, crate };
+  }
+
+  it('lets a body jump onto a crate and stand on it', () => {
+    const { sim, t, b, crate } = crateWorld(1);
+    b.vx = 3;
+    run(sim, 40); // walk up to it, blocked by the side
+    expect(t.x).toBeLessThan(5);
+    jumpBody(b, 11);
+    run(sim, 20); // drift forward in the air...
+    b.vx = 0; // ...then stop and drop onto the top
+    run(sim, 40);
+    expect(t.h).toBeCloseTo(1, 5);
+    expect(b.standingOn).toBe(crate.id);
+    expect(b.state).toBe('ground');
+    expect(t.x).toBeGreaterThan(5); // it made it onto the top
+  });
+
+  it('keeps a body standing on the crate when it stops, and drops it when it walks off', () => {
+    const { sim, t, b, crate } = crateWorld(1);
+    teleportBody({ map: sim.map } as never, sim.world.findByName('hero')!, 5.5, 5.5, 1);
+    b.state = 'air';
+    run(sim, 30);
+    expect(t.h).toBeCloseTo(1, 5);
+    expect(b.standingOn).toBe(crate.id);
+    b.vx = 2;
+    run(sim, 90);
+    expect(t.x).toBeGreaterThan(6.2);
+    expect(t.h).toBe(0);
+    expect(b.standingOn).toBeNull();
+  });
+
+  it('cannot step onto a crate that is taller than the step, but can onto a low one', () => {
+    const tall = crateWorld(1);
+    tall.b.vx = 3;
+    run(tall.sim, 90);
+    expect(tall.t.x).toBeLessThan(5);
+    const low = crateWorld(0.3);
+    low.b.vx = 3;
+    run(low.sim, 90);
+    expect(low.t.x).toBeGreaterThan(6);
+  });
+
+  it('a platform that is switched off or removed is not stood on any more', () => {
+    const { sim, t, b, crate } = crateWorld(1);
+    teleportBody({ map: sim.map } as never, sim.world.findByName('hero')!, 5.5, 5.5, 1);
+    b.state = 'air';
+    run(sim, 20);
+    expect(b.standingOn).toBe(crate.id);
+    crate.require<ReturnType<typeof makeCollider>>(C.Collider).enabled = false;
+    run(sim, 30);
+    expect(t.h).toBe(0);
+    expect(b.standingOn).toBeNull();
+  });
+
+  it('respects collider.platform = false', () => {
+    const { sim, t, b, crate } = crateWorld(1);
+    crate.require<ReturnType<typeof makeCollider>>(C.Collider).platform = false;
+    teleportBody({ map: sim.map } as never, sim.world.findByName('hero')!, 5.5, 5.5, 1);
+    b.state = 'air';
+    run(sim, 30);
+    expect(t.h).toBeLessThan(1); // fell through it
+  });
+});
+
 describe('triggers', () => {
   function plateWorld() {
     const w = world(flat(), 2.5, 5.5);

@@ -1,5 +1,8 @@
 import { FACING_NAMES, type Animator, type EntityData, type RegionData } from '@tilewright/runtime';
+import { behaviorList } from '@tilewright/behaviors';
 import { applySprite, setLocomotionClips, setPlainClip } from '../studio/apply';
+import { BehaviorsSection } from './BehaviorsSection';
+import { PrefabBanner, WiresSection } from './LogicSections';
 import { studio, useStudio } from '../studio/store';
 import { useApp, store } from '../app/store';
 import { copySelection, deleteSelection, pasteClipboard, rotateSelection } from '../app/commands';
@@ -12,7 +15,8 @@ const SHAPES = [
   { value: 'box', label: 'Box' },
   { value: 'diamond', label: 'Flat diamond' },
 ];
-const KNOWN = new Set(['transform', 'sprite', 'collider', 'playerController', 'body', 'animator']);
+const KNOWN = new Set(['transform', 'sprite', 'collider', 'playerController', 'body', 'animator', 'meta', 'signals']);
+const isHidden = (k: string): boolean => KNOWN.has(k) || k.startsWith('state:') || behaviorList().some((b) => b.id === k);
 
 function comp<T extends Rec>(e: EntityData, name: string): T | undefined {
   return e.components[name] as T | undefined;
@@ -105,6 +109,7 @@ function EntityInspector({ ids }: { ids: string[] }) {
   return (
     <div data-testid="inspector-entity">
       <h3>{e.name}</h3>
+      <PrefabBanner entity={e} />
       <TextField testId="insp-name" label="Name" value={e.name} onCommit={(v) => edit('Rename object', (x) => (x.name = v.trim() || x.name))} />
       <TextField label="Tags (comma separated)" value={e.tags.join(', ')} onCommit={(v) => edit('Change tags', (x) => (x.tags = v.split(',').map((q) => q.trim()).filter(Boolean)))} />
       {t && (
@@ -149,12 +154,14 @@ function EntityInspector({ ids }: { ids: string[] }) {
           <NumberField label="Jump speed (0 = no jump)" step={0.5} min={0} max={30} value={pc.jumpSpeed} onCommit={(v) => setC('playerController', 'jumpSpeed', v, 'Change jump')} />
         </fieldset>
       )}
-      {Object.keys(e.components).some((k) => !KNOWN.has(k)) && (
+      <BehaviorsSection entity={e} edit={edit} />
+      <WiresSection entityId={e.id} />
+      {Object.keys(e.components).some((k) => !isHidden(k)) && (
         <fieldset>
           <legend>Other components</legend>
           <ul className="plain">
             {Object.keys(e.components)
-              .filter((k) => !KNOWN.has(k))
+              .filter((k) => !isHidden(k))
               .map((k) => (
                 <li key={k}>{k}</li>
               ))}

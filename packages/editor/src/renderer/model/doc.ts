@@ -1,11 +1,17 @@
 import {
   CURRENT_SCHEMA_VERSION,
   TileMap,
+  collapseInstance,
+  resolveInstance,
+  type PrefabData,
   tileMapFromRows,
   tileMapToRows,
   type EntityData,
+  type EventRow,
   type RegionData,
   type SceneData,
+  type VariableData,
+  type WireData,
 } from '@tilewright/runtime';
 import { EditBuffer, readCell, sameCell, writeCell, type CellData, type CellEdit, type CellPatch } from './cells';
 import { History, type Command } from './history';
@@ -15,6 +21,8 @@ export type DocEvent =
   | { type: 'map' }
   | { type: 'entities' }
   | { type: 'regions' }
+  | { type: 'wires' }
+  | { type: 'events' }
   | { type: 'meta' }
   | { type: 'history' };
 
@@ -75,6 +83,8 @@ export class Stroke {
 export class EditorDoc {
   readonly history = new History();
   dirty = false;
+  /** Prefabs instances in this scene follow (set by the app; used when loading and saving). */
+  prefabs: ReadonlyMap<string, PrefabData> = new Map();
   private readonly listeners = new Set<DocListener>();
   private nextId = 1;
 
@@ -83,13 +93,20 @@ export class EditorDoc {
     public map: TileMap,
     public entities: EntityData[] = [],
     public regions: RegionData[] = [],
+    public wires: WireData[] = [],
+    public variables: VariableData[] = [],
+    public events: EventRow[] = [],
   ) {
     this.nextId = this.computeNextId();
   }
 
-  static fromScene(scene: SceneData): EditorDoc {
+  /** Open a scene; instances of prefabs are filled in from their prefab so every setting can be seen and edited. */
+  static fromScene(scene: SceneData, prefabs: ReadonlyMap<string, PrefabData> = new Map()): EditorDoc {
     const copy = structuredClone(scene);
-    return new EditorDoc(copy.name, tileMapFromRows(copy.map), copy.entities, copy.regions);
+    const entities = copy.entities.map((e) => (e.prefab && prefabs.has(e.prefab) ? (resolveInstance(e, prefabs) ?? e) : e));
+    const doc = new EditorDoc(copy.name, tileMapFromRows(copy.map), entities, copy.regions, copy.wires, copy.variables, copy.events);
+    doc.prefabs = prefabs;
+    return doc;
   }
 
   toScene(): SceneData {
@@ -97,14 +114,21 @@ export class EditorDoc {
       schemaVersion: CURRENT_SCHEMA_VERSION,
       name: this.name,
       map: tileMapToRows(this.map),
-      entities: this.entities,
+      // instances are stored as just their overrides, so editing a prefab updates every instance
+      entities: this.entities.map((e) => {
+        const p = e.prefab ? this.prefabs.get(e.prefab) : undefined;
+        return p ? collapseInstance(e, p, this.prefabs) : e;
+      }),
       regions: this.regions,
+      wires: this.wires,
+      variables: this.variables,
+      events: this.events,
     });
   }
 
   private computeNextId(): number {
     let max = 0;
-    for (const e of [...this.entities, ...this.regions]) {
+    for (const e of [...this.entities, ...this.regions, ...this.wires, ...this.events]) {
       const m = /(\d+)$/.exec(e.id);
       if (m) max = Math.max(max, Number(m[1]));
     }
@@ -184,6 +208,21 @@ export class EditorDoc {
     });
   }
 
+  /**
+   * The project's prefabs changed (made, updated, deleted). Instances are re-filled from the new prefab,
+   * keeping what was overridden on them. Not an undo step: it follows files on disk.
+   */
+  setPrefabs(next: ReadonlyMap<string, PrefabData>): void {
+    const old = this.prefabs;
+    this.entities = this.entities.map((e) => {
+      const p = e.prefab ? old.get(e.prefab) : undefined;
+      if (!e.prefab || !p) return e;
+      const saved = collapseInstance(e, p, old);
+      return next.has(e.prefab) ? (resolveInstance(saved, next) ?? e) : e;
+    });
+    this.prefabs = next;
+    this.emit({ type: 'entities' });
+  }
   // ---- entities ----
 
   getEntity(id: string): EntityData | undefined {
@@ -211,15 +250,20 @@ export class EditorDoc {
     const set = new Set(ids);
     const removed = this.entities.map((e, index) => ({ e: structuredClone(e), index })).filter((r) => set.has(r.e.id));
     if (removed.length === 0) return;
+    const droppedWires = this.wires.map((w, index) => ({ w: structuredClone(w), index })).filter((r) => set.has(r.w.from.entity) || set.has(r.w.to.entity));
     this.run({
       label: removed.length > 1 ? `${label} (${removed.length})` : label,
       redo: () => {
         this.entities = this.entities.filter((e) => !set.has(e.id));
+        this.wires = this.wires.filter((w) => !set.has(w.from.entity) && !set.has(w.to.entity));
         this.emit({ type: 'entities' });
+        this.emit({ type: 'wires' });
       },
       undo: () => {
         for (const r of removed) this.entities.splice(r.index, 0, structuredClone(r.e));
+        for (const r of droppedWires) this.wires.splice(r.index, 0, structuredClone(r.w));
         this.emit({ type: 'entities' });
+        this.emit({ type: 'wires' });
       },
     });
   }
@@ -295,6 +339,76 @@ export class EditorDoc {
     });
   }
 
+  // ---- wires, variables, event sheet ----
+
+  addWire(from: WireData['from'], to: WireData['to']): WireData | null {
+    if (this.wires.some((w) => w.from.entity === from.entity && w.from.output === from.output && w.to.entity === to.entity && w.to.input === to.input)) return null;
+    const wire: WireData = { id: this.newId('w'), from, to };
+    this.run({
+      label: 'Connect with a wire',
+      redo: () => {
+        this.wires.push(structuredClone(wire));
+        this.emit({ type: 'wires' });
+      },
+      undo: () => {
+        this.wires = this.wires.filter((w) => w.id !== wire.id);
+        this.emit({ type: 'wires' });
+      },
+    });
+    return wire;
+  }
+
+  removeWire(id: string): void {
+    const index = this.wires.findIndex((w) => w.id === id);
+    if (index < 0) return;
+    const wire = structuredClone(this.wires[index]!);
+    this.run({
+      label: 'Remove wire',
+      redo: () => {
+        this.wires = this.wires.filter((w) => w.id !== id);
+        this.emit({ type: 'wires' });
+      },
+      undo: () => {
+        this.wires.splice(index, 0, structuredClone(wire));
+        this.emit({ type: 'wires' });
+      },
+    });
+  }
+
+  /** Replace the whole event sheet (every edit in the sheet editor is one undo step). */
+  setEvents(label: string, rows: EventRow[]): void {
+    const before = structuredClone(this.events);
+    const after = structuredClone(rows);
+    if (JSON.stringify(before) === JSON.stringify(after)) return;
+    this.run({
+      label,
+      redo: () => {
+        this.events = structuredClone(after);
+        this.emit({ type: 'events' });
+      },
+      undo: () => {
+        this.events = structuredClone(before);
+        this.emit({ type: 'events' });
+      },
+    });
+  }
+
+  setVariables(label: string, vars: VariableData[]): void {
+    const before = structuredClone(this.variables);
+    const after = structuredClone(vars);
+    if (JSON.stringify(before) === JSON.stringify(after)) return;
+    this.run({
+      label,
+      redo: () => {
+        this.variables = structuredClone(after);
+        this.emit({ type: 'events' });
+      },
+      undo: () => {
+        this.variables = structuredClone(before);
+        this.emit({ type: 'events' });
+      },
+    });
+  }
   rename(name: string): void {
     const before = this.name;
     if (before === name) return;

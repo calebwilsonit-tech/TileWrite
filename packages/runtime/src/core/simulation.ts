@@ -1,4 +1,5 @@
 import { Tweens } from '../anim/tween';
+import type { EventRow, PrefabData, VariableValue, WireData } from '../project/schema';
 import { InputState, type ActionSnapshot } from '../input/input';
 import { World } from '../scene/world';
 import type { SpriteData } from '../sprites/format';
@@ -10,6 +11,19 @@ import { TICK_DT } from './timestep';
 /** Game data systems may read (sprite definitions for animation, later audio and strings). */
 export interface Assets {
   sprites: Map<string, SpriteData>;
+  /** Prefabs objects can be spawned from while the game runs. */
+  prefabs: Map<string, PrefabData>;
+}
+
+/** Per-scene data that logic reads and writes: wires, the event sheet, variables. All of it is part of the replayable state. */
+export interface SceneRuntime {
+  wires: WireData[];
+  sheet: EventRow[];
+  vars: Record<string, VariableValue>;
+  /** What each event-sheet row remembered from the last tick (was it true, timers...). */
+  rowState: Record<string, { prev: boolean; timer: number }>;
+  /** Scene object id (like "e3") to the id of the live entity. */
+  ids: Map<string, number>;
 }
 
 export interface SimContext {
@@ -19,6 +33,7 @@ export interface SimContext {
   events: EventBus;
   tweens: Tweens;
   assets: Assets;
+  runtime: SceneRuntime;
   /** The terrain, or null for scenes without tiles. */
   map: TileMap | null;
   /** Seconds per tick (always 1/60). */
@@ -39,7 +54,8 @@ export class Simulation {
   readonly input = new InputState();
   readonly events = new EventBus();
   readonly tweens = new Tweens();
-  readonly assets: Assets = { sprites: new Map() };
+  readonly assets: Assets = { sprites: new Map(), prefabs: new Map() };
+  readonly runtime: SceneRuntime = { wires: [], sheet: [], vars: {}, rowState: {}, ids: new Map() };
   readonly rng: Rng;
   /** Terrain used by physics and AI. Set it before the first step. */
   map: TileMap | null = null;
@@ -66,6 +82,7 @@ export class Simulation {
       events: this.events,
       tweens: this.tweens,
       assets: this.assets,
+      runtime: this.runtime,
       map: this.map,
       dt: TICK_DT,
       tick: this.tick,
@@ -85,6 +102,8 @@ export class Simulation {
     const data = JSON.stringify([
       this.tick,
       this.rng.state,
+      this.runtime.vars,
+      this.runtime.rowState,
       this.world.all().map((e) => [e.id, e.name, [...e.tags].sort(), [...e.components.entries()]]),
     ]);
     let h = 0x811c9dc5;

@@ -1,10 +1,10 @@
 import { SLOPE, type SlopeDir } from '@tilewright/runtime';
 import { useApp, store, type ToolId, type ToolOptions } from '../app/store';
 import { describeKeys } from '../app/commands';
-import { PREFABS, prefabById } from '../tools/prefabs';
+import { allPrefabs, prefabById } from '../tools/prefabs';
 import { TOOL_META, toolMeta, type ToolMeta } from '../tools/tools';
 
-const GROUPS: ToolMeta['group'][] = ['Select', 'Paint', 'Height', 'Terrain', 'Collision', 'Objects', 'Helpers'];
+const GROUPS: ToolMeta['group'][] = ['Select', 'Paint', 'Height', 'Terrain', 'Collision', 'Objects', 'Logic', 'Helpers'];
 
 const DIRS: { dir: SlopeDir; label: string; arrow: string }[] = [
   { dir: SLOPE.N, label: 'North (up-right on screen)', arrow: '↗' },
@@ -32,6 +32,9 @@ function Slider({ label, value, min, max, step = 1, onChange, testId }: { label:
 
 export function ToolOptionsView({ tool, options }: { tool: ToolId; options: ToolOptions }) {
   const meta = toolMeta(tool);
+  useApp((s) => s.prefabNames);
+  const choices = allPrefabs(store.prefabs);
+  const groups = [...new Set(choices.map((c) => c.group))];
   const set = (p: Partial<ToolOptions>): void => store.setOptions(p);
   return (
     <div className="tool-options" data-testid="tool-options">
@@ -74,13 +77,19 @@ export function ToolOptionsView({ tool, options }: { tool: ToolId; options: Tool
         <div className="opt">
           <span>Object to place</span>
           <select data-testid="opt-prefab" value={options.prefab} onChange={(e) => set({ prefab: e.target.value })}>
-            {PREFABS.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.label}
-              </option>
+            {groups.map((g) => (
+              <optgroup key={g} label={g}>
+                {choices
+                  .filter((c) => c.group === g)
+                  .map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.label}
+                    </option>
+                  ))}
+              </optgroup>
             ))}
           </select>
-          <p className="hint">{prefabById(options.prefab).hint}</p>
+          <p className="hint">{prefabById(options.prefab, store.prefabs).hint}</p>
         </div>
       )}
     </div>
