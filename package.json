@@ -1,0 +1,36 @@
+{
+  "name": "tilewright",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Tilewright - a no-code 2D isometric game engine",
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint packages",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "npm run build -w @tilewright/editor && playwright test",
+    "build": "npm run build -ws --if-present",
+    "dev": "npm run dev -w @tilewright/editor",
+    "dist:win": "npm run build && npm run dist:win -w @tilewright/editor"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.64.1",
+    "@types/node": "^26.6.5",
+    "eslint": "^10.12.0",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.71.2",
+    "vitest": "^5.0.5"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true,
+    "electron-winstaller@5.4.0": true
+  }
+}

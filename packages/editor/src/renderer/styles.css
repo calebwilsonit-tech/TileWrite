@@ -1,0 +1,39 @@
+:root {
+  color-scheme: dark;
+  --bg: #1b1d23;
+  --fg: #e6e8ee;
+  --muted: #8b90a0;
+  --accent: #6aa8ff;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+.welcome {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.welcome h1 {
+  margin: 0;
+  font-size: 48px;
+  color: var(--accent);
+}
+
+.muted {
+  color: var(--muted);
+}

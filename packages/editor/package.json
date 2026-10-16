@@ -1,0 +1,50 @@
+{
+  "name": "@tilewright/editor",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Tilewright editor (Electron app)",
+  "type": "module",
+  "main": "dist/main/main.mjs",
+  "scripts": {
+    "build:main": "esbuild src/main/main.ts --bundle --platform=node --format=esm --external:electron --outfile=dist/main/main.mjs && esbuild src/main/preload.ts --bundle --platform=node --format=cjs --external:electron --outfile=dist/main/preload.cjs",
+    "build:renderer": "vite build",
+    "build": "npm run build:main && npm run build:renderer",
+    "dev": "node scripts/dev.mjs",
+    "start": "electron .",
+    "dist:win": "electron-builder --win --publish never"
+  },
+  "build": {
+    "appId": "dev.tilewright.editor",
+    "productName": "Tilewright",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "zip"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "electron": "^44.8.0",
+    "electron-builder": "^26.15.3",
+    "esbuild": "^0.28.2",
+    "vite": "^8.3.4"
+  },
+  "dependencies": {
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  }
+}

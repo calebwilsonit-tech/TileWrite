@@ -1,0 +1,9 @@
+﻿{
+  "name": "@tilewright/runtime",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Game engine core: scene, ECS, renderer, physics, audio, input, save",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts"
+}
