@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useApp, store } from '../app/store';
 import { viewportRef } from '../app/commands';
 import { ViewportController } from '../viewport/controller';
+import { PlayHud } from './PlayHud';
 
 export function ViewportPanel() {
   const host = useRef<HTMLDivElement>(null);
@@ -28,9 +29,10 @@ export function ViewportPanel() {
   return (
     <div className="viewport-wrap">
       <div ref={host} className="viewport-host" data-testid="viewport" tabIndex={0} />
+      {mode === 'play' && <PlayHud />}
       {mode === 'play' && (
         <div className="play-badge" data-testid="play-badge">
-          {paused ? 'Paused' : 'Playing'}: WASD / arrows move, Shift runs, Space jumps, E interacts, R records an echo. Esc stops.
+          {paused ? 'Paused' : 'Playing'}: WASD / arrows move, Shift runs, Space jumps, E interacts, R records an echo, J attacks, Q dodges. Esc stops.
         </div>
       )}
     </div>

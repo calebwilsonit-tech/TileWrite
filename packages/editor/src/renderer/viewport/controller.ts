@@ -20,7 +20,7 @@ import {
   type TileSet,
   type TransformIso,
 } from '@tilewright/runtime';
-import { addStandardSystems } from '@tilewright/behaviors';
+import { addStandardSystems, parsePoints } from '@tilewright/behaviors';
 import type { EditorDoc, DocEvent } from '../model/doc';
 import { store, type ToolId } from '../app/store';
 import { studio } from '../studio/store';
@@ -350,6 +350,7 @@ export class ViewportController {
       regions: { list: doc.regions, visible: s.view.regions, selected: s.selectedRegion },
       walk: this.walk,
       wires: this.wirePoints(),
+      ...this.aiGizmos(),
       previews: this.previews,
       zoom: cam.zoom,
       visible: { minX: tl.x - 40, minY: tl.y - 40, maxX: br.x + 40, maxY: br.y + 40 },
@@ -395,6 +396,26 @@ export class ViewportController {
       const a = this.anchorOf(w.from.entity);
       const b = this.anchorOf(w.to.entity);
       if (a && b) out.push({ a, b, hot: sel.includes(w.from.entity) || sel.includes(w.to.entity) });
+    }
+    return out;
+  }
+  /** Patrol routes and guard view cones for the overlay (every guard faintly, the selected ones brightly). */
+  private aiGizmos(): Pick<Parameters<OverlayDrawer['draw']>[0], 'paths' | 'cones'> {
+    const doc = this.doc;
+    const out: Pick<Parameters<OverlayDrawer['draw']>[0], 'paths' | 'cones'> = { paths: [], cones: [] };
+    if (!doc) return out;
+    const sel = store.state.selection;
+    for (const e of doc.entities) {
+      const t = e.components.transform as TransformIso | undefined;
+      if (!t) continue;
+      const hot = sel.includes(e.id);
+      const pat = e.components.patrol as { points?: string; mode?: string } | undefined;
+      if (pat) {
+        const pts = parsePoints(pat.points ?? '').map((p) => ({ x: p.x, y: p.y, h: t.h + 0.05 }));
+        if (pts.length > 0) out.paths.push({ points: pts, loop: pat.mode !== 'pingpong', hot });
+      }
+      const vis = e.components.vision as { range?: number; angle?: number; hearing?: number } | undefined;
+      if (vis) out.cones.push({ x: t.x, y: t.y, h: t.h + 0.05, facing: t.facing, range: vis.range ?? 6, angle: vis.angle ?? 100, hearing: vis.hearing ?? 0, hot });
     }
     return out;
   }

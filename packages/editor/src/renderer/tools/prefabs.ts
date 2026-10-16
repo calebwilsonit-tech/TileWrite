@@ -6,7 +6,7 @@ export interface Prefab {
   id: string;
   label: string;
   hint: string;
-  group: 'Basics' | 'Puzzle' | 'Story puzzles' | 'Light' | 'Logic' | 'World' | 'Your prefabs';
+  group: 'Basics' | 'Puzzle' | 'Story puzzles' | 'Light' | 'Enemies' | 'Logic' | 'World' | 'Your prefabs';
   /** Build entity data (without an id) standing at (x, y) on a floor at height h. */
   make(x: number, y: number, h: number): Omit<EntityData, 'id'>;
 }
@@ -43,6 +43,15 @@ const solid = (w: number, d: number, height: number, layer = 16): Record<string,
   collider: { w, d, height, solid: true, trigger: false, layer, mask: 65535, enabled: true, inside: [] },
 });
 
+/** A walking body on the enemy collision layer. */
+function enemyBody(radius = 0.3): Record<string, unknown> {
+  return {
+    body: {
+      vx: 0, vy: 0, vz: 0, radius, height: 1.2, state: 'ground', stepUp: 0.35, stepDown: 0.4, ledge: 'fall', pits: 'fall', wade: false,
+      gravity: 1, peakZ: 0, layer: 4, mask: 65535, noclip: false, blockedBy: [], blockedTerrain: false, standingOn: null,
+    },
+  };
+}
 export const PREFABS: Prefab[] = [
   {
     id: 'player',
@@ -143,6 +152,35 @@ export const PREFABS: Prefab[] = [
     make: (x, y, h) => thing('Rising dough', ['dough'], { color: 0xf3dfb1, w: 0.9, d: 0.9, height: 0.2 }, x, y, h, ['growing']),
   },
   {
+    id: 'guard',
+    label: 'Guard',
+    group: 'Enemies',
+    hint: 'Walks a route (Patrol path tool), sees you in a cone, hears footsteps, chases you around walls, then searches and goes home. Hurts on touch.',
+    make: (x, y, h) =>
+      thing('Guard', ['enemy'], { color: 0x9b2d30, w: 0.6, d: 0.6, height: 1.2 }, x, y, h, ['health', 'vision', 'chase', 'patrol', 'damageOnTouch'], enemyBody()),
+  },
+  {
+    id: 'boss',
+    label: 'Boss',
+    group: 'Enemies',
+    hint: 'A tough guard with Boss Phases: faster and stronger as its health runs down. Mark its room with a Region set to "Bosses here only act while the player is inside".',
+    make: (x, y, h) => {
+      const e = thing('Boss', ['enemy', 'boss'], { color: 0x5b2a86, w: 1.2, d: 1.2, height: 2 }, x, y, h, ['health', 'vision', 'chase', 'damageOnTouch', 'bossPhases'], enemyBody(0.55));
+      Object.assign(e.components.health as object, { max: 12, onDeath: 'stay', invulnerableSeconds: 0.5, fallDamage: 0 });
+      (e.components.chase as { speed: number }).speed = 2.6;
+      (e.components.vision as { range: number; angle: number }).range = 9;
+      (e.components.vision as { range: number; angle: number }).angle = 200;
+      (e.components.damageOnTouch as { range: number }).range = 0.9;
+      return e;
+    },
+  },
+  {
+    id: 'spikes',
+    label: 'Spikes',
+    group: 'Enemies',
+    hint: 'A trap that hurts whatever touches it.',
+    make: (x, y, h) => thing('Spikes', ['trap'], { shape: 'diamond', color: 0xcfd3dc, w: 0.9, d: 0.9, height: 0.1 }, x, y, h, ['damageOnTouch']),
+  },  {
     id: 'logic',
     label: 'Logic gate',
     group: 'Logic',

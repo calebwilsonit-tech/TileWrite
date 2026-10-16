@@ -1,4 +1,5 @@
 import { Container, Graphics, Text } from 'pixi.js';
+import { facingVector } from '@tilewright/behaviors';
 import { DEFAULT_ISO, gridToScreen, type IsoConfig, type RegionData, type TileMap } from '@tilewright/runtime';
 import { collisionKind, type CollisionKind, type P } from '../tools/algorithms';
 import type { Preview } from '../tools/tools';
@@ -25,6 +26,10 @@ export interface OverlayInput {
   walk: Set<string> | null;
   /** Wires between objects, as points in grid space; hot ones belong to the selected object. */
   wires: { a: { x: number; y: number; h: number }; b: { x: number; y: number; h: number }; hot: boolean }[];
+  /** Patrol routes (grid space); the selected object's is bright. */
+  paths: { points: { x: number; y: number; h: number }[]; loop: boolean; hot: boolean }[];
+  /** What guards can see and hear. */
+  cones: { x: number; y: number; h: number; facing: number; range: number; angle: number; hearing: number; hot: boolean }[];
   previews: Preview[];
   zoom: number;
   /** World-space bounds currently visible, to avoid drawing labels off screen. */
@@ -104,6 +109,8 @@ export class OverlayDrawer {
       }
     }
 
+    for (const c of o.cones) this.cone(g, c, iso);
+    for (const pa of o.paths) this.path(g, pa, iso);
     for (const w of o.wires) this.wireLine(g, w.a, w.b, w.hot ? 0xffd34a : 0xe8b84a, w.hot ? 3 : 2, iso);
     for (const pv of o.previews) {
       if (pv.kind === 'wire') {
@@ -122,6 +129,43 @@ export class OverlayDrawer {
     this.drawLabels(o);
   }
 
+  /** A guard's view: a wedge for the vision cone and a ring for how far it hears. */
+  private cone(g: Graphics, c: OverlayInput['cones'][number], iso: IsoConfig): void {
+    const base = facingVector(c.facing);
+    const baseAngle = Math.atan2(base.y, base.x);
+    const half = (c.angle / 2) * (Math.PI / 180);
+    const pts = [gridToScreen(c.x, c.y, c.h, iso)];
+    const steps = 18;
+    for (let i = 0; i <= steps; i++) {
+      const a = baseAngle - half + (2 * half * i) / steps;
+      pts.push(gridToScreen(c.x + Math.cos(a) * c.range, c.y + Math.sin(a) * c.range, c.h, iso));
+    }
+    g.poly(pts.flatMap((p) => [p.x, p.y])).fill({ color: 0xff9a3c, alpha: c.hot ? 0.22 : 0.09 });
+    g.poly(pts.flatMap((p) => [p.x, p.y])).stroke({ width: c.hot ? 2 : 1, color: 0xff9a3c, alpha: c.hot ? 0.9 : 0.35 });
+    if (c.hearing > 0) {
+      const ring: number[] = [];
+      for (let i = 0; i < 28; i++) {
+        const a = (i / 28) * Math.PI * 2;
+        const p = gridToScreen(c.x + Math.cos(a) * c.hearing, c.y + Math.sin(a) * c.hearing, c.h, iso);
+        ring.push(p.x, p.y);
+      }
+      g.poly(ring).stroke({ width: 1, color: 0xffd34a, alpha: c.hot ? 0.8 : 0.25 });
+    }
+  }
+
+  /** A patrol route: a line through the waypoints, numbered, with an arrow back to the start when it loops. */
+  private path(g: Graphics, p: OverlayInput['paths'][number], iso: IsoConfig): void {
+    if (p.points.length === 0) return;
+    const color = 0x4ad1c8;
+    const alpha = p.hot ? 0.95 : 0.4;
+    const pts = p.points.map((q) => gridToScreen(q.x, q.y, q.h, iso));
+    for (let i = 0; i < pts.length; i++) {
+      const a = pts[i]!;
+      const b = i + 1 < pts.length ? pts[i + 1]! : p.loop && pts.length > 1 ? pts[0]! : null;
+      if (b) g.moveTo(a.x, a.y).lineTo(b.x, b.y).stroke({ width: p.hot ? 3 : 2, color, alpha });
+      g.circle(a.x, a.y, p.hot ? 6 : 4).fill({ color, alpha });
+    }
+  }
   /** A line with an arrowhead from one object to another (both in grid space). */
   private wireLine(g: Graphics, a: { x: number; y: number; h: number }, b: { x: number; y: number; h: number }, color: number, width: number, iso: IsoConfig): void {
     const pa = gridToScreen(a.x, a.y, a.h, iso);

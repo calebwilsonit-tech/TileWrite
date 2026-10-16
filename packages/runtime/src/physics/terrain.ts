@@ -86,6 +86,24 @@ export function oneWayBlocks(map: TileMap, ax: number, ay: number, bx: number, b
   return (map.getOneWay(bx, by) & entersThroughEdge(ax, ay, bx, by)) !== 0;
 }
 
+/** Can a body stand in this cell at all (not void, not blocked, not a bare pit or water)? A bridge over a pit counts. */
+export function cellWalkable(map: TileMap, x: number, y: number): boolean {
+  if (!map.inBounds(x, y) || map.getTile(x, y) === EMPTY_TILE) return false;
+  const flags = map.getFlags(x, y);
+  if (flags & FLAG.BLOCK) return false;
+  return map.getDeck(x, y) > 0 || !(flags & (FLAG.PIT | FLAG.WATER));
+}
+
+/** Can a walker step from one cell to the orthogonally adjacent one (one-way edges, climbing and drop limits)? */
+export function stepAllowed(map: TileMap, ax: number, ay: number, bx: number, by: number, stepUp: number, maxDrop: number): boolean {
+  if (oneWayBlocks(map, ax, ay, bx, by)) return false;
+  const dx = bx - ax;
+  const dy = by - ay;
+  const hereEdge = edgeHeight(map, ax, ay, dx, dy);
+  const nextEdge = edgeHeight(map, bx, by, -dx, -dy);
+  return nextEdge - hereEdge <= stepUp && hereEdge - nextEdge <= maxDrop;
+}
+
 /** Cells (4-connected) a body standing at `start` can walk to without falling, step limit `stepUp`. Used by the walk-test tool. */
 export function reachableCells(
   map: TileMap,
@@ -98,32 +116,19 @@ export function reachableCells(
   const key = (x: number, y: number): string => `${x},${y}`;
   const out = new Set<string>([key(start.x, start.y)]);
   const queue = [{ x: start.x, y: start.y }];
-  const walkable = (x: number, y: number): boolean => {
-    if (!map.inBounds(x, y) || map.getTile(x, y) === EMPTY_TILE) return false;
-    const flags = map.getFlags(x, y);
-    if (flags & FLAG.BLOCK) return false;
-    // a bridge over water or a pit is walkable even though the ground below is not
-    return map.getDeck(x, y) > 0 || !(flags & (FLAG.PIT | FLAG.WATER));
-  };
   while (queue.length > 0 && out.size < limit) {
     const c = queue.shift()!;
     for (const [dx, dy] of [[0, -1], [1, 0], [0, 1], [-1, 0]] as const) {
       const nx = c.x + dx;
       const ny = c.y + dy;
       if (out.has(key(nx, ny))) continue;
-      if (!walkable(nx, ny) || oneWayBlocks(map, c.x, c.y, nx, ny)) continue;
-      // Compare the ground height at the shared edge: leaving this cell and arriving in the next.
-      const hereEdge = edgeHeight(map, c.x, c.y, dx, dy);
-      const nextEdge = edgeHeight(map, nx, ny, -dx, -dy);
-      if (nextEdge - hereEdge > stepUp) continue;
-      if (hereEdge - nextEdge > maxDrop) continue;
+      if (!cellWalkable(map, nx, ny) || !stepAllowed(map, c.x, c.y, nx, ny, stepUp, maxDrop)) continue;
       out.add(key(nx, ny));
       queue.push({ x: nx, y: ny });
     }
   }
   return out;
 }
-
 /** Ground height along the middle of the edge of a cell facing (dx, dy). */
 function edgeHeight(map: TileMap, cx: number, cy: number, dx: number, dy: number): number {
   const deck = map.getDeck(cx, cy);

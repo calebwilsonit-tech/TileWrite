@@ -1162,3 +1162,11 @@ button.small {
 .event-problems h4 {
   margin: 12px 0 4px;
 }
+/* play HUD */
+.play-hud { position: absolute; top: 44px; left: 12px; right: 12px; pointer-events: none; display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.play-hud .hud-hearts { font-size: 22px; letter-spacing: 3px; text-shadow: 0 1px 3px #000; }
+.play-hud .heart.full { color: #ff5d6c; }
+.play-hud .heart.empty { color: #8a8f9c; }
+.play-hud .hud-boss { align-self: center; width: min(60%, 480px); text-align: center; font-size: 13px; text-shadow: 0 1px 3px #000; }
+.play-hud .hud-boss .bar { height: 10px; background: #1b1d24; border: 1px solid #000; border-radius: 6px; overflow: hidden; margin-top: 3px; }
+.play-hud .hud-boss .fill { height: 100%; background: linear-gradient(90deg, #b3366e, #e0566b); transition: width 0.15s; }

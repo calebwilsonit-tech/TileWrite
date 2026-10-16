@@ -87,6 +87,23 @@ export const spawner = defineBehavior<Spawner>({
   },
 });
 
+/** Create a copy of a prefab at a spot (boss helpers, projectiles). Returns null, with a problem message, if the prefab is missing. */
+export function spawnPrefabAt(ctx: SimContext, by: Entity, prefabName: string, x: number, y: number, h: number, key: string): Entity | null {
+  const prefab = ctx.assets.prefabs.get(prefabName);
+  if (!prefab) {
+    ctx.events.emit('problem', { entity: by.id, text: `"${by.name}" wants to create the prefab "${prefabName}", which does not exist.` });
+    return null;
+  }
+  const sceneId = `${by.get<{ sceneId: string }>('meta')?.sceneId ?? by.id}#${key}-${ctx.tick}`;
+  const { entities } = expandEntities([{ id: sceneId, name: prefab.name, tags: [], prefab: prefab.name, components: { transform: { x, y, h } } }], ctx.assets.prefabs);
+  let root: Entity | null = null;
+  for (const data of entities) {
+    const made = instantiate(ctx, data);
+    if (data.id === sceneId) root = made;
+  }
+  return root;
+}
+
 function instantiate(ctx: SimContext, data: Parameters<typeof instantiateEntity>[1]): Entity {
   const entity = ctx.world.spawn({ name: data.name, tags: data.tags, components: structuredClone(data.components) });
   entity.set('meta', { sceneId: data.id });

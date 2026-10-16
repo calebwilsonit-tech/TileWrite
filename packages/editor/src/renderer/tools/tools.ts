@@ -1,3 +1,4 @@
+import { formatPoints, parsePoints } from '@tilewright/behaviors';
 import { EMPTY_TILE, FLAG, SLOPE, groundHeightAt, reachableCells, type PrefabData, type SlopeDir } from '@tilewright/runtime';
 import type { CellData } from '../model/cells';
 import type { EditorDoc, Stroke } from '../model/doc';
@@ -105,6 +106,7 @@ export const TOOL_META: ToolMeta[] = [
   { id: 'room', label: 'Room', group: 'Helpers', hint: 'Drag a rectangle to build a room: floor in the chosen tile, brick walls around it, flattened inside.', edits: 'ground', options: ['tile', 'height'] },
   { id: 'corridor', label: 'Corridor', group: 'Helpers', hint: 'Drag from one point to another to carve a two-cell-wide corridor of the chosen tile between them.', edits: 'ground', options: ['tile'] },
   { id: 'wire', label: 'Wire', group: 'Logic', hotkey: 'Y', hint: 'Drag from one object to another to connect them: a pressure plate to a gate, a lever to a spawner, anything to a logic gate.', edits: 'objects', options: [] },
+  { id: 'patrol', label: 'Patrol path', group: 'Logic', hotkey: 'F', hint: 'Select a guard (anything with the Patrol behaviour), then click cells to add the places it walks between. Shift-click removes the last point. Clicking a guard selects it.', edits: 'objects', options: [] },
   { id: 'props', label: 'Scatter props', group: 'Helpers', hint: 'Drag a rectangle to sprinkle the chosen object around it, keeping clear of walls, water and stairs. Density sets how many.', edits: 'objects', options: ['prefab', 'density'] },
 ];
 
@@ -658,7 +660,36 @@ const wireTool = (): ToolImpl => {
   };
 };
 
+const patrolTool = (): ToolImpl => ({
+  down(p, env) {
+    const hit = env.pickEntity(p.screen);
+    if (hit && env.doc.getEntity(hit)?.components.patrol) {
+      env.select([hit]);
+      return;
+    }
+    const id = env.selection.find((s) => env.doc.getEntity(s)?.components.patrol);
+    if (!id) {
+      env.notify('info', 'Select a guard first (an object with the Patrol behaviour), then click the cells it should walk between.');
+      return;
+    }
+    if (!p.cell) return;
+    const cell = p.cell;
+    env.doc.updateEntities([id], p.shift ? 'Remove patrol point' : 'Add patrol point', (e) => {
+      const pat = e.components.patrol as { points: string };
+      const pts = parsePoints(pat.points ?? '');
+      if (p.shift) pts.pop();
+      else pts.push({ x: cell.x + 0.5, y: cell.y + 0.5 });
+      pat.points = formatPoints(pts);
+    });
+  },
+  move() {},
+  up() {},
+  cancel() {},
+  hover() {},
+});
+
 export const TOOLS: Record<ToolId, ToolImpl> = {
+  patrol: patrolTool(),
   wire: wireTool(),
   room: roomTool(),
   corridor: corridorTool(),

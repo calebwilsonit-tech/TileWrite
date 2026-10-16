@@ -5,16 +5,16 @@ Tick an item when the engine can make it **without code**, verified by a test or
 ## Isometric world
 - [x] 64x32 diamond tiles, multiple height levels per cell
 - [x] Stairs/ramps between levels, cliffs
-- [ ] Pits (fall animation, damage, respawn) - falling and respawn work (M2); damage needs Health (M7)
+- [x] Pits (fall animation, damage, respawn) - falling and respawn work (M2); fall damage and return to solid ground work with Health (M7)
 - [x] Water, bridges
 - [x] Wall occlusion fade
 - [x] Correct depth sorting of tall objects, characters, props at every height
 
 ## Player
 - [x] 8-direction movement, walk/run (with drawn, animated, mirrored sprites)
-- [ ] Dodge
-- [ ] Melee weapon (quill)
-- [ ] Health, light/resource bar
+- [x] Dodge
+- [x] Melee weapon (quill)
+- [ ] Health, light/resource bar - hearts and Health done (M7); no light/resource bar yet
 - [ ] Interact button, quick-slot items
 
 ## Echoes
@@ -38,11 +38,11 @@ Tick an item when the engine can make it **without code**, verified by a test or
 - [x] Dynamic 2D lighting with shadows
 
 ## Enemies and bosses
-- [ ] Patrol paths
-- [ ] Vision cones (stealth) and hearing
-- [ ] Chase / search / return states
-- [ ] A* pathfinding on the iso grid with heights
-- [ ] Boss fights with phases; boss active only in certain rooms
+- [x] Patrol paths
+- [x] Vision cones (stealth) and hearing
+- [x] Chase / search / return states
+- [x] A* pathfinding on the iso grid with heights
+- [x] Boss fights with phases; boss active only in certain rooms
 
 ## Story
 - [ ] NPC dialogue with choices, conditions, flags

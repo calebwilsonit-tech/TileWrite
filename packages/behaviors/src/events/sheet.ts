@@ -13,6 +13,7 @@ import {
   type VariableValue,
 } from '@tilewright/runtime';
 import { input, output, setOutput } from '../signals';
+import { damage, heal, healthOf } from '../builtins/combat';
 
 /**
  * Event sheets: "When [conditions] do [actions]" rows in plain English, with sub-events, AND/OR,
@@ -227,6 +228,17 @@ export const CONDITIONS: ConditionDef[] = [
     },
   },
   {
+    id: 'health',
+    label: "An object's health compares",
+    category: 'Objects',
+    params: [entityParam('who', 'Object', 'player'), { key: 'op', label: 'Is', type: 'select', default: '<=', options: COMPARISONS }, { key: 'value', label: 'Hit points', type: 'number', default: 1, step: 1 }],
+    describe: (p, n) => `${describeRef(str(p, 'who'), n)} has ${COMPARISONS.find((c) => c.value === str(p, 'op'))?.label ?? str(p, 'op')} ${num(p, 'value', 1)} hit points`,
+    test: (ctx, p, row) =>
+      resolveRef(ctx, str(p, 'who'), row.picked).some((e) => {
+        const h = healthOf(e);
+        return !!h && compare(h.hp, str(p, 'op'), num(p, 'value', 1));
+      }),
+  },  {
     id: 'inside',
     label: 'Something is inside an area',
     category: 'Objects',
@@ -284,6 +296,17 @@ export const CONDITIONS: ConditionDef[] = [
           { value: 'projectile-hit', label: 'a projectile hits' },
           { value: 'spawned', label: 'something is created' },
           { value: 'anim-event', label: 'an animation event fires' },
+          { value: 'damaged', label: 'something is hurt' },
+          { value: 'died', label: 'something is defeated' },
+          { value: 'attack', label: 'the player swings the quill' },
+          { value: 'dodge', label: 'the player dodges' },
+          { value: 'noticed', label: 'a guard notices something' },
+          { value: 'lost', label: 'a guard loses track' },
+          { value: 'boss-phase', label: 'a boss enters a new phase' },
+          { value: 'boss-defeated', label: 'a boss is defeated' },
+          { value: 'echo-made', label: 'an echo is recorded' },
+          { value: 'sentence-changed', label: 'a sentence stone changes its word' },
+          { value: 'text-formatted', label: 'a text block is reformatted' },
         ],
       },
     ],
@@ -301,6 +324,17 @@ const COND_EVENT_TEXT: Record<string, string> = {
   'projectile-hit': 'a projectile hits something',
   spawned: 'something is created',
   'anim-event': 'an animation event fires',
+  damaged: 'something is hurt',
+  died: 'something is defeated',
+  attack: 'the player swings the quill',
+  dodge: 'the player dodges',
+  noticed: 'a guard notices something',
+  lost: 'a guard loses track',
+  'boss-phase': 'a boss enters a new phase',
+  'boss-defeated': 'a boss is defeated',
+  'echo-made': 'an echo is recorded',
+  'sentence-changed': 'a sentence stone changes its word',
+  'text-formatted': 'a text block is reformatted',
 };
 
 const onOff = [{ value: 'on', label: 'on' }, { value: 'off', label: 'off' }, { value: 'toggle', label: 'the other way (toggle)' }];
@@ -425,6 +459,25 @@ export const ACTIONS: ActionDef[] = [
     },
   },
   {
+    id: 'damage',
+    label: 'Hurt an object',
+    category: 'Combat',
+    params: [entityParam('who', 'Object', 'player'), { key: 'amount', label: 'Damage', type: 'number', default: 1, min: 0, step: 1 }],
+    describe: (p, n) => `hurt ${describeRef(str(p, 'who'), n)} for ${num(p, 'amount', 1)}`,
+    run(ctx, p, row) {
+      for (const e of resolveRef(ctx, str(p, 'who'), row.picked)) damage(ctx, e, num(p, 'amount', 1), { ignoreIframes: true });
+    },
+  },
+  {
+    id: 'heal',
+    label: 'Heal an object',
+    category: 'Combat',
+    params: [entityParam('who', 'Object', 'player'), { key: 'amount', label: 'Hit points', type: 'number', default: 1, min: 0, step: 1 }],
+    describe: (p, n) => `heal ${describeRef(str(p, 'who'), n)} by ${num(p, 'amount', 1)}`,
+    run(ctx, p, row) {
+      for (const e of resolveRef(ctx, str(p, 'who'), row.picked)) heal(ctx, e, num(p, 'amount', 1));
+    },
+  },  {
     id: 'message',
     label: 'Show a message',
     category: 'Basics',

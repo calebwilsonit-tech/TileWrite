@@ -461,3 +461,40 @@ describe('gestures', () => {
     expect(doc.entities).toHaveLength(0);
   });
 });
+
+describe('patrol path tool', () => {
+  function guardDoc() {
+    const s = setup(16, 16);
+    const [g] = s.doc.addEntities([{ name: 'Guard', tags: [], components: { transform: { x: 2.5, y: 2.5, h: 0, facing: 2 }, patrol: { points: '', mode: 'loop', speed: 1.8, waitSeconds: 0.8 } } }]);
+    return { ...s, id: g!.id };
+  }
+  const points = (s: ReturnType<typeof guardDoc>): string => (s.doc.getEntity(s.id)!.components.patrol as { points: string }).points;
+
+  it('adds waypoints at cell centres to the selected guard, and shift-click removes the last', () => {
+    const s = guardDoc();
+    s.state.selection = [s.id];
+    s.click('patrol', [5, 5]);
+    s.click('patrol', [9, 5]);
+    s.click('patrol', [9, 9]);
+    expect(points(s)).toBe('5.5,5.5; 9.5,5.5; 9.5,9.5');
+    s.click('patrol', [9, 9], { shift: true });
+    expect(points(s)).toBe('5.5,5.5; 9.5,5.5');
+    s.doc.history.undo();
+    expect(points(s)).toBe('5.5,5.5; 9.5,5.5; 9.5,9.5');
+  });
+
+  it('asks for a guard first when nothing suitable is selected', () => {
+    const s = guardDoc();
+    s.click('patrol', [5, 5]);
+    expect(points(s)).toBe('');
+    expect(s.log.some((l) => /Select a guard first/.test(l.text))).toBe(true);
+  });
+
+  it('clicking a guard selects it instead of adding a point', () => {
+    const s = guardDoc();
+    s.state.picks.set('55,55', s.id);
+    s.click('patrol', [5, 5]);
+    expect(s.state.selection).toEqual([s.id]);
+    expect(points(s)).toBe('');
+  });
+});

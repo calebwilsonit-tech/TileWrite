@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { newScene, type EntityData, type PrefabData } from '@tilewright/runtime';
+import { FLAG, newScene, type EntityData, type PrefabData } from '@tilewright/runtime';
 import { newRow } from '@tilewright/behaviors';
 import { EditorDoc } from './doc';
 import { validateScene } from './validate';
@@ -158,6 +158,44 @@ describe('M6 validation', () => {
     expect(make('lightsensor').components).toHaveProperty('lightSensor');
     expect(make('dough').components).toHaveProperty('growing');
     expect(make('dough').components).toHaveProperty('collider');
+  });
+});
+describe('M7 validation', () => {
+  const guard = (points: string): Omit<EntityData, 'id'> => ({ name: 'Guard', tags: ['enemy'], components: { transform: { x: 3.5, y: 3.5, h: 0, facing: 2 }, patrol: { points, mode: 'loop', speed: 1.8, waitSeconds: 0.5 } } });
+
+  it('explains a patrol with too few points, a point off the map, and a route with no way through', () => {
+    const d = doc();
+    d.addEntities([guard('3.5,3.5')]);
+    expect(validateScene(d).some((p) => p.id.startsWith('patrol-short-') && /fewer than two/.test(p.message))).toBe(true);
+    d.updateEntities([d.entities.find((e) => e.name === 'Guard')!.id], 'route', (e) => {
+      (e.components.patrol as { points: string }).points = '3.5,3.5; 40.5,3.5';
+    });
+    expect(validateScene(d).some((p) => p.id.startsWith('patrol-out-'))).toBe(true);
+    d.updateEntities([d.entities.find((e) => e.name === 'Guard')!.id], 'route', (e) => {
+      (e.components.patrol as { points: string }).points = '3.5,3.5; 8.5,3.5';
+    });
+    expect(validateScene(d).some((p) => p.id.startsWith('patrol-'))).toBe(false);
+    for (let y = 0; y < 12; y++) d.paint('wall', [{ x: 6, y, patch: { flags: FLAG.BLOCK } }]);
+    expect(validateScene(d).some((p) => p.id.startsWith('patrol-blocked-') && /cannot walk from patrol point 1 to point 2/.test(p.message))).toBe(true);
+  });
+
+  it('a boss that only fights in its room needs a region marked for bosses around it', () => {
+    const d = doc();
+    d.addEntities([{ name: 'Boss', tags: ['enemy', 'boss'], components: { transform: { x: 6.5, y: 6.5, h: 0, facing: 2 }, health: { max: 8, onDeath: 'stay' }, bossPhases: { onlyInRoom: true } } }]);
+    expect(validateScene(d).some((p) => p.id.startsWith('boss-room-'))).toBe(true);
+    d.addRegion({ name: 'Arena', x: 4, y: 4, w: 6, h: 6, cameraBounds: false, music: '', darkness: 0, bossActive: true });
+    expect(validateScene(d).some((p) => p.id.startsWith('boss-room-'))).toBe(false);
+  });
+
+  it('the Place tool offers guards, bosses and spikes ready to use', async () => {
+    const { PREFABS } = await import('../tools/prefabs');
+    const g = PREFABS.find((p) => p.id === 'guard')!.make(3.5, 3.5, 0);
+    for (const part of ['health', 'vision', 'chase', 'patrol', 'damageOnTouch', 'body']) expect(g.components, part).toHaveProperty(part);
+    expect((g.components.body as { layer: number }).layer).toBe(4);
+    const b = PREFABS.find((p) => p.id === 'boss')!.make(3.5, 3.5, 0);
+    expect(b.components).toHaveProperty('bossPhases');
+    expect((b.components.health as { onDeath: string }).onDeath).toBe('stay');
+    expect(PREFABS.find((p) => p.id === 'spikes')!.make(1.5, 1.5, 0).components).toHaveProperty('damageOnTouch');
   });
 });
 describe('prefab instances in the editor document', () => {

@@ -47,7 +47,8 @@ export type ToolId =
   | 'room'
   | 'corridor'
   | 'props'
-  | 'wire';
+  | 'wire'
+  | 'patrol';
 
 export interface ToolOptions {
   tile: number;

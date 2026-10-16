@@ -3,7 +3,7 @@
 Boxes are ticked only when the milestone's tests pass and the sample has been played.
 Spec: `ENGINE_BUILD_PROMPT.md`. Read `DECISIONS.md` and `KNOWN_ISSUES.md` before continuing.
 
-**Next up:** M7 AI and combat - A* pathfinding on the iso grid with heights, patrols, vision cones and hearing, chase/search/return states, Health, Damage on Touch, melee (the quill), dodge, boss phases and room-limited bosses, pit damage; sample: a stealth room and a small boss. Owed earlier: autotiling rules + Decoration/Walls/Lights layers, hot reload while playing and a separate game window (M10 / M14), vector drawing in the studio (M14), bypass/soft-lock validators (M9).
+**Next up:** M8 story systems - NPC dialogue with choices, conditions and flags, cutscenes on a timeline, inventory/items/quick slots, checkpoints (lantern posts) and respawn at the last one, scene portals, hub overworld/world map, save/load slots, pause menu and HUD. Owed earlier: autotiling rules + Decoration/Walls/Lights layers, hot reload while playing and a separate game window (M10 / M14), vector drawing in the studio (M14), bypass/soft-lock validators (M9), a visual state-machine editor for enemies (M9/M14).
 
 ## Milestones
 
@@ -14,7 +14,7 @@ Spec: `ENGINE_BUILD_PROMPT.md`. Read `DECISIONS.md` and `KNOWN_ISSUES.md` before
 - [x] M4 Sprite studio (see the M4 checklist for what is deferred)
 - [x] M5 No-code logic (see the M5 checklist for what is deferred)
 - [x] M6 Echoes, light, puzzle parts (see the M6 checklist)
-- [ ] M7 AI and combat
+- [x] M7 AI and combat (see the M7 checklist)
 - [ ] M8 Story systems
 - [ ] M9 Errors and debugging (problems panel, overlays, profiler, validators, playbot)
 - [ ] M10 Code window
@@ -100,3 +100,16 @@ Done and covered by tests (unit: `packages/runtime/src/lighting`, `packages/beha
 Deferred:
 - [ ] Lantern fuel / light resource bar (M7/M8); light tinting of tiles; soft region borders; edit-mode lighting preview; shadows from decks and slopes
 - [ ] Event-sheet conditions/actions specific to echoes and words (they work today through variables and wires)
+
+## M7 checklist
+
+Done and covered by tests (unit: `packages/runtime/src/ai`, `packages/behaviors/src/m7.test.ts`, editor tests; e2e: `e2e/m7-combat.spec.ts`; docs: `docs/ai-and-combat.md`):
+- [x] A* pathfinding on the iso grid with heights, stairs, pits, water, walls, one-way edges, bridges and obstacles
+- [x] Health (invulnerability, knockback, respawn/remove/stay, fall damage and recovery), Damage on Touch, Melee Attack (the quill), Dodge, Boss Phases (phases, helpers, room-limited fights, Defeated signal)
+- [x] Patrol (with the Patrol path tool), Vision Cone (cone, walls, darkness, hearing), Chase (chase, search, return) with editor gizmos for routes and view cones
+- [x] Play HUD (hearts and boss bar), event-sheet conditions and actions for health and combat events, validators (routes that cannot be walked, bosses without a room)
+- [x] Sample built in the UI and played: a stealth guard that is heard and defeated, and a three-phase boss in an arena whose defeat opens a gate (`e2e/m7-combat.spec.ts`, screenshots inspected)
+
+Deferred:
+- [ ] Visual state-machine editor for enemies and bosses; behaviour trees; ranged enemy attacks; guards avoiding each other; hearing blocked by walls
+- [ ] Light/resource bar and lantern fuel; art and animation for the quill and dodge

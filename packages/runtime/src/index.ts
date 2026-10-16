@@ -19,3 +19,4 @@ export * from './render/iso-renderer';
 export * from './runner';
 export * from './sprites';
 export * from './anim';
+export * from './ai/pathfinding';

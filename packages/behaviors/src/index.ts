@@ -9,3 +9,5 @@ export * from './events/sheet';
 export * from './builtins/echo';
 export * from './builtins/light';
 export * from './builtins/text';
+export * from './builtins/combat';
+export * from './builtins/ai';

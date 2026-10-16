@@ -1,5 +1,5 @@
-import { behaviorList, checkSheet } from '@tilewright/behaviors';
-import { EMPTY_TILE, FLAG, SLOPE_RISE, groundHeightAt, reachableCells } from '@tilewright/runtime';
+import { behaviorList, checkSheet, parsePoints } from '@tilewright/behaviors';
+import { EMPTY_TILE, FLAG, SLOPE_RISE, findPath, groundHeightAt, reachableCells } from '@tilewright/runtime';
 import { highSide, lowSide, meetsTop } from '../tools/algorithms';
 import type { EditorDoc } from './doc';
 
@@ -97,6 +97,38 @@ export function validateScene(doc: EditorDoc, sprites?: ReadonlySet<string>, pre
     }
   }
 
+  // guards, patrols and bosses
+  for (const e of doc.entities) {
+    const t = e.components.transform as T | undefined;
+    const target = t ? pos('entity', e.id, t) : undefined;
+    const pat = e.components.patrol as { points?: string } | undefined;
+    if (pat) {
+      const pts = parsePoints(pat.points ?? '');
+      if (pts.length < 2) {
+        out.push({ id: `patrol-short-${e.id}`, severity: 'warning', message: `"${e.name}" has the Patrol behaviour but fewer than two route points, so it will stand still. Select it and use the Patrol path tool to click its route.`, target });
+      } else {
+        for (let i = 0; i < pts.length; i++) {
+          const a = pts[i]!;
+          const b = pts[(i + 1) % pts.length]!;
+          if (doc.map.inBounds(Math.floor(a.x), Math.floor(a.y)) === false) {
+            out.push({ id: `patrol-out-${e.id}-${i}`, severity: 'warning', message: `Patrol point ${i + 1} of "${e.name}" is outside the map.`, target });
+          } else if (i + 1 < pts.length && findPath(doc.map, a, b, { maxNodes: 6000 }) === null) {
+            out.push({ id: `patrol-blocked-${e.id}-${i}`, severity: 'warning', message: `"${e.name}" cannot walk from patrol point ${i + 1} to point ${i + 2}: walls, pits, water or cliffs are in the way.`, target });
+          }
+        }
+      }
+    }
+    if (e.components.bossPhases && (e.components.bossPhases as { onlyInRoom?: boolean }).onlyInRoom && t) {
+      const room = doc.regions.find((r) => r.bossActive && t.x >= r.x && t.x < r.x + r.w && t.y >= r.y && t.y < r.y + r.h);
+      if (!room) {
+        out.push({ id: `boss-room-${e.id}`, severity: 'warning', message: `"${e.name}" only fights while the player is in its room, but it is not inside a Region marked "Bosses here only act while the player is inside". Draw a Region around it and tick that box (or turn off "Only fights while the player is in its room").`, target });
+      }
+    }
+    const h = e.components.health as { max?: number } | undefined;
+    if (e.components.damageOnTouch && !h && e.tags.includes('enemy')) {
+      out.push({ id: `enemy-nohealth-${e.id}`, severity: 'warning', message: `"${e.name}" hurts on touch but has no Health, so it cannot be defeated.`, target });
+    }
+  }
   // wires must join real objects through signals they really have
   const signalsOf = (entityId: string, side: 'inputs' | 'outputs'): Set<string> => {
     const e = doc.getEntity(entityId);
