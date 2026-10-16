@@ -51,7 +51,7 @@ Deliberately deferred (so the box above is honest):
 - [ ] Autotiling rules and their visual editor, Decoration / Walls / Lights layers (M4 / M6)
 - [ ] Per-height collision painting (collision currently comes from heights, flags and decks)
 - [ ] Hot reload while the game is running; game in a separate window (M10 / M14)
-- [ ] Asset import and asset browser (M4); "Explain / Fix with Claude" buttons (M11)
+- [x] Asset import and asset browser (M4); "Explain / Fix with Claude" buttons (M11, done)
 - [ ] Bypass and soft-lock validators (M9)
 
 ## M4 checklist
@@ -162,5 +162,6 @@ Done and covered by tests (unit: `packages/playbot/src`, `packages/behaviors/src
 
 Deferred:
 - [ ] A search-based puzzle solver for echo/crate combinations beyond the fixed recipes; soft-lock analysis beyond crate puzzles; a bot that fights and uses items
-- [ ] "Explain" / "Fix with Claude" buttons (M11); crash log files and screen in exported games (M12)
+- [x] "Explain" / "Fix with Claude" buttons (M11)
+- [ ] Crash log files and screen in exported games (M12)
 
