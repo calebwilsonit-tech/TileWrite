@@ -35,3 +35,12 @@ Renderer: PixiJS v8, tiles are built once as Graphics (procedural diamonds + sid
 Prefabs with overrides: deferred to M5 (needs the inspector); noted in PROGRESS.md.
 
 M1 checklist: iso math (grid/screen/world, height, neighbours 4/8, cell queries, line of sight) / fixed timestep + determinism test / seeded RNG / ECS world (components, tags, groups, safe refs, deferred spawn/destroy) / tilemap data / camera (follow, deadzone, bounds, zoom, shake) / box depth sort / input map + recorder + playback + DOM keyboard source / Pixi renderer / walking-square sample inside the editor (`#sample-m1`) / e2e screenshot / docs/runtime.md.
+
+## D007 - M2 terrain and collision model (2026-10-16)
+Each cell is a column (`heights`) plus optional extras: `slope` (stairs/ramp, rises exactly 1 level toward N/E/S/W over the cell), `flags` (PIT, BLOCK, TRIGGER, WATER), `deck` (one walkable layer above the ground, used for bridges, 1 level thick so you can walk underneath) and `oneWay` (bitmask of cell edges that cannot be entered).
+Rejected: arbitrary stacks of surfaces per cell (much more data and editor UI for a case the reference game only needs for bridges); revisit if a game needs multi-storey buildings.
+Bodies move axis-separated in sub-steps of <= 0.2 cells. Blocking uses the 4 footprint corners; support/snapping uses the footprint centre. A surface more than `stepUp` (0.35 levels) above the feet blocks (cliff or wall); a drop beyond `stepDown` makes the body airborne (`ledge: 'fall'`) or blocks it (`ledge: 'block'`, used by AI). Gravity 36 levels/s^2.
+Pits: a PIT cell has no floor. A body over one falls until z <= PIT_KILL_Z (-3), then the body freezes in state `pit` and `fell` is emitted; game logic (respawn behaviour) calls `teleportBody`. Landing emits `landed` with the fall distance.
+Entity colliders: AABB in the ground plane with z range; layers/masks as bitmasks; `solid` blocks bodies, `trigger` emits trigger-enter/stay/exit. Bodies record `blockedBy` for pushables (M5).
+Events: `Simulation.events` (EventBus) - synchronous listeners plus a per-tick log for tests and the debugger.
+Occlusion fade: renderer-only (not simulation state). Tiles taller than the focus entity's feet + 0.5 that are drawn after it and overlap it on screen fade toward alpha 0.3.

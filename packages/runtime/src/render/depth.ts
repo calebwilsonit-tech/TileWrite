@@ -33,6 +33,32 @@ function relation(a: DepthBox, b: DepthBox): number {
   return 0; // interpenetrating; the tie-break key decides
 }
 
+/** True if `b` is drawn after (in front of) `a` because of a hard ordering between them. */
+export function isInFront(a: DepthBox, b: DepthBox): boolean {
+  return relation(a, b) === 1;
+}
+
+export interface ScreenRect {
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+}
+
+/** Bounding rectangle of a box's projection, in screen-projection pixels. */
+export function screenRect(box: DepthBox, cfg: IsoConfig = DEFAULT_ISO): ScreenRect {
+  return {
+    left: (box.minX - box.maxY) * (cfg.tileW / 2),
+    right: (box.maxX - box.minY) * (cfg.tileW / 2),
+    top: (box.minX + box.minY) * (cfg.tileH / 2) - box.maxZ * cfg.heightPx,
+    bottom: (box.maxX + box.maxY) * (cfg.tileH / 2) - box.minZ * cfg.heightPx,
+  };
+}
+
+export function rectsOverlap(a: ScreenRect, b: ScreenRect): boolean {
+  return a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
+}
+
 function tieKey(b: DepthBox): number {
   return (b.minX + b.maxX + b.minY + b.maxY) / 2 + (b.minZ + b.maxZ) * 0.001 + (b.sortOffset ?? 0);
 }

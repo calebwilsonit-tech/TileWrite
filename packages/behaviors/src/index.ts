@@ -1,2 +1,2 @@
-﻿export const PACKAGE_NAME = '@tilewright/behaviors';
+export const PACKAGE_NAME = '@tilewright/behaviors';
 

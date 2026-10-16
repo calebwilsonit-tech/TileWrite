@@ -1,5 +1,7 @@
 import { InputState, type ActionSnapshot } from '../input/input';
 import { World } from '../scene/world';
+import type { TileMap } from '../tilemap/tilemap';
+import { EventBus } from './events';
 import { Rng } from './rng';
 import { TICK_DT } from './timestep';
 
@@ -7,6 +9,9 @@ export interface SimContext {
   world: World;
   input: InputState;
   rng: Rng;
+  events: EventBus;
+  /** The terrain, or null for scenes without tiles. */
+  map: TileMap | null;
   /** Seconds per tick (always 1/60). */
   dt: number;
   /** Ticks completed before this one. */
@@ -23,7 +28,10 @@ export type System = (ctx: SimContext) => void;
 export class Simulation {
   readonly world = new World();
   readonly input = new InputState();
+  readonly events = new EventBus();
   readonly rng: Rng;
+  /** Terrain used by physics and AI. Set it before the first step. */
+  map: TileMap | null = null;
   tick = 0;
   private readonly systems: { name: string; fn: System }[] = [];
 
@@ -39,7 +47,16 @@ export class Simulation {
   /** Run one fixed step with the given actions held this tick. */
   step(snapshot: ActionSnapshot = {}): void {
     this.input.update(snapshot);
-    const ctx: SimContext = { world: this.world, input: this.input, rng: this.rng, dt: TICK_DT, tick: this.tick };
+    this.events.beginTick();
+    const ctx: SimContext = {
+      world: this.world,
+      input: this.input,
+      rng: this.rng,
+      events: this.events,
+      map: this.map,
+      dt: TICK_DT,
+      tick: this.tick,
+    };
     this.world.beginTick();
     try {
       for (const s of this.systems) s.fn(ctx);

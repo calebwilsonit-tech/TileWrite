@@ -67,3 +67,9 @@ a {
 .sample-host canvas {
   display: block;
 }
+
+.sample-status {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+}

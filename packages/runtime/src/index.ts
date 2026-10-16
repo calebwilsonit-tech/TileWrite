@@ -4,6 +4,8 @@ export * from './iso';
 export * from './core/rng';
 export * from './core/timestep';
 export * from './core/simulation';
+export * from './core/events';
+export * from './physics';
 export * from './scene/world';
 export * from './scene/components';
 export * from './input/input';

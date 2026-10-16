@@ -1,15 +1,15 @@
-﻿# Tilewright progress
+# Tilewright progress
 
 Boxes are ticked only when the milestone's tests pass and the sample has been played.
 Spec: `ENGINE_BUILD_PROMPT.md`. Read `DECISIONS.md` and `KNOWN_ISSUES.md` before continuing.
 
-**Next up:** M2 heights and collision - height-aware collision (`packages/runtime/src/physics`), stairs/ramps, cliffs, pits + falling, occlusion fade, then a multi-level room sample (`#sample-m2`). Also owed from M1: prefabs with overrides (planned M5), render interpolation and sort caching (M14).
+**Next up:** M3 editor shell + world painter - panels, global undo/redo (command pattern), project JSON + Zod schemas with schemaVersion, brushes, height/stair/ramp/cliff/pit tools, collision overlay + walk test (use `reachableCells`), Play-in-editor. Owed from M2: entities as platforms (M5), pit damage (M7).
 
 ## Milestones
 
 - [x] M0 Foundations (repo, workspaces, lint, typecheck, tests, CI, Electron window, state docs)
 - [x] M1 Runtime core (iso math, scene/ECS, renderer + depth sort, camera, input, fixed timestep)
-- [ ] M2 Heights and collision (stairs, cliffs, pits, falling, occlusion fade)
+- [x] M2 Heights and collision (stairs, cliffs, pits, falling, occlusion fade)
 - [ ] M3 Editor shell + world painter
 - [ ] M4 Sprite studio
 - [ ] M5 No-code logic (behaviours, inspector, event sheets, wires)

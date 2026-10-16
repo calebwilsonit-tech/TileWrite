@@ -3,6 +3,8 @@
 export const C = {
   Transform: 'transform',
   Sprite: 'sprite',
+  Body: 'body',
+  Collider: 'collider',
 } as const;
 
 /** Position in grid units; h is height in levels (feet position). Facing is 0..7 (see FACING_NAMES). */

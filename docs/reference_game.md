@@ -3,12 +3,12 @@
 Tick an item when the engine can make it **without code**, verified by a test or a sample.
 
 ## Isometric world
-- [ ] 64x32 diamond tiles, multiple height levels per cell
-- [ ] Stairs/ramps between levels, cliffs
-- [ ] Pits (fall animation, damage, respawn)
-- [ ] Water, bridges
-- [ ] Wall occlusion fade
-- [ ] Correct depth sorting of tall objects, characters, props at every height
+- [x] 64x32 diamond tiles, multiple height levels per cell
+- [x] Stairs/ramps between levels, cliffs
+- [ ] Pits (fall animation, damage, respawn) - falling and respawn work (M2); damage needs Health (M7)
+- [x] Water, bridges
+- [x] Wall occlusion fade
+- [x] Correct depth sorting of tall objects, characters, props at every height
 
 ## Player
 - [ ] 8-direction movement, walk/run

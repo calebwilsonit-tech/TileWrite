@@ -49,8 +49,10 @@ export const DEFAULT_INPUT_MAP = {
   move_down: ['key:KeyS', 'key:ArrowDown'],
   run: ['key:ShiftLeft', 'key:ShiftRight'],
   interact: ['key:KeyE', 'key:Enter'],
-  attack: ['key:Space', 'mouse:0'],
+  attack: ['key:KeyJ', 'mouse:0'],
+  jump: ['key:Space'],
   dodge: ['key:KeyQ'],
   echo: ['key:KeyR'],
   pause: ['key:Escape'],
 };
+
