@@ -15,6 +15,7 @@ import { AssetsPanel } from '../panels/AssetsPanel';
 import { EventsPanel } from '../panels/EventsPanel';
 import { StoryPanel } from '../panels/StoryPanel';
 import { PlaybotPanel } from '../panels/PlaybotPanel';
+import { MixerPanel } from '../panels/MixerPanel';
 import { ConnectDialog } from './ConnectDialog';
 import { ExportDialog } from '../export/ExportDialog';
 import { TutorialCard } from '../tutorial/TutorialCard';
@@ -32,6 +33,7 @@ const components: Record<string, React.FunctionComponent<IDockviewPanelProps>> =
   events: () => <EventsPanel />,
   story: () => <StoryPanel />,
   playbot: () => <PlaybotPanel />,
+  mixer: () => <MixerPanel />,
   assistant: () => <AssistantPanel />,
   problems: () => <ProblemsPanel />,
   console: () => <ConsolePanel />,
@@ -55,6 +57,7 @@ function buildDefault(api: DockviewApi): void {
   api.addPanel({ id: 'events', component: 'events', title: 'Events', position: { referencePanel: 'problems', direction: 'within' } });
   api.addPanel({ id: 'story', component: 'story', title: 'Story', position: { referencePanel: 'problems', direction: 'within' } });
   api.addPanel({ id: 'playbot', component: 'playbot', title: 'Playbot', position: { referencePanel: 'problems', direction: 'within' } });
+  api.addPanel({ id: 'mixer', component: 'mixer', title: 'Mixer', position: { referencePanel: 'problems', direction: 'within' } });
   api.getPanel('tiles')?.api.setActive();
   api.getPanel('inspector')?.api.setActive();
   api.getPanel('problems')?.api.setActive();

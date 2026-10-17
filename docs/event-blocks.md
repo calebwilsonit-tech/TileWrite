@@ -321,6 +321,8 @@ Id: `sound`.
 | --- | --- | --- | --- | --- |
 | Sound (a file in Assets -> Sounds) | `name` | sound | (empty) |  |
 | Volume (0 to 1) | `volume` | number | 1 | 0 to 1 |
+| Heard from (optional: quieter and to one side when far from the player) | `at` | entity | (empty) |  |
+| Farthest it can be heard (cells) | `far` | number | 16 | 2 to 80 |
 
 #### Change the music
 

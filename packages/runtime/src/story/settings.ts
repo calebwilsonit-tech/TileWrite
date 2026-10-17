@@ -8,6 +8,7 @@ export const SettingsSchema = z.object({
   master: z.number().min(0).max(1).default(0.8),
   music: z.number().min(0).max(1).default(0.7),
   sfx: z.number().min(0).max(1).default(0.9),
+  voice: z.number().min(0).max(1).default(0.9),
   difficulty: z.enum(['easy', 'normal', 'hard']).default('normal'),
   /** Screen shake on hits and in cutscenes, and the short freeze when a hit lands. */
   screenShake: z.boolean().default(true),

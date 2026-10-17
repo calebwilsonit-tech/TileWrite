@@ -148,3 +148,60 @@ describe('news of a finished conversation', () => {
     expect(r.sim.runtime.vars['after']).toBe(1);
   });
 });
+
+describe('sound source', () => {
+  const rigWith = (settings: object): Rig => {
+    const { scene } = flatScene();
+    scene.entities.push(player('p', 2.5, 2.5), thing('drip', 'Drip', 8.5, 5.5, { soundSource: settings }));
+    return rig(scene);
+  };
+  const sounds = (r: Rig) => r.sim.runtime.fx.filter((f) => f.kind === 'sound');
+
+  it('an ambient source is audible while it loops, and a Silence signal turns it off', () => {
+    const r = rigWith({ sound: 'waterfall', ambient: true });
+    r.run(3);
+    expect(r.get('drip').get<{ audible: boolean }>('state:soundSource')!.audible).toBe(true);
+    expect(output(r.get('drip'), 'audible')).toBe(true);
+    expect(sounds(r)).toHaveLength(0); // the loop is the host's job; no one-shots are queued
+    (r.get('drip').get<{ inputs: Record<string, boolean> }>('signals')!).inputs.silence = true;
+    r.run(2);
+    expect(r.get('drip').get<{ audible: boolean }>('state:soundSource')!.audible).toBe(false);
+  });
+
+  it('a one-shot repeats every so often, from its own place with its own hearing range', () => {
+    const r = rigWith({ sound: 'drip', ambient: false, every: 1, near: 3, far: 9, volume: 0.5 });
+    r.run(130);
+    const list = sounds(r);
+    expect(list.length).toBe(2);
+    expect(list[0]).toMatchObject({ kind: 'sound', name: 'drip', volume: 0.5, at: { x: 8.5, y: 5.5, near: 3, far: 9 } });
+  });
+
+  it('a one-shot with no repeat plays when its Play input rises, once per rise', () => {
+    const r = rigWith({ sound: 'ding', ambient: false, every: 0 });
+    r.run(5);
+    expect(sounds(r)).toHaveLength(0);
+    const sig = r.get('drip').get<{ inputs: Record<string, boolean> }>('signals')!;
+    sig.inputs.play = true;
+    r.run(5);
+    expect(sounds(r)).toHaveLength(1);
+    sig.inputs.play = false;
+    r.run(2);
+    sig.inputs.play = true;
+    r.run(2);
+    expect(sounds(r)).toHaveLength(2);
+  });
+
+  it('the Play a sound action can say where a sound comes from', () => {
+    const { scene } = flatScene();
+    const cond = (type: string) => ({ ...newCondition(type) });
+    const act = (type: string, params: Record<string, unknown>) => ({ ...newAction(type), params: { ...newAction(type).params, ...params } });
+    scene.entities.push(player('p', 2.5, 2.5), thing('bell', 'Bell', 9.5, 4.5, {}));
+    scene.events = [{ ...newRow('ring'), once: true, conditions: [cond('start')], actions: [act('sound', { name: 'bell', at: 'name:Bell', far: 20 }), act('sound', { name: 'plain' })] }];
+    const r = rig(scene);
+    r.run(3);
+    expect(sounds(r)).toEqual([
+      { kind: 'sound', name: 'bell', volume: 1, at: { x: 9.5, y: 4.5, near: 2, far: 20 } },
+      { kind: 'sound', name: 'plain', volume: 1 },
+    ]);
+  });
+});

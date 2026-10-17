@@ -1,4 +1,4 @@
-import { AUDIO_EXTENSIONS, type AudioEngine } from '@tilewright/runtime';
+import { AUDIO_EXTENSIONS, CURRENT_SCHEMA_VERSION, MixerSchema, newMixer, type AudioEngine, type MixerData } from '@tilewright/runtime';
 import { joinPath } from '../project/api';
 import { UserError } from '../project/io';
 import type { AssetFs } from './assets';
@@ -50,6 +50,25 @@ export async function loadSounds(fs: AssetFs, dir: string, engine: AudioEngine):
     }
   }
   return [...problems, ...engine.problems.splice(0)];
+}
+
+export const MIXER_FILE = `${AUDIO_DIR}/mixer.json`;
+
+/** The project's mix (levels, ducking, per-sound settings, loop points); the defaults when the project has none. */
+export async function loadMixer(fs: AssetFs, dir: string): Promise<{ mixer: MixerData; problems: string[] }> {
+  const file = joinPath(dir, MIXER_FILE);
+  try {
+    if (!(await fs.exists(file))) return { mixer: newMixer(), problems: [] };
+    const r = MixerSchema.safeParse(JSON.parse(await fs.read(file)));
+    if (!r.success) return { mixer: newMixer(), problems: [`The mixer file is not valid, so the default mix is used: ${r.error.issues[0]?.message ?? 'unknown problem'}.`] };
+    return { mixer: r.data, problems: [] };
+  } catch (e) {
+    return { mixer: newMixer(), problems: [`The mixer file could not be read, so the default mix is used (${(e as Error).message}).`] };
+  }
+}
+
+export async function saveMixer(fs: AssetFs, dir: string, mixer: MixerData): Promise<void> {
+  await fs.write(joinPath(dir, MIXER_FILE), JSON.stringify({ ...mixer, schemaVersion: CURRENT_SCHEMA_VERSION }, null, 2) + '\n');
 }
 
 /** Add a sound file to the project. */

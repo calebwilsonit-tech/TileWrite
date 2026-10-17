@@ -31,6 +31,9 @@ import {
   type PrefabData,
   type SkinData,
   type MinigameData,
+  type MixerData,
+  spatialize,
+  type AmbientRequest,
   type SaveData,
   type SceneData,
   type SpriteData,
@@ -52,7 +55,7 @@ import { drawCone, drawFootprint, drawLightRadius, drawPath, shapesOf } from './
 import { assetFs } from '../project/assetFs';
 import { joinPath } from '../project/api';
 import { loadScene as loadSceneFile } from '../project/io';
-import { loadSounds } from '../studio/audio';
+import { loadMixer, loadSounds } from '../studio/audio';
 import { loadLanguages } from '../project/localization';
 import type { CutsceneData, DialogueData, ItemData } from '@tilewright/runtime';
 
@@ -90,6 +93,8 @@ export interface PlayOptions {
   skins?: readonly SkinData[];
   /** The project's minigames. */
   minigames?: readonly MinigameData[];
+  /** The project's mix, when the host keeps it live (the editor's Mixer panel); otherwise it is read from the project folder. */
+  mixer?: { get(): MixerData; subscribe(fn: () => void): () => void };
 }
 
 /**
@@ -110,6 +115,8 @@ export class PlaySession {
   /** The skins on offer (replaced by hot reload). */
   private skinsNow: readonly SkinData[] = [];
   private readonly unlockAudio = (): void => void this.audio.unlock();
+  /** Stops listening to the editor's mixer. */
+  private offMixer: (() => void) | null = null;
   settings: GameSettings;
   private readonly saves: SaveManager;
   private scenePath: string;
@@ -203,6 +210,15 @@ export class PlaySession {
       for (const l of languages) sim.assets.strings.set(l);
       this.applyLanguage();
     });
+    if (o.mixer) {
+      this.audio.setMixer(o.mixer.get());
+      this.offMixer = o.mixer.subscribe(() => this.audio.setMixer(o.mixer!.get()));
+    } else {
+      void loadMixer(assetFs, o.projectDir).then(({ mixer, problems }) => {
+        for (const p of problems) o.notify('warn', p);
+        this.audio.setMixer(mixer);
+      });
+    }
     void loadSounds(assetFs, o.projectDir, this.audio).then((problems) => {
       for (const p of problems) o.notify('warn', p);
       this.roomMusic = null; // start the room's music now that it can play
@@ -317,7 +333,7 @@ export class PlaySession {
 
   private applyVolumes(): void {
     const s = this.settings;
-    this.audio.setVolumes({ master: s.master, music: s.music, sfx: s.sfx });
+    this.audio.setVolumes({ master: s.master, music: s.music, sfx: s.sfx, voice: s.voice });
   }
 
   /** Screen shake, freeze frames and sparks follow the player's settings and the editor's reduce-motion switch. */
@@ -329,8 +345,40 @@ export class PlaySession {
   }
 
   private onFx(fx: FxEvent): void {
-    if (fx.kind === 'sound') this.audio.play(fx.name, fx.volume ?? 1);
+    if (fx.kind === 'sound') {
+      const heard = fx.at ? this.heard(fx.at) : null;
+      if (heard === null) this.audio.play(fx.name, fx.volume ?? 1);
+      else if (heard.gain > 0) this.audio.play(fx.name, (fx.volume ?? 1) * heard.gain, undefined, { pan: heard.pan });
+    }
     else if (fx.kind === 'music') this.audio.playMusic(fx.name);
+  }
+
+  /** Where the player's ears are: the player, or nowhere in particular when there is none. */
+  private listener(): { x: number; y: number } | null {
+    const t = this.sim.world.withTag('player')[0]?.get<TransformIso>(C.Transform);
+    return t ? { x: t.x, y: t.y } : null;
+  }
+
+  /** How loud and from which side a sound at a place is heard (null when nobody is listening: it plays plainly). */
+  private heard(at: { x: number; y: number; near: number; far: number }): { gain: number; pan: number } | null {
+    const l = this.listener();
+    return l ? spatialize(l.x, l.y, at.x, at.y, { near: at.near, far: at.far }) : null;
+  }
+
+  /** The looping sounds of Sound Source objects: audible ones loop with the volume and side the player would hear. */
+  private syncAmbient(): void {
+    const l = this.listener();
+    const active = new Map<string, AmbientRequest>();
+    if (l) {
+      for (const e of this.sim.world.query('soundSource', C.Transform)) {
+        const s = e.get<{ sound: string; near: number; far: number; volume: number }>('soundSource')!;
+        if (!e.get<{ audible: boolean }>('state:soundSource')?.audible) continue;
+        const t = e.require<TransformIso>(C.Transform);
+        const h = spatialize(l.x, l.y, t.x, t.y, { near: s.near, far: s.far });
+        active.set(String(e.id), { name: s.sound, gain: h.gain * s.volume, pan: h.pan });
+      }
+    }
+    this.audio.syncAmbient(active);
   }
 
   /** Music follows the room: leaving a room with music for one without lets the last track keep playing until something else asks. */
@@ -348,6 +396,7 @@ export class PlaySession {
     const { sim, o } = this;
     const player = sim.world.withTag('player')[0];
     const t = player?.get<TransformIso>(C.Transform);
+    this.syncAmbient();
     if (t) {
       this.followRoomMusic(t.x, t.y);
       const cam = o.renderer.camera;
@@ -587,6 +636,7 @@ export class PlaySession {
     this.source.dispose();
     window.removeEventListener('keydown', this.unlockAudio);
     window.removeEventListener('pointerdown', this.unlockAudio);
+    this.offMixer?.();
     this.audio.dispose();
     this.o.renderer.particles.system.clear();
     this.ui.dispose();

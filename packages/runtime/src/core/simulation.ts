@@ -89,7 +89,7 @@ export interface SceneRuntime {
 /** A cosmetic request from a behaviour or event row. The host (editor, exported game, or nobody in a headless run) shows it. */
 export type FxEvent =
   | { kind: 'burst'; preset: string; x: number; y: number; h: number; color?: number; count?: number }
-  | { kind: 'sound'; name: string; volume?: number }
+  | { kind: 'sound'; name: string; volume?: number; at?: { x: number; y: number; near: number; far: number } }
   | { kind: 'music'; name: string };
 
 const FX_CAP = 128;

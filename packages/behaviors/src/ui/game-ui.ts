@@ -47,7 +47,7 @@ export const UI_STRINGS: readonly string[] = [
   'Paused', 'Resume', 'Inventory', 'Travel to a lit lantern', 'Save game', 'Load game', 'Settings', 'Restart this area', 'Quit',
   '{n} lit', 'You are carrying nothing.', 'press E to use', 'slot {n}', 'E: use   A / D: choose its quick slot   Esc: back',
   'No lanterns lit yet. Light one by pressing E beside it.', 'this area', 'Autosave', 'Slot {n}', 'damaged', 'empty',
-  'Master volume', 'Music volume', 'Effects volume', 'Difficulty', 'easy', 'normal', 'hard', 'Screen shake and hit freeze', 'on', 'off',
+  'Master volume', 'Music volume', 'Effects volume', 'Voice volume', 'Difficulty', 'easy', 'normal', 'hard', 'Screen shake and hit freeze', 'on', 'off',
   'Camera zoom', 'Full screen', 'Show frame rate', 'Appearance', 'Original', 'Language', 'Default', 'Controls', 'press a key or button...', 'not set', 'Reset all controls',
   'E: change the selected control, then press the new key or button', 'W / S to choose, E to select, Esc or P to go back',
   'E / click: continue', 'P / Start: skip', 'Received {item}', 'Used {item}', 'You were defeated.',
@@ -461,14 +461,14 @@ export class GameUi {
       case 'settings': {
         title = 'Settings';
         const set = h.settings;
-        const slider = (label: string, key: 'master' | 'music' | 'sfx'): Row => ({
+        const slider = (label: string, key: 'master' | 'music' | 'sfx' | 'voice'): Row => ({
           label,
           detail: `${Math.round(set[key] * 100)}%`,
           adjust: (d) => h.changeSettings({ [key]: Math.min(1, Math.max(0, Math.round((set[key] + d * 0.1) * 10) / 10)) }),
           run: () => h.changeSettings({ [key]: set[key] > 0 ? 0 : 0.8 }),
           testId: `set-${key}`,
         });
-        rows.push(slider('Master volume', 'master'), slider('Music volume', 'music'), slider('Effects volume', 'sfx'));
+        rows.push(slider('Master volume', 'master'), slider('Music volume', 'music'), slider('Effects volume', 'sfx'), slider('Voice volume', 'voice'));
         const levels: GameSettings['difficulty'][] = ['easy', 'normal', 'hard'];
         const cycle = (d: number): void => {
           const next = levels[(levels.indexOf(set.difficulty) + d + 3) % 3]!;

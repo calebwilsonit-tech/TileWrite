@@ -4,7 +4,7 @@
 
 A behaviour is ready-made logic you add to an object in the Inspector (**Behaviours -> Add**). Its settings appear as fields; its signals can be joined to other objects with the Wire tool. Each behaviour has an id (the key under which it is saved) shown in `code`.
 
-There are 33 behaviours. Behaviours made by scripts (see [code-window.md](code-window.md)) appear in the same list under "Scripts".
+There are 34 behaviours. Behaviours made by scripts (see [code-window.md](code-window.md)) appear in the same list under "Scripts".
 
 - [AI](#ai) (Vision Cone, Chase, Patrol, Boss Phases, State Machine)
 - [Combat](#combat) (Health, Damage on Touch, Melee Attack (quill), Dodge)
@@ -12,7 +12,7 @@ There are 33 behaviours. Behaviours made by scripts (see [code-window.md](code-w
 - [Logic](#logic) (Logic Gate)
 - [Player](#player) (Echo Recorder)
 - [Puzzle](#puzzle) (Pressure Plate, Trigger Zone, Lever, Timer, Gate / Door, Pushable)
-- [Story](#story) (NPC Talk, Minigame, Lantern Post (checkpoint), Scene Portal, Cutscene Trigger)
+- [Story](#story) (NPC Talk, Sound Source, Minigame, Lantern Post (checkpoint), Scene Portal, Cutscene Trigger)
 - [Story puzzles](#story-puzzles) (Sentence Stone, Formattable Text Block)
 - [World](#world) (Spawner, Pickup, Moving Platform, Falling Floor, Projectile, Follow Camera)
 
@@ -424,6 +424,25 @@ A doorway: when the player steps into it they are taken to another scene (or ano
 | Appear at (name of an object in that scene, or "x,y") | `spawn` | text | (empty) |  |
 
 Adds automatically: `collider`.
+
+### Sound Source
+
+Id: `soundSource`. Each update it makes signals.
+
+A sound that comes from this object. It gets quieter and moves to one side as the player walks away from it. Ambient: a loop that plays while the player is in range (a waterfall). Otherwise it plays once when its Play input arrives, or every few seconds (a dripping pipe). A wire into Silence turns it off.
+
+| Setting | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Sound (a file in Assets -> Sounds) | `sound` | text | (empty) | The name of a sound file in Assets -> Sounds, without its ending. |
+| Loops while the player is in range | `ambient` | boolean | true |  |
+| Full volume within (cells) | `near` | number | 2 | 0 to 40 |
+| Cannot be heard beyond (cells) | `far` | number | 14 | 1 to 80 |
+| Volume (0 to 1) | `volume` | number | 1 | 0 to 1 |
+| Repeat a one-shot every (seconds, 0 = off) | `every` | number | 0 | 0 to 120 |
+
+Receives: **Play once** (`play`); **Silence (while on)** (`silence`).
+
+Sends: **Is making sound** (`audible`).
 
 ## Story puzzles
 

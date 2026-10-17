@@ -193,6 +193,14 @@ export function validateScene(doc: EditorDoc, sprites?: ReadonlySet<string>, pre
     for (const r of doc.regions) {
       if (r.music && !sounds.has(r.music)) out.push({ id: `music-missing-${r.id}`, severity: 'warning', message: `The region "${r.name}" plays the music "${r.music}", which is not in Assets -> Sounds.`, target: { kind: 'region', id: r.id, x: r.x, y: r.y } });
     }
+    for (const e of doc.entities) {
+      const src = e.components.soundSource as { sound?: string } | undefined;
+      if (!src) continue;
+      const t = e.components.transform as { x: number; y: number } | undefined;
+      const target = t ? { kind: 'entity' as const, id: e.id, x: t.x, y: t.y } : undefined;
+      if (!src.sound) out.push({ id: `sound-empty-${e.id}`, severity: 'warning', message: `"${e.name}" is a Sound Source with no sound chosen, so it is silent.`, target });
+      else if (!sounds.has(src.sound)) out.push({ id: `sound-missing-${e.id}`, severity: 'warning', message: `"${e.name}" plays the sound "${src.sound}", which is not in Assets -> Sounds.`, target });
+    }
   }
 
   // the event sheet

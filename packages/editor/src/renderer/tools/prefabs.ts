@@ -137,6 +137,13 @@ export const PREFABS: Prefab[] = [
     make: (x, y, h) => thing('Arcade', ['minigame'], { color: 0xd06a1a, w: 0.7, d: 0.7, height: 1.2 }, x, y, h, ['minigameStation']),
   },
   {
+    id: 'soundsource',
+    label: 'Sound source',
+    group: 'Story',
+    hint: 'A sound that comes from this spot and gets quieter as the player walks away: a waterfall, a campfire, a dripping pipe. Choose the sound in the Inspector.',
+    make: (x, y, h) => thing('Sound source', ['sound-source'], { shape: 'diamond', color: 0x7ad0e8, w: 0.5, d: 0.5, height: 0.05 }, x, y, h, ['soundSource']),
+  },
+  {
     id: 'lanternpost',
     label: 'Lantern post (checkpoint)',
     group: 'Story',

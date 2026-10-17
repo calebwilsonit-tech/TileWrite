@@ -857,7 +857,8 @@ class AppStore {
     if (!p) return [];
     await this.flushStory().catch(() => undefined);
     const { studio } = await import('../studio/store');
-    const problems = await checkProject(realFs, p.dir, p.project, this.prefabs, this.story, new Set(studio.assets.keys()), new Set(studio.sounds.map((s) => s.name)), (await loadLanguages(assetFs, p.dir)).languages, this.skins, this.minigames);
+    await studio.flushMixer().catch(() => undefined);
+    const problems = await checkProject(realFs, p.dir, p.project, this.prefabs, this.story, new Set(studio.assets.keys()), new Set(studio.sounds.map((s) => s.name)), (await loadLanguages(assetFs, p.dir)).languages, this.skins, this.minigames, studio.mixer);
     this.set({ projectCheck: { problems, at: Date.now() } });
     return problems;
   }

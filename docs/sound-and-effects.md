@@ -22,7 +22,20 @@ The Problems panel warns when an action, cutscene or region uses a name that is 
 
 Each time a sound plays it drifts a few percent in pitch so repeated hits do not sound mechanical. The same sound cannot start twice within a twentieth of a second, and at most 24 sounds play at once.
 
-The player's **Settings** menu has Master, Music and Sound effects volumes; they apply at once and are remembered.
+The player's **Settings** menu has Master, Music, Sound effects and Voice volumes; they apply at once and are remembered.
+
+## The Mixer panel
+The **Mixer** tab (bottom panels, beside Problems) is the mix of the whole game. Changes are heard at once, also in a game that is running, and are saved as you make them in `assets/audio/mixer.json` (only what you changed). The player's own volumes in Settings multiply with these levels, so you set the balance and the player sets the overall loudness.
+- **Levels**: master, music, sound effects and voice, from silent to one and a half times.
+- **Ducking**: while a sound on the **voice** bus plays, the music gets quieter (how much, how quickly it goes down and comes back). Switch it off if you do not want it.
+- **Each sound** (open its row): *Loudness*; *Plays on* (sound effects, or voice, which ducks the music); *pitch drift* and *loudness drift* (how much each play differs from the last); *seconds before it can play again* (so a swarm of hits is one hit); and *Also picks from* a list of other sounds, so "hit" can be one of hit, hit2 and hit3 chosen at random each time.
+- **As music**: loudness, **loop start** and **loop end** in seconds (the track plays through once, then loops between them: an intro that plays once and a body that repeats), and the fade time used when the music changes. The `♫ music` button plays the sound as looping music so you can hear the loop; press it again to stop.
+- The Mixer and the project check warn about settings for sounds that do not exist, variants that are missing, and loops that end before they start.
+
+## Sounds that come from a place
+- **Sound Source** (Place tool, Story group): a sound that comes from that spot. **Ambient** ones loop while the player is within hearing (a waterfall, a campfire); others play once when their **Play** input arrives (wire a lever to it) or every few seconds (a dripping pipe). Within *full volume within* cells you hear it plainly; it fades smoothly to silence at *cannot be heard beyond*, and moves to the left or right in your headphones as the player moves around it (left and right follow the screen). A wire into **Silence** turns it off.
+- The **Play a sound** action has *Heard from*: pick an object and the sound comes from there, quieter and to one side when the player is far, and not at all beyond *Farthest it can be heard*. Left empty it plays plainly, as before.
+- Nothing here changes how the game plays: where sounds come from is only heard, never part of the saved state.
 
 ## Hit feel: freeze, shake and sparks
 - **Hit freeze** ("hit-stop"): the world holds still for a few frames when a heavy hit lands. The player's buttons are not lost; the game just waits a moment.
@@ -39,4 +52,4 @@ The game's **Settings -> Screen shake and hit freeze** switch turns off both the
 ## How it works (for the curious)
 - The simulation only *asks* for effects (`runtime.fx`, `runtime.hitStop`, `view.impact`); the game window shows them. A run with no window (the playbot, the checks, the tests) ignores them and plays out exactly the same.
 - Hit-stop is done by the game window not stepping the simulation for a few frames. That is why a recorded playthrough replays identically with or without it.
-- Sound uses the browser's Web Audio inside the Electron window; the engine part is `packages/runtime/src/audio/engine.ts`, tested against a pretend sound card.
+- Sound uses the browser's Web Audio inside the Electron window; the engine part is `packages/runtime/src/audio/engine.ts` and the mix (`audio/mixer.ts`: buses, ducking, per-sound settings, variants, the distance and pan maths), both tested against a pretend sound card. Tests: `e2e/m15-mixer.spec.ts`.

@@ -740,6 +740,7 @@ export class ViewportController {
         record,
         skins: store.skins,
         minigames: store.minigames,
+        mixer: studio.mixerSource,
         liveAssets: () => ({ prefabs: store.prefabs, sprites: studio.assets, story: store.story, skins: store.skins, minigames: store.minigames }),
       });
     } catch (e) {

@@ -648,12 +648,20 @@ export const ACTIONS: ActionDef[] = [
     id: 'sound',
     label: 'Play a sound',
     category: 'Basics',
-    params: [{ key: 'name', label: 'Sound (a file in Assets -> Sounds)', type: 'sound', default: '' }, { key: 'volume', label: 'Volume (0 to 1)', type: 'number', default: 1, min: 0, max: 1, step: 0.1 }],
-    describe: (p) => `play the sound "${str(p, 'name')}"`,
-    run(ctx, p) {
+    params: [
+      { key: 'name', label: 'Sound (a file in Assets -> Sounds)', type: 'sound', default: '' },
+      { key: 'volume', label: 'Volume (0 to 1)', type: 'number', default: 1, min: 0, max: 1, step: 0.1 },
+      entityParam('at', 'Heard from (optional: quieter and to one side when far from the player)', ''),
+      { key: 'far', label: 'Farthest it can be heard (cells)', type: 'number', default: 16, min: 2, max: 80, step: 1 },
+    ],
+    describe: (p, n) => `play the sound "${str(p, 'name')}"${str(p, 'at') ? ` from ${describeRef(str(p, 'at'), n)}` : ''}`,
+    run(ctx, p, row) {
       const name = str(p, 'name');
       ctx.events.emit('sound', { name });
-      if (name) emitFx(ctx.runtime, { kind: 'sound', name, volume: p.volume === undefined ? 1 : num(p, 'volume') });
+      if (!name) return;
+      const volume = p.volume === undefined ? 1 : num(p, 'volume');
+      const source = str(p, 'at') ? resolveRef(ctx, str(p, 'at'), row.picked)[0]?.get<TransformIso>(C.Transform) : undefined;
+      emitFx(ctx.runtime, { kind: 'sound', name, volume, ...(source ? { at: { x: source.x, y: source.y, near: 2, far: p.far === undefined ? 16 : num(p, 'far') } } : {}) });
     },
   },
   {

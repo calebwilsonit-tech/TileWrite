@@ -68,6 +68,7 @@ Tick an item when the engine can make it **without code**, verified by a test or
 ## Feel
 - [x] Screen shake, hit-stop (M14; the game window holds the simulation for a few frames, settings switch it off)
 - [x] Particles (seven presets, event action and automatic on hits); tweens drive gates and doors
+- [x] Buses (master, music, sound effects, voice) with volume settings, ducking, positional sounds (Sound Source, Play a sound from an object), music loop points (M15: Mixer panel)
 - [x] Sound effects with a little pitch variation (M14; checked against a pretend sound card and by loading real files in the editor; not judged by ear)
 - [x] Music with crossfades (M14; region music and the Change the music action)
 - [x] Camera follow with deadzone and room bounds

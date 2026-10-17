@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react';
-import { AudioEngine, type SpriteData } from '@tilewright/runtime';
+import { AudioEngine, defaultMusic, defaultSound, newMixer, type MixerData, type SpriteData } from '@tilewright/runtime';
 import { store } from '../app/store';
 import { assetFs } from '../project/assetFs';
 import { api } from '../project/api';
@@ -15,7 +15,7 @@ import {
   spriteNameProblem,
   type AssetMeta,
 } from './assets';
-import { AUDIO_DIR, deleteSound, importSound, listSounds, type SoundFile } from './audio';
+import { AUDIO_DIR, deleteSound, importSound, listSounds, loadMixer, saveMixer, type SoundFile } from './audio';
 import { joinPath } from '../project/api';
 import { AUDIO_EXTENSIONS } from '@tilewright/runtime';
 import { SpriteDoc } from './doc';
@@ -102,6 +102,18 @@ class StudioStore {
   meta: AssetMeta = { tags: {} };
   /** The project's sound and music files. */
   sounds: SoundFile[] = [];
+  /** The project's mix (assets/audio/mixer.json): bus levels, ducking, per-sound settings and music loop points. */
+  mixer: MixerData = newMixer();
+  private mixerListeners = new Set<() => void>();
+  private mixerTimer: number | null = null;
+  /** The live mix for a running game: it hears about every change as it is made. */
+  readonly mixerSource = {
+    get: (): MixerData => this.mixer,
+    subscribe: (fn: () => void): (() => void) => {
+      this.mixerListeners.add(fn);
+      return () => this.mixerListeners.delete(fn);
+    },
+  };
   private preview: AudioEngine | null = null;
   private listeners = new Set<Listener>();
   private unsubDoc: (() => void) | null = null;
@@ -134,6 +146,9 @@ class StudioStore {
       return;
     }
     this.sounds = await listSounds(assetFs, dir);
+    const mix = await loadMixer(assetFs, dir);
+    this.mixer = mix.mixer;
+    for (const p of mix.problems) store.notify('warn', p);
     this.preview?.dispose();
     this.preview = null;
     const { sprites, problems } = await loadAllSprites(assetFs, dir);
@@ -288,12 +303,68 @@ class StudioStore {
     });
   }
 
+  /** Change the mix: running games hear it at once, and the file is saved a moment after the last change. */
+  setMixer(next: MixerData): void {
+    // settings that are all defaults are not kept, so the file only lists what was changed
+    const same = (a: unknown, b: unknown): boolean => JSON.stringify(a) === JSON.stringify(b);
+    const sounds = Object.fromEntries(Object.entries(next.sounds).filter(([, s]) => !same(s, defaultSound())));
+    const music = Object.fromEntries(Object.entries(next.music).filter(([, m]) => !same(m, defaultMusic())));
+    this.mixer = { ...next, sounds, music };
+    this.preview?.setMixer(this.mixer);
+    for (const l of [...this.mixerListeners]) l();
+    this.set({ assetsVersion: this.state.assetsVersion + 1 });
+    const dir = this.projectDir();
+    if (!dir) return;
+    if (this.mixerTimer !== null) window.clearTimeout(this.mixerTimer);
+    this.mixerTimer = window.setTimeout(() => {
+      this.mixerTimer = null;
+      void saveMixer(assetFs, dir, this.mixer).catch((e) => store.notify('error', `The mix could not be saved: ${(e as Error).message}`));
+    }, 400);
+  }
+
+  /** Write a pending mix change now (before the game is exported or the project closed). */
+  async flushMixer(): Promise<void> {
+    const dir = this.projectDir();
+    if (this.mixerTimer === null || !dir) return;
+    window.clearTimeout(this.mixerTimer);
+    this.mixerTimer = null;
+    await saveMixer(assetFs, dir, this.mixer);
+  }
+
+  /** Play a music file with its loop points and fade (the editor's own player); calling it again stops it. */
+  async previewMusic(file: SoundFile): Promise<boolean> {
+    const dir = this.projectDir();
+    if (!dir) return false;
+    const playing = await store.guard('Playing the music', async () => {
+      this.preview ??= new AudioEngine();
+      this.preview.setMixer(this.mixer);
+      await this.preview.unlock();
+      if (!this.preview.has(file.name)) {
+        const ok = await this.preview.load(file.name, await assetFs.readBinary(joinPath(dir, AUDIO_DIR, file.file)));
+        if (!ok) throw new Error(this.preview.problems.splice(0).join(' ') || 'That sound could not be played.');
+      }
+      if (this.preview.currentMusic === file.name) {
+        this.preview.playMusic('');
+        return false;
+      }
+      this.preview.playMusic(file.name);
+      return true;
+    });
+    return playing === true;
+  }
+
+  /** How long a sound file is, in seconds (once it has been played or loaded in the preview). */
+  soundLength(name: string): number | null {
+    return this.preview?.durationOf(name) ?? null;
+  }
+
   /** Play a sound once so you can hear what it is (the editor's own player, not the game's). */
   async previewSound(file: SoundFile): Promise<void> {
     const dir = this.projectDir();
     if (!dir) return;
     await store.guard('Playing the sound', async () => {
       this.preview ??= new AudioEngine();
+      this.preview.setMixer(this.mixer);
       await this.preview.unlock();
       if (!this.preview.has(file.name)) {
         const ok = await this.preview.load(file.name, await assetFs.readBinary(joinPath(dir, AUDIO_DIR, file.file)));

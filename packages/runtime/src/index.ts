@@ -19,6 +19,7 @@ export * from './render/depth';
 export * from './render/iso-renderer';
 export * from './render/particle-system';
 export * from './audio/engine';
+export * from './audio/mixer';
 export * from './runner';
 export * from './sprites';
 export * from './anim';
