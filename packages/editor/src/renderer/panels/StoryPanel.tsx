@@ -16,6 +16,7 @@ import {
 } from '@tilewright/runtime';
 import { store, useApp } from '../app/store';
 import { storyNameProblem } from '../project/story';
+import { SoundField } from './SoundField';
 import { CheckField, NumberField, SelectField, TextField, hexToNumber, numberToHex } from './fields';
 
 type Tab = 'items' | 'dialogues' | 'cutscenes';
@@ -375,7 +376,7 @@ function NodeFields({ n, targets, onChange }: { n: DialogueNode; targets: Target
 
 // ---------- cutscenes ----------
 
-type FieldKind = 'text' | 'number' | 'colour' | 'dialogue' | 'item' | 'value';
+type FieldKind = 'text' | 'number' | 'colour' | 'dialogue' | 'item' | 'value' | 'sound';
 interface StepField {
   key: string;
   label: string;
@@ -395,7 +396,8 @@ const STEP_FIELDS: Record<CutsceneStep['type'], StepField[]> = {
   fade: [{ key: 'to', label: 'Fade to (0 = clear, 1 = black)', kind: 'number', step: 0.1 }, { key: 'seconds', label: 'Seconds', kind: 'number', step: 0.1 }, { key: 'color', label: 'Colour', kind: 'colour' }],
   animation: [{ key: 'who', label: 'Who', kind: 'text' }, { key: 'clip', label: 'Animation name', kind: 'text' }],
   shake: [{ key: 'amount', label: 'Strength (pixels)', kind: 'number', step: 1 }, { key: 'seconds', label: 'Seconds', kind: 'number', step: 0.1 }],
-  sound: [{ key: 'name', label: 'Sound name', kind: 'text' }],
+  sound: [{ key: 'name', label: 'Sound name', kind: 'sound' }],
+  music: [{ key: 'name', label: 'Music name (empty = silence)', kind: 'sound' }],
   setVariable: [{ key: 'name', label: 'Variable', kind: 'text' }, { key: 'value', label: 'Value', kind: 'value' }],
   give: [{ key: 'item', label: 'Item', kind: 'item' }, { key: 'amount', label: 'How many', kind: 'number', step: 1 }],
   message: [{ key: 'text', label: 'Message', kind: 'text' }],
@@ -480,6 +482,8 @@ function CutsceneEditor({ c, onDeleted }: { c: CutsceneData; onDeleted(): void }
                 return <SelectField<string> key={f.key} label={f.label} testId={tid} value={String(value)} options={[{ value: '', label: '(choose)' }, ...store.story.items.map((n) => ({ value: n.id, label: n.name }))]} onChange={set} />;
               case 'value':
                 return <TextField key={f.key} label={f.label} testId={tid} value={String(value)} onCommit={(v) => set(parseValue(v))} />;
+              case 'sound':
+                return <SoundField key={f.key} label={f.label} testId={tid} value={String(value ?? '')} onCommit={set} />;
               default:
                 return <TextField key={f.key} label={f.label} testId={tid} value={String(value ?? '')} onCommit={set} />;
             }

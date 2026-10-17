@@ -137,6 +137,7 @@ function createWindow(): BrowserWindow {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
+      autoplayPolicy: 'no-user-gesture-required', // music can start with the game, before any key is pressed
       devTools: testMode,
     },
   });

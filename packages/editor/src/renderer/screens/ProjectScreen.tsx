@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useApp, store } from '../app/store';
 import { TEMPLATES } from '../project/templates';
 import { Toasts } from '../app/Chrome';
 import { tutorial } from '../tutorial/store';
+import { api } from '../project/api';
 
 export function ProjectScreen() {
   const recent = useApp((s) => s.recent);
@@ -10,6 +11,10 @@ export function ProjectScreen() {
   const [name, setName] = useState('My Game');
   const [template, setTemplate] = useState(TEMPLATES[0]!.id);
   const [showNew, setShowNew] = useState(false);
+  const [samples, setSamples] = useState<{ id: string; name: string }[]>([]);
+  useEffect(() => {
+    api().samples.list().then(setSamples, () => setSamples([]));
+  }, []);
 
   return (
     <main className="projects" data-testid="project-screen">
@@ -28,6 +33,18 @@ export function ProjectScreen() {
           <button className="primary" data-testid="btn-tutorial" disabled={busy} onClick={() => void store.newProjectUnique('Tutorial Room', 'empty-iso').then((ok) => ok && tutorial.start())}>
             Take the tutorial
           </button>
+          {samples.length > 0 && (
+            <>
+              <hr />
+              <h2>See a finished game</h2>
+              <p className="hint">A small complete game, made only with this editor. It is copied into a folder you choose, so you can change it freely.</p>
+              {samples.map((s) => (
+                <button key={s.id} data-testid={`sample-${s.id}`} disabled={busy} onClick={() => void store.openSample(s.id)}>
+                  Open "{s.name}"…
+                </button>
+              ))}
+            </>
+          )}
         </section>
 
         <section className="card">

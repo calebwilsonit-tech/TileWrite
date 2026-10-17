@@ -30,6 +30,11 @@ function memFs(): AssetFs & { files: Map<string, string | Uint8Array> } {
     async write(f, t) {
       files.set(f, t);
     },
+    async readBinary(f) {
+      const v = files.get(f);
+      if (!(v instanceof Uint8Array)) throw new Error('not binary');
+      return v;
+    },
     async writeBinary(f, b) {
       files.set(f, b);
     },

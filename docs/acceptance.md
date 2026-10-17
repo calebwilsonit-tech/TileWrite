@@ -46,3 +46,12 @@ npx playwright test e2e/m13-acceptance.spec.ts
 ```
 
 Screenshots land in `screenshots/` (`m13-hub-built.png`, `m13-dungeon-built.png`, `m13-validators.png`, `m13-choice.png`, `m13-seal-open.png`, `m13-remap.png`, `m13-dungeon-play.png`, `m13-exported-game.png`). To keep the project the test builds (for working on the bot), set `TILEWRIGHT_KEEP_SLICE` to a folder.
+
+## The sample game
+The finished slice ships with the editor as a sample: the project screen's **See a finished game** card copies it into a folder you choose and opens the copy (`templates/last-storytender`, built into the editor's `dist/samples`). It includes the playbot's recorded playthrough, so the Playbot panel can replay it. It is regenerated from the acceptance test, never edited by hand:
+
+```bash
+TILEWRIGHT_SAMPLE_OUT=templates/last-storytender npx playwright test e2e/m13-acceptance.spec.ts
+```
+
+`e2e/m14-sample.spec.ts` opens the sample, runs the whole-project check (all clear) and replays the playthrough.

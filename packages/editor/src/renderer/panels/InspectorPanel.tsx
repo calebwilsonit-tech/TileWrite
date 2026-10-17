@@ -2,6 +2,7 @@ import { FACING_NAMES, type Animator, type EntityData, type RegionData } from '@
 import { behaviorList } from '@tilewright/behaviors';
 import { applySprite, setLocomotionClips, setPlainClip } from '../studio/apply';
 import { BehaviorsSection } from './BehaviorsSection';
+import { SoundField } from './SoundField';
 import { PrefabBanner, WiresSection } from './LogicSections';
 import { studio, useStudio } from '../studio/store';
 import { useApp, store } from '../app/store';
@@ -194,7 +195,7 @@ function RegionInspector({ id }: { id: string }) {
         <NumberField label="Height" min={1} value={r.h} onCommit={(v) => edit('Resize region', (x) => (x.h = Math.max(1, Math.round(v))))} />
       </fieldset>
       <CheckField testId="reg-camera" label="Keep the camera inside this room" value={r.cameraBounds} onChange={(v) => edit('Toggle camera bounds', (x) => (x.cameraBounds = v))} />
-      <TextField label="Music (file name, optional)" value={r.music} onCommit={(v) => edit('Set music', (x) => (x.music = v.trim()))} />
+      <SoundField label="Music (a file in Assets -> Sounds, optional)" testId="region-music" value={r.music} onCommit={(v) => edit('Set music', (x) => (x.music = v.trim()))} />
       <label className="field">
         <span>Darkness {Math.round(r.darkness * 100)}%</span>
         <input data-testid="insp-darkness" type="range" min={0} max={1} step={0.05} value={r.darkness} onChange={(e) => edit('Set darkness', (x) => (x.darkness = Number(e.target.value)))} />

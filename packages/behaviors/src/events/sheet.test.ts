@@ -293,6 +293,25 @@ describe('actions', () => {
     expect(seen).toEqual(['message:Score 0', 'ding:', 'sound:boom']);
   });
 
+  it('asks the host for sounds, music, sparks, a shake and a freeze', () => {
+    const r = sim([
+      row({
+        id: 'a',
+        once: true,
+        conditions: [cond('start')],
+        actions: [act('sound', { name: 'boom', volume: 0.5 }), act('music', { name: 'calm' }), act('particles', { at: 'id:lamp', effect: 'confetti', count: 12 }), act('shake', { pixels: 6 }), act('hitStop', { seconds: 0.1 })],
+      }),
+    ]);
+    r.run(2);
+    const rt = r.sim.runtime;
+    expect(rt.fx).toContainEqual({ kind: 'sound', name: 'boom', volume: 0.5 });
+    expect(rt.fx).toContainEqual({ kind: 'music', name: 'calm' });
+    expect(rt.fx).toContainEqual({ kind: 'burst', preset: 'confetti', x: 9.5, y: 9.5, h: 0, count: 12 });
+    expect(rt.view.impact).toBeGreaterThan(0);
+    expect(rt.hitStop).toBe(6);
+    expect(describeRow(row({ id: 'p', conditions: [cond('always')], actions: [act('particles', { at: 'player', effect: 'dust', count: 0 }), act('music', { name: '' })] }))).toBe('Always, throw dust at the player, then fade the music out.');
+  });
+
   it('creates objects from a prefab at another object', () => {
     const r = sim([row({ id: 'a', once: true, conditions: [cond('start')], actions: [act('spawn', { prefab: 'Orb', at: 'id:lamp', dx: 1, dy: -1 })] })]);
     r.sim.assets.prefabs.set('Orb', { schemaVersion: 1, name: 'Orb', root: { name: 'Orb', tags: ['orb'], components: { transform: { x: 0, y: 0, h: 0, facing: 2 } }, children: [] } });
@@ -346,6 +365,14 @@ describe('checking a sheet', () => {
     expect(text).toMatch(/only works inside a "for each" row/);
     expect(text).toMatch(/condition of type "weird"/);
     expect(text).toMatch(/action of type "weird"/);
+  });
+
+  it('reports sounds that are not in the project, but only when it knows which sounds there are', () => {
+    const rows = [row({ id: 'a', conditions: [cond('start')], actions: [act('sound', { name: 'boom' }), act('music', { name: 'calm' }), act('music', { name: '' })] })];
+    expect(checkSheet(rows, facts)).toEqual([]);
+    const text = checkSheet(rows, { ...facts, sounds: new Set(['calm']) }).map((p) => p.text);
+    expect(text).toHaveLength(1);
+    expect(text[0]).toMatch(/sound "boom" is not in Assets -> Sounds/);
   });
 
   it('is quiet for a good sheet, and allows "picked" inside loops and variables set elsewhere', () => {

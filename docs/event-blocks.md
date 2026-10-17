@@ -4,7 +4,7 @@
 
 An event sheet is a list of rows, each reading like a sentence: **when** its conditions hold, **do** its actions. Rows can have sub-events that run only while the row holds. Objects are chosen as "the player", "anything tagged ...", or a particular object. See [logic.md](logic.md).
 
-There are 14 conditions and 19 actions.
+There are 14 conditions and 23 actions.
 
 ## Conditions
 
@@ -303,7 +303,16 @@ Id: `sound`.
 
 | Parameter | Key | Kind | Starts as | Choices and notes |
 | --- | --- | --- | --- | --- |
-| Sound | `name` | text | (empty) |  |
+| Sound (a file in Assets -> Sounds) | `name` | sound | (empty) |  |
+| Volume (0 to 1) | `volume` | number | 1 | 0 to 1 |
+
+#### Change the music
+
+Id: `music`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Music (a file in Assets -> Sounds; empty = silence) | `name` | sound | (empty) |  |
 
 ### Advanced
 
@@ -325,3 +334,31 @@ Id: `emit`.
 | Parameter | Key | Kind | Starts as | Choices and notes |
 | --- | --- | --- | --- | --- |
 | Event name | `name` | text | "my-event" |  |
+
+### Effects
+
+#### Burst of sparks, dust or glow
+
+Id: `particles`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Where | `at` | entity | "player" |  |
+| Kind | `effect` | select | "spark" | `hit`, `spark`, `dust`, `puff`, `heal`, `magic`, `confetti` |
+| How many (0 = the usual amount) | `count` | number | 0 | 0 to 80 |
+
+#### Shake the screen
+
+Id: `shake`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| How hard (pixels) | `pixels` | number | 5 | 0 to 14 |
+
+#### Freeze the game for a moment
+
+Id: `hitStop`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Seconds (0.05 is a good hit) | `seconds` | number | 0.08 | 0 to 0.2 |

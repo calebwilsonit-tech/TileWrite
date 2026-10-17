@@ -4,6 +4,7 @@ import { DEFAULT_ISO, gridToScreen, screenToCell, type Cell, type IsoConfig } fr
 import type { LightingModel } from '../lighting/lighting';
 import { C, LABEL, type Label, type Sprite, type TransformIso } from '../scene/components';
 import { LightingLayer } from './lighting-layer';
+import { ParticleLayer } from './particles';
 import type { SpriteData } from '../sprites/format';
 import { exportSheet, type Atlas } from '../sprites/sheet';
 import type { Entity, EntityId, World } from '../scene/world';
@@ -121,6 +122,9 @@ export class IsoRenderer {
   private readonly lightLayer = new LightingLayer();
   private readonly labelLayer = new Container();
   private readonly labelViews = new Map<number, LabelView>();
+  /** Sparks, dust and other bursts; the runner throws them from the simulation's effect queue. */
+  readonly particles: ParticleLayer;
+  private lastFrameAt = 0;
 
   private cellViews = new Map<number, TileView[]>();
   private viewById = new Map<number, TileView>();
@@ -136,6 +140,7 @@ export class IsoRenderer {
 
   constructor(private readonly opts: RendererOptions = {}) {
     this.iso = opts.iso ?? DEFAULT_ISO;
+    this.particles = new ParticleLayer(this.iso);
   }
 
   async init(parent?: HTMLElement): Promise<void> {
@@ -152,6 +157,7 @@ export class IsoRenderer {
     this.world.addChild(this.overlay);
     this.labelLayer.zIndex = 1e8;
     this.world.addChild(this.labelLayer);
+    this.world.addChild(this.particles.container);
     this.app.stage.addChild(this.world, this.lightLayer.glow, this.lightLayer.darkness);
     if (parent && !this.opts.canvas) parent.appendChild(this.app.canvas);
     this.camera.setViewport(this.app.screen.width, this.app.screen.height);
@@ -396,6 +402,9 @@ export class IsoRenderer {
     this.syncDepthLabels();
 
     this.updateFade(focusBox);
+    const nowMs = performance.now();
+    this.particles.frame(this.lastFrameAt ? Math.min(0.1, (nowMs - this.lastFrameAt) / 1000) : 0);
+    this.lastFrameAt = nowMs;
 
     const off = this.camera.offset;
     const jx = this.shake > 0 ? (Math.random() - 0.5) * 2 * this.shake : 0;

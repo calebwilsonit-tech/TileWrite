@@ -16,6 +16,9 @@ function memoryFs(): AssetFs & { files: Map<string, string> } {
       files.set(f, t);
     },
     async writeBinary() {},
+    async readBinary() {
+      return new Uint8Array();
+    },
     async exists(f) {
       return files.has(f);
     },

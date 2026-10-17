@@ -62,7 +62,31 @@ export function AssetsPanel() {
             </button>
           </li>
         ))}
-      </ul>      {names.length === 0 && <p className="hint">No sprites yet. Open the Sprites tab to draw one or import a PNG.</p>}
+      </ul>
+      <h3>Sounds and music</h3>
+      <p className="hint">
+        Add WAV, OGG or MP3 files. A file's name is how the game asks for it: "hit", "hurt" and "defeat" play on their own when a fight happens; any other name is used by a Play a sound action, a cutscene or a region's music.
+      </p>
+      <div className="row">
+        <button data-testid="sound-add" onClick={() => void studio.importSoundFile()}>
+          Add a sound file…
+        </button>
+      </div>
+      {studio.sounds.length === 0 && <p className="hint">No sounds yet.</p>}
+      <ul className="plain sound-list" data-testid="sound-list">
+        {studio.sounds.map((s) => (
+          <li key={s.file} className="row" data-testid={`sound-${s.name}`}>
+            <span>{s.name}</span>
+            <button aria-label={`Play ${s.name}`} title="Listen to it" onClick={() => void studio.previewSound(s)}>
+              ▶
+            </button>
+            <button aria-label={`Delete sound ${s.name}`} onClick={() => void studio.removeSound(s.file)}>
+              ✕
+            </button>
+          </li>
+        ))}
+      </ul>
+      {names.length === 0 && <p className="hint">No sprites yet. Open the Sprites tab to draw one or import a PNG.</p>}
       {data && (
         <div className="asset-detail">
           <h3>{data.name}</h3>

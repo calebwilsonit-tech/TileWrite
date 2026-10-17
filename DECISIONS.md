@@ -146,3 +146,10 @@ Occlusion fade: renderer-only (not simulation state). Tiles taller than the focu
 - **A gate is judged useful if opening it changes where the player can go with the other gates shut or with them open**, which handles both a doorway filled by two gates and gates in a row.
 - **Crate puzzle analysis**: targets are only plates a crate could be pushed onto; the player's position can be given; if the puzzle looks unsolvable because the player starts behind closed gates, it is tried again with the gates open (the player is assumed to have got there).
 - **Event-sheet checks know which flags conversations and cutscenes set** (`storyVariables`).
+
+## D019 - Hit feel, sound and the sample game (M14) (2026-10-16)
+- Hit-stop is not part of the simulation. The simulation records a request (`runtime.hitStop`, `runtime.fx`, `view.impact`); the game window (`GameRunner`) holds off stepping for those frames and draws sparks. Putting a freeze inside `Simulation.step` made every tick-counted test, the playbot and recorded playthroughs depend on it (7 unit tests failed on the first try), and gave nothing a player could see.
+- Effects never enter the replayable state (not in `stateHash`, not in saves). The queue is capped, so a headless run that never drains it cannot grow without bound.
+- Sounds are plain files in `assets/audio`, named by their file name. There is no sound database or mixer UI: an event, cutscene or region asks for a name; a missing file is a Problems-panel warning, never a crash. The names `hit`, `hurt` and `defeat` play automatically during fights.
+- The editor and the exported game share one `AudioEngine` through `PlaySession`, so exported games have sound with no extra code. Autoplay is allowed in both Electron windows so music can start before a key is pressed.
+- The sample game is the acceptance slice itself, regenerated from `e2e/m13-acceptance.spec.ts` (`TILEWRIGHT_SAMPLE_OUT`), so it cannot drift from what the tests build. It is copied, not opened in place.

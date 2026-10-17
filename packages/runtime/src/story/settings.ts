@@ -9,7 +9,7 @@ export const SettingsSchema = z.object({
   music: z.number().min(0).max(1).default(0.7),
   sfx: z.number().min(0).max(1).default(0.9),
   difficulty: z.enum(['easy', 'normal', 'hard']).default('normal'),
-  /** Screen shake on hits and in cutscenes. */
+  /** Screen shake on hits and in cutscenes, and the short freeze when a hit lands. */
   screenShake: z.boolean().default(true),
   /** Replaces the default input bindings, per action. */
   bindings: z.record(z.string(), z.array(z.string())).default({}),

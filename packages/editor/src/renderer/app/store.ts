@@ -321,6 +321,16 @@ class AppStore {
     return ok;
   }
 
+  /** Copy a finished sample game into a folder the user picks, and open the copy. */
+  async openSample(id: string): Promise<void> {
+    await this.guard('Opening the sample', async () => {
+      const parent = await this.chooseParentFolder();
+      if (!parent) return;
+      const dir = await api().samples.copy(id, parent);
+      await this.openLoaded(await openProject(realFs, dir));
+    });
+  }
+
   async openProjectDialog(): Promise<void> {
     await this.guard('Opening the project', async () => {
       const dir = await api().chooseFolder('Open a Tilewright project folder');
@@ -745,7 +755,7 @@ class AppStore {
     if (!p) return [];
     await this.flushStory().catch(() => undefined);
     const { studio } = await import('../studio/store');
-    const problems = await checkProject(realFs, p.dir, p.project, this.prefabs, this.story, new Set(studio.assets.keys()));
+    const problems = await checkProject(realFs, p.dir, p.project, this.prefabs, this.story, new Set(studio.assets.keys()), new Set(studio.sounds.map((s) => s.name)));
     this.set({ projectCheck: { problems, at: Date.now() } });
     return problems;
   }

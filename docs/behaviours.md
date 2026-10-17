@@ -148,6 +148,8 @@ Press the Attack button (J) to swing in the direction you face, hurting enemies 
 | Recovery (seconds) | `cooldown` | number | 0.3 | 0 to 3 |
 | Knockback (cells per second) | `knockback` | number | 7 | 0 to 20 |
 | Hurts | `hurts` | select | "enemies" | `enemies`, `anything`, `player` |
+| Freeze on a hit (seconds) | `hitStop` | number | 0.05 | 0 to 0.2 |
+| Screen shake on a hit (pixels) | `shake` | number | 2 | 0 to 14 |
 
 ## Light
 

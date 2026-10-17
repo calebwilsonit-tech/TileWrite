@@ -55,6 +55,16 @@ Short, step-by-step ways to make common things. Names in **bold** are buttons, p
 1. **+ Scene** adds a scene; build it and give it a **Marker** named, say, "Cave entrance".
 2. In the first scene place a **Scene portal**; set its scene (`scenes/cave.scene.json`) and *Appear at* "Cave entrance". Add a portal back the other way. Items, flags, lit lanterns and health come along.
 
+## Music for a room
+1. **Assets -> Add a sound file...** and pick a music file (OGG keeps it small).
+2. Draw a **Region** over the room; in the Inspector type the file's name in **Music** (the box suggests your files).
+3. Play: walking in fades the music in. A second room with different music crossfades when you cross over. More in [sound-and-effects.md](sound-and-effects.md).
+
+## A door that slams open with a bang
+1. Wire a lever to a gate as in the first recipe.
+2. **Events panel**: *When the lever is pulled*, do **Shake the screen** (4 pixels), **Burst of sparks, dust or glow** (kind: dust, at the gate) and **Play a sound** ("thud").
+3. For a weapon that feels heavier, raise the Melee Attack's **Freeze on a hit** and **Screen shake on a hit**.
+
 ## Reuse an object (prefabs)
 1. Select an object and press **Make a prefab from this object...**, give it a name.
 2. Place it from the **Place** tool's "Your prefabs" group. Change the prefab and every copy follows, except for settings you changed on a copy.

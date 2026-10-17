@@ -1,5 +1,8 @@
-import {
+﻿import {
   C,
+  addImpact,
+  emitFx,
+  requestHitStop,
   screenIntentToGrid,
   teleportBody,
   type Body,
@@ -99,6 +102,10 @@ export interface DamageOptions {
   knockback?: number;
   /** Hurts even during the invulnerable moments after a hit (falls). */
   ignoreIframes?: boolean;
+  /** Seconds the world holds still on impact (default: a short hold when the player is hurt, none otherwise). */
+  hitStop?: number;
+  /** Pixels of screen shake on impact (default: a knock when the player is hurt, none otherwise). */
+  shake?: number;
 }
 
 /** Hurt an object. Returns true if it took the damage (false if it was invulnerable, dead or has no Health). */
@@ -121,7 +128,20 @@ export function damage(ctx: SimContext, target: Entity, amount: number, opts: Da
     st.knock = { vx: (dx / len) * opts.knockback, vy: (dy / len) * opts.knockback, t: 0.16 };
   }
   ctx.events.emit('damaged', { entity: target.id, amount, hp: st.hp, source: opts.source?.id });
+  hitFeel(ctx, target, opts);
   return true;
+}
+
+/** The cosmetic side of a hit: a freeze frame, a knock of the screen, sparks and a sound. None of it touches the game's state. */
+function hitFeel(ctx: SimContext, target: Entity, opts: DamageOptions): void {
+  const isPlayer = teamOf(target) === 'player';
+  const stop = opts.hitStop ?? (isPlayer ? 0.07 : 0);
+  const shake = opts.shake ?? (isPlayer ? 5 : 0);
+  if (stop > 0) requestHitStop(ctx.runtime, Math.round(stop * 60));
+  if (shake > 0) addImpact(ctx.runtime, shake);
+  const t = target.get<TransformIso>(C.Transform);
+  if (t) emitFx(ctx.runtime, { kind: 'burst', preset: isPlayer ? 'spark' : 'hit', x: t.x, y: t.y, h: t.h });
+  emitFx(ctx.runtime, { kind: 'sound', name: isPlayer ? 'hurt' : 'hit' });
 }
 
 export function heal(ctx: SimContext, target: Entity, amount: number): void {
@@ -140,7 +160,7 @@ export function grantInvulnerability(e: Entity, seconds: number): void {
   st.iframes = Math.max(st.iframes, seconds);
 }
 
-const hearts = (hp: number, max: number): string => '♥'.repeat(Math.max(0, Math.ceil(hp))) + '♡'.repeat(Math.max(0, Math.ceil(max) - Math.ceil(hp)));
+const hearts = (hp: number, max: number): string => 'â™¥'.repeat(Math.max(0, Math.ceil(hp))) + 'â™¡'.repeat(Math.max(0, Math.ceil(max) - Math.ceil(hp)));
 
 export const health = defineBehavior<Health>({
   id: 'health',
@@ -227,6 +247,8 @@ export const health = defineBehavior<Health>({
     if (st.hp <= 0 && !st.dead) {
       st.dead = true;
       ctx.events.emit('died', { entity: e.id });
+      emitFx(ctx.runtime, { kind: 'burst', preset: 'puff', x: t.x, y: t.y, h: t.h });
+      emitFx(ctx.runtime, { kind: 'sound', name: 'defeat' });
       if (s.onDeath === 'remove') {
         setOutput(e, 'dead', true);
         ctx.world.destroy(e);
@@ -348,6 +370,10 @@ export interface MeleeAttack {
   cooldown: number;
   knockback: number;
   hurts: Hurts;
+  /** Seconds the world holds still when the swing connects. */
+  hitStop: number;
+  /** Pixels the screen shakes when the swing connects. */
+  shake: number;
 }
 
 interface MeleeState {
@@ -373,7 +399,7 @@ export const meleeAttack = defineBehavior<MeleeAttack>({
   category: 'Combat',
   description: 'Press the Attack button (J) to swing in the direction you face, hurting enemies in front of you. A short wind-up and recovery keep it fair.',
   phase: 'control',
-  defaults: { damage: 1, range: 1.4, arc: 120, windup: 0.08, active: 0.16, cooldown: 0.3, knockback: 7, hurts: 'enemies' },
+  defaults: { damage: 1, range: 1.4, arc: 120, windup: 0.08, active: 0.16, cooldown: 0.3, knockback: 7, hurts: 'enemies', hitStop: 0.05, shake: 2 },
   fields: [
     { key: 'damage', label: 'Damage', type: 'number', min: 0, max: 99, step: 1 },
     { key: 'range', label: 'Reach (cells)', type: 'number', min: 0.5, max: 6, step: 0.1 },
@@ -392,6 +418,8 @@ export const meleeAttack = defineBehavior<MeleeAttack>({
         { value: 'player', label: 'The player' },
       ],
     },
+    { key: 'hitStop', label: 'Freeze on a hit (seconds)', type: 'number', min: 0, max: 0.2, step: 0.01 },
+    { key: 'shake', label: 'Screen shake on a hit (pixels)', type: 'number', min: 0, max: 14, step: 0.5 },
   ],
   inputs: [],
   outputs: [],
@@ -424,7 +452,7 @@ export const meleeAttack = defineBehavior<MeleeAttack>({
           if (Math.abs(ot.h - t.h) > 1.2) continue;
           if (swingHits(t, ot.x, ot.y, body(o)?.radius ?? 0.3, s.range, s.arc)) {
             st.hit.push(o.id);
-            if (damage(ctx, o, s.damage * aiFlags(e).damageScale, { source: e, knockback: s.knockback })) ctx.events.emit('hit', { entity: e.id, target: o.id });
+            if (damage(ctx, o, s.damage * aiFlags(e).damageScale, { source: e, knockback: s.knockback, hitStop: s.hitStop, shake: s.shake })) ctx.events.emit('hit', { entity: e.id, target: o.id });
           }
         }
         if (st.t <= 0) {

@@ -1,6 +1,6 @@
 # Tilewright documentation
 
-Start with the tutorial in the app (the project screen's **Take the tutorial** button, or **Commands -> Start the tutorial**): in about ten minutes you build a small puzzle room without writing code.
+Start with the tutorial in the app (the project screen's **Take the tutorial** button, or **Commands -> Start the tutorial**): in about ten minutes you build a small puzzle room without writing code. To see what a whole game looks like, open the finished sample from the project screen (**See a finished game**); it is a copy you can change.
 
 | If you want to... | Read |
 | --- | --- |
@@ -13,6 +13,7 @@ Start with the tutorial in the app (the project screen's **Take the tutorial** b
 | Enemies, stealth, bosses | [ai-and-combat.md](ai-and-combat.md) |
 | Conversations, cutscenes, items, saves, menus | [story-systems.md](story-systems.md) |
 | Draw and animate sprites | [sprite-studio.md](sprite-studio.md) |
+| Add sounds and music, hit shake, sparks | [sound-and-effects.md](sound-and-effects.md) |
 | Write scripts (TypeScript), breakpoints, watch | [code-window.md](code-window.md) |
 | Check a level, use the playbot, read crash reports | [checks-and-playbot.md](checks-and-playbot.md) |
 | Use Claude inside the editor | [assistant.md](assistant.md) |

@@ -9,4 +9,5 @@ export const assetFs: AssetFs = {
   remove: (f) => api().fs.remove(f),
   list: (d) => api().fs.list(d),
   writeBinary: (f, b) => api().fs.writeBinary(f, b),
+  readBinary: (f) => api().fs.readBinary(f),
 };

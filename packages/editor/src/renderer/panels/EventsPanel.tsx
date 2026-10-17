@@ -17,6 +17,8 @@ import { store, useApp } from '../app/store';
 import { storyVariables } from '../model/story-vars';
 import { assistant } from '../assistant/store';
 import { CheckField, NumberField, SelectField, TextField } from './fields';
+import { SoundField } from './SoundField';
+import { studio } from '../studio/store';
 
 type Rows = EventRow[];
 
@@ -79,6 +81,8 @@ function ParamEditor({ spec, value, onChange, testId, facts, inLoop }: { spec: P
     }
     case 'prefab':
       return <SelectField<string> testId={testId} label={spec.label} value={String(value ?? '')} options={[{ value: '', label: facts.prefabs.length ? '(choose a prefab)' : '(no prefabs yet)' }, ...facts.prefabs.map((p) => ({ value: p, label: p }))]} onChange={onChange} />;
+    case 'sound':
+      return <SoundField testId={testId} label={spec.label} value={String(value ?? '')} onCommit={onChange} />;
     case 'action':
       return <SelectField<string> testId={testId} label={spec.label} value={String(value ?? '')} options={Object.keys(DEFAULT_INPUT_MAP).map((a) => ({ value: a, label: a }))} onChange={onChange} />;
     case 'variable':
@@ -278,7 +282,7 @@ export function EventsPanel() {
     fn(rows);
     doc.setEvents(label, rows);
   };
-  const problems = checkSheet(doc.events, { entityIds: new Set(doc.entities.map((e) => e.id)), tags: new Set(facts.tags), variables: new Set(doc.variables.map((v) => v.name)), prefabs: new Set(facts.prefabs), storyVariables: storyVariables(store.story.dialogues, store.story.cutscenes) }, names);
+  const problems = checkSheet(doc.events, { entityIds: new Set(doc.entities.map((e) => e.id)), tags: new Set(facts.tags), variables: new Set(doc.variables.map((v) => v.name)), prefabs: new Set(facts.prefabs), storyVariables: storyVariables(store.story.dialogues, store.story.cutscenes), sounds: new Set(studio.sounds.map((s) => s.name)) }, names);
 
   return (
     <div className="panel events-panel" data-testid="events-panel">

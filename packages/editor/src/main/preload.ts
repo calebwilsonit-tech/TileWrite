@@ -58,6 +58,10 @@ contextBridge.exposeInMainWorld('tilewright', {
       return () => ipcRenderer.removeListener('export:progress', l);
     },
   },
+  samples: {
+    list: () => invoke<{ id: string; name: string }[]>('sample:list'),
+    copy: (id: string, parentDir: string) => invoke<string>('sample:copy', id, parentDir),
+  },
   recent: {
     list: () => invoke<{ dir: string; name: string; opened: number }[]>('recent:list'),
     add: (dir: string, name: string) => invoke<void>('recent:add', dir, name),

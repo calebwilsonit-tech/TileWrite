@@ -1,5 +1,5 @@
 import { FixedTimestep, TICK_DT } from './core/timestep';
-import type { Simulation } from './core/simulation';
+import type { FxEvent, Simulation } from './core/simulation';
 import { gridToScreen } from './iso/math';
 import { InputMap, InputRecorder, type ActionSnapshot, type RawInput } from './input/input';
 import { IsoRenderer } from './render/iso-renderer';
@@ -16,6 +16,8 @@ export interface RunnerOptions {
   follow?: EntityId;
   /** Called after every simulation step. */
   onTick?: (sim: Simulation) => void;
+  /** Called for each sound or music request the simulation made this tick (pictures are drawn by the runner). */
+  onFx?: (fx: FxEvent) => void;
   /**
    * Called if a system throws. The runner pauses itself first, so a bug never kills the page
    * or spams errors every frame; the editor shows the message in the Problems panel.
@@ -34,6 +36,10 @@ export class GameRunner {
   follow: EntityId | undefined;
   /** Apply screen shake from the simulation (the player can turn it off). */
   shakeEnabled = true;
+  /** Hold the world still for a few frames after a heavy hit (turned off by the reduce-motion setting). */
+  hitStopEnabled = true;
+  /** Ticks of hit-stop still to wait out. */
+  holdTicks = 0;
   private baseZoom: number | null = null;
   recorder: InputRecorder | null = null;
   /** Set when a system threw; cleared by `resume()`. */
@@ -59,7 +65,13 @@ export class GameRunner {
       this.last = now;
       if (!this.paused) {
         const steps = this.timestep.advance(elapsed);
-        for (let i = 0; i < steps && !this.paused; i++) this.stepOnce();
+        for (let i = 0; i < steps && !this.paused; i++) {
+          if (this.holdTicks > 0) {
+            this.holdTicks--; // hit-stop: the world holds still for a few frames (the picture, sparks and shake carry on)
+            continue;
+          }
+          this.stepOnce();
+        }
       }
       this.draw();
       this.raf = requestAnimationFrame(frame);
@@ -105,13 +117,30 @@ export class GameRunner {
         cam.zoom = this.baseZoom;
         this.baseZoom = null;
       }
-      this.o.renderer.shake = this.shakeEnabled ? view.shake : 0;
+      this.o.renderer.shake = this.shakeEnabled ? Math.max(view.shake, view.impact) : 0;
+      this.drainFx();
+      const rt = this.o.sim.runtime;
+      if (rt.hitStop > 0) {
+        if (this.hitStopEnabled) this.holdTicks = Math.max(this.holdTicks, rt.hitStop);
+        rt.hitStop = 0;
+      }
       cam.update(TICK_DT);
       this.o.onTick?.(this.o.sim);
     } catch (error) {
       this.failed = error;
       this.paused = true;
       this.o.onError?.(error, this.o.sim);
+    }
+  }
+
+  /** Show this tick's pictures and hand the sounds to the host. */
+  private drainFx(): void {
+    const fx = this.o.sim.runtime.fx;
+    if (fx.length === 0) return;
+    const queued = fx.splice(0, fx.length);
+    for (const f of queued) {
+      if (f.kind === 'burst') this.o.renderer.particles.burst(f.preset, f.x, f.y, f.h, f.color, f.count);
+      else this.o.onFx?.(f);
     }
   }
 

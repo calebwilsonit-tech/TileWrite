@@ -22,7 +22,7 @@ Panels dock, tab, split and float: drag a tab. The layout is remembered; **Comma
 | History | The undo list. |
 | Problems | Mistakes found in the scene, in plain English, with **Go to**. |
 | Console | Messages from the editor and from the game while it runs. |
-| Assets | The project's sprites, with search, tags and "find where it is used" (see [sprite-studio.md](sprite-studio.md)). |
+| Assets | The project's sprites, with search, tags and "find where it is used" (see [sprite-studio.md](sprite-studio.md)); its prefabs; and its sounds and music (see [sound-and-effects.md](sound-and-effects.md)). |
 | Events | The scene's event sheet: rows that read like sentences, variables, and a "Convert to code" button (see [logic.md](logic.md)). |
 | Story | Items, conversations (a graph of lines, choices, flags and gifts) and cutscenes (see [story-systems.md](story-systems.md)). |
 | Playbot | Lets a bot play the open scene with only a player's buttons and reports how it went; keeps and replays playthroughs (see [checks-and-playbot.md](checks-and-playbot.md)). |

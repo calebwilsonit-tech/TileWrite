@@ -26,6 +26,7 @@ export const CutsceneStepSchema = z.discriminatedUnion('type', [
   z.object({ ...common, type: z.literal('animation'), who: z.string().default('player'), clip: z.string().default('') }),
   z.object({ ...common, type: z.literal('shake'), amount: z.number().min(0).default(6), seconds: z.number().min(0).default(0.4) }),
   z.object({ ...common, type: z.literal('sound'), name: z.string().default('') }),
+  z.object({ ...common, type: z.literal('music'), name: z.string().default('') }),
   z.object({ ...common, type: z.literal('setVariable'), name: z.string().default(''), value: VariableValueSchema.default(1) }),
   z.object({ ...common, type: z.literal('give'), item: z.string().default(''), amount: z.number().default(1) }),
   z.object({ ...common, type: z.literal('message'), text: z.string().default('') }),
@@ -58,6 +59,7 @@ export const CUTSCENE_STEP_LABELS: Record<CutsceneStep['type'], string> = {
   animation: 'Play an animation',
   shake: 'Shake the screen',
   sound: 'Play a sound',
+  music: 'Change the music',
   setVariable: 'Set a variable',
   give: 'Give an item',
   message: 'Show a message',
@@ -70,10 +72,12 @@ export interface ViewState {
   cameraZoom: number | null;
   /** Pixels of screen shake. */
   shake: number;
+  /** Pixels of quick shake from hits and bangs; fades by itself (see `Simulation.step`). */
+  impact: number;
   fade: { alpha: number; color: number };
 }
 
-export const newView = (): ViewState => ({ cameraTarget: null, cameraZoom: null, shake: 0, fade: { alpha: 0, color: 0 } });
+export const newView = (): ViewState => ({ cameraTarget: null, cameraZoom: null, shake: 0, impact: 0, fade: { alpha: 0, color: 0 } });
 
 /** A cutscene that is playing right now. */
 export interface CutsceneState {
@@ -100,7 +104,7 @@ export interface CutsceneProblem {
 }
 
 /** Plain-English problems in a cutscene. */
-export function checkCutscene(c: CutsceneData, known: { dialogues: ReadonlySet<string>; items: ReadonlySet<string> }): CutsceneProblem[] {
+export function checkCutscene(c: CutsceneData, known: { dialogues: ReadonlySet<string>; items: ReadonlySet<string>; sounds?: ReadonlySet<string> }): CutsceneProblem[] {
   const out: CutsceneProblem[] = [];
   if (c.steps.length === 0) out.push({ text: `The cutscene "${c.name}" has no steps yet.` });
   const seen = new Set<string>();
@@ -112,6 +116,8 @@ export function checkCutscene(c: CutsceneData, known: { dialogues: ReadonlySet<s
       if (s.dialogue === '') out.push({ step: s.id, text: `${label} has no dialogue chosen.` });
       else if (!known.dialogues.has(s.dialogue)) out.push({ step: s.id, text: `${label} uses the dialogue "${s.dialogue}", which does not exist.` });
     }
+    if ((s.type === 'sound' || s.type === 'music') && s.name !== '' && known.sounds && !known.sounds.has(s.name)) out.push({ step: s.id, text: ` uses the sound "${s.name}", which is not in Assets -> Sounds.` });
+    if (s.type === 'sound' && s.name === '') out.push({ step: s.id, text: ` has no sound chosen.` });
     if (s.type === 'give' && !known.items.has(s.item)) out.push({ step: s.id, text: `${label} gives "${s.item}", which is not in your items list.` });
     if (s.type === 'move' && s.to === '') out.push({ step: s.id, text: `${label} does not say where to walk.` });
     if (s.type === 'face' && s.toward === '') out.push({ step: s.id, text: `${label} does not say what to turn towards.` });

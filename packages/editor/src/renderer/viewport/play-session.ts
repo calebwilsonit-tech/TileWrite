@@ -1,5 +1,6 @@
 import { Container, Graphics } from 'pixi.js';
 import {
+  AudioEngine,
   C,
   DEFAULT_INPUT_MAP,
   DomInputSource,
@@ -22,6 +23,7 @@ import {
   saveSettings,
   serializeGame,
   teleportBody,
+  type FxEvent,
   type GameSettings,
   type InputRecording,
   type PrefabData,
@@ -45,6 +47,7 @@ import { drawCone, drawFootprint, drawLightRadius, drawPath, shapesOf } from './
 import { assetFs } from '../project/assetFs';
 import { joinPath } from '../project/api';
 import { loadScene as loadSceneFile } from '../project/io';
+import { loadSounds } from '../studio/audio';
 import type { CutsceneData, DialogueData, ItemData } from '@tilewright/runtime';
 
 export interface PlayOptions {
@@ -86,6 +89,11 @@ export class PlaySession {
   readonly runner: GameRunner;
   readonly ui: GameUi;
   readonly inputMap = new InputMap(DEFAULT_INPUT_MAP);
+  /** Sounds and music (files in `assets/audio`); silent when there are none. */
+  readonly audio = new AudioEngine();
+  /** The music asked for by the room the player stands in; '' when the room has none. */
+  private roomMusic: string | null = null;
+  private readonly unlockAudio = (): void => void this.audio.unlock();
   settings: GameSettings;
   private readonly saves: SaveManager;
   private scenePath: string;
@@ -156,9 +164,17 @@ export class PlaySession {
       readInput: () => this.source.read(),
       follow: player.id,
       onTick: () => this.afterTick(),
+      onFx: (fx) => this.onFx(fx),
       onError: (e) => o.onError(e),
     });
-    this.runner.shakeEnabled = this.settings.screenShake;
+    this.applyFeelSettings();
+    this.applyVolumes();
+    window.addEventListener('keydown', this.unlockAudio);
+    window.addEventListener('pointerdown', this.unlockAudio);
+    void loadSounds(assetFs, o.projectDir, this.audio).then((problems) => {
+      for (const p of problems) o.notify('warn', p);
+      this.roomMusic = null; // start the room's music now that it can play
+    });
     this.debugLayer.zIndex = 9e8;
     this.debugLayer.addChild(this.debugG);
     this.debugLayer.visible = false;
@@ -178,6 +194,35 @@ export class PlaySession {
     this.raf = requestAnimationFrame(loop);
   }
 
+  // ---------- sound and effects ----------
+
+  private applyVolumes(): void {
+    const s = this.settings;
+    this.audio.setVolumes({ master: s.master, music: s.music, sfx: s.sfx });
+  }
+
+  /** Screen shake, freeze frames and sparks follow the player's settings and the editor's reduce-motion switch. */
+  private applyFeelSettings(): void {
+    const calm = typeof document !== 'undefined' && document.documentElement.classList.contains('reduce-motion');
+    this.runner.shakeEnabled = this.settings.screenShake && !calm;
+    this.runner.hitStopEnabled = this.settings.screenShake && !calm;
+    this.o.renderer.particles.enabled = !calm;
+  }
+
+  private onFx(fx: FxEvent): void {
+    if (fx.kind === 'sound') this.audio.play(fx.name, fx.volume ?? 1);
+    else if (fx.kind === 'music') this.audio.playMusic(fx.name);
+  }
+
+  /** Music follows the room: leaving a room with music for one without lets the last track keep playing until something else asks. */
+  private followRoomMusic(x: number, y: number): void {
+    const room = this.sim.runtime.regions.find((rg) => rg.music && x >= rg.x && x < rg.x + rg.w && y >= rg.y && y < rg.y + rg.h);
+    const want = room?.music ?? '';
+    if (want === this.roomMusic) return;
+    this.roomMusic = want;
+    if (want) this.audio.playMusic(want, 1.5);
+  }
+
   // ---------- each tick ----------
 
   private afterTick(): void {
@@ -185,6 +230,7 @@ export class PlaySession {
     const player = sim.world.withTag('player')[0];
     const t = player?.get<TransformIso>(C.Transform);
     if (t) {
+      this.followRoomMusic(t.x, t.y);
       const cam = o.renderer.camera;
       const r = sim.runtime.regions.find((rg) => rg.cameraBounds && t.x >= rg.x && t.x < rg.x + rg.w && t.y >= rg.y && t.y < rg.y + rg.h);
       if (r) {
@@ -349,7 +395,8 @@ export class PlaySession {
       bindings: () => effectiveBindings(this.settings),
       changeSettings: (patch) => {
         this.setSettings({ ...this.settings, ...patch });
-        this.runner.shakeEnabled = this.settings.screenShake;
+        this.applyFeelSettings();
+        this.applyVolumes();
       },
       rebind: (action, binding) => {
         const next = rebind(effectiveBindings(this.settings), action, binding);
@@ -413,6 +460,10 @@ export class PlaySession {
     cancelAnimationFrame(this.raf);
     this.runner.stop();
     this.source.dispose();
+    window.removeEventListener('keydown', this.unlockAudio);
+    window.removeEventListener('pointerdown', this.unlockAudio);
+    this.audio.dispose();
+    this.o.renderer.particles.system.clear();
     this.ui.dispose();
     this.o.renderer.shake = 0;
     this.o.renderer.debugDepth = false;

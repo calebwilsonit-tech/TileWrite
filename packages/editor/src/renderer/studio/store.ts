@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react';
-import type { SpriteData } from '@tilewright/runtime';
+import { AudioEngine, type SpriteData } from '@tilewright/runtime';
 import { store } from '../app/store';
 import { assetFs } from '../project/assetFs';
 import { api } from '../project/api';
@@ -15,6 +15,9 @@ import {
   spriteNameProblem,
   type AssetMeta,
 } from './assets';
+import { AUDIO_DIR, deleteSound, importSound, listSounds, type SoundFile } from './audio';
+import { joinPath } from '../project/api';
+import { AUDIO_EXTENSIONS } from '@tilewright/runtime';
 import { SpriteDoc } from './doc';
 
 export type StudioTool = 'pencil' | 'eraser' | 'line' | 'rect' | 'ellipse' | 'fill' | 'picker' | 'select' | 'isobox' | 'origin' | 'hitbox' | 'hurtbox';
@@ -81,6 +84,9 @@ class StudioStore {
   doc: SpriteDoc | null = null;
   assets = new Map<string, SpriteData>();
   meta: AssetMeta = { tags: {} };
+  /** The project's sound and music files. */
+  sounds: SoundFile[] = [];
+  private preview: AudioEngine | null = null;
   private listeners = new Set<Listener>();
   private unsubDoc: (() => void) | null = null;
   private tick: number | null = null;
@@ -107,9 +113,13 @@ class StudioStore {
     this.closeSprite();
     if (!dir) {
       this.assets = new Map();
+      this.sounds = [];
       this.set({ names: [], problems: [], assetsVersion: this.state.assetsVersion + 1 });
       return;
     }
+    this.sounds = await listSounds(assetFs, dir);
+    this.preview?.dispose();
+    this.preview = null;
     const { sprites, problems } = await loadAllSprites(assetFs, dir);
     this.assets = sprites;
     this.meta = await loadMeta(assetFs, dir);
@@ -232,6 +242,49 @@ class StudioStore {
     if (clean.length === 0) delete this.meta.tags[name];
     await saveMeta(assetFs, dir, this.meta);
     this.set({ assetsVersion: this.state.assetsVersion + 1 });
+  }
+
+  /** Pick a sound file and add it to the project. */
+  async importSoundFile(): Promise<string | null> {
+    const dir = this.projectDir();
+    if (!dir) return null;
+    const result = await store.guard('Importing the sound', async () => {
+      const file = await api().importFile('Add a sound or music file', AUDIO_EXTENSIONS);
+      if (!file) return null;
+      const added = await importSound(assetFs, dir, file);
+      this.sounds = await listSounds(assetFs, dir);
+      this.set({ assetsVersion: this.state.assetsVersion + 1 });
+      store.notify('info', `Added the sound "${added.name}". Use that name in a Play a sound action, a cutscene or a region's music.`);
+      return added.name;
+    });
+    return result ?? null;
+  }
+
+  async removeSound(file: string): Promise<void> {
+    const dir = this.projectDir();
+    if (!dir) return;
+    await store.guard('Deleting the sound', async () => {
+      await deleteSound(assetFs, dir, file);
+      this.sounds = await listSounds(assetFs, dir);
+      this.preview?.dispose();
+      this.preview = null;
+      this.set({ assetsVersion: this.state.assetsVersion + 1 });
+    });
+  }
+
+  /** Play a sound once so you can hear what it is (the editor's own player, not the game's). */
+  async previewSound(file: SoundFile): Promise<void> {
+    const dir = this.projectDir();
+    if (!dir) return;
+    await store.guard('Playing the sound', async () => {
+      this.preview ??= new AudioEngine();
+      await this.preview.unlock();
+      if (!this.preview.has(file.name)) {
+        const ok = await this.preview.load(file.name, await assetFs.readBinary(joinPath(dir, AUDIO_DIR, file.file)));
+        if (!ok) throw new Error(this.preview.problems.splice(0).join(' ') || 'That sound could not be played.');
+      }
+      this.preview.play(file.name);
+    });
   }
 
   isDirty(): boolean {

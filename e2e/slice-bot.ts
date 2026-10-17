@@ -15,6 +15,7 @@ const nodeFs: AssetFs = {
     await fs.promises.writeFile(f, t, 'utf8');
   },
   writeBinary: async (f, b) => fs.promises.writeFile(f, b),
+  readBinary: async (f) => new Uint8Array(await fs.promises.readFile(f)),
   exists: async (f) => fs.existsSync(f),
   remove: async (f) => fs.promises.rm(f, { force: true }),
   list: async (d) => (await fs.promises.readdir(d, { withFileTypes: true })).map((e) => ({ name: e.name, dir: e.isDirectory() })),

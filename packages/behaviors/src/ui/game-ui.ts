@@ -435,7 +435,7 @@ export class GameUi {
           sim.runtime.difficulty = next;
         };
         rows.push({ label: 'Difficulty', detail: set.difficulty, adjust: cycle, run: () => cycle(1), testId: 'set-difficulty' });
-        rows.push({ label: 'Screen shake', detail: set.screenShake ? 'on' : 'off', run: () => h.changeSettings({ screenShake: !set.screenShake }), adjust: () => h.changeSettings({ screenShake: !set.screenShake }), testId: 'set-shake' });
+        rows.push({ label: 'Screen shake and hit freeze', detail: set.screenShake ? 'on' : 'off', run: () => h.changeSettings({ screenShake: !set.screenShake }), adjust: () => h.changeSettings({ screenShake: !set.screenShake }), testId: 'set-shake' });
         rows.push({ label: 'Controls', run: () => this.go('controls'), testId: 'set-controls' });
         break;
       }

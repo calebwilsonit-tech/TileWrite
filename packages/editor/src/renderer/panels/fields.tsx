@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 
 /** Text input that only commits on Enter or blur, so typing never creates a flood of undo steps. */
-export function TextField({ label, value, onCommit, testId, placeholder }: { label: string; value: string; onCommit(v: string): void; testId?: string; placeholder?: string }) {
+export function TextField({ label, value, onCommit, testId, placeholder, suggestions }: { label: string; value: string; onCommit(v: string): void; testId?: string; placeholder?: string; suggestions?: readonly string[] }) {
   const [draft, setDraft] = useState(value);
+  const listId = useId();
   useEffect(() => setDraft(value), [value]);
   const commit = (): void => {
     if (draft !== value) onCommit(draft);
@@ -14,6 +15,7 @@ export function TextField({ label, value, onCommit, testId, placeholder }: { lab
         data-testid={testId}
         value={draft}
         placeholder={placeholder}
+        list={suggestions ? listId : undefined}
         onChange={(e) => setDraft(e.target.value)}
         onBlur={commit}
         onKeyDown={(e) => {
@@ -24,6 +26,13 @@ export function TextField({ label, value, onCommit, testId, placeholder }: { lab
           }
         }}
       />
+      {suggestions && (
+        <datalist id={listId}>
+          {suggestions.map((s) => (
+            <option key={s} value={s} />
+          ))}
+        </datalist>
+      )}
     </label>
   );
 }

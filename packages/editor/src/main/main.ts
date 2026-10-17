@@ -4,6 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { registerAssistant } from './assistant';
 import { registerExport } from './export';
+import { registerSamples } from './samples';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 
@@ -46,6 +47,7 @@ async function readJsonFile<T>(file: string, fallback: T): Promise<T> {
 function registerIpc(): void {
   registerAssistant();
   registerExport({ resolveInside, distDir: path.join(here, '..') });
+  registerSamples({ resolveInside, distDir: path.join(here, '..') });
   ipcMain.handle('app:info', () => ({
     version: app.getVersion(),
     userData: app.getPath('userData'),
@@ -85,7 +87,7 @@ function registerIpc(): void {
   ipcMain.handle('dialog:importFile', async (_e, title: string, extensions: string[]) => {
     let file: string | undefined = process.env.TILEWRIGHT_TEST_IMPORT;
     if (!file) {
-      const r = await dialog.showOpenDialog({ title, properties: ['openFile'], filters: [{ name: 'Images and sprites', extensions }] });
+      const r = await dialog.showOpenDialog({ title, properties: ['openFile'], filters: [{ name: 'Files', extensions }] });
       if (r.canceled || r.filePaths.length === 0) return null;
       file = r.filePaths[0]!;
     }
@@ -163,6 +165,7 @@ function createWindow(): BrowserWindow {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
+      autoplayPolicy: 'no-user-gesture-required',
     },
   });
 

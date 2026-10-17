@@ -67,6 +67,34 @@ export interface SceneRuntime {
   difficulty: Difficulty;
   /** Scene ids of the objects tagged persistent when the scene loaded (saves track which of them are gone). */
   persistentIds: string[];
+  /** Ticks of "hit-stop" the game host should hold the world for after a heavy hit (the host reads it and sets it back to 0; the simulation itself ignores it). */
+  hitStop: number;
+  /** Pictures and sounds for the host to show (sparks, dust, a sound or music change). Never read by game logic. */
+  fx: FxEvent[];
+}
+
+/** A cosmetic request from a behaviour or event row. The host (editor, exported game, or nobody in a headless run) shows it. */
+export type FxEvent =
+  | { kind: 'burst'; preset: string; x: number; y: number; h: number; color?: number; count?: number }
+  | { kind: 'sound'; name: string; volume?: number }
+  | { kind: 'music'; name: string };
+
+const FX_CAP = 128;
+
+/** Queue a cosmetic effect. A headless run never drains the queue, so it is capped. */
+export function emitFx(runtime: SceneRuntime, fx: FxEvent): void {
+  runtime.fx.push(fx);
+  if (runtime.fx.length > FX_CAP) runtime.fx.splice(0, runtime.fx.length - FX_CAP);
+}
+
+/** Hold the world still for `ticks` ticks (never shortens a longer hold). */
+export function requestHitStop(runtime: SceneRuntime, ticks: number): void {
+  runtime.hitStop = Math.max(runtime.hitStop, Math.min(12, Math.round(ticks)));
+}
+
+/** Add a short, fading screen shake (pixels). */
+export function addImpact(runtime: SceneRuntime, pixels: number): void {
+  runtime.view.impact = Math.min(14, Math.max(runtime.view.impact, pixels));
 }
 
 /**
@@ -122,6 +150,8 @@ export function newSceneRuntime(): SceneRuntime {
     menuOpen: false,
     difficulty: 'normal',
     persistentIds: [],
+    hitStop: 0,
+    fx: [],
   };
 }
 
@@ -167,6 +197,9 @@ export class Simulation {
   /** Run one fixed step with the given actions held this tick. */
   step(snapshot: ActionSnapshot = {}): void {
     const modal = this.modal;
+    // (hit-stop is not here: the game host just stops calling `step` for a few frames, so the simulation stays the same everywhere)
+    const v = this.runtime.view;
+    if (v.impact > 0) v.impact = v.impact < 0.15 ? 0 : v.impact * 0.82;
     // The player's controls: nothing while something else has them, and a button held through the end of that
     // moment (the one that closed a conversation) stays ignored until it is released, so it cannot fire twice.
     let gameplay: ActionSnapshot = {};

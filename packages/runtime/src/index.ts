@@ -16,6 +16,8 @@ export * from './lighting/lighting';
 export * from './render/camera';
 export * from './render/depth';
 export * from './render/iso-renderer';
+export * from './render/particle-system';
+export * from './audio/engine';
 export * from './runner';
 export * from './sprites';
 export * from './anim';

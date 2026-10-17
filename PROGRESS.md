@@ -1,9 +1,9 @@
-﻿# Tilewright progress
+# Tilewright progress
 
 Boxes are ticked only when the milestone's tests pass and the sample has been played.
 Spec: `ENGINE_BUILD_PROMPT.md`. Read `DECISIONS.md` and `KNOWN_ISSUES.md` before continuing.
 
-**Next up:** M14 polish - the interactive first-run tutorial (build a room with a plate and a gate in under 15 minutes), docs for every panel/behaviour/recipe, templates, a performance pass, accessibility (font scaling, colour-blind-safe overlays, everything remappable), and the engine features still owed (audio engine, particles and hit-stop, autotiling, hot reload / separate game window, vector drawing, visual state machines, dialogue graph canvas, localization). Then the final summary in PROGRESS.md (what was built, what is weak, what next).
+**Next up:** M14 is nearly done (tutorial, docs, accessibility, golden pictures, sound and hit feel, the sample game). What is left is the list of engine features owed since earlier milestones (autotiling, hot reload / separate game window, vector drawing, visual state machines, dialogue graph canvas, localization), a full green run, and the final summary in this file (what was built, what is weak, what next).
 
 ## Milestones
 
@@ -127,7 +127,8 @@ Done and covered by tests (unit: `packages/runtime/src/story`, `packages/behavio
 
 Deferred:
 - [ ] Dialogue node-graph canvas and a visual cutscene timeline; localization string tables
-- [ ] Audio engine (volumes are stored only), video settings, minigames, cosmetic skins, hit-stop, drawn world map
+- [x] Audio engine and hit-stop (M14)
+- [ ] Video settings, minigames, cosmetic skins, drawn world map
 
 ## M14 checklist (in progress)
 
@@ -135,9 +136,10 @@ Deferred:
 - [x] Docs: an index (`docs/README.md`), a reference page for every behaviour and every event block generated from the engine and compared by a test, recipes for the common things, a panel manual (a test checks every panel is described and every link resolves)
 - [x] Accessibility: text size 100-200%, colour-blind-safe overlay palette (checked by a test simulating protanopia, deuteranopia and tritanopia), less motion, everything remappable (`e2e/m14-accessibility.spec.ts`, `docs/accessibility.md`)
 - [x] Golden-picture tests of the finished hub and dungeon (Playwright snapshots), determinism (three replays of the slice end in identical saved state, equal to the bot's own run), speed (about 1 ms of game logic per step in a headless replay, 60 fps and 0.3 ms per step in the real window, asserted)
-- [ ] Audio engine, particles, hit-stop, screen shake from combat
-- [ ] Sample project / template of the acceptance slice
-- [ ] Autotiling, hot reload and a separate game window, vector drawing, visual state machine, dialogue graph canvas, localization (owed since earlier milestones)
+- [x] Sound and music (WebAudio engine: named sounds from `assets/audio`, pitch variation, a voice cap, music loops that crossfade, volumes from Settings), region music, event actions and cutscene steps, Assets panel Sounds section with preview, a warning for names that have no file (`docs/sound-and-effects.md`, `e2e/m14-feel.spec.ts`)
+- [x] Hit feel: hit-stop (the game window pauses stepping, so the simulation, bot and replays are unchanged), screen shake from hits, seven particle presets, event actions (burst, shake, freeze), Melee Attack settings, switched off by Settings or Reduce motion
+- [x] Sample game: the finished slice ships as 	emplates/last-storytender (project screen **See a finished game**, copied into a chosen folder; checked and replayed by e2e/m14-sample.spec.ts)
+- [ ] Autotiling, hot reload and a separate game window, vector drawing, visual state machine, dialogue graph canvas, localization, video settings, minigames, skins (owed since earlier milestones; see KNOWN_ISSUES)
 
 ## M13 checklist
 

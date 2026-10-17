@@ -287,6 +287,9 @@ function memoryAssetFs(): AssetFs & { files: Map<string, string> } {
     async write(f, t) {
       files.set(f, t);
     },
+    async readBinary() {
+      return new Uint8Array();
+    },
     async writeBinary() {
       /* unused */
     },

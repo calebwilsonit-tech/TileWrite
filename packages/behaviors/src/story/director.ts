@@ -4,6 +4,7 @@ import {
   advanceDialogue,
   autoSlot,
   chooseDialogue,
+  emitFx,
   facingOfGridDir,
   startDialogue,
   teleportBody,
@@ -213,7 +214,13 @@ function startStep(ctx: SimContext, cs: CutsceneState, step: CutsceneStep, insta
       wait(step.seconds);
       break;
     case 'sound':
-      if (!instant) ctx.events.emit('sound', { name: step.name });
+      if (!instant) {
+        ctx.events.emit('sound', { name: step.name });
+        if (step.name) emitFx(ctx.runtime, { kind: 'sound', name: step.name });
+      }
+      break;
+    case 'music':
+      emitFx(ctx.runtime, { kind: 'music', name: step.name });
       break;
     case 'setVariable':
       ctx.runtime.vars[step.name] = step.value;

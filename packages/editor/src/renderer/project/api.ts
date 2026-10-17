@@ -59,6 +59,10 @@ export interface TilewrightApi {
     build(job: ExportJob): Promise<ExportResult>;
     onProgress(fn: (text: string) => void): () => void;
   };
+  samples: {
+    list(): Promise<{ id: string; name: string }[]>;
+    copy(id: string, parentDir: string): Promise<string>;
+  };
   recent: {
     list(): Promise<{ dir: string; name: string; opened: number }[]>;
     add(dir: string, name: string): Promise<void>;

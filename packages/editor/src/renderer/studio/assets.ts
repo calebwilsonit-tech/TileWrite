@@ -22,6 +22,7 @@ import { UserError, type ProjectFs } from '../project/io';
 export interface AssetFs extends ProjectFs {
   list(dir: string): Promise<{ name: string; dir: boolean }[]>;
   writeBinary(file: string, bytes: Uint8Array): Promise<void>;
+  readBinary(file: string): Promise<Uint8Array>;
 }
 
 export const SPRITE_DIR = 'assets/sprites';

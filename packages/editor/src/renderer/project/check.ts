@@ -44,6 +44,7 @@ export async function checkProject(
   prefabs: ReadonlyMap<string, PrefabData>,
   story: StoryData,
   spriteNames: ReadonlySet<string> = new Set(),
+  soundNames?: ReadonlySet<string>,
 ): Promise<ProjectProblem[]> {
   const out: ProjectProblem[] = [];
   const scenes = new Map<string, SceneData>();
@@ -62,7 +63,7 @@ export async function checkProject(
 
   for (const [path, scene] of scenes) {
     const doc = EditorDoc.fromScene(scene, prefabs);
-    for (const p of validateScene(doc, spriteNames, prefabNames, storyVariables(story.dialogues, story.cutscenes))) {
+    for (const p of validateScene(doc, spriteNames, prefabNames, storyVariables(story.dialogues, story.cutscenes), soundNames)) {
       out.push({ id: `${path}:${p.id}`, severity: p.severity, scene: path, message: p.message, entity: p.target?.kind === 'entity' ? p.target.id : undefined, x: p.target?.x, y: p.target?.y });
     }
     for (const i of [...analyseLevel(scene, prefabs), ...analysePushPuzzles(scene, prefabs)]) {
@@ -117,7 +118,7 @@ export async function checkProject(
 
   const known = { items: itemIds, variables: new Set<string>() };
   for (const [name, d] of story.dialogues) for (const p of checkDialogue(d, known)) out.push({ id: `dialogue:${name}:${p.text}`, severity: 'warning', scene: '', message: `Dialogue "${name}": ${p.text}` });
-  const cknown = { dialogues: new Set(story.dialogues.keys()), items: itemIds };
+  const cknown = { dialogues: new Set(story.dialogues.keys()), items: itemIds, ...(soundNames ? { sounds: soundNames } : {}) };
   for (const [name, c] of story.cutscenes) for (const p of checkCutscene(c, cknown)) out.push({ id: `cutscene:${name}:${p.text}`, severity: 'warning', scene: '', message: `Cutscene "${name}": ${p.text}` });
   return out;
 }

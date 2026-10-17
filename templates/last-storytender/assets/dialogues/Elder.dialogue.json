@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "name": "Elder",
+  "start": "n1",
+  "nodes": [
+    {
+      "id": "n1",
+      "type": "line",
+      "speaker": "Elder",
+      "text": "The old words are broken, storyteller. Will you mend them?",
+      "next": "n2"
+    },
+    {
+      "id": "n2",
+      "type": "choice",
+      "speaker": "",
+      "prompt": "What do you say?",
+      "options": [
+        {
+          "text": "I will.",
+          "next": "n5"
+        },
+        {
+          "text": "Not yet.",
+          "next": "n3"
+        }
+      ]
+    },
+    {
+      "id": "n3",
+      "type": "line",
+      "speaker": "Elder",
+      "text": "Come back when you are ready.",
+      "next": "n4"
+    },
+    {
+      "id": "n4",
+      "type": "end"
+    },
+    {
+      "id": "n5",
+      "type": "set",
+      "variable": "accepted",
+      "op": "set",
+      "value": 1,
+      "next": "n6"
+    },
+    {
+      "id": "n6",
+      "type": "line",
+      "speaker": "Elder",
+      "text": "Then the seal will open. Go with the light."
+    }
+  ]
+}

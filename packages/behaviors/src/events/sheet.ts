@@ -1,6 +1,11 @@
 import {
+  PARTICLE_PRESETS,
+  PARTICLE_PRESET_IDS,
+  addImpact,
   addItem,
   autoSlot,
+  emitFx,
+  requestHitStop,
   itemCount,
   C,
   expandEntities,
@@ -67,7 +72,7 @@ export function describeRef(ref: Ref, names?: Names): string {
 
 // ---------- parameters ----------
 
-export type ParamType = 'number' | 'text' | 'boolean' | 'select' | 'entity' | 'variable' | 'signal' | 'prefab' | 'action';
+export type ParamType = 'number' | 'text' | 'boolean' | 'select' | 'entity' | 'variable' | 'signal' | 'prefab' | 'action' | 'sound';
 
 export interface ParamSpec {
   key: string;
@@ -619,9 +624,54 @@ export const ACTIONS: ActionDef[] = [
     id: 'sound',
     label: 'Play a sound',
     category: 'Basics',
-    params: [{ key: 'name', label: 'Sound', type: 'text', default: '' }],
+    params: [{ key: 'name', label: 'Sound (a file in Assets -> Sounds)', type: 'sound', default: '' }, { key: 'volume', label: 'Volume (0 to 1)', type: 'number', default: 1, min: 0, max: 1, step: 0.1 }],
     describe: (p) => `play the sound "${str(p, 'name')}"`,
-    run: (ctx, p) => void ctx.events.emit('sound', { name: str(p, 'name') }),
+    run(ctx, p) {
+      const name = str(p, 'name');
+      ctx.events.emit('sound', { name });
+      if (name) emitFx(ctx.runtime, { kind: 'sound', name, volume: p.volume === undefined ? 1 : num(p, 'volume') });
+    },
+  },
+  {
+    id: 'music',
+    label: 'Change the music',
+    category: 'Basics',
+    params: [{ key: 'name', label: 'Music (a file in Assets -> Sounds; empty = silence)', type: 'sound', default: '' }],
+    describe: (p) => (str(p, 'name') ? `play the music "${str(p, 'name')}"` : 'fade the music out'),
+    run: (ctx, p) => void emitFx(ctx.runtime, { kind: 'music', name: str(p, 'name') }),
+  },
+  {
+    id: 'particles',
+    label: 'Burst of sparks, dust or glow',
+    category: 'Effects',
+    params: [
+      entityParam('at', 'Where', 'player'),
+      { key: 'effect', label: 'Kind', type: 'select', default: 'spark', options: PARTICLE_PRESET_IDS.map((id) => ({ value: id, label: PARTICLE_PRESETS[id]!.label })) },
+      { key: 'count', label: 'How many (0 = the usual amount)', type: 'number', default: 0, min: 0, max: 80, step: 1 },
+    ],
+    describe: (p, n) => `throw ${PARTICLE_PRESETS[str(p, 'effect')]?.label.toLowerCase() ?? str(p, 'effect')} at ${describeRef(str(p, 'at'), n)}`,
+    run(ctx, p, row) {
+      for (const e of resolveRef(ctx, str(p, 'at'), row.picked)) {
+        const t = e.get<TransformIso>(C.Transform);
+        if (t) emitFx(ctx.runtime, { kind: 'burst', preset: str(p, 'effect'), x: t.x, y: t.y, h: t.h, ...(num(p, 'count') > 0 ? { count: num(p, 'count') } : {}) });
+      }
+    },
+  },
+  {
+    id: 'shake',
+    label: 'Shake the screen',
+    category: 'Effects',
+    params: [{ key: 'pixels', label: 'How hard (pixels)', type: 'number', default: 5, min: 0, max: 14, step: 0.5 }],
+    describe: (p) => `shake the screen (${num(p, 'pixels')} pixels)`,
+    run: (ctx, p) => void addImpact(ctx.runtime, num(p, 'pixels')),
+  },
+  {
+    id: 'hitStop',
+    label: 'Freeze the game for a moment',
+    category: 'Effects',
+    params: [{ key: 'seconds', label: 'Seconds (0.05 is a good hit)', type: 'number', default: 0.08, min: 0, max: 0.2, step: 0.01 }],
+    describe: (p) => `freeze the game for ${num(p, 'seconds')} seconds`,
+    run: (ctx, p) => void requestHitStop(ctx.runtime, Math.round(num(p, 'seconds') * 60)),
   },
 ];
 
@@ -718,6 +768,8 @@ export interface SheetFacts {
   prefabs: ReadonlySet<string>;
   /** Variables that conversations and cutscenes set (so a row may check them without setting them itself). */
   storyVariables?: ReadonlySet<string>;
+  /** Names of the project's sound files; when given, sounds that do not exist are reported. */
+  sounds?: ReadonlySet<string>;
 }
 
 /** Mistakes in a sheet that would stop a row from doing what it says, in plain English. */
@@ -770,6 +822,7 @@ export function checkSheet(rows: readonly EventRow[], facts: SheetFacts, names?:
         for (const p of def.params) {
           if (p.type === 'entity') refOk(str(a.params, p.key), `"${def.label}"`, r.id, loop);
           if (p.type === 'prefab' && str(a.params, p.key) && !facts.prefabs.has(str(a.params, p.key))) out.push({ rowId: r.id, text: `The prefab "${str(a.params, p.key)}" does not exist.` });
+          if (p.type === 'sound' && str(a.params, p.key) && facts.sounds && !facts.sounds.has(str(a.params, p.key))) out.push({ rowId: r.id, text: `The sound "${str(a.params, p.key)}" is not in Assets -> Sounds, so nothing will play.` });
         }
         if (a.type === 'setVariable' && !str(a.params, 'name')) out.push({ rowId: r.id, text: 'An action changes a variable but no variable is chosen.' });
         if (a.type === 'spawn' && !str(a.params, 'prefab')) out.push({ rowId: r.id, text: 'An action creates an object but no prefab is chosen.' });
