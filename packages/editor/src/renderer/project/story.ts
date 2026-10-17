@@ -8,6 +8,13 @@ import {
   type WorldMapData,
   type MinigameData,
   CURRENT_SCHEMA_VERSION,
+  ProjectInputSchema,
+  UiLayoutSchema,
+  completeLayout,
+  defaultUiLayout,
+  emptyProjectInput,
+  type ProjectInput,
+  type UiLayout,
   type SkinData,
   type CutsceneData,
   type DialogueData,
@@ -22,6 +29,8 @@ export const ITEMS_FILE = 'assets/items.json';
 export const SKINS_FILE = 'assets/skins.json';
 export const MINIGAMES_FILE = 'assets/minigames.json';
 export const WORLDMAP_FILE = 'assets/worldmap.json';
+export const INPUT_FILE = 'assets/input.json';
+export const UI_FILE = 'assets/ui.json';
 export const DIALOGUE_DIR = 'assets/dialogues';
 export const CUTSCENE_DIR = 'assets/cutscenes';
 const DIALOGUE_EXT = '.dialogue.json';
@@ -105,6 +114,45 @@ export async function saveWorldMap(fs: AssetFs, dir: string, map: WorldMapData):
     ids.add(n.id);
   }
   await fs.write(joinPath(dir, WORLDMAP_FILE), json({ ...map, schemaVersion: CURRENT_SCHEMA_VERSION }));
+}
+
+// ---------- controls and interface ----------
+
+export async function loadProjectInput(fs: AssetFs, dir: string): Promise<{ input: ProjectInput; problems: string[] }> {
+  const file = joinPath(dir, INPUT_FILE);
+  try {
+    if (!(await fs.exists(file))) return { input: emptyProjectInput(), problems: [] };
+    const r = ProjectInputSchema.safeParse(JSON.parse(await fs.read(file)));
+    if (!r.success) return { input: emptyProjectInput(), problems: [`The controls file is not valid: ${r.error.issues[0]?.message ?? 'unknown problem'}.`] };
+    return { input: r.data, problems: [] };
+  } catch (e) {
+    return { input: emptyProjectInput(), problems: [`The controls file could not be read (${(e as Error).message}).`] };
+  }
+}
+
+export async function saveProjectInput(fs: AssetFs, dir: string, input: ProjectInput): Promise<void> {
+  await fs.write(joinPath(dir, INPUT_FILE), json({ ...input, schemaVersion: CURRENT_SCHEMA_VERSION }));
+}
+
+export async function loadUiLayout(fs: AssetFs, dir: string): Promise<{ layout: UiLayout; problems: string[] }> {
+  const file = joinPath(dir, UI_FILE);
+  try {
+    if (!(await fs.exists(file))) return { layout: defaultUiLayout(), problems: [] };
+    const r = UiLayoutSchema.safeParse(JSON.parse(await fs.read(file)));
+    if (!r.success) return { layout: defaultUiLayout(), problems: [`The interface file is not valid: ${r.error.issues[0]?.message ?? 'unknown problem'}.`] };
+    return { layout: completeLayout(r.data), problems: [] };
+  } catch (e) {
+    return { layout: defaultUiLayout(), problems: [`The interface file could not be read (${(e as Error).message}).`] };
+  }
+}
+
+export async function saveUiLayout(fs: AssetFs, dir: string, layout: UiLayout): Promise<void> {
+  const ids = new Set<string>();
+  for (const w of layout.widgets) {
+    if (ids.has(w.id)) throw new UserError(`Two pieces of the screen share the name "${w.id}". Names must be different.`);
+    ids.add(w.id);
+  }
+  await fs.write(joinPath(dir, UI_FILE), json({ ...layout, schemaVersion: CURRENT_SCHEMA_VERSION }));
 }
 
 // ---------- minigames ----------

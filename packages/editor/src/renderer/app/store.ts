@@ -14,7 +14,7 @@ import { Game, newPlaythrough, replayPlaythrough, type GameSetup } from '@tilewr
 import { eventsToScript } from '@tilewright/behaviors';
 import { reloadScripts, type BreakHit, type ScriptProblemEntry } from '../code/script-manager';
 import { deleteScript as deleteScriptFile, loadScripts as loadScriptFiles, saveScript as saveScriptFile } from '../project/scripts';
-import { storyNameProblem } from '../project/story';
+import { loadProjectInput, loadUiLayout, saveProjectInput, saveUiLayout, storyNameProblem } from '../project/story';
 import { deleteCutscene, deleteDialogue, loadCutscenes, loadDialogues, loadItems, loadMinigames, loadSkins, loadWorldMap, saveCutscene, saveDialogue, saveItems, saveMinigames, saveSkins, saveWorldMap } from '../project/story';
 import {
   UserError,
@@ -31,7 +31,7 @@ import {
   type OpenProject,
   type ProjectFs,
 } from '../project/io';
-import { DEFAULT_TILESET, groupOf, newScene, tilesetFromList, type AutotileRuleData, type MinigameData, type SkinData, type WorldMapData, type TileDefData } from '@tilewright/runtime';
+import { DEFAULT_TILESET, defaultUiLayout, emptyProjectInput, groupOf, newScene, tilesetFromList, type AutotileRuleData, type ProjectData, type ProjectInput, type UiLayout, type MinigameData, type SkinData, type WorldMapData, type TileDefData } from '@tilewright/runtime';
 
 /** Everything the Story panel edits, as it is at one moment (the parts are replaced, never changed in place). */
 interface StorySnapshot {
@@ -565,6 +565,10 @@ class AppStore {
   minigames: MinigameData[] = [];
   /** The map of places the player can open (Story -> Map), saved in assets/worldmap.json; null when there is none. */
   worldMap: WorldMapData | null = null;
+  /** The game's own controls (Project settings -> Controls), saved in assets/input.json. */
+  input: ProjectInput = emptyProjectInput();
+  /** The theme and arrangement of the game's own screen (Story -> Interface), saved in assets/ui.json. */
+  uiLayout: UiLayout = defaultUiLayout();
   /** Something to start as soon as the next Play begins (the Story panel's "Test" buttons). */
   autoPlay: { cutscene?: string; dialogue?: string; minigame?: string } | null = null;
   private storyTimers = new Map<string, number>();
@@ -638,15 +642,20 @@ class AppStore {
       this.skins = [];
       this.minigames = [];
       this.worldMap = null;
+      this.input = emptyProjectInput();
+      this.uiLayout = defaultUiLayout();
       return;
     }
     const [items, dialogues, cutscenes, skins, minigames, world] = await Promise.all([loadItems(assetFs, p.dir), loadDialogues(assetFs, p.dir), loadCutscenes(assetFs, p.dir), loadSkins(assetFs, p.dir), loadMinigames(assetFs, p.dir), loadWorldMap(assetFs, p.dir)]);
+    const [inputFile, uiFile] = await Promise.all([loadProjectInput(assetFs, p.dir), loadUiLayout(assetFs, p.dir)]);
+    this.input = inputFile.input;
+    this.uiLayout = uiFile.layout;
     this.worldMap = world.map;
     this.skins = skins.skins;
     this.minigames = minigames.minigames;
     this.story = { items: items.items, dialogues: dialogues.items, cutscenes: cutscenes.items };
     this.set({ storyVersion: this.state.storyVersion + 1 });
-    for (const problem of [...items.problems, ...dialogues.problems, ...cutscenes.problems, ...skins.problems, ...minigames.problems, ...world.problems]) this.notify('warn', problem);
+    for (const problem of [...items.problems, ...dialogues.problems, ...cutscenes.problems, ...skins.problems, ...minigames.problems, ...world.problems, ...inputFile.problems, ...uiFile.problems]) this.notify('warn', problem);
   }
 
   /** Save a story file a moment after the last edit (typing in a field must not write a file per keystroke). */
@@ -671,6 +680,8 @@ class AppStore {
     if (this.skins.length > 0 || (await assetFs.exists(joinPath(p.dir, 'assets/skins.json')))) await saveSkins(assetFs, p.dir, this.skins);
     if (this.minigames.length > 0 || (await assetFs.exists(joinPath(p.dir, 'assets/minigames.json')))) await saveMinigames(assetFs, p.dir, this.minigames);
     if (this.worldMap) await saveWorldMap(assetFs, p.dir, this.worldMap);
+    if (this.input.actions.length > 0 || Object.keys(this.input.overrides).length > 0 || (await assetFs.exists(joinPath(p.dir, 'assets/input.json')))) await saveProjectInput(assetFs, p.dir, this.input);
+    if (JSON.stringify(this.uiLayout) !== JSON.stringify(defaultUiLayout()) || (await assetFs.exists(joinPath(p.dir, 'assets/ui.json')))) await saveUiLayout(assetFs, p.dir, this.uiLayout);
     for (const d of this.story.dialogues.values()) await saveDialogue(assetFs, p.dir, d);
     for (const c of this.story.cutscenes.values()) await saveCutscene(assetFs, p.dir, c);
   }
@@ -683,6 +694,37 @@ class AppStore {
     this.maybeHotReload();
     const p = this.state.project;
     if (p) this.persistLater('items', () => saveItems(assetFs, p.dir, this.story.items));
+  }
+
+  /** The game's own controls. */
+  setProjectInput(input: ProjectInput): void {
+    this.input = input;
+    this.set({ storyVersion: this.state.storyVersion + 1 });
+    this.maybeHotReload();
+    const p = this.state.project;
+    if (p) this.persistLater('input', () => saveProjectInput(assetFs, p.dir, this.input));
+  }
+
+  /** The look and arrangement of the game's own screen. */
+  setUiLayout(layout: UiLayout): void {
+    this.uiLayout = layout;
+    this.set({ storyVersion: this.state.storyVersion + 1 });
+    this.maybeHotReload();
+    const p = this.state.project;
+    if (p) this.persistLater('ui', () => saveUiLayout(assetFs, p.dir, this.uiLayout));
+  }
+
+  /** Change the project's name, first scene, tile size or title screen. Saved at once. */
+  async updateProjectSettings(patch: Partial<Pick<ProjectData, 'name' | 'startScene' | 'iso' | 'title'>>): Promise<boolean> {
+    const p = this.state.project;
+    if (!p) return false;
+    const ok = await this.guard('Saving the project settings', async () => {
+      const project = { ...p.project, ...patch };
+      await saveProject(realFs, p.dir, project);
+      this.set({ project: { ...p, project }, docVersion: this.state.docVersion + 1 });
+      return true;
+    });
+    return ok === true;
   }
 
   setSkins(skins: SkinData[]): void {
@@ -984,7 +1026,7 @@ class AppStore {
     await this.flushStory().catch(() => undefined);
     const { studio } = await import('../studio/store');
     await studio.flushMixer().catch(() => undefined);
-    const problems = await checkProject(realFs, p.dir, p.project, this.prefabs, this.story, new Set(studio.assets.keys()), new Set(studio.sounds.map((s) => s.name)), (await loadLanguages(assetFs, p.dir)).languages, this.skins, this.minigames, studio.mixer, this.worldMap);
+    const problems = await checkProject(realFs, p.dir, p.project, this.prefabs, this.story, new Set(studio.assets.keys()), new Set(studio.sounds.map((s) => s.name)), (await loadLanguages(assetFs, p.dir)).languages, this.skins, this.minigames, studio.mixer, this.worldMap, { input: this.input, layout: this.uiLayout });
     this.set({ projectCheck: { problems, at: Date.now() } });
     return problems;
   }

@@ -6,6 +6,7 @@ import { EditorShell } from './app/EditorShell';
 import { ProjectScreen } from './screens/ProjectScreen';
 import { AccessibilityDialog } from './app/AccessibilityDialog';
 import { AutotileDialog } from './app/AutotileDialog';
+import { ProjectSettingsDialog } from './app/ProjectSettingsDialog';
 import { TranslationsDialog } from './app/TranslationsDialog';
 import { studio } from './studio/store';
 
@@ -101,6 +102,7 @@ export function App() {
       {screen === 'editor' ? <EditorShell /> : <ProjectScreen />}
       <AccessibilityDialog />
       <AutotileDialog />
+      <ProjectSettingsDialog />
       <TranslationsDialog />
     </>
   );

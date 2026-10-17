@@ -204,6 +204,8 @@ export const ProjectSchema = z.object({
   /** Scene file paths relative to the project folder. */
   scenes: z.array(z.string()).min(1),
   startScene: z.string(),
+  /** A title screen shown when the game starts (New game, Continue, Load game, Settings, Quit). */
+  title: z.object({ enabled: z.boolean().default(false), subtitle: z.string().default('') }).optional(),
 });
 export type ProjectData = z.infer<typeof ProjectSchema>;
 

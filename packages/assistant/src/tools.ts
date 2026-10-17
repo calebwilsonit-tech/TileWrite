@@ -400,6 +400,53 @@ export const TOOLS: ToolSpec[] = [
     }),
   },
   {
+    name: 'write_ui_layout',
+    kind: 'act',
+    description: 'Change the look of the game\'s own screen (assets/ui.json). theme (only what you name changes): font ("serif"|"sans"|"mono"|"rounded"), text, accent, panel, border, highlight (colours as #rrggbb), radius 0-28 (corner roundness), scale 0.75-2 (size of menus, conversation box and display). widgets, when given, is the whole list of pieces (start from story_overview): the built-ins hearts, lightbar, slots, bosses, toasts and your own counter / bar / text. A piece has id, kind, anchor ("default" leaves it where the game puts it, or tl tc tr cl c cr bl bc br), x and y (pixels inward from that edge, from the middle for c), scale 0.5-3, visible, and for your own: label, variable (the flag or counter shown), max or maxVariable (a bar is full at this), color, text (with {variable}). Missing built-ins come back by themselves. reset:true goes back to the standard screen.',
+    schema: z.object({
+      reset: z.boolean().optional(),
+      theme: z
+        .object({
+          font: z.enum(['serif', 'sans', 'mono', 'rounded']).optional(),
+          text: z.string().optional(),
+          accent: z.string().optional(),
+          panel: z.string().optional(),
+          border: z.string().optional(),
+          highlight: z.string().optional(),
+          radius: z.number().optional(),
+          scale: z.number().optional(),
+        })
+        .optional(),
+      widgets: z
+        .array(
+          z
+            .object({
+              id: z.string().regex(/^[A-Za-z0-9_-]{1,32}$/),
+              kind: z.enum(['hearts', 'lightbar', 'slots', 'bosses', 'toasts', 'counter', 'bar', 'text']),
+            })
+            .catchall(z.unknown()),
+        )
+        .max(40)
+        .optional(),
+    }),
+  },
+  {
+    name: 'write_controls',
+    kind: 'act',
+    description: 'Change the keys and buttons a new player starts with (assets/input.json; players can still rebind them in Settings). overrides maps a built-in action (move_left, move_right, move_up, move_down, run, interact, attack, jump, dodge, echo, pause, inventory, map, quick_1..quick_4) to its bindings and replaces that action\'s list. actions, when given, is the whole list of the game\'s own actions {id: lower_case_name, label, bindings}; event rows ("a button is pressed", type the action name) and scripts (input.pressed("name")) can use them. Bindings look like "key:KeyF", "key:Space", "key:ArrowUp", "mouse:0" or "pad:button0".',
+    schema: z.object({
+      overrides: z.record(z.string(), z.array(z.string())).optional(),
+      resetOverrides: z.boolean().optional().describe('True first forgets every built-in change.'),
+      actions: z.array(z.object({ id: z.string().regex(/^[a-z][a-z0-9_]{0,31}$/), label: z.string().min(1), bindings: z.array(z.string()).max(8).optional() })).max(40).optional(),
+    }),
+  },
+  {
+    name: 'set_project_settings',
+    kind: 'act',
+    description: 'Change the game\'s name, the scene it starts in (a scene file as project_overview lists them), or the title screen shown first (New game, Continue, Load game, Settings, Quit) with a line under the name.',
+    schema: z.object({ name: z.string().min(1).optional(), startScene: z.string().optional(), titleScreen: z.boolean().optional(), subtitle: z.string().optional() }),
+  },
+  {
     name: 'edit_event_rows',
     kind: 'act',
     description: 'Change single rows of the open scene\'s event sheet without sending the whole sheet: operations run in order. {"op":"add","row":{...},"after":"<row id>"|"start"|"end"}, {"op":"update","id":"<row id>","row":{...the fields to change; conditions/actions/children you give replace the old ones...}}, {"op":"remove","id":"<row id>"}. Row ids come from get_event_sheet. Rows have the same shape as in set_event_sheet.',

@@ -1,6 +1,13 @@
 import {
   ACTION_LABELS,
   availableSkins,
+  completeLayout,
+  defaultUiLayout,
+  fillVariables,
+  themeVars,
+  widgetCss,
+  type UiLayout,
+  type UiWidget,
   MAP_HEIGHT,
   MAP_WIDTH,
   neighbourInDirection,
@@ -27,6 +34,8 @@ export interface GameUiHost {
   sim: Simulation;
   settings: GameSettings;
   bindings(): InputMapDef;
+  /** Names of the actions for the Controls screen (the game's own actions included); default: the built-in ones. */
+  actionLabels?(): Record<string, string>;
   changeSettings(patch: Partial<GameSettings>): void;
   rebind(action: string, binding: string): void;
   resetBindings(): void;
@@ -51,13 +60,13 @@ export interface GameUiHost {
  */
 export const UI_STRINGS: readonly string[] = [
   ...MINIGAME_STRINGS,
-  'Paused', 'Resume', 'Inventory', 'Travel to a lit lantern', 'Save game', 'Load game', 'Settings', 'Restart this area', 'Quit',
+  'Paused', 'Resume', 'New game', 'Continue', 'Inventory', 'Travel to a lit lantern', 'Save game', 'Load game', 'Settings', 'Restart this area', 'Quit',
   '{n} lit', 'You are carrying nothing.', 'press E to use', 'slot {n}', 'E: use   A / D: choose its quick slot   Esc: back',
   'No lanterns lit yet. Light one by pressing E beside it.', 'this area', 'Autosave', 'Slot {n}', 'damaged', 'empty',
   'Map', 'you are here', 'Arrows or W A S D: choose a place   E or click: travel   Esc: back', 'Nowhere to go yet.',
   'Master volume', 'Music volume', 'Effects volume', 'Voice volume', 'Difficulty', 'easy', 'normal', 'hard', 'Screen shake and hit freeze', 'on', 'off',
   'Camera zoom', 'Full screen', 'Show frame rate', 'Appearance', 'Original', 'Language', 'Default', 'Controls', 'press a key or button...', 'not set', 'Reset all controls',
-  'E: change the selected control, then press the new key or button', 'W / S to choose, E to select, Esc or P to go back',
+  'E: change the selected control, then press the new key or button', 'W / S to choose, E to select, Esc or P to go back', 'W / S to choose, E to select',
   'E / click: continue', 'P / Start: skip', 'Received {item}', 'Used {item}', 'You were defeated.',
   'Echo made.', 'You cannot make echoes yet.', 'Recording... press Echo again to finish.',
   '{name} is lit.', 'Rested at {name}.', '{name} gets angry!', '{name} is defeated!',
@@ -66,7 +75,13 @@ export const UI_STRINGS: readonly string[] = [
 /** Every fixed text of the game's screens, including the names of the controls. */
 export const uiStrings = (): string[] => [...new Set([...UI_STRINGS, ...Object.values(ACTION_LABELS)])];
 
-type Screen = 'main' | 'inventory' | 'travel' | 'map' | 'save' | 'load' | 'settings' | 'controls';
+/** What the title screen shows (the game's name and a line under it). */
+export interface TitleInfo {
+  text: string;
+  subtitle: string;
+}
+
+type Screen = 'title' | 'main' | 'inventory' | 'travel' | 'map' | 'save' | 'load' | 'settings' | 'controls';
 
 const MAP_GLYPHS: Record<string, string> = { pin: '\u25CF', town: '\u2302', dungeon: '\u2620', cave: '\u25D3', forest: '\u2663', tower: '\u265C', castle: '\u265B', camp: '\u25B2', harbor: '\u2693' };
 
@@ -81,7 +96,7 @@ interface Row {
 }
 
 const CSS = `
-.tw-ui { position: absolute; inset: 0; pointer-events: none; font-family: Georgia, 'Times New Roman', serif; color: #f4efe6; user-select: none; }
+.tw-ui { position: absolute; inset: 0; pointer-events: none; font-family: var(--tw-font, Georgia, 'Times New Roman', serif); color: var(--tw-text, #f4efe6); user-select: none; }
 .tw-ui * { box-sizing: border-box; }
 .tw-hud { position: absolute; top: 10px; left: 12px; right: 12px; display: flex; flex-direction: column; gap: 6px; align-items: flex-start; text-shadow: 0 1px 3px #000; }
 .tw-hearts { font-size: 22px; letter-spacing: 3px; }
@@ -90,7 +105,7 @@ const CSS = `
 .tw-lightbar .fill { height: 100%; background: linear-gradient(90deg, #d9a21a, #ffe27a); }
 .tw-lightbar.low .fill { background: linear-gradient(90deg, #8a3a1a, #d9701a); }
 .tw-slots { display: flex; gap: 6px; }
-.tw-slot { width: 44px; height: 44px; border: 2px solid #ffffff55; border-radius: 8px; background: #14161bcc; display: flex; align-items: center; justify-content: center; position: relative; font-size: 11px; }
+.tw-slot { width: 44px; height: 44px; border: 2px solid #ffffff55; border-radius: min(var(--tw-radius, 10px), 14px); background: color-mix(in srgb, var(--tw-panel, #14161b) 80%, transparent); display: flex; align-items: center; justify-content: center; position: relative; font-size: 11px; }
 .tw-slot .key { position: absolute; top: 1px; left: 4px; opacity: .7; }
 .tw-slot .count { position: absolute; bottom: 1px; right: 4px; }
 .tw-slot .gem { width: 20px; height: 20px; border-radius: 5px; }
@@ -98,24 +113,33 @@ const CSS = `
 .tw-boss .bar { height: 10px; background: #1b1d24; border: 1px solid #000; border-radius: 6px; overflow: hidden; margin-top: 3px; }
 .tw-boss .fill { height: 100%; background: linear-gradient(90deg, #b3366e, #e0566b); }
 .tw-toasts { position: absolute; right: 14px; bottom: 14px; display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
-.tw-toast { background: #14161bdd; border-left: 4px solid #6aa8ff; padding: 7px 12px; border-radius: 4px; font-size: 14px; }
+.tw-toast { background: color-mix(in srgb, var(--tw-panel, #14161b) 87%, transparent); border-left: 4px solid var(--tw-highlight, #6aa8ff); padding: 7px 12px; border-radius: min(var(--tw-radius, 10px), 8px); font-size: 14px; }
 .tw-fade { position: absolute; inset: 0; background: #000; opacity: 0; }
 .tw-skip { position: absolute; top: 12px; right: 16px; font-size: 12px; opacity: .75; text-shadow: 0 1px 3px #000; }
-.tw-dialogue { position: absolute; left: 50%; bottom: 28px; transform: translateX(-50%); width: min(80%, 760px); background: #14161bf0; border: 2px solid #d9c6a0; border-radius: 10px; padding: 14px 18px; pointer-events: auto; }
-.tw-dialogue .speaker { color: #ffd98a; font-weight: bold; margin-bottom: 4px; }
+.tw-dialogue { position: absolute; left: 50%; bottom: 28px; transform: translateX(-50%) scale(var(--tw-scale, 1)); transform-origin: bottom center; width: min(80%, 760px); background: color-mix(in srgb, var(--tw-panel, #14161b) 94%, transparent); border: 2px solid var(--tw-border, #d9c6a0); border-radius: var(--tw-radius, 10px); padding: 14px 18px; pointer-events: auto; }
+.tw-dialogue .speaker { color: var(--tw-accent, #ffd98a); font-weight: bold; margin-bottom: 4px; }
 .tw-dialogue .text { font-size: 18px; line-height: 1.4; min-height: 1.4em; }
 .tw-dialogue .more { text-align: right; font-size: 12px; opacity: .7; margin-top: 6px; }
 .tw-choices { margin-top: 8px; display: flex; flex-direction: column; gap: 4px; }
-.tw-choice { padding: 5px 10px; border-radius: 6px; cursor: pointer; border: 1px solid transparent; }
-.tw-choice.on { background: #2b3350; border-color: #6aa8ff; }
+.tw-choice { padding: 5px 10px; border-radius: min(var(--tw-radius, 10px), 8px); cursor: pointer; border: 1px solid transparent; }
+.tw-choice.on { background: color-mix(in srgb, var(--tw-highlight, #6aa8ff) 25%, var(--tw-panel, #14161b)); border-color: var(--tw-highlight, #6aa8ff); }
 .tw-menu { position: absolute; inset: 0; background: #05060ccc; display: flex; align-items: center; justify-content: center; pointer-events: auto; }
-.tw-panel { width: min(88%, 560px); max-height: 86%; overflow: auto; background: #14161b; border: 2px solid #d9c6a0; border-radius: 12px; padding: 18px 22px; }
-.tw-panel h2 { margin: 0 0 12px; font-size: 22px; font-weight: normal; color: #ffd98a; }
-.tw-row { display: flex; justify-content: space-between; gap: 14px; padding: 7px 12px; border-radius: 6px; cursor: pointer; border: 1px solid transparent; }
-.tw-row.on { background: #2b3350; border-color: #6aa8ff; }
+.tw-panel { width: min(88%, 560px); max-height: 86%; overflow: auto; zoom: var(--tw-scale, 1); background: var(--tw-panel, #14161b); border: 2px solid var(--tw-border, #d9c6a0); border-radius: calc(var(--tw-radius, 10px) + 2px); padding: 18px 22px; }
+.tw-panel h2 { margin: 0 0 12px; font-size: 22px; font-weight: normal; color: var(--tw-accent, #ffd98a); }
+.tw-row { display: flex; justify-content: space-between; gap: 14px; padding: 7px 12px; border-radius: min(var(--tw-radius, 10px), 8px); cursor: pointer; border: 1px solid transparent; }
+.tw-row.on { background: color-mix(in srgb, var(--tw-highlight, #6aa8ff) 25%, var(--tw-panel, #14161b)); border-color: var(--tw-highlight, #6aa8ff); }
 .tw-row .detail { opacity: .75; text-align: right; }
 .tw-hint { margin-top: 12px; font-size: 12px; opacity: .7; }
 .tw-panel.wide { width: min(94%, 920px); }
+.tw-menu.front { background: radial-gradient(ellipse at center, #1b2030f2, #05060cf8); }
+.tw-game-title { margin: 6px 0 4px; font-size: 40px; font-weight: normal; color: var(--tw-accent, #ffd98a); text-align: center; letter-spacing: .04em; }
+.tw-subtitle { text-align: center; opacity: .8; margin-bottom: 16px; }
+.tw-hidden { display: none !important; }
+.tw-bosses[data-pinned] .tw-boss { width: 320px; }
+.tw-widget { text-shadow: 0 1px 3px #000; font-size: 15px; }
+.tw-widget .label { margin-right: 6px; opacity: .85; }
+.tw-widget .track { width: 160px; height: 10px; background: #1b1d24; border: 1px solid #000; border-radius: 6px; overflow: hidden; margin-top: 3px; }
+.tw-widget .track .fill { height: 100%; }
 .tw-map { width: 100%; height: auto; display: block; margin-bottom: 10px; border-radius: 8px; border: 1px solid #d9c6a055; background: #2a2418; }
 .tw-map .place { cursor: pointer; } .tw-map .place text { pointer-events: none; }
 `;
@@ -159,15 +183,22 @@ export class GameUi {
   private readonly hearts = el('div', 'tw-hearts');
   private readonly lightBar = el('div', 'tw-lightbar');
   private readonly slotsEl = el('div', 'tw-slots');
-  private readonly bosses = el('div');
+  private readonly bosses = el('div', 'tw-bosses');
   private readonly toasts = el('div', 'tw-toasts');
   private readonly fade = el('div', 'tw-fade');
   private readonly skip = el('div', 'tw-skip');
   private dialogueEl: HTMLElement | null = null;
+  private layout: UiLayout = defaultUiLayout();
+  /** The game's own counters, bars and texts, by name. */
+  private readonly widgetEls = new Map<string, HTMLElement>();
+  /** Inline styles put on a piece by the layout, so the next layout can take them off again. */
+  private readonly applied = new Map<HTMLElement, string[]>();
   private readonly minigame: MinigameView;
   private menuEl: HTMLElement | null = null;
   private readonly style = el('style');
   private screen: Screen = 'main';
+  /** Set while the title screen is the game's front door: the pause keys cannot close it. */
+  private titleInfo: TitleInfo | null = null;
   private focus = 0;
   private rows: Row[] = [];
   private message = '';
@@ -201,6 +232,7 @@ export class GameUi {
     this.hud.append(this.hearts, this.lightBar, this.slotsEl, this.bosses);
     this.root.append(this.style, this.hud, this.toasts, this.fade, this.skip);
     parent.appendChild(this.root);
+    this.setLayout(defaultUiLayout());
     const ev = host.sim.events;
     this.offs.push(
       ev.on('message', (e) => this.toast(this.tr(String(e.text ?? '')))),
@@ -220,6 +252,87 @@ export class GameUi {
     if (this.toastList.length > 5) this.toastList.shift();
   }
 
+  /** Use this theme and arrangement of the heads-up display. */
+  setLayout(layout: UiLayout): void {
+    this.layout = completeLayout(layout);
+    for (const [k, v] of Object.entries(themeVars(this.layout.theme))) this.root.style.setProperty(k, v);
+    const builtin: Record<string, HTMLElement> = { hearts: this.hearts, lightbar: this.lightBar, slots: this.slotsEl, bosses: this.bosses, toasts: this.toasts };
+    const wanted = new Set<string>();
+    const flow: HTMLElement[] = [];
+    for (const w of this.layout.widgets) {
+      let target = builtin[w.kind];
+      if (!target) {
+        wanted.add(w.id);
+        target = this.widgetEls.get(w.id);
+        if (!target) {
+          target = el('div', 'tw-widget');
+          target.setAttribute('data-testid', `tw-widget-${w.id}`);
+          this.widgetEls.set(w.id, target);
+        }
+        target.dataset.kind = w.kind;
+        target.dataset.sig = '';
+      }
+      this.place(target, w);
+      if (w.anchor === 'default' && w.kind !== 'toasts') flow.push(target);
+      else if (target.parentElement !== this.root) this.root.appendChild(target);
+    }
+    // pieces on the default anchor stay in the column at the top left, in a fixed order
+    const order: HTMLElement[] = [this.hearts, this.lightBar, this.slotsEl, this.bosses];
+    flow.sort((a, b) => (order.includes(a) ? order.indexOf(a) : 99) - (order.includes(b) ? order.indexOf(b) : 99));
+    for (const f of flow) this.hud.appendChild(f);
+    if (this.toasts.parentElement !== this.root) this.root.appendChild(this.toasts);
+    for (const [id, e] of this.widgetEls) {
+      if (!wanted.has(id)) {
+        e.remove();
+        this.widgetEls.delete(id);
+      }
+    }
+    this.hud.dataset.sig = '';
+  }
+
+  private place(target: HTMLElement, w: UiWidget): void {
+    for (const k of this.applied.get(target) ?? []) target.style.removeProperty(k);
+    const css = widgetCss(w, this.layout.theme.scale);
+    for (const [k, v] of Object.entries(css)) target.style.setProperty(k, v);
+    this.applied.set(target, Object.keys(css));
+    target.classList.toggle('tw-hidden', !w.visible);
+    if (target === this.bosses) {
+      if (w.anchor === 'default') delete target.dataset.pinned;
+      else target.dataset.pinned = '1';
+    }
+  }
+
+  /** The game's own counters, bars and texts. */
+  private drawWidgets(): void {
+    const vars = this.host.sim.runtime.vars;
+    for (const w of this.layout.widgets) {
+      if (w.kind !== 'counter' && w.kind !== 'bar' && w.kind !== 'text') continue;
+      const e = this.widgetEls.get(w.id);
+      if (!e || !w.visible) continue;
+      const value = Number(vars[w.variable]) || 0;
+      const max = w.maxVariable ? Number(vars[w.maxVariable]) || 1 : w.max;
+      const sig = w.kind === 'text' ? fillVariables(this.tr(w.text), vars) : JSON.stringify([w.label, value, max, w.color]);
+      if (e.dataset.sig === sig) continue;
+      e.dataset.sig = sig;
+      e.replaceChildren();
+      if (w.kind === 'text') e.appendChild(rich('span', '', sig));
+      else {
+        const line = el('div');
+        if (w.label) line.appendChild(rich('span', 'label', this.tr(w.label)));
+        if (w.kind === 'counter') line.appendChild(el('span', 'value', String(Math.round(value * 100) / 100)));
+        e.appendChild(line);
+        if (w.kind === 'bar') {
+          const track = el('div', 'track');
+          const fill = el('div', 'fill');
+          fill.style.width = `${Math.max(0, Math.min(100, (value / Math.max(1, max)) * 100))}%`;
+          fill.style.background = w.color;
+          track.appendChild(fill);
+          e.appendChild(track);
+        }
+      }
+    }
+  }
+
   get menuOpen(): boolean {
     return this.host.sim.runtime.menuOpen;
   }
@@ -231,7 +344,19 @@ export class GameUi {
     this.go(screen);
   }
 
+  /** Show the title screen (New game, Continue, Load game, Settings, Quit); the world waits behind it. */
+  openTitle(info: TitleInfo): void {
+    this.titleInfo = info;
+    this.host.sim.runtime.menuOpen = true;
+    this.go('title');
+  }
+
+  get titleOpen(): boolean {
+    return this.titleInfo !== null;
+  }
+
   closeMenu(): void {
+    this.titleInfo = null;
     this.host.sim.runtime.menuOpen = false;
     this.menuEl?.remove();
     this.menuEl = null;
@@ -243,7 +368,7 @@ export class GameUi {
     this.screen = screen;
     this.focus = screen === 'map' ? Math.max(0, this.mapPlaces().findIndex((p) => p.state === 'here')) : 0;
     this.message = '';
-    if (screen === 'save' || screen === 'load') void this.refreshSlots();
+    if (screen === 'save' || screen === 'load' || screen === 'title') void this.refreshSlots();
   }
 
   private async refreshSlots(): Promise<void> {
@@ -261,6 +386,7 @@ export class GameUi {
       this.handleInput();
     }
     this.drawHud();
+    this.drawWidgets();
     this.drawDialogue();
     this.minigame.update();
     this.drawMenu();
@@ -380,8 +506,9 @@ export class GameUi {
   }
 
   private back(): void {
+    if (this.screen === 'title') return;
     if (this.screen === 'main') this.closeMenu();
-    else this.go(this.screen === 'controls' ? 'settings' : 'main');
+    else this.go(this.screen === 'controls' ? 'settings' : this.titleInfo ? 'title' : 'main');
   }
 
   // ---------- HUD ----------
@@ -507,6 +634,28 @@ export class GameUi {
     let title = 'Paused';
     let hint = 'W / S to choose, E to select, Esc or P to go back';
     switch (this.screen) {
+      case 'title': {
+        title = this.titleInfo?.text ?? '';
+        hint = 'W / S to choose, E to select';
+        const latest = this.slotCache.filter((s) => s.exists && !s.damaged).sort((a, b) => b.savedAt.localeCompare(a.savedAt))[0];
+        if (latest) {
+          rows.push({
+            label: 'Continue',
+            detail: latest.label,
+            run: () =>
+              void h.loadFrom(latest.slot).then((msg) => {
+                this.closeMenu();
+                this.toast(msg);
+              }),
+            testId: 'continue',
+          });
+        }
+        rows.push({ label: 'New game', run: () => this.closeMenu(), testId: 'new-game' });
+        rows.push({ label: 'Load game', run: () => this.go('load'), testId: 'load' });
+        rows.push({ label: 'Settings', run: () => this.go('settings'), testId: 'settings' });
+        if (h.quit) rows.push({ label: 'Quit', run: () => h.quit?.(), testId: 'quit' });
+        break;
+      }
       case 'main':
         rows.push({ label: 'Resume', run: () => this.closeMenu(), testId: 'resume' });
         rows.push({ label: 'Inventory', run: () => this.go('inventory'), testId: 'inventory' });
@@ -665,9 +814,10 @@ export class GameUi {
       case 'controls': {
         title = 'Controls';
         const b = h.bindings();
-        for (const action of Object.keys(ACTION_LABELS)) {
+        const labels = h.actionLabels?.() ?? ACTION_LABELS;
+        for (const action of Object.keys(labels)) {
           rows.push({
-            label: ACTION_LABELS[action]!,
+            label: labels[action]!,
             detail: this.capturing === action ? 'press a key or button...' : (b[action] ?? []).map(bindingLabel).join(', ') || 'not set',
             run: () => {
               this.capturing = action;
@@ -700,11 +850,16 @@ export class GameUi {
     const sig = JSON.stringify([this.screen, this.focus, this.rows.map((r) => [r.label, r.detail]), this.message, this.capturing, this.host.sim.assets.strings.language]);
     if (this.menuEl && this.menuEl.dataset.sig === sig) return;
     this.menuEl?.remove();
-    const wrap = el('div', 'tw-menu');
+    const wrap = el('div', this.screen === 'title' ? 'tw-menu front' : 'tw-menu');
     wrap.dataset.sig = sig;
     wrap.setAttribute('data-testid', 'tw-menu');
     const panel = el('div', this.screen === 'map' ? 'tw-panel wide' : 'tw-panel');
-    panel.appendChild(el('h2', '', this.tr(title)));
+    if (this.screen === 'title') {
+      const h1 = rich('h1', 'tw-game-title', this.tr(title));
+      h1.setAttribute('data-testid', 'tw-game-title');
+      panel.appendChild(h1);
+      if (this.titleInfo?.subtitle) panel.appendChild(rich('div', 'tw-subtitle', this.tr(this.titleInfo.subtitle)));
+    } else panel.appendChild(el('h2', '', this.tr(title)));
     if (this.screen === 'map' && this.host.sim.assets.worldMap) panel.appendChild(this.mapSvg());
     this.rows.forEach((r, i) => {
       const row = el('div', `tw-row${i === this.focus ? ' on' : ''}`);

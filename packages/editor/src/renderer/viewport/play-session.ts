@@ -16,6 +16,11 @@ import {
   availableSkins,
   bindingChanges,
   effectiveBindings,
+  projectActionLabels,
+  projectDefaults,
+  type InputMapDef,
+  type ProjectInput,
+  type UiLayout,
   gridToScreen,
   groundHeightAt,
   loadScene,
@@ -89,7 +94,7 @@ export interface PlayOptions {
   /** Switch the window to or from full screen (only a game in its own window can). */
   setFullscreen?: (on: boolean) => void;
   /** The project's prefabs, sprites and story as they are now (for hot reload while playing in the editor). */
-  liveAssets?: () => { prefabs: ReadonlyMap<string, PrefabData>; sprites: ReadonlyMap<string, SpriteData>; story: PlayOptions['story']; skins?: readonly SkinData[]; minigames?: readonly MinigameData[]; worldMap?: WorldMapData | null };
+  liveAssets?: () => { prefabs: ReadonlyMap<string, PrefabData>; sprites: ReadonlyMap<string, SpriteData>; story: PlayOptions['story']; skins?: readonly SkinData[]; minigames?: readonly MinigameData[]; worldMap?: WorldMapData | null; layout?: UiLayout; input?: ProjectInput };
   /** The player's other looks. */
   skins?: readonly SkinData[];
   /** The project's minigames. */
@@ -98,6 +103,12 @@ export interface PlayOptions {
   worldMap?: WorldMapData | null;
   /** The project's mix, when the host keeps it live (the editor's Mixer panel); otherwise it is read from the project folder. */
   mixer?: { get(): MixerData; subscribe(fn: () => void): () => void };
+  /** Show the title screen first (the game's name and a line under it). */
+  title?: { text: string; subtitle: string };
+  /** How the game's own screen looks and where its pieces sit (Story -> Interface). */
+  layout?: UiLayout;
+  /** The game's own controls (assets/input.json). */
+  input?: ProjectInput;
 }
 
 /**
@@ -117,6 +128,9 @@ export class PlaySession {
   private roomMusic: string | null = null;
   /** The skins on offer (replaced by hot reload). */
   private skinsNow: readonly SkinData[] = [];
+  /** The bindings a player starts with (the built-in ones with this game's changes and its own actions). */
+  private defaults: InputMapDef = projectDefaults(null);
+  private labels: Record<string, string> = projectActionLabels(null);
   private readonly unlockAudio = (): void => void this.audio.unlock();
   /** Stops listening to the editor's mixer. */
   private offMixer: (() => void) | null = null;
@@ -136,7 +150,7 @@ export class PlaySession {
     const renderer = o.renderer;
     this.scenePath = o.scenePath;
     this.settings = loadSettings(typeof localStorage === 'undefined' ? undefined : localStorage);
-    this.inputMap.bindings = effectiveBindings(this.settings);
+    this.useInput(o.input);
     sim.runtime.difficulty = this.settings.difficulty;
     for (const [name, data] of o.sprites) sim.assets.sprites.set(name, data);
     for (const [name, data] of o.prefabs) sim.assets.prefabs.set(name, data);
@@ -233,8 +247,10 @@ export class PlaySession {
     renderer.world.addChild(this.debugLayer);
     if (o.record) this.runner.recorder = new InputRecorder();
     this.ui = new GameUi(o.uiParent, this.uiHost());
+    if (o.layout) this.ui.setLayout(o.layout);
     this.startedAt = performance.now();
     const auto = o.autoPlay;
+    if (o.title && !auto && !o.from) this.ui.openTitle(o.title);
     if (auto) {
       void languagesReady.then(() => {
         if (this.disposed) return;
@@ -301,8 +317,17 @@ export class PlaySession {
       if (health) player.set('state:health', { ...health, trail: [], knock: null });
     }
     if (live?.skins) this.skinsNow = live.skins;
+    if (live?.layout) this.ui.setLayout(live.layout);
+    if (live?.input) this.useInput(live.input);
     this.applySkinToPlayer();
     return 'Reloaded the game with your changes.';
+  }
+
+  /** Start from this game's own controls: the bindings a new player gets and the names shown on the Controls screen. */
+  private useInput(input: ProjectInput | undefined): void {
+    this.defaults = projectDefaults(input);
+    this.labels = projectActionLabels(input);
+    this.inputMap.bindings = effectiveBindings(this.settings, this.defaults);
   }
 
   // ---------- sound and effects ----------
@@ -567,7 +592,8 @@ export class PlaySession {
     this.hostObj = {
       sim: this.sim,
       settings: this.settings,
-      bindings: () => effectiveBindings(this.settings),
+      bindings: () => effectiveBindings(this.settings, this.defaults),
+      actionLabels: () => this.labels,
       changeSettings: (patch) => {
         this.setSettings({ ...this.settings, ...patch });
         this.applyFeelSettings();
@@ -577,13 +603,13 @@ export class PlaySession {
         this.applySkinToPlayer();
       },
       rebind: (action, binding) => {
-        const next = rebind(effectiveBindings(this.settings), action, binding);
-        this.setSettings({ ...this.settings, bindings: bindingChanges(next) });
+        const next = rebind(effectiveBindings(this.settings, this.defaults), action, binding);
+        this.setSettings({ ...this.settings, bindings: bindingChanges(next, this.defaults) });
         this.inputMap.bindings = next;
       },
       resetBindings: () => {
         this.setSettings({ ...this.settings, bindings: {} });
-        this.inputMap.bindings = effectiveBindings(this.settings);
+        this.inputMap.bindings = effectiveBindings(this.settings, this.defaults);
       },
       captureNext: () => this.source.captureNext(),
       restart: () => {

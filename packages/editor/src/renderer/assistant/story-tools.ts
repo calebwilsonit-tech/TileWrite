@@ -1,8 +1,8 @@
-import { CutsceneSchema, DialogueSchema, ItemSchema, LanguageSchema, MinigameSchema, MixerSchema, SkinSchema, WorldMapSchema, checkCutscene, checkDialogue, checkMinigame, checkMixer, checkWorldMap, newLanguage, type CutsceneData, type DialogueData, type ItemData, type MinigameData, type MixerData, type RegionData, type SkinData, type WorldMapData } from '@tilewright/runtime';
+import { CutsceneSchema, DialogueSchema, ItemSchema, LanguageSchema, MinigameSchema, MixerSchema, ProjectInputSchema, SkinSchema, UiLayoutSchema, WorldMapSchema, checkProjectInput, checkUiLayout, completeLayout, defaultUiLayout, checkCutscene, checkDialogue, checkMinigame, checkMixer, checkWorldMap, newLanguage, type CutsceneData, type DialogueData, type ItemData, type ProjectInput, type UiLayout, type MinigameData, type MixerData, type RegionData, type SkinData, type WorldMapData } from '@tilewright/runtime';
 import { lineDiff, type ToolOutput } from '@tilewright/assistant';
 import { store } from '../app/store';
 import { assetFs } from '../project/assetFs';
-import { collectStrings, coverage, deleteLanguage, loadLanguages, saveLanguage } from '../project/localization';
+import { collectStrings, coverage, deleteLanguage, interfaceTexts, loadLanguages, saveLanguage } from '../project/localization';
 import { skinProblems } from '../project/story';
 import { studio } from '../studio/store';
 import { ToolProblem, fail, json, requireEditing, undoTop, type Proposal } from './tool-core';
@@ -39,7 +39,7 @@ function describeCutscene(c: CutsceneData): string {
 
 async function allSources() {
   const scenes = await store.loadAllScenes();
-  return collectStrings(store.story, [...scenes].map(([path, scene]) => ({ path, scene })), undefined, store.minigames);
+  return collectStrings(store.story, [...scenes].map(([path, scene]) => ({ path, scene })), undefined, store.minigames, interfaceTexts(store.uiLayout, store.state.project?.project));
 }
 
 /** Reading tools about the story data. Returns null when the name is not one of them. */
@@ -59,6 +59,9 @@ export async function runStoryRead(name: string, input: Record<string, unknown>)
             minigames: store.minigames.map((m) => ({ ...m, problems: checkMinigame(m, { items: knownItems() }) })),
             skins: store.skins,
             worldMap: store.worldMap ? { ...store.worldMap, problems: checkWorldMap(store.worldMap, store.state.project?.project.scenes ?? []) } : null,
+            interface: { layout: store.uiLayout, problems: checkUiLayout(store.uiLayout) },
+            controls: { input: store.input, problems: checkProjectInput(store.input) },
+            title: store.state.project?.project.title ?? { enabled: false, subtitle: '' },
             mixer: { buses: studio.mixer.buses, ducking: studio.mixer.ducking, soundSettings: Object.keys(studio.mixer.sounds), musicSettings: Object.keys(studio.mixer.music), sounds: studio.sounds.map((s) => s.name), problems: checkMixer(studio.mixer, new Set(studio.sounds.map((s) => s.name))) },
             languages: languages.map((l) => {
               const c = coverage(l, sources);
@@ -301,6 +304,97 @@ function writeMixer(input: Record<string, unknown>): Proposal {
   };
 }
 
+function writeUiLayout(input: Record<string, unknown>): Proposal {
+  const previous: UiLayout = store.uiLayout;
+  const parsed = UiLayoutSchema.safeParse(
+    input.reset === true
+      ? defaultUiLayout()
+      : { theme: { ...previous.theme, ...((input.theme as object | undefined) ?? {}) }, widgets: input.widgets ?? previous.widgets },
+  );
+  if (!parsed.success) return fail(`The layout is not valid: ${parsed.error.issues.slice(0, 3).map((i) => `${i.path.join('.')}: ${i.message}`).join('; ')}`);
+  const next = completeLayout(parsed.data);
+  const ids = next.widgets.map((w) => w.id);
+  const dup = ids.find((id, i) => ids.indexOf(id) !== i);
+  if (dup) fail(`Two pieces share the id "${dup}".`);
+  const problems = checkUiLayout(next);
+  return {
+    tool: 'write_ui_layout',
+    title: 'Change the screen layout and theme',
+    lines: [`The game's screen has ${next.widgets.length} piece(s) and the ${next.theme.font} lettering.`, ...problems.map((p) => `Warning: ${p}`)],
+    diff: { name: 'ui.json', lines: lineDiff(lines(previous), lines(next)) },
+    async apply() {
+      store.setUiLayout(next);
+      await store.flushStory();
+      return `The screen layout is updated.${problems.length ? ` The checker still reports: ${problems.join(' | ')}` : ' The checker found no problems.'}`;
+    },
+    async undo() {
+      store.setUiLayout(previous);
+      await store.flushStory();
+      return true;
+    },
+  };
+}
+
+function writeControls(input: Record<string, unknown>): Proposal {
+  const previous: ProjectInput = store.input;
+  const overrides = { ...(input.resetOverrides === true ? {} : previous.overrides), ...((input.overrides as Record<string, string[]> | undefined) ?? {}) };
+  const parsed = ProjectInputSchema.safeParse({ overrides, actions: input.actions ?? previous.actions });
+  if (!parsed.success) return fail(`The controls are not valid: ${parsed.error.issues.slice(0, 3).map((i) => `${i.path.join('.')}: ${i.message}`).join('; ')}`);
+  const next = parsed.data;
+  const problems = checkProjectInput(next);
+  return {
+    tool: 'write_controls',
+    title: 'Change the game\'s controls',
+    lines: [`${Object.keys(next.overrides).length} built-in action(s) changed and ${next.actions.length} of the game's own.`, ...problems.map((p) => `Warning: ${p}`)],
+    diff: { name: 'input.json', lines: lineDiff(lines(previous), lines(next)) },
+    async apply() {
+      store.setProjectInput(next);
+      await store.flushStory();
+      return `The controls are updated.${problems.length ? ` The checker still reports: ${problems.join(' | ')}` : ' The checker found no problems.'}`;
+    },
+    async undo() {
+      store.setProjectInput(previous);
+      await store.flushStory();
+      return true;
+    },
+  };
+}
+
+function setProjectSettings(input: Record<string, unknown>): Proposal {
+  const p = store.state.project?.project;
+  if (!p) return fail('No project is open.');
+  const patch: Parameters<typeof store.updateProjectSettings>[0] = {};
+  const notes: string[] = [];
+  if (typeof input.name === 'string') {
+    patch.name = input.name.trim();
+    notes.push(`Name the game "${patch.name}".`);
+  }
+  if (typeof input.startScene === 'string') {
+    if (!p.scenes.includes(input.startScene)) return fail(`"${input.startScene}" is not a scene of this project. The scenes are: ${p.scenes.join(', ')}.`);
+    patch.startScene = input.startScene;
+    notes.push(`Start in ${input.startScene}.`);
+  }
+  if (input.titleScreen !== undefined || input.subtitle !== undefined) {
+    const enabled = typeof input.titleScreen === 'boolean' ? input.titleScreen : (p.title?.enabled ?? false);
+    patch.title = { enabled, subtitle: typeof input.subtitle === 'string' ? input.subtitle : (p.title?.subtitle ?? '') };
+    notes.push(enabled ? `Show a title screen${patch.title.subtitle ? ` with the line "${patch.title.subtitle}"` : ''}.` : 'Do not show a title screen.');
+  }
+  if (notes.length === 0) return fail('Nothing to change: give a name, a startScene, titleScreen or subtitle.');
+  const before = { name: p.name, startScene: p.startScene, title: p.title };
+  return {
+    tool: 'set_project_settings',
+    title: 'Change the project settings',
+    lines: notes,
+    async apply() {
+      const ok = await store.updateProjectSettings(patch);
+      return ok ? 'The project settings are saved.' : fail('The settings could not be saved.');
+    },
+    async undo() {
+      return store.updateProjectSettings(before);
+    },
+  };
+}
+
 function setRegions(input: Record<string, unknown>): Proposal {
   const doc = requireEditing();
   const list = input.regions as { id?: string; name: string; x: number; y: number; w: number; h: number; cameraBounds?: boolean; music?: string; darkness?: number; bossActive?: boolean }[];
@@ -385,6 +479,12 @@ export async function prepareStoryAction(name: string, input: Record<string, unk
       return writeWorldMap(input);
     case 'write_mixer':
       return writeMixer(input);
+    case 'write_ui_layout':
+      return writeUiLayout(input);
+    case 'write_controls':
+      return writeControls(input);
+    case 'set_project_settings':
+      return setProjectSettings(input);
     case 'set_regions':
       return setRegions(input);
     case 'write_translation':

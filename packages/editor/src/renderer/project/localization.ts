@@ -1,4 +1,4 @@
-import { LanguageSchema, defaultInstructions, newLanguage, type MinigameData, type CutsceneData, type DialogueData, type EventRow, type ItemData, type LanguageData, type SceneData } from '@tilewright/runtime';
+import { LanguageSchema, defaultInstructions, newLanguage, type MinigameData, type CutsceneData, type DialogueData, type EventRow, type ItemData, type LanguageData, type SceneData, type UiLayout } from '@tilewright/runtime';
 import { uiStrings } from '@tilewright/behaviors';
 import { joinPath } from './api';
 import { UserError } from './io';
@@ -31,6 +31,7 @@ export function collectStrings(
   scenes: readonly { path: string; scene: SceneData }[],
   menus: readonly string[] = uiStrings(),
   minigames: readonly MinigameData[] = [],
+  interfaceStrings: readonly string[] = [],
 ): SourceString[] {
   const seen = new Map<string, string>();
   const add = (text: unknown, where: string): void => {
@@ -72,6 +73,7 @@ export function collectStrings(
     for (const e of scene.entities) add((e.components.pickup as { message?: string } | undefined)?.message, `${label}: ${e.name}`);
   }
   for (const s of menus) add(s, 'Game menus and messages');
+  for (const s of interfaceStrings) add(s, 'Title screen and heads-up display');
   return [...seen].map(([text, where]) => ({ text, where }));
 }
 
@@ -121,4 +123,15 @@ export function makeLanguage(code: string, name: string): LanguageData {
   const problem = languageProblem(code, name, []);
   if (problem) throw new UserError(problem);
   return newLanguage(code, name.trim());
+}
+
+/** The words the title screen and the game's own counters, bars and texts show (they can be translated too). */
+export function interfaceTexts(layout: UiLayout | undefined, project: { name: string; title?: { enabled: boolean; subtitle: string } | undefined } | undefined): string[] {
+  const out: string[] = [];
+  if (project?.title?.enabled) out.push(project.name, project.title.subtitle);
+  for (const w of layout?.widgets ?? []) {
+    if (w.kind === 'counter' || w.kind === 'bar') out.push(w.label);
+    else if (w.kind === 'text') out.push(w.text);
+  }
+  return out.filter((t) => t.trim() !== '');
 }

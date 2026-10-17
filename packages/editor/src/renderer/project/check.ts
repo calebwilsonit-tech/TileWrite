@@ -1,4 +1,4 @@
-import { checkDialogue } from '@tilewright/runtime';
+import { checkDialogue, checkProjectInput, checkUiLayout, type ProjectInput, type UiLayout } from '@tilewright/runtime';
 import { checkCutscene, checkMinigame, checkMixer, checkWorldMap, expandEntities, type WorldMapData, type MixerData, type MinigameData, type SkinData, type CutsceneData, type DialogueData, type LanguageData, type EventRow, type ItemData, type PrefabData, type ProjectData, type SceneData } from '@tilewright/runtime';
 import { analyseLevel, analysePushPuzzles } from '@tilewright/playbot';
 import { EditorDoc } from '../model/doc';
@@ -6,7 +6,7 @@ import { validateScene } from '../model/validate';
 import { storyVariables } from '../model/story-vars';
 import { loadScene, type ProjectFs } from './io';
 import { checkRules, missingTiles, ownTiles, tileArtProblems } from './tiles';
-import { collectStrings, coverage } from './localization';
+import { collectStrings, coverage, interfaceTexts } from './localization';
 import { skinProblems } from './story';
 
 export interface ProjectProblem {
@@ -53,6 +53,7 @@ export async function checkProject(
   minigames: readonly MinigameData[] = [],
   mixer?: MixerData,
   worldMap?: WorldMapData | null,
+  extras: { input?: ProjectInput; layout?: UiLayout } = {},
 ): Promise<ProjectProblem[]> {
   const out: ProjectProblem[] = [];
   const scenes = new Map<string, SceneData>();
@@ -136,7 +137,7 @@ export async function checkProject(
   }
 
   if (languages.length > 0) {
-    const sources = collectStrings(story, [...scenes].map(([p, scene]) => ({ path: p, scene })), undefined, minigames);
+    const sources = collectStrings(story, [...scenes].map(([p, scene]) => ({ path: p, scene })), undefined, minigames, interfaceTexts(extras.layout, project));
     for (const l of languages) {
       const c = coverage(l, sources);
       if (c.missing.length > 0) out.push({ id: `language:${l.code}`, severity: 'warning', scene: '', message: `The language ${l.name} is missing ${c.missing.length} of ${c.total} lines (for example "${c.missing[0]!.text}"), so players will see those in the original text. Open Story -> Translations.` });
@@ -151,6 +152,8 @@ export async function checkProject(
   if (mixer && soundNames) for (const text of checkMixer(mixer, soundNames)) out.push({ id: `mixer:${text}`, severity: 'warning', scene: '', message: `Mixer: ${text}` });
   for (const m of minigames) for (const text of checkMinigame(m, { items: itemIds })) out.push({ id: `minigame:${m.name}:${text}`, severity: 'warning', scene: '', message: text });
   for (const text of tileArtProblems(tiles, spriteNames)) out.push({ id: `tile-art:${text}`, severity: 'warning', scene: '', message: text });
+  if (extras.input) for (const text of checkProjectInput(extras.input)) out.push({ id: `controls:${text}`, severity: 'warning', scene: '', message: `Controls: ${text}` });
+  if (extras.layout) for (const text of checkUiLayout(extras.layout)) out.push({ id: `interface:${text}`, severity: 'warning', scene: '', message: `Interface: ${text}` });
   for (const text of skinProblems(skins, { sprites: spriteNames, items: itemIds })) out.push({ id: `skin:${text}`, severity: 'warning', scene: '', message: text });
   return out;
 }

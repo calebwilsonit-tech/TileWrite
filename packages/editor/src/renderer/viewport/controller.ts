@@ -736,13 +736,16 @@ export class ViewportController {
         },
         quit: () => store.stop(),
         autoPlay,
+        ...(project?.project.title?.enabled ? { title: { text: project.project.name, subtitle: project.project.title.subtitle } } : {}),
         flags: () => store.state.view,
         record,
         skins: store.skins,
         minigames: store.minigames,
         worldMap: store.worldMap,
+        layout: store.uiLayout,
+        input: store.input,
         mixer: studio.mixerSource,
-        liveAssets: () => ({ prefabs: store.prefabs, sprites: studio.assets, story: store.story, skins: store.skins, minigames: store.minigames, worldMap: store.worldMap }),
+        liveAssets: () => ({ prefabs: store.prefabs, sprites: studio.assets, story: store.story, skins: store.skins, minigames: store.minigames, worldMap: store.worldMap, layout: store.uiLayout, input: store.input }),
       });
     } catch (e) {
       store.notify('error', `The game could not start: ${e instanceof Error ? e.message : String(e)}`);

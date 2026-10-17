@@ -27,6 +27,9 @@ test('M15: Claude writes minigames, skins, a world map and the sound mix, edits 
         tool('m4', 'write_mixer', { buses: { music: 0.6 }, ducking: { amount: 0.5 }, sounds: { hit: { volume: 0.7 } } }),
         tool('m5', 'create_prefab', { object: crate, name: 'Test Prefab' }),
         tool('m6', 'edit_event_rows', { operations: [{ op: 'add', row: { comment: 'Greet', conditions: [{ type: 'start' }], actions: [{ type: 'message', params: { text: 'Welcome!' } }] } }] }),
+        tool('m7', 'write_ui_layout', { theme: { font: 'sans', accent: '#00ff88' }, widgets: [{ id: 'coins', kind: 'counter', anchor: 'tr', x: 12, y: 12, label: 'Coins', variable: 'coins' }] }),
+        tool('m8', 'write_controls', { overrides: { interact: ['key:KeyF'] }, actions: [{ id: 'dash', label: 'Dash', bindings: ['key:KeyZ'] }] }),
+        tool('m9', 'set_project_settings', { name: 'Tool Game Deluxe', titleScreen: true, subtitle: 'A tale' }),
       ],
     },
     { content: [{ type: 'text', text: 'All set.' }] },
@@ -63,6 +66,17 @@ test('M15: Claude writes minigames, skins, a world map and the sound mix, edits 
   await expect(page.getByTestId('proposal').nth(5)).toContainText('Add a row');
   await page.getByTestId('proposal-apply').click();
   expect(await page.evaluate(() => window.__store!.doc!.events.map((r) => r.comment))).toEqual(['Greet']);
+  // the screen layout, the controls and the project settings
+  await expect(page.getByTestId('proposal').nth(6)).toContainText('screen layout');
+  await page.getByTestId('proposal-apply').click();
+  expect(await page.evaluate(() => ({ font: window.__store!.uiLayout.theme.font, ids: window.__store!.uiLayout.widgets.map((w) => w.id) }))).toEqual({ font: 'sans', ids: ['coins', 'hearts', 'lightbar', 'slots', 'bosses', 'toasts'] });
+  await expect(page.getByTestId('proposal').nth(7)).toContainText('controls');
+  await page.getByTestId('proposal-apply').click();
+  expect(await page.evaluate(() => ({ keys: window.__store!.input.overrides.interact, dash: window.__store!.input.actions.map((a) => a.id) }))).toEqual({ keys: ['key:KeyF'], dash: ['dash'] });
+  await expect(page.getByTestId('proposal').nth(8)).toContainText('project settings');
+  await page.getByTestId('proposal-apply').click();
+  await expect.poll(() => page.evaluate(() => window.__store!.state.project!.project.title?.enabled)).toBe(true);
+  expect(await page.evaluate(() => window.__store!.state.project!.project.name)).toBe('Tool Game Deluxe');
   await idle(page);
 
   // all of it is one history: the row edit, then the prefab, then the story changes, undone newest first

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { csvToStrings, stringsToCsv, type LanguageData } from '@tilewright/runtime';
 import { api, joinPath } from '../project/api';
 import { assetFs } from '../project/assetFs';
-import { LOCALE_DIR, collectStrings, coverage, deleteLanguage, languageProblem, loadLanguages, makeLanguage, saveLanguage, type SourceString } from '../project/localization';
+import { LOCALE_DIR, collectStrings, coverage, interfaceTexts, deleteLanguage, languageProblem, loadLanguages, makeLanguage, saveLanguage, type SourceString } from '../project/localization';
 import { store, useApp } from './store';
 
 /**
@@ -23,7 +23,7 @@ export function TranslationsDialog() {
 
   const scan = async (): Promise<SourceString[]> => {
     const scenes = await store.loadAllScenes();
-    const found = collectStrings(store.story, [...scenes].map(([path, scene]) => ({ path, scene })), undefined, store.minigames);
+    const found = collectStrings(store.story, [...scenes].map(([path, scene]) => ({ path, scene })), undefined, store.minigames, interfaceTexts(store.uiLayout, store.state.project?.project));
     setSources(found);
     return found;
   };
