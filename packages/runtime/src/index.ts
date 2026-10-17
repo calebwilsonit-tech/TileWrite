@@ -32,5 +32,6 @@ export * from './story/settings';
 export * from './story/strings';
 export * from './story/skins';
 export * from './story/minigames';
+export * from './story/worldmap';
 export * from './core/profiler';
 export * from './core/crash';

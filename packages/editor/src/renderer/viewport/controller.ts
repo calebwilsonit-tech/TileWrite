@@ -740,8 +740,9 @@ export class ViewportController {
         record,
         skins: store.skins,
         minigames: store.minigames,
+        worldMap: store.worldMap,
         mixer: studio.mixerSource,
-        liveAssets: () => ({ prefabs: store.prefabs, sprites: studio.assets, story: store.story, skins: store.skins, minigames: store.minigames }),
+        liveAssets: () => ({ prefabs: store.prefabs, sprites: studio.assets, story: store.story, skins: store.skins, minigames: store.minigames, worldMap: store.worldMap }),
       });
     } catch (e) {
       store.notify('error', `The game could not start: ${e instanceof Error ? e.message : String(e)}`);

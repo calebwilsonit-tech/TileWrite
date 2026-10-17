@@ -32,6 +32,7 @@ import {
   type SkinData,
   type MinigameData,
   type MixerData,
+  type WorldMapData,
   spatialize,
   type AmbientRequest,
   type SaveData,
@@ -88,11 +89,13 @@ export interface PlayOptions {
   /** Switch the window to or from full screen (only a game in its own window can). */
   setFullscreen?: (on: boolean) => void;
   /** The project's prefabs, sprites and story as they are now (for hot reload while playing in the editor). */
-  liveAssets?: () => { prefabs: ReadonlyMap<string, PrefabData>; sprites: ReadonlyMap<string, SpriteData>; story: PlayOptions['story']; skins?: readonly SkinData[]; minigames?: readonly MinigameData[] };
+  liveAssets?: () => { prefabs: ReadonlyMap<string, PrefabData>; sprites: ReadonlyMap<string, SpriteData>; story: PlayOptions['story']; skins?: readonly SkinData[]; minigames?: readonly MinigameData[]; worldMap?: WorldMapData | null };
   /** The player's other looks. */
   skins?: readonly SkinData[];
   /** The project's minigames. */
   minigames?: readonly MinigameData[];
+  /** The world map (Story -> Map), if the game has one. */
+  worldMap?: WorldMapData | null;
   /** The project's mix, when the host keeps it live (the editor's Mixer panel); otherwise it is read from the project folder. */
   mixer?: { get(): MixerData; subscribe(fn: () => void): () => void };
 }
@@ -141,6 +144,7 @@ export class PlaySession {
     for (const [name, d] of o.story.dialogues) sim.assets.dialogues.set(name, d);
     for (const [name, c] of o.story.cutscenes) sim.assets.cutscenes.set(name, c);
     for (const m of o.minigames ?? []) sim.assets.minigames.set(m.name, m);
+    sim.assets.worldMap = o.worldMap ?? null;
     this.saves = new SaveManager(
       {
         read: (p) => assetFs.read(p),
@@ -269,6 +273,7 @@ export class PlaySession {
       for (const [name, d] of live.story.dialogues) sim.assets.dialogues.set(name, d);
       sim.assets.cutscenes.clear();
       for (const [name, c] of live.story.cutscenes) sim.assets.cutscenes.set(name, c);
+      if (live.worldMap !== undefined) sim.assets.worldMap = live.worldMap;
       if (live.minigames) {
         sim.assets.minigames.clear();
         for (const m of live.minigames) sim.assets.minigames.set(m.name, m);
@@ -594,6 +599,12 @@ export class PlaySession {
           const p = this.sim.world.withTag('player')[0];
           if (p) this.placeAt(p, post.x, post.y, post.h);
         } else void this.enterScene(post.scene, { at: { x: post.x, y: post.y, h: post.h } });
+      },
+      travelToScene: (scene, spawn) => {
+        if (scene === this.scenePath || scene === '') {
+          const p = this.sim.world.withTag('player')[0];
+          if (p && spawn !== '' && !placeAtSpawn(contextOf(this.sim), p, spawn)) this.o.notify('warn', `There is no place called "${spawn}" to go to.`);
+        } else void this.enterScene(scene, spawn !== '' ? { spawn } : {});
       },
       quit: () => this.o.quit(),
       fullscreen: this.o.setFullscreen ? { get: () => window.outerWidth >= screen.width && window.outerHeight >= screen.height, set: (on) => this.o.setFullscreen?.(on) } : undefined,

@@ -4,6 +4,8 @@ import {
   ItemsFileSchema,
   SkinsFileSchema,
   MinigamesFileSchema,
+  WorldMapSchema,
+  type WorldMapData,
   type MinigameData,
   CURRENT_SCHEMA_VERSION,
   type SkinData,
@@ -19,6 +21,7 @@ import { UserError } from './io';
 export const ITEMS_FILE = 'assets/items.json';
 export const SKINS_FILE = 'assets/skins.json';
 export const MINIGAMES_FILE = 'assets/minigames.json';
+export const WORLDMAP_FILE = 'assets/worldmap.json';
 export const DIALOGUE_DIR = 'assets/dialogues';
 export const CUTSCENE_DIR = 'assets/cutscenes';
 const DIALOGUE_EXT = '.dialogue.json';
@@ -79,6 +82,29 @@ export async function saveItems(fs: AssetFs, dir: string, items: readonly ItemDa
     ids.add(i.id);
   }
   await fs.write(joinPath(dir, ITEMS_FILE), json({ schemaVersion: CURRENT_SCHEMA_VERSION, items }));
+}
+
+// ---------- the world map ----------
+
+export async function loadWorldMap(fs: AssetFs, dir: string): Promise<{ map: WorldMapData | null; problems: string[] }> {
+  const file = joinPath(dir, WORLDMAP_FILE);
+  try {
+    if (!(await fs.exists(file))) return { map: null, problems: [] };
+    const r = WorldMapSchema.safeParse(JSON.parse(await fs.read(file)));
+    if (!r.success) return { map: null, problems: [`The world map file is not valid: ${r.error.issues[0]?.message ?? 'unknown problem'}.`] };
+    return { map: r.data, problems: [] };
+  } catch (e) {
+    return { map: null, problems: [`The world map file could not be read (${(e as Error).message}).`] };
+  }
+}
+
+export async function saveWorldMap(fs: AssetFs, dir: string, map: WorldMapData): Promise<void> {
+  const ids = new Set<string>();
+  for (const n of map.nodes) {
+    if (ids.has(n.id)) throw new UserError(`Two places on the map share the id "${n.id}". Place ids must be different.`);
+    ids.add(n.id);
+  }
+  await fs.write(joinPath(dir, WORLDMAP_FILE), json({ ...map, schemaVersion: CURRENT_SCHEMA_VERSION }));
 }
 
 // ---------- minigames ----------

@@ -28,10 +28,11 @@ import { storyNameProblem } from '../project/story';
 import { SoundField } from './SoundField';
 import { DialogueGraph } from './DialogueGraph';
 import { CutsceneTimeline } from './CutsceneTimeline';
+import { WorldMapEditor } from './WorldMapEditor';
 import { connect, linkTarget, nodeHeight, portsOf, spotForNew } from '../model/dialogue-graph';
 import { CheckField, NumberField, SelectField, TextField, hexToNumber, numberToHex } from './fields';
 
-type Tab = 'items' | 'dialogues' | 'cutscenes' | 'minigames' | 'skins';
+type Tab = 'items' | 'dialogues' | 'cutscenes' | 'minigames' | 'map' | 'skins';
 
 export function StoryPanel() {
   useApp((s) => s.storyVersion);
@@ -39,7 +40,7 @@ export function StoryPanel() {
   return (
     <div className="story-panel" data-testid="story-panel">
       <div className="seg" role="tablist">
-        {(['items', 'dialogues', 'cutscenes', 'minigames', 'skins'] as Tab[]).map((t) => (
+        {(['items', 'dialogues', 'cutscenes', 'minigames', 'map', 'skins'] as Tab[]).map((t) => (
           <button key={t} role="tab" aria-selected={tab === t} className={tab === t ? 'on' : ''} data-testid={`story-tab-${t}`} onClick={() => setTab(t)}>
             {t[0]!.toUpperCase() + t.slice(1)}
           </button>
@@ -54,6 +55,7 @@ export function StoryPanel() {
       {tab === 'dialogues' && <DialoguesTab />}
       {tab === 'cutscenes' && <CutscenesTab />}
       {tab === 'minigames' && <MinigamesTab />}
+      {tab === 'map' && <WorldMapEditor />}
       {tab === 'skins' && <SkinsTab />}
     </div>
   );

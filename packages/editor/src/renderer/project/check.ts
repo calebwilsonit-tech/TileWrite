@@ -1,5 +1,5 @@
 import { checkDialogue } from '@tilewright/runtime';
-import { checkCutscene, checkMinigame, checkMixer, expandEntities, type MixerData, type MinigameData, type SkinData, type CutsceneData, type DialogueData, type LanguageData, type EventRow, type ItemData, type PrefabData, type ProjectData, type SceneData } from '@tilewright/runtime';
+import { checkCutscene, checkMinigame, checkMixer, checkWorldMap, expandEntities, type WorldMapData, type MixerData, type MinigameData, type SkinData, type CutsceneData, type DialogueData, type LanguageData, type EventRow, type ItemData, type PrefabData, type ProjectData, type SceneData } from '@tilewright/runtime';
 import { analyseLevel, analysePushPuzzles } from '@tilewright/playbot';
 import { EditorDoc } from '../model/doc';
 import { validateScene } from '../model/validate';
@@ -52,6 +52,7 @@ export async function checkProject(
   skins: readonly SkinData[] = [],
   minigames: readonly MinigameData[] = [],
   mixer?: MixerData,
+  worldMap?: WorldMapData | null,
 ): Promise<ProjectProblem[]> {
   const out: ProjectProblem[] = [];
   const scenes = new Map<string, SceneData>();
@@ -146,6 +147,7 @@ export async function checkProject(
   for (const [name, d] of story.dialogues) for (const p of checkDialogue(d, known)) out.push({ id: `dialogue:${name}:${p.text}`, severity: 'warning', scene: '', message: `Dialogue "${name}": ${p.text}` });
   const cknown = { dialogues: new Set(story.dialogues.keys()), items: itemIds, ...(soundNames ? { sounds: soundNames } : {}) };
   for (const [name, c] of story.cutscenes) for (const p of checkCutscene(c, cknown)) out.push({ id: `cutscene:${name}:${p.text}`, severity: 'warning', scene: '', message: `Cutscene "${name}": ${p.text}` });
+  if (worldMap && worldMap.nodes.length > 0) for (const text of checkWorldMap(worldMap, project.scenes)) out.push({ id: `worldmap:${text}`, severity: 'warning', scene: '', message: `World map: ${text}` });
   if (mixer && soundNames) for (const text of checkMixer(mixer, soundNames)) out.push({ id: `mixer:${text}`, severity: 'warning', scene: '', message: `Mixer: ${text}` });
   for (const m of minigames) for (const text of checkMinigame(m, { items: itemIds })) out.push({ id: `minigame:${m.name}:${text}`, severity: 'warning', scene: '', message: text });
   for (const text of skinProblems(skins, { sprites: spriteNames, items: itemIds })) out.push({ id: `skin:${text}`, severity: 'warning', scene: '', message: text });

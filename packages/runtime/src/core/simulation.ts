@@ -11,6 +11,7 @@ import type { ItemData } from '../story/items';
 import { StringTables } from '../story/strings';
 import type { SkinData } from '../story/skins';
 import type { MinigameData, MinigameState } from '../story/minigames';
+import type { WorldMapData } from '../story/worldmap';
 import type { TileMap } from '../tilemap/tilemap';
 import { EventBus } from './events';
 import { Profiler, SystemError } from './profiler';
@@ -31,6 +32,8 @@ export interface Assets {
   skins: SkinData[];
   /** Small games inside the game (see story/minigames.ts). */
   minigames: Map<string, MinigameData>;
+  /** The world map the player can open (null when the game has none). */
+  worldMap: WorldMapData | null;
 }
 
 /** A lantern post the player lit or rested at: where death sends them. */
@@ -181,7 +184,7 @@ export class Simulation {
   readonly uiInput = new InputState();
   readonly events = new EventBus();
   readonly tweens = new Tweens();
-  readonly assets: Assets = { sprites: new Map(), prefabs: new Map(), dialogues: new Map(), items: new Map(), cutscenes: new Map(), strings: new StringTables(), skins: [], minigames: new Map() };
+  readonly assets: Assets = { sprites: new Map(), prefabs: new Map(), dialogues: new Map(), items: new Map(), cutscenes: new Map(), strings: new StringTables(), skins: [], minigames: new Map(), worldMap: null };
   readonly runtime: SceneRuntime = newSceneRuntime();
   readonly rng: Rng;
   readonly profiler = new Profiler();

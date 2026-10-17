@@ -147,6 +147,8 @@ export function loadScene(sim: Simulation, scene: SceneData, opts: LoadOptions =
   sim.runtime.regions = structuredClone(scene.regions);
   sim.runtime.lighting = undefined;
   sim.runtime.scene = opts.scene ?? sim.runtime.scene;
+  // the world map remembers where the player has been
+  if (sim.runtime.scene !== '') sim.runtime.vars[`visited:${sim.runtime.scene}`] = true;
   sim.runtime.persistentIds = entities.filter((e) => e.tags.includes('persistent')).map((e) => e.id);
   sim.runtime.dialogue = null;
   sim.runtime.minigame = null;

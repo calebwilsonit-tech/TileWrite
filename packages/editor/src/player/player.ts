@@ -6,7 +6,7 @@ import { joinPath } from '../renderer/project/api';
 import { assetFs } from '../renderer/project/assetFs';
 import { loadScene, openProject } from '../renderer/project/io';
 import { loadAllPrefabs } from '../renderer/project/prefabs';
-import { loadCutscenes, loadDialogues, loadItems, loadMinigames, loadSkins } from '../renderer/project/story';
+import { loadCutscenes, loadDialogues, loadItems, loadMinigames, loadSkins, loadWorldMap } from '../renderer/project/story';
 import { loadAllSprites } from '../renderer/studio/assets';
 import { PlaySession } from '../renderer/viewport/play-session';
 
@@ -119,7 +119,7 @@ async function boot(): Promise<void> {
   const splashScreen = manifest.splashText ? splash(manifest.splashText) : null;
 
   const { project } = await openProject(assetFs, root);
-  const [{ prefabs, problems: prefabProblems }, { sprites, problems: spriteProblems }, items, dialogues, cutscenes, skins, minigames] = await Promise.all([
+  const [{ prefabs, problems: prefabProblems }, { sprites, problems: spriteProblems }, items, dialogues, cutscenes, skins, minigames, worldMap] = await Promise.all([
     loadAllPrefabs(assetFs, root),
     loadAllSprites(assetFs, root),
     loadItems(assetFs, root),
@@ -127,8 +127,9 @@ async function boot(): Promise<void> {
     loadCutscenes(assetFs, root),
     loadSkins(assetFs, root),
     loadMinigames(assetFs, root),
+    loadWorldMap(assetFs, root),
   ]);
-  for (const p of [...prefabProblems, ...spriteProblems, ...items.problems, ...dialogues.problems, ...cutscenes.problems, ...skins.problems, ...minigames.problems]) console.warn(p);
+  for (const p of [...prefabProblems, ...spriteProblems, ...items.problems, ...dialogues.problems, ...cutscenes.problems, ...skins.problems, ...minigames.problems, ...worldMap.problems]) console.warn(p);
 
   // scripts were compiled when the game was exported; they become behaviours exactly as in the editor
   const bundle = ScriptsBundleSchema.parse(JSON.parse(await assetFs.read(joinPath(root, 'scripts.json'))));
@@ -174,6 +175,7 @@ async function boot(): Promise<void> {
     story: { items: items.items, dialogues: dialogues.items, cutscenes: cutscenes.items },
     skins: skins.skins,
     minigames: minigames.minigames,
+    worldMap: worldMap.map,
     tileset: () => tileset,
     currentScene: () => null,
     notify: (kind, text) => {

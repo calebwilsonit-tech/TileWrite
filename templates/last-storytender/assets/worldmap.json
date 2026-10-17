@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "title": "The Storytender's Map",
+  "nodes": [
+    { "id": "hub", "label": "The Hub", "scene": "scenes/main.scene.json", "x": 280, "y": 340, "icon": "town", "unlock": { "kind": "always" }, "spawn": "", "hidden": false },
+    { "id": "dungeon", "label": "The Dungeon", "scene": "scenes/dungeon.scene.json", "x": 700, "y": 220, "icon": "dungeon", "unlock": { "kind": "visited" }, "spawn": "", "hidden": false }
+  ],
+  "links": [{ "a": "hub", "b": "dungeon" }]
+}

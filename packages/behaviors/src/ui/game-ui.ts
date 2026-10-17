@@ -1,6 +1,10 @@
 import {
   ACTION_LABELS,
   availableSkins,
+  MAP_HEIGHT,
+  MAP_WIDTH,
+  neighbourInDirection,
+  placeState,
   bindingLabel,
   carried,
   languageChoices,
@@ -33,6 +37,8 @@ export interface GameUiHost {
   loadFrom(slot: string): Promise<string>;
   slots(): Promise<SlotInfo[]>;
   travelTo(post: LitPost): void;
+  /** Go to a scene (and a spawn point in it: an object's name or "x,y"; '' = its player start). */
+  travelToScene(scene: string, spawn: string): void;
   quit?(): void;
   /** Full screen on and off; only a game running in its own window can offer it. */
   fullscreen?: { get(): boolean; set(on: boolean): void };
@@ -47,6 +53,7 @@ export const UI_STRINGS: readonly string[] = [
   'Paused', 'Resume', 'Inventory', 'Travel to a lit lantern', 'Save game', 'Load game', 'Settings', 'Restart this area', 'Quit',
   '{n} lit', 'You are carrying nothing.', 'press E to use', 'slot {n}', 'E: use   A / D: choose its quick slot   Esc: back',
   'No lanterns lit yet. Light one by pressing E beside it.', 'this area', 'Autosave', 'Slot {n}', 'damaged', 'empty',
+  'Map', 'you are here', 'Arrows or W A S D: choose a place   E or click: travel   Esc: back', 'Nowhere to go yet.',
   'Master volume', 'Music volume', 'Effects volume', 'Voice volume', 'Difficulty', 'easy', 'normal', 'hard', 'Screen shake and hit freeze', 'on', 'off',
   'Camera zoom', 'Full screen', 'Show frame rate', 'Appearance', 'Original', 'Language', 'Default', 'Controls', 'press a key or button...', 'not set', 'Reset all controls',
   'E: change the selected control, then press the new key or button', 'W / S to choose, E to select, Esc or P to go back',
@@ -58,7 +65,9 @@ export const UI_STRINGS: readonly string[] = [
 /** Every fixed text of the game's screens, including the names of the controls. */
 export const uiStrings = (): string[] => [...new Set([...UI_STRINGS, ...Object.values(ACTION_LABELS)])];
 
-type Screen = 'main' | 'inventory' | 'travel' | 'save' | 'load' | 'settings' | 'controls';
+type Screen = 'main' | 'inventory' | 'travel' | 'map' | 'save' | 'load' | 'settings' | 'controls';
+
+const MAP_GLYPHS: Record<string, string> = { pin: '\u25CF', town: '\u2302', dungeon: '\u2620', cave: '\u25D3', forest: '\u2663', tower: '\u265C', castle: '\u265B', camp: '\u25B2', harbor: '\u2693' };
 
 interface Row {
   label: string;
@@ -102,6 +111,9 @@ const CSS = `
 .tw-row.on { background: #2b3350; border-color: #6aa8ff; }
 .tw-row .detail { opacity: .75; text-align: right; }
 .tw-hint { margin-top: 12px; font-size: 12px; opacity: .7; }
+.tw-panel.wide { width: min(94%, 920px); }
+.tw-map { width: 100%; height: auto; display: block; margin-bottom: 10px; border-radius: 8px; border: 1px solid #d9c6a055; background: #2a2418; }
+.tw-map .place { cursor: pointer; } .tw-map .place text { pointer-events: none; }
 `;
 
 const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls = '', text = ''): HTMLElementTagNameMap[K] => {
@@ -204,7 +216,7 @@ export class GameUi {
 
   private go(screen: Screen): void {
     this.screen = screen;
-    this.focus = 0;
+    this.focus = screen === 'map' ? Math.max(0, this.mapPlaces().findIndex((p) => p.state === 'here')) : 0;
     this.message = '';
     if (screen === 'save' || screen === 'load') void this.refreshSlots();
   }
@@ -246,16 +258,100 @@ export class GameUi {
       if (sim.runtime.dialogue || sim.runtime.cutscene || sim.runtime.minigame) return;
       if (ui.pressed('pause')) this.openMenu('main');
       else if (ui.pressed('inventory')) this.openMenu('inventory');
-      else if (ui.pressed('map')) this.openMenu('travel');
+      else if (ui.pressed('map')) this.openMenu(sim.assets.worldMap && sim.assets.worldMap.nodes.length > 0 ? 'map' : 'travel');
       return;
     }
     if (this.capturing) return; // waiting for a key to bind
+    if (this.screen === 'map') {
+      const dir = ui.pressed('move_left') ? 'left' : ui.pressed('move_right') ? 'right' : ui.pressed('move_up') ? 'up' : ui.pressed('move_down') ? 'down' : null;
+      if (dir) {
+        const places = this.mapPlaces();
+        const from = places[this.focus]?.node.id ?? '';
+        const to = neighbourInDirection(places.map((p) => p.node), from, dir);
+        const at = places.findIndex((p) => p.node.id === to);
+        if (at >= 0) this.focus = at;
+      }
+      if (ui.pressed('interact')) this.rows[this.focus]?.run?.();
+      if (ui.pressed('pause')) this.back();
+      return;
+    }
     if (ui.pressed('move_up')) this.focus = (this.focus - 1 + this.rows.length) % Math.max(1, this.rows.length);
     if (ui.pressed('move_down')) this.focus = (this.focus + 1) % Math.max(1, this.rows.length);
     if (ui.pressed('move_left')) this.rows[this.focus]?.adjust?.(-1);
     if (ui.pressed('move_right')) this.rows[this.focus]?.adjust?.(1);
     if (ui.pressed('interact')) this.rows[this.focus]?.run?.();
     if (ui.pressed('pause')) this.back();
+  }
+
+  /** The places of the world map the player can see and pick (open ones, and the one they are standing in). */
+  private mapPlaces(): { node: import('@tilewright/runtime').MapNode; state: ReturnType<typeof placeState> }[] {
+    const sim = this.host.sim;
+    const map = sim.assets.worldMap;
+    if (!map) return [];
+    const posts = litPosts(sim.runtime.vars);
+    const lit = (scene: string): boolean => posts.some((p) => p.scene === scene);
+    return map.nodes.map((node) => ({ node, state: placeState(node, sim.runtime.vars, sim.runtime.scene, lit) })).filter((p) => p.state === 'open' || p.state === 'here');
+  }
+
+  private travelToPlace(node: import('@tilewright/runtime').MapNode): void {
+    const sim = this.host.sim;
+    this.closeMenu();
+    // a place that unlocks with a lantern: arrive at its lit lantern
+    const post = node.unlock.kind === 'lantern' ? litPosts(sim.runtime.vars).find((p) => p.scene === node.scene) : undefined;
+    if (post) this.host.travelTo(post);
+    else this.host.travelToScene(node.scene, node.spawn);
+  }
+
+  /** The picture of the map: places joined by paths, the one under the cursor ringed, locked ones as question marks. */
+  private mapSvg(): SVGSVGElement {
+    const sim = this.host.sim;
+    const map = sim.assets.worldMap!;
+    const ns = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', `0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`);
+    svg.setAttribute('class', 'tw-map');
+    svg.setAttribute('data-testid', 'tw-map');
+    const make = <K extends keyof SVGElementTagNameMap>(tag: K, attrs: Record<string, string | number>, parent: Element = svg): SVGElementTagNameMap[K] => {
+      const e = document.createElementNS(ns, tag);
+      for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, String(v));
+      parent.appendChild(e);
+      return e;
+    };
+    const posts = litPosts(sim.runtime.vars);
+    const lit = (scene: string): boolean => posts.some((p) => p.scene === scene);
+    const state = new Map(map.nodes.map((n) => [n.id, placeState(n, sim.runtime.vars, sim.runtime.scene, lit)]));
+    const shown = (id: string): boolean => (state.get(id) ?? 'hidden') !== 'hidden';
+    const byId = new Map(map.nodes.map((n) => [n.id, n]));
+    for (const l of map.links) {
+      const a = byId.get(l.a);
+      const b = byId.get(l.b);
+      if (!a || !b || !shown(a.id) || !shown(b.id)) continue;
+      make('line', { x1: a.x, y1: a.y, x2: b.x, y2: b.y, stroke: '#d9c6a0', 'stroke-width': 3, 'stroke-dasharray': '10 7', opacity: 0.6 });
+    }
+    const focused = this.mapPlaces()[this.focus]?.node.id;
+    for (const n of map.nodes) {
+      const st = state.get(n.id)!;
+      if (st === 'hidden') continue;
+      const g = make('g', { class: 'place', transform: `translate(${n.x},${n.y})`, 'data-testid': `tw-place-${n.id}`, 'data-state': st });
+      if (n.id === focused) make('circle', { r: 30, fill: 'none', stroke: '#6aa8ff', 'stroke-width': 4 }, g);
+      make('circle', { r: 22, fill: st === 'locked' ? '#3b3b44' : st === 'here' ? '#2b4c7e' : '#4a3b1e', stroke: st === 'locked' ? '#777' : '#ffd98a', 'stroke-width': 3 }, g);
+      const glyph = make('text', { 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': 22, fill: st === 'locked' ? '#999' : '#ffd98a' }, g);
+      glyph.textContent = st === 'locked' ? '?' : (MAP_GLYPHS[n.icon] ?? MAP_GLYPHS.pin!);
+      const label = make('text', { 'text-anchor': 'middle', y: 42, 'font-size': 20, fill: st === 'locked' ? '#999' : '#f4efe6' }, g);
+      label.textContent = st === 'locked' ? '?' : this.tr(n.label);
+      if (st === 'here') {
+        const you = make('text', { 'text-anchor': 'middle', y: -34, 'font-size': 15, fill: '#9cc7ff' }, g);
+        you.textContent = this.tr('you are here');
+      }
+      const index = this.mapPlaces().findIndex((p) => p.node.id === n.id);
+      if (index >= 0) {
+        g.addEventListener('click', () => {
+          this.focus = index;
+          this.rows[index]?.run?.();
+        });
+      }
+    }
+    return svg;
   }
 
   private back(): void {
@@ -379,6 +475,7 @@ export class GameUi {
       case 'main':
         rows.push({ label: 'Resume', run: () => this.closeMenu(), testId: 'resume' });
         rows.push({ label: 'Inventory', run: () => this.go('inventory'), testId: 'inventory' });
+        if (sim.assets.worldMap && sim.assets.worldMap.nodes.length > 0) rows.push({ label: 'Map', run: () => this.go('map'), testId: 'map' });
         rows.push({ label: 'Travel to a lit lantern', detail: this.fmt('{n} lit', { n: litPosts(sim.runtime.vars).length }), run: () => this.go('travel'), testId: 'travel' });
         rows.push({ label: 'Save game', run: () => this.go('save'), testId: 'save' });
         rows.push({ label: 'Load game', run: () => this.go('load'), testId: 'load' });
@@ -433,6 +530,22 @@ export class GameUi {
             testId: `post-${p.id}`,
           });
         }
+        break;
+      }
+      case 'map': {
+        title = sim.assets.worldMap?.title || 'Map';
+        const places = this.mapPlaces();
+        if (places.length === 0) rows.push({ label: 'Nowhere to go yet.' });
+        for (const p of places) {
+          const here = p.state === 'here';
+          rows.push({
+            label: p.node.label,
+            detail: here ? 'you are here' : '',
+            run: here ? undefined : () => this.travelToPlace(p.node),
+            testId: `place-${p.node.id}`,
+          });
+        }
+        hint = 'Arrows or W A S D: choose a place   E or click: travel   Esc: back';
         break;
       }
       case 'save':
@@ -555,8 +668,9 @@ export class GameUi {
     const wrap = el('div', 'tw-menu');
     wrap.dataset.sig = sig;
     wrap.setAttribute('data-testid', 'tw-menu');
-    const panel = el('div', 'tw-panel');
+    const panel = el('div', this.screen === 'map' ? 'tw-panel wide' : 'tw-panel');
     panel.appendChild(el('h2', '', this.tr(title)));
+    if (this.screen === 'map' && this.host.sim.assets.worldMap) panel.appendChild(this.mapSvg());
     this.rows.forEach((r, i) => {
       const row = el('div', `tw-row${i === this.focus ? ' on' : ''}`);
       row.appendChild(el('span', '', this.tr(r.label)));
