@@ -59,6 +59,17 @@ export function LayersPanel() {
             <span>Collision colours</span>
           </label>
           <small data-testid="collision-legend">{collisionLegend()}</small>
+          <label className="opt">
+            <span>Seen by a walker at</span>
+            <select data-testid="view-collision-level" value={view.collisionLevel === null ? 'auto' : String(view.collisionLevel)} onChange={(e) => store.setView({ collisionLevel: e.target.value === 'auto' ? null : Number(e.target.value) })}>
+              <option value="auto">the floor of each cell</option>
+              {Array.from({ length: 13 }, (_, i) => (
+                <option key={i} value={i}>
+                  height {i}
+                </option>
+              ))}
+            </select>
+          </label>
         </li>
         <li>
           <label>

@@ -644,3 +644,66 @@ describe('determinism and walk test', () => {
     expect(r.has('4,0')).toBe(false); // water beside the bridge stays unreachable
   });
 });
+
+describe('blockers that only cover some levels', () => {
+  const walkRight = (sim: Simulation, b: Body, ticks: number): void =>
+    run(sim, ticks, () => {
+      b.vx = 3;
+    });
+
+  it('a blocker with no levels stops everything, one with levels only stops what overlaps them', () => {
+    const m = flat(12, 3);
+    m.setFlag(5, 1, FLAG.BLOCK);
+    expect(m.blockedAt(5, 1, 0, 1)).toBe(true);
+    expect(m.blockedAt(5, 1, 40, 1)).toBe(true);
+    m.setBlockBand(5, 1, 0, 2); // levels 0 and 1
+    expect(m.getBlockBand(5, 1)).toEqual({ low: 0, high: 2 });
+    expect(m.blockedAt(5, 1, 0, 1)).toBe(true);
+    expect(m.blockedAt(5, 1, 1.5, 1)).toBe(true);
+    expect(m.blockedAt(5, 1, 2, 1)).toBe(false);
+    expect(m.blockedAt(5, 1, 3, 1)).toBe(false);
+    m.setBlockBand(5, 1, 3, 5); // an overhead wall: a walker on the floor is under it
+    expect(m.blockedAt(5, 1, 0, 1)).toBe(false);
+    expect(m.blockedAt(5, 1, 2.5, 1)).toBe(true); // a tall body reaching up into it
+    expect(m.blockedAt(5, 1, 3, 1)).toBe(true);
+    m.setBlockBand(5, 1, 0, 0);
+    expect(m.getBlockBand(5, 1)).toBeNull();
+  });
+
+  it('a walker on the floor is stopped by a low blocker; the same blocker does not stop a walker on a deck above it', () => {
+    const m = flat(12, 3);
+    m.setFlag(5, 1, FLAG.BLOCK);
+    m.setBlockBand(5, 1, 0, 2);
+    const low = world(m, 3.5, 1.5, 0);
+    walkRight(low.sim, low.b, 90);
+    expect(low.t.x).toBeLessThan(5.01);
+    // a bridge at level 3 over the blocker
+    const m2 = flat(12, 3);
+    m2.setFlag(5, 1, FLAG.BLOCK);
+    m2.setBlockBand(5, 1, 0, 2);
+    for (const x of [3, 4, 5, 6, 7]) m2.setDeck(x, 1, 3, 6);
+    const high = world(m2, 3.5, 1.5, 3);
+    walkRight(high.sim, high.b, 90);
+    expect(high.t.x).toBeGreaterThan(6);
+  });
+
+  it('an overhead blocker does not stop a walker on the floor beneath it (a low ceiling for tall things only)', () => {
+    const m = flat(12, 3);
+    m.setFlag(5, 1, FLAG.BLOCK);
+    m.setBlockBand(5, 1, 3, 5);
+    const w = world(m, 3.5, 1.5, 0);
+    walkRight(w.sim, w.b, 90);
+    expect(w.t.x).toBeGreaterThan(6);
+  });
+
+  it('the walk test and cell checks use the level a walker stands at', () => {
+    const m = flat(8, 1);
+    m.setFlag(3, 0, FLAG.BLOCK);
+    m.setBlockBand(3, 0, 3, 5);
+    expect(m.cellBlocked(3, 0)).toBe(false);
+    expect(reachableCells(m, { x: 0, y: 0 }).has('6,0')).toBe(true);
+    m.setBlockBand(3, 0, 0, 1);
+    expect(m.cellBlocked(3, 0)).toBe(true);
+    expect(reachableCells(m, { x: 0, y: 0 }).has('6,0')).toBe(false);
+  });
+});

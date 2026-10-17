@@ -42,7 +42,7 @@ Two more workspaces sit beside **World** at the top: **Sprites** (draw and anima
 - **Cliff** (C): drag a rectangle to raise it to a height; its edges become cliffs that block walking.
 - **Pit** (P), **Water** (O), **Bridge** (J, deck at a chosen level): Shift removes.
 
-**Collision**: Blocker (K) paints invisible walls; One-way edge makes a side that cannot be entered; **Walk test** (H) shows everywhere the player could walk to from a clicked cell. Collision comes from the terrain automatically (heights, slopes, pits, water, decks); the overlay (Layers → Collision colours, or automatically while a terrain tool is active) shows it: green walkable, red blocked, blue water, yellow stairs, orange bridge.
+**Collision**: Blocker (K) paints invisible walls, at every height or (untick "Blocks at every height") only between two levels: a low wall that a bridge above can pass over, or an overhead blocker that only stops tall things on high decks (Shift clears); One-way edge makes a side that cannot be entered; **Walk test** (H) shows everywhere the player could walk to from a clicked cell. Collision comes from the terrain automatically (heights, slopes, pits, water, decks); the overlay (Layers → Collision colours, or automatically while a terrain tool is active) shows it: green walkable, red blocked, blue water, yellow stairs, orange bridge, pink "blocks other heights only". **Layers -> Seen by a walker at** shows the colours as a walker at height 0, 1, 2... would meet them, so you can check each level of a multi-storey room.
 
 **Objects**: Place (N) puts the chosen object on the grid (R turns it); placing the Player start again moves it. Region (M) marks a room.
 

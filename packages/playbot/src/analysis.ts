@@ -114,11 +114,11 @@ export function reachCells(map: TileMap, start: { x: number; y: number }, walker
   const sy = Math.floor(start.y);
   const seen = new Set<string>([cellKey(sx, sy)]);
   const queue: [number, number][] = [[sx, sy]];
-  const open = (x: number, y: number): boolean => (cellWalkable(map, x, y) || (bridges.has(cellKey(x, y)) && map.inBounds(x, y) && (map.getFlags(x, y) & FLAG.BLOCK) === 0)) && !blocked.has(cellKey(x, y));
+  const open = (x: number, y: number): boolean => (cellWalkable(map, x, y) || (bridges.has(cellKey(x, y)) && map.inBounds(x, y) && !map.cellBlocked(x, y))) && !blocked.has(cellKey(x, y));
   const isHole = (x: number, y: number): boolean => {
     if (blocked.has(cellKey(x, y)) || bridges.has(cellKey(x, y))) return false;
     if (!map.inBounds(x, y)) return true;
-    if (map.getFlags(x, y) & FLAG.BLOCK) return false;
+    if (map.cellBlocked(x, y)) return false;
     return map.getTile(x, y) === 0 || (map.getDeck(x, y) === 0 && (map.getFlags(x, y) & (FLAG.PIT | FLAG.WATER)) !== 0);
   };
   while (queue.length > 0) {

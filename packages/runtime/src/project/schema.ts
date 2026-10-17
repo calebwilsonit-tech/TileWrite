@@ -25,10 +25,14 @@ export const TileMapRowsSchema = z
     decks: rows,
     deckTiles: rows,
     oneWay: rows,
+    /** Optional (only maps with level-limited blockers have them). */
+    blockLow: rows.optional(),
+    blockHigh: rows.optional(),
   })
   .superRefine((m, ctx) => {
-    for (const key of ['tiles', 'heights', 'slopes', 'flags', 'decks', 'deckTiles', 'oneWay'] as const) {
+    for (const key of ['tiles', 'heights', 'slopes', 'flags', 'decks', 'deckTiles', 'oneWay', 'blockLow', 'blockHigh'] as const) {
       const layer = m[key];
+      if (layer === undefined) continue;
       if (layer.length !== m.height || layer.some((r) => r.length !== m.width)) {
         ctx.addIssue({ code: 'custom', message: `map layer "${key}" must be ${m.width} x ${m.height}`, path: [key] });
       }

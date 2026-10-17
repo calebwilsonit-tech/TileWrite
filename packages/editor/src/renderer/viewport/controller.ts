@@ -381,6 +381,7 @@ export class ViewportController {
       iso: this.renderer.iso,
       grid: s.view.grid,
       collision: s.view.collision || !!toolMeta(s.tool).showsCollision,
+      collisionLevel: s.view.collisionLevel,
       heightLabels: s.view.heightLabels,
       regions: { list: doc.regions, visible: s.view.regions, selected: s.selectedRegion },
       walk: this.walk,

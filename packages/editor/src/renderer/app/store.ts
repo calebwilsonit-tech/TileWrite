@@ -70,6 +70,9 @@ export interface ToolOptions {
   density: number;
   slopeDir: SlopeDir;
   bridgeLevel: number;
+  /** The blocker tool: first level it covers, and the level where it stops (0 = every height). */
+  blockFrom: number;
+  blockTo: number;
   prefab: string;
   outline: boolean;
   edge: number;
@@ -78,6 +81,8 @@ export interface ToolOptions {
 export interface ViewOptions {
   grid: boolean;
   collision: boolean;
+  /** The collision colours as a walker at this level would meet them (null = at the floor of each cell). */
+  collisionLevel: number | null;
   heightLabels: boolean;
   /** Trigger areas and solid objects. */
   triggers: boolean;
@@ -176,11 +181,13 @@ const initial: AppState = {
     density: 0.3,
     slopeDir: SLOPE.E,
     bridgeLevel: 1,
+    blockFrom: 0,
+    blockTo: 0,
     prefab: 'crate',
     outline: false,
     edge: 1,
   },
-  view: { grid: true, collision: false, heightLabels: false, triggers: false, ai: true, lights: false, depth: false, profiler: false, ground: true, walls: true, objects: true, decoration: true, lightsLayer: true, regions: true },
+  view: { grid: true, collision: false, collisionLevel: null, heightLabels: false, triggers: false, ai: true, lights: false, depth: false, profiler: false, ground: true, walls: true, objects: true, decoration: true, lightsLayer: true, regions: true },
   locks: { ground: false, walls: false, objects: false, decoration: false, lightsLayer: false, regions: false },
   selection: [],
   selectedRegion: null,

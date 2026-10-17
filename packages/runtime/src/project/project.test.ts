@@ -118,3 +118,38 @@ describe('loadScene', () => {
     expect((scene.entities[0]!.components[C.Transform] as { x: number }).x).toBe(1.5); // scene data untouched
   });
 });
+
+describe('level-limited blockers in the scene file', () => {
+  it('round-trip, and maps without them are saved exactly as before', () => {
+    const plain = new TileMap(4, 3);
+    plain.fill(1);
+    plain.setFlag(1, 1, FLAG.BLOCK);
+    const rows = tileMapToRows(plain);
+    expect('blockHigh' in rows).toBe(false);
+    expect(tileMapFromRows(rows).toJSON()).toEqual(plain.toJSON());
+
+    const m = new TileMap(4, 3);
+    m.fill(1);
+    m.setFlag(2, 1, FLAG.BLOCK);
+    m.setBlockBand(2, 1, 1, 3);
+    const back = tileMapFromRows(tileMapToRows(m));
+    expect(back.getBlockBand(2, 1)).toEqual({ low: 1, high: 3 });
+    const scene = newScene('B', 4, 3);
+    scene.map = tileMapToRows(m);
+    const parsed = parseScene(JSON.parse(stringifyScene(scene)));
+    expect(parsed.ok).toBe(true);
+    if (parsed.ok) expect(tileMapFromRows(parsed.value.map).getBlockBand(2, 1)).toEqual({ low: 1, high: 3 });
+  });
+
+  it('refuses a layer of the wrong size', () => {
+    const m = new TileMap(4, 3);
+    m.fill(1);
+    m.setFlag(0, 0, FLAG.BLOCK);
+    m.setBlockBand(0, 0, 0, 2);
+    const scene = newScene('B', 4, 3);
+    scene.map = tileMapToRows(m);
+    const bad = JSON.parse(JSON.stringify(scene));
+    bad.map.blockHigh = [[0, 0]];
+    expect(parseScene(bad).ok).toBe(false);
+  });
+});

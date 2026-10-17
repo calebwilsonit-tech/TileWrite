@@ -9,6 +9,9 @@ export interface CellData {
   deck: number;
   deckTile: number;
   oneWay: number;
+  /** Level-limited blocker: the first level it covers and the level where it stops (0 = every height). */
+  blockLow: number;
+  blockHigh: number;
 }
 
 export type CellPatch = Partial<CellData>;
@@ -30,6 +33,8 @@ export function readCell(map: TileMap, x: number, y: number): CellData {
     deck: map.decks[i]!,
     deckTile: map.deckTiles[i]!,
     oneWay: map.oneWay[i]!,
+    blockLow: map.blockLow[i]!,
+    blockHigh: map.blockHigh[i]!,
   };
 }
 
@@ -42,6 +47,8 @@ export function writeCell(map: TileMap, x: number, y: number, c: CellData): void
   map.decks[i] = c.deck;
   map.deckTiles[i] = c.deckTile;
   map.oneWay[i] = c.oneWay;
+  map.blockLow[i] = c.blockLow;
+  map.blockHigh[i] = c.blockHigh;
 }
 
 export function sameCell(a: CellData, b: CellData): boolean {
@@ -52,7 +59,9 @@ export function sameCell(a: CellData, b: CellData): boolean {
     a.flags === b.flags &&
     a.deck === b.deck &&
     a.deckTile === b.deckTile &&
-    a.oneWay === b.oneWay
+    a.oneWay === b.oneWay &&
+    a.blockLow === b.blockLow &&
+    a.blockHigh === b.blockHigh
   );
 }
 

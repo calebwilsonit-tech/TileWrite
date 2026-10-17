@@ -1,5 +1,5 @@
 import { DEFAULT_STEP_DOWN, DEFAULT_STEP_UP, cellWalkable, stepAllowed } from '../physics/terrain';
-import { FLAG, type TileMap } from '../tilemap/tilemap';
+import { type TileMap } from '../tilemap/tilemap';
 
 export interface PathOptions {
   /** Highest step a walker can climb (levels). Defaults to the player's. */
@@ -21,7 +21,7 @@ export interface PathOptions {
 /** Floor, or a bridge laid over a hole. */
 function walkableCell(map: TileMap, x: number, y: number, opts: PathOptions): boolean {
   if (cellWalkable(map, x, y)) return true;
-  return (opts.bridges?.has(`${x},${y}`) ?? false) && map.inBounds(x, y) && (map.getFlags(x, y) & FLAG.BLOCK) === 0;
+  return (opts.bridges?.has(`${x},${y}`) ?? false) && map.inBounds(x, y) && !map.cellBlocked(x, y);
 }
 
 export interface Cell2 {

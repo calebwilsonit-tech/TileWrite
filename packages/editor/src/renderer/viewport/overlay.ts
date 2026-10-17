@@ -13,6 +13,8 @@ export interface OverlayInput {
   iso: IsoConfig;
   grid: boolean;
   collision: boolean;
+  /** Show the collision as a walker at this level would meet it (null = at the floor of each cell). */
+  collisionLevel: number | null;
   heightLabels: boolean;
   regions: { list: RegionData[]; visible: boolean; selected: string | null };
   walk: Set<string> | null;
@@ -66,7 +68,7 @@ export class OverlayDrawer {
     if (o.collision) {
       for (let y = 0; y < map.height; y++) {
         for (let x = 0; x < map.width; x++) {
-          const kind = collisionKind(map, x, y);
+          const kind = collisionKind(map, x, y, o.collisionLevel);
           if (kind === 'void') continue;
           this.diamond(g, x, y, cellTopHeight(map, x, y), iso);
           g.fill({ color: COLLISION_COLORS[kind], alpha: kind === 'walkable' ? 0.22 : 0.5 });

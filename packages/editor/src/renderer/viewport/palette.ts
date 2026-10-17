@@ -16,6 +16,7 @@ export const NORMAL_PALETTE: Palette = {
   void: 0x000000,
   walkable: 0x2ec27e,
   blocked: 0xe5484d,
+  overhead: 0xc9577a,
   pit: 0x1b1b1f,
   water: 0x3b82f6,
   stair: 0xf5d90a,
@@ -29,6 +30,7 @@ export const SAFE_PALETTE: Palette = {
   void: 0x000000,
   walkable: 0x56b4e9,
   blocked: 0xd55e00,
+  overhead: 0x9a5aa0,
   pit: 0x1b1b1f,
   water: 0x0072b2,
   stair: 0xf0e442,
@@ -47,5 +49,5 @@ export function setColourBlindSafe(on: boolean): void {
 
 /** What the collision colours mean, in words that match the colours now in use. */
 export function collisionLegend(): string {
-  return PALETTE.walkable === SAFE_PALETTE.walkable ? 'light blue walk, red-orange blocked, dark blue water, yellow stairs, green bridge' : 'green walk, red blocked, blue water, yellow stairs, orange bridge';
+  return PALETTE.walkable === SAFE_PALETTE.walkable ? 'light blue walk, red-orange blocked, purple blocks other heights only, dark blue water, yellow stairs, green bridge' : 'green walk, red blocked, pink blocks other heights only, blue water, yellow stairs, orange bridge';
 }

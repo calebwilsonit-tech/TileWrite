@@ -159,12 +159,20 @@ export function planSlope(map: TileMap, x: number, y: number, dir: SlopeDir, sty
 }
 
 /** What the collision overlay shows for a cell. */
-export type CollisionKind = 'void' | 'walkable' | 'blocked' | 'pit' | 'water' | 'stair' | 'trigger' | 'deck';
+export type CollisionKind = 'void' | 'walkable' | 'blocked' | 'overhead' | 'pit' | 'water' | 'stair' | 'trigger' | 'deck';
 
-export function collisionKind(map: TileMap, x: number, y: number): CollisionKind {
+/**
+ * What a cell is to a walker. `level` is the height of the walker's feet (null = standing on the cell's own floor).
+ * 'overhead' is a blocker that exists in the cell but does not reach a walker at that level.
+ */
+export function collisionKind(map: TileMap, x: number, y: number, level: number | null = null): CollisionKind {
   if (!map.inBounds(x, y) || map.getTile(x, y) === EMPTY_TILE) return 'void';
   const f = map.getFlags(x, y);
-  if (f & FLAG.BLOCK) return 'blocked';
+  if (f & FLAG.BLOCK) {
+    if (!map.getBlockBand(x, y)) return 'blocked';
+    if (map.cellBlocked(x, y, level ?? map.walkLevel(x, y))) return 'blocked';
+    return 'overhead';
+  }
   if (f & FLAG.PIT) return map.getDeck(x, y) > 0 ? 'deck' : 'pit';
   if (f & FLAG.WATER) return map.getDeck(x, y) > 0 ? 'deck' : 'water';
   if (map.getSlope(x, y)) return 'stair';

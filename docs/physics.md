@@ -9,7 +9,8 @@ Each cell holds:
 | `tiles` | tile id (0 = void: nothing there, impassable) |
 | `heights` | ground height in levels (for a slope: the LOW end) |
 | `slopes` | stairs or ramp that rises exactly 1 level toward N / E / S / W |
-| `flags` | `PIT` (no floor), `BLOCK` (solid at every height), `WATER` (blocks walking), `TRIGGER` (marker) |
+| `flags` | `PIT` (no floor), `BLOCK` (an invisible wall: solid at every height, or only between `blockLow` and `blockHigh` when those are set), `WATER` (blocks walking), `TRIGGER` (marker) |
+| `blockLow`, `blockHigh` | with `BLOCK`: the levels [low, high) the invisible wall covers (high 0 = every height). A body is stopped only when its feet and body overlap those levels, so a walker on a bridge above a low wall passes over it. Scene files only carry these two layers when some cell uses them. |
 | `decks` | one walkable layer above the ground, 1 level thick - bridges. You can walk under it if you fit. |
 | `oneWay` | cell edges that cannot be entered (they can still be left) |
 
@@ -42,4 +43,4 @@ Constants: gravity 36 levels/s^2, sub-steps of at most 0.2 cells (no tunnelling 
 `reachableCells(map, start)` returns the cells a walker can reach with the same step rules (used by the editor's walk-test mode and the level validators later).
 
 ## Not yet
-Entities as platforms (standing on crates, moving platforms): bodies are blocked by solid colliders but cannot stand on them. Planned with the Moving Platform behaviour (M5). Per-height collision painting and automatic collision generation arrive with the editor tools in M3.
+Entities as platforms (standing on crates, moving platforms): bodies are blocked by solid colliders but cannot stand on them. Planned with the Moving Platform behaviour (M5). Collision painting per height and automatic collision from tiles are in the editor (Blocker tool with levels; Layers -> Seen by a walker at).

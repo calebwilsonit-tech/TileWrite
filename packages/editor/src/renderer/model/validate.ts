@@ -59,7 +59,7 @@ export function validateScene(doc: EditorDoc, sprites?: ReadonlySet<string>, pre
       out.push({ id: `void-${e.id}`, severity: 'warning', message: `"${e.name}" is standing on empty space.`, target: pos('entity', e.id, t) });
     } else if (map.getFlags(cx, cy) & FLAG.PIT && map.getDeck(cx, cy) === 0 && e.components.body) {
       out.push({ id: `pit-${e.id}`, severity: 'warning', message: `"${e.name}" starts over a pit and will fall.`, target: pos('entity', e.id, t) });
-    } else if (map.getFlags(cx, cy) & FLAG.BLOCK) {
+    } else if (map.blockedAt(cx, cy, t.h, 1)) {
       out.push({ id: `blocked-${e.id}`, severity: 'warning', message: `"${e.name}" is inside a blocked cell.`, target: pos('entity', e.id, t) });
     } else if (e.tags.includes('player') && Math.abs(groundHeightAt(map, t.x, t.y) - t.h) > 0.5 && map.getDeck(cx, cy) === 0) {
       out.push({
@@ -247,7 +247,7 @@ export function validateScene(doc: EditorDoc, sprites?: ReadonlySet<string>, pre
       for (let y = 0; y < map.height; y++) {
         for (let x = 0; x < map.width; x++) {
           const f = map.getFlags(x, y);
-          if (map.getTile(x, y) === EMPTY_TILE || f & (FLAG.BLOCK | FLAG.PIT | FLAG.WATER)) continue;
+          if (map.getTile(x, y) === EMPTY_TILE || map.cellBlocked(x, y) || f & (FLAG.PIT | FLAG.WATER)) continue;
           walkable++;
           if (!reach.has(`${x},${y}`) && !island && map.getHeight(x, y) === 0) island = { x, y };
         }

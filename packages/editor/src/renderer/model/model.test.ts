@@ -357,3 +357,20 @@ describe('tool algorithms', () => {
     expect(cells[1]).toMatchObject({ x: 5, y: 4, cell: { tile: 5, height: 2 } });
   });
 });
+
+describe('collision overlay at a height', () => {
+  it('shows a level-limited blocker as blocked only for walkers it reaches', () => {
+    const m = new TileMap(3, 1);
+    m.fill(1);
+    m.setFlag(1, 0, FLAG.BLOCK);
+    expect(collisionKind(m, 1, 0, 5)).toBe('blocked'); // no levels: every height
+    m.setBlockBand(1, 0, 0, 2);
+    expect(collisionKind(m, 1, 0)).toBe('blocked'); // the floor is level 0
+    expect(collisionKind(m, 1, 0, 1)).toBe('blocked');
+    expect(collisionKind(m, 1, 0, 4)).toBe('overhead');
+    m.setBlockBand(1, 0, 3, 6); // overhead only: the floor walker passes underneath
+    expect(collisionKind(m, 1, 0)).toBe('overhead');
+    expect(collisionKind(m, 1, 0, 0)).toBe('overhead');
+    expect(collisionKind(m, 1, 0, 3)).toBe('blocked');
+  });
+});

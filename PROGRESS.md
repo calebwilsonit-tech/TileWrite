@@ -77,7 +77,7 @@ Done and covered by tests (unit: `packages/editor/src/**/*.test.ts`; e2e: `e2e/m
 
 Deliberately deferred (so the box above is honest):
 - [x] Autotiling rules and their visual editor, Decoration / Walls / Lights layers (done after M14: `docs/autotiling-and-layers.md`)
-- [ ] Per-height collision painting (collision currently comes from heights, flags and decks)
+- [x] Per-height collision painting (blockers with levels, overlay seen at any height; done after M14: `e2e/m15-collision-levels.spec.ts`)
 - [x] Hot reload while the game is running; game in a separate window (done after M14)
 - [x] Asset import and asset browser (M4); "Explain / Fix with Claude" buttons (M11, done)
 - [ ] Bypass and soft-lock validators (M9)

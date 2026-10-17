@@ -57,7 +57,7 @@ export function surfaceAt(map: TileMap, x: number, y: number, z: number, q: Surf
   const cy = Math.floor(y);
   if (!map.inBounds(cx, cy) || map.getTile(cx, cy) === EMPTY_TILE) return { kind: 'void', z: Infinity };
   const flags = map.getFlags(cx, cy);
-  if (flags & FLAG.BLOCK) return { kind: 'solid', z: Infinity };
+  if (map.blockedAt(cx, cy, z, q.bodyHeight)) return { kind: 'solid', z: Infinity };
 
   const deck = map.getDeck(cx, cy);
   if (deck > 0) {
@@ -90,7 +90,7 @@ export function oneWayBlocks(map: TileMap, ax: number, ay: number, bx: number, b
 export function cellWalkable(map: TileMap, x: number, y: number): boolean {
   if (!map.inBounds(x, y) || map.getTile(x, y) === EMPTY_TILE) return false;
   const flags = map.getFlags(x, y);
-  if (flags & FLAG.BLOCK) return false;
+  if (map.cellBlocked(x, y)) return false;
   return map.getDeck(x, y) > 0 || !(flags & (FLAG.PIT | FLAG.WATER));
 }
 
@@ -122,7 +122,7 @@ export function reachableCells(
       const nx = c.x + dx;
       const ny = c.y + dy;
       if (out.has(key(nx, ny))) continue;
-      const bridged = (opts.bridges?.has(key(nx, ny)) ?? false) && map.inBounds(nx, ny) && (map.getFlags(nx, ny) & FLAG.BLOCK) === 0;
+      const bridged = (opts.bridges?.has(key(nx, ny)) ?? false) && map.inBounds(nx, ny) && !map.cellBlocked(nx, ny);
       if (!(cellWalkable(map, nx, ny) || bridged) || !stepAllowed(map, c.x, c.y, nx, ny, stepUp, maxDrop)) continue;
       out.add(key(nx, ny));
       queue.push({ x: nx, y: ny });

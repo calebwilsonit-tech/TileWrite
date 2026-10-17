@@ -36,7 +36,7 @@ export function makeOccluder(map: TileMap | null, tall: readonly { x: number; y:
   return (cx, cy, h) => {
     if (map) {
       if (!map.inBounds(cx, cy)) return true;
-      if (map.hasFlag(cx, cy, FLAG.BLOCK)) return true;
+      if (map.hasFlag(cx, cy, FLAG.BLOCK) && !map.getBlockBand(cx, cy)) return true;
       if (map.getTile(cx, cy) !== 0 && map.topHeight(cx, cy) > h + 1.2) return true;
     }
     for (const o of objects) {

@@ -43,6 +43,21 @@ export function ToolOptionsView({ tool, options }: { tool: ToolId; options: Tool
       {meta.options.includes('height') && <Slider testId="opt-height" label="Height level" value={options.height} min={0} max={12} onChange={(v) => set({ height: v })} />}
       {meta.options.includes('density') && <Slider testId="opt-density" label="Density" value={options.density} min={0.05} max={1} step={0.05} onChange={(v) => set({ density: v })} />}
       {meta.options.includes('bridgeLevel') && <Slider testId="opt-bridge" label="Bridge level" value={options.bridgeLevel} min={1} max={12} onChange={(v) => set({ bridgeLevel: v })} />}
+      {meta.options.includes('blockTo') && (
+        <>
+          <label className="opt check">
+            <input data-testid="opt-block-all" type="checkbox" checked={options.blockTo === 0} onChange={(e) => set(e.target.checked ? { blockFrom: 0, blockTo: 0 } : { blockFrom: 0, blockTo: Math.max(1, options.blockTo || 2) })} />
+            <span>Blocks at every height</span>
+          </label>
+          {options.blockTo > 0 && (
+            <>
+              <Slider testId="opt-block-from" label="Blocks from level" value={options.blockFrom} min={0} max={Math.max(0, options.blockTo - 1)} onChange={(v) => set({ blockFrom: v })} />
+              <Slider testId="opt-block-to" label="Up to (not including) level" value={options.blockTo} min={1} max={12} onChange={(v) => set({ blockTo: v, blockFrom: Math.min(options.blockFrom, v - 1) })} />
+              <p className="hint">Things whose feet and body are outside these levels walk through. Bridges and decks above the top pass over it.</p>
+            </>
+          )}
+        </>
+      )}
       {meta.options.includes('outline') && (
         <label className="opt check">
           <input data-testid="opt-outline" type="checkbox" checked={options.outline} onChange={(e) => set({ outline: e.target.checked })} />

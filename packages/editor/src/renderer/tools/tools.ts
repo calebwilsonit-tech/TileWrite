@@ -99,7 +99,7 @@ export const TOOL_META: ToolMeta[] = [
   { id: 'pit', label: 'Pit', group: 'Terrain', hotkey: 'P', hint: 'Paint holes that things fall into. Hold Shift to fill them in.', edits: 'ground', options: ['size'], showsCollision: true },
   { id: 'water', label: 'Water', group: 'Terrain', hotkey: 'O', hint: 'Paint water, which blocks walking. Hold Shift to remove it.', edits: 'ground', options: ['size', 'tile'], showsCollision: true },
   { id: 'bridge', label: 'Bridge', group: 'Terrain', hotkey: 'J', hint: 'Paint a walkable deck at the chosen level over water, pits or floor. Hold Shift to remove it.', edits: 'ground', options: ['bridgeLevel', 'size'], showsCollision: true },
-  { id: 'block', label: 'Blocker', group: 'Collision', hotkey: 'K', hint: 'Paint invisible walls that block at every height. Hold Shift to clear them.', edits: 'ground', options: ['size'], showsCollision: true },
+  { id: 'block', label: 'Blocker', group: 'Collision', hotkey: 'K', hint: 'Paint invisible walls. They block at every height, or only between two levels (a low wall a bridge can pass over, a ceiling that only stops tall things on high decks). Hold Shift to clear them.', edits: 'ground', options: ['size', 'blockFrom', 'blockTo'], showsCollision: true },
   { id: 'oneway', label: 'One-way edge', group: 'Collision', hint: 'Click a cell to toggle a side that cannot be entered (but can be left).', edits: 'ground', options: ['edge'], showsCollision: true },
   { id: 'walktest', label: 'Walk test', group: 'Collision', hotkey: 'H', hint: 'Click a cell to see everywhere the player could walk to from there.', edits: 'none', options: [], showsCollision: true },
   { id: 'place', label: 'Place', group: 'Objects', hotkey: 'N', hint: 'Click to place the chosen object, snapped to the grid. R turns it.', edits: 'objects', options: ['prefab'] },
@@ -117,7 +117,7 @@ export function toolMeta(id: ToolId): ToolMeta {
 
 // ---------- helpers ----------
 
-const ERASED: Partial<CellData> = { tile: EMPTY_TILE, height: 0, slope: 0, flags: 0, deck: 0, deckTile: 0, oneWay: 0 };
+const ERASED: Partial<CellData> = { tile: EMPTY_TILE, height: 0, slope: 0, flags: 0, deck: 0, deckTile: 0, oneWay: 0, blockLow: 0, blockHigh: 0 };
 
 function key(c: P): string {
   return `${c.x},${c.y}`;
@@ -566,7 +566,7 @@ export function roomPlan(a: P, b: P): { floor: P[]; walls: P[] } {
   return { floor, walls };
 }
 
-const CLEAN: Partial<CellData> = { slope: 0, flags: 0, deck: 0, deckTile: 0, oneWay: 0 };
+const CLEAN: Partial<CellData> = { slope: 0, flags: 0, deck: 0, deckTile: 0, oneWay: 0, blockLow: 0, blockHigh: 0 };
 
 const roomTool = (): ToolImpl =>
   dragTool(
@@ -614,7 +614,7 @@ const propsTool = (): ToolImpl =>
       const items: ReturnType<typeof prefab.make>[] = [];
       for (const c of rectCells(a, b)) {
         if (!map.inBounds(c.x, c.y) || map.getTile(c.x, c.y) === EMPTY_TILE) continue;
-        if (map.getFlags(c.x, c.y) & (FLAG.PIT | FLAG.WATER | FLAG.BLOCK) || map.getSlope(c.x, c.y) || map.getDeck(c.x, c.y) > 0) continue;
+        if (map.getFlags(c.x, c.y) & (FLAG.PIT | FLAG.WATER) || map.cellBlocked(c.x, c.y) || map.getSlope(c.x, c.y) || map.getDeck(c.x, c.y) > 0) continue;
         if (taken.has(`${c.x},${c.y}`) || hash01(c.x, c.y, 91) >= env.opts.density * 0.5) continue;
         const data = prefab.make(c.x + 0.5, c.y + 0.5, map.getHeight(c.x, c.y));
         items.push({ ...data, name: `${data.name}` });
@@ -837,7 +837,14 @@ export const TOOLS: Record<ToolId, ToolImpl> = {
   ),
   block: brushTool(
     'Paint blocker',
-    (s, c, p) => void s.apply(c.x, c.y, (cell) => (cell.tile === EMPTY_TILE ? {} : { flags: p.shift ? cell.flags & ~FLAG.BLOCK : cell.flags | FLAG.BLOCK })),
+    (s, c, p, env) =>
+      void s.apply(c.x, c.y, (cell) => {
+        if (cell.tile === EMPTY_TILE) return {};
+        if (p.shift) return { flags: cell.flags & ~FLAG.BLOCK, blockLow: 0, blockHigh: 0 };
+        const high = Math.max(0, env.opts.blockTo);
+        const low = high === 0 ? 0 : Math.min(high - 1, Math.max(0, env.opts.blockFrom));
+        return { flags: cell.flags | FLAG.BLOCK, blockLow: low, blockHigh: high };
+      }),
     { color: 0xff6b6b },
   ),
   oneway: {

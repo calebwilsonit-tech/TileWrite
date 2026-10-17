@@ -40,7 +40,7 @@ export const DEFAULT_TILESET: TileSet = {
 export const FLAG = {
   /** No floor: bodies fall through. */
   PIT: 1,
-  /** Solid at every height (props, invisible walls). */
+  /** Solid at every height (props, invisible walls), or only between the cell's block levels (`blockLow` .. `blockHigh`) when it has them. */
   BLOCK: 2,
   /** Trigger area marker (tools and validators read it; entity triggers do the real work). */
   TRIGGER: 4,
@@ -79,6 +79,10 @@ export class TileMap {
   /** Tile id drawn for the deck (0 = use the ground tile's look). */
   readonly deckTiles: Uint16Array;
   readonly oneWay: Uint8Array;
+  /** With BLOCK: the lowest level the blocker covers (feet at or above this level... see `blockedAt`). */
+  readonly blockLow: Uint8Array;
+  /** With BLOCK: 0 = the blocker covers every height; otherwise the level where it stops (exclusive). */
+  readonly blockHigh: Uint8Array;
 
   constructor(
     readonly width: number,
@@ -92,6 +96,8 @@ export class TileMap {
     this.decks = new Uint8Array(n);
     this.deckTiles = new Uint16Array(n);
     this.oneWay = new Uint8Array(n);
+    this.blockLow = new Uint8Array(n);
+    this.blockHigh = new Uint8Array(n);
   }
 
   inBounds(x: number, y: number): boolean {
@@ -122,6 +128,8 @@ export class TileMap {
     this.decks[i] = 0;
     this.deckTiles[i] = 0;
     this.oneWay[i] = 0;
+    this.blockLow[i] = 0;
+    this.blockHigh[i] = 0;
   }
 
   getSlope(x: number, y: number): SlopeInfo | null {
@@ -172,6 +180,48 @@ export class TileMap {
     if (this.inBounds(x, y)) this.oneWay[this.idx(x, y)] = edges;
   }
 
+  /** The levels a blocker covers, as [low, high), or null when it covers every height (or there is none). */
+  getBlockBand(x: number, y: number): { low: number; high: number } | null {
+    if (!this.inBounds(x, y)) return null;
+    const i = this.idx(x, y);
+    const high = this.blockHigh[i]!;
+    return high === 0 ? null : { low: this.blockLow[i]!, high };
+  }
+
+  /** Make the blocker of this cell cover only the levels [low, high); high 0 = every height again. */
+  setBlockBand(x: number, y: number, low: number, high: number): void {
+    if (!this.inBounds(x, y)) return;
+    const i = this.idx(x, y);
+    const hi = Math.max(0, Math.min(255, Math.round(high)));
+    this.blockLow[i] = hi === 0 ? 0 : Math.max(0, Math.min(hi - 1, Math.round(low)));
+    this.blockHigh[i] = hi;
+  }
+
+  /**
+   * Does the invisible blocker of this cell stop a body whose feet are at `z` and that is `bodyHeight` tall?
+   * A blocker without levels stops everything; one with levels only stops bodies that overlap them, so a walker on
+   * a bridge at level 4 passes over a blocker that covers levels 0 to 2.
+   */
+  blockedAt(x: number, y: number, z: number, bodyHeight: number): boolean {
+    if (!this.inBounds(x, y)) return false;
+    const i = this.idx(x, y);
+    if (!(this.flags[i]! & FLAG.BLOCK)) return false;
+    const high = this.blockHigh[i]!;
+    if (high === 0) return true;
+    return z < high - 1e-6 && z + bodyHeight > this.blockLow[i]! + 1e-6;
+  }
+
+  /** The level a walker's feet are at on this cell: the deck when there is one, otherwise the ground. */
+  walkLevel(x: number, y: number): number {
+    const deck = this.getDeck(x, y);
+    return deck > 0 ? deck : this.getHeight(x, y);
+  }
+
+  /** Is this cell blocked for a walker standing on it (what paths, the walk test and the checks care about)? */
+  cellBlocked(x: number, y: number, level = this.walkLevel(x, y)): boolean {
+    return this.blockedAt(x, y, level, 1);
+  }
+
   fill(tile: number, height = 0): void {
     this.tiles.fill(tile);
     this.heights.fill(height);
@@ -180,6 +230,8 @@ export class TileMap {
     this.decks.fill(0);
     this.deckTiles.fill(0);
     this.oneWay.fill(0);
+    this.blockLow.fill(0);
+    this.blockHigh.fill(0);
   }
 
   /** Visit every non-empty cell. */
@@ -213,6 +265,8 @@ export class TileMap {
       decks: [...this.decks],
       deckTiles: [...this.deckTiles],
       oneWay: [...this.oneWay],
+      blockLow: [...this.blockLow],
+      blockHigh: [...this.blockHigh],
     };
   }
 
@@ -225,6 +279,8 @@ export class TileMap {
     if (d.decks) m.decks.set(d.decks);
     if (d.deckTiles) m.deckTiles.set(d.deckTiles);
     if (d.oneWay) m.oneWay.set(d.oneWay);
+    if (d.blockLow) m.blockLow.set(d.blockLow);
+    if (d.blockHigh) m.blockHigh.set(d.blockHigh);
     return m;
   }
 }
@@ -239,4 +295,6 @@ export interface TileMapData {
   decks?: number[];
   deckTiles?: number[];
   oneWay?: number[];
+  blockLow?: number[];
+  blockHigh?: number[];
 }

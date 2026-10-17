@@ -37,6 +37,8 @@ export function tileMapToRows(map: TileMap): TileMapRows {
     decks: toRows(map.decks),
     deckTiles: toRows(map.deckTiles),
     oneWay: toRows(map.oneWay),
+    // only maps with level-limited blockers carry these two layers, so older files stay exactly as they were
+    ...(map.blockHigh.some((v) => v > 0) ? { blockLow: toRows(map.blockLow), blockHigh: toRows(map.blockHigh) } : {}),
   };
 }
 
@@ -52,6 +54,8 @@ export function tileMapFromRows(d: TileMapRows): TileMap {
   fill(map.decks, d.decks);
   fill(map.deckTiles, d.deckTiles);
   fill(map.oneWay, d.oneWay);
+  if (d.blockLow) fill(map.blockLow, d.blockLow);
+  if (d.blockHigh) fill(map.blockHigh, d.blockHigh);
   return map;
 }
 
@@ -89,8 +93,9 @@ export function stringifyScene(scene: SceneData): string {
   const rowText = (rows: number[][]): string => `[\n      ${rows.map((r) => JSON.stringify(r)).join(',\n      ')}\n    ]`;
   const mapText =
     `{\n    "width": ${map.width},\n    "height": ${map.height},\n` +
-    (['tiles', 'heights', 'slopes', 'flags', 'decks', 'deckTiles', 'oneWay'] as const)
-      .map((k) => `    "${k}": ${rowText(map[k])}`)
+    (['tiles', 'heights', 'slopes', 'flags', 'decks', 'deckTiles', 'oneWay', 'blockLow', 'blockHigh'] as const)
+      .filter((k) => map[k] !== undefined)
+      .map((k) => `    "${k}": ${rowText(map[k]!)}`)
       .join(',\n') +
     '\n  }';
   const token = '__MAP__';

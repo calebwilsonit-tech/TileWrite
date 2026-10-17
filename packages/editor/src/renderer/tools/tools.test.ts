@@ -12,6 +12,8 @@ const baseOpts: ToolOptions = {
   density: 0.5,
   slopeDir: SLOPE.E,
   bridgeLevel: 1,
+  blockFrom: 0,
+  blockTo: 0,
   prefab: 'crate',
   outline: false,
   edge: 1,
@@ -496,5 +498,35 @@ describe('patrol path tool', () => {
     s.click('patrol', [5, 5]);
     expect(s.state.selection).toEqual([s.id]);
     expect(points(s)).toBe('');
+  });
+});
+
+describe('the blocker tool with levels', () => {
+  it('paints a blocker for every height by default, and one limited to some levels when asked', () => {
+    const a = setup();
+    a.click('block', [2, 2]);
+    expect(a.doc.map.getFlags(2, 2) & FLAG.BLOCK).toBe(FLAG.BLOCK);
+    expect(a.doc.map.getBlockBand(2, 2)).toBeNull();
+
+    const b = setup(12, 12, { blockFrom: 1, blockTo: 3 });
+    b.click('block', [4, 4]);
+    expect(b.doc.map.getBlockBand(4, 4)).toEqual({ low: 1, high: 3 });
+    b.doc.undo();
+    expect(b.doc.map.getFlags(4, 4)).toBe(0);
+    expect(b.doc.map.getBlockBand(4, 4)).toBeNull();
+    b.doc.redo();
+    expect(b.doc.map.getBlockBand(4, 4)).toEqual({ low: 1, high: 3 });
+  });
+
+  it('Shift clears the blocker and its levels, and the eraser does too', () => {
+    const { doc, click } = setup(12, 12, { blockFrom: 0, blockTo: 2 });
+    click('block', [3, 3]);
+    click('block', [3, 3], { shift: true });
+    expect(doc.map.getFlags(3, 3) & FLAG.BLOCK).toBe(0);
+    expect(doc.map.getBlockBand(3, 3)).toBeNull();
+    click('block', [5, 5]);
+    click('eraser', [5, 5]);
+    expect(doc.map.getBlockBand(5, 5)).toBeNull();
+    expect(doc.map.getFlags(5, 5)).toBe(0);
   });
 });
