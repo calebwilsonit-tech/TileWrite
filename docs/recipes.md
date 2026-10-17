@@ -65,6 +65,14 @@ Short, step-by-step ways to make common things. Names in **bold** are buttons, p
 2. **Events panel**: *When the lever is pulled*, do **Shake the screen** (4 pixels), **Burst of sparks, dust or glow** (kind: dust, at the gate) and **Play a sound** ("thud").
 3. For a weapon that feels heavier, raise the Melee Attack's **Freeze on a hit** and **Screen shake on a hit**.
 
+## A lake with a shore
+1. **Tiles -> Autotiling...**, pick *water*, press **Make edges and corners** (choose a white or sand edge colour first), then **Save and apply to this scene**.
+2. Paint water with the Water tool or a tile brush: the outline appears on the sides that border grass, and inner corners get dots. One Undo removes the whole stroke.
+3. For raised ground with rocky sides, do the same for *stone* with **Make cliff faces**. See [autotiling-and-layers.md](autotiling-and-layers.md).
+
+## See the floor behind a tall wall
+**Layers -> Walls**: untick it to hide every wall tile (brick), tick **Lock** to keep tools from painting over them. Flowers, rugs and bushes from the Place tool's Decoration group have their own layer, so you can hide them while you work on puzzles.
+
 ## Reuse an object (prefabs)
 1. Select an object and press **Make a prefab from this object...**, give it a name.
 2. Place it from the **Place** tool's "Your prefabs" group. Change the prefab and every copy follows, except for settings you changed on a copy.

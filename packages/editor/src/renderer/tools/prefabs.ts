@@ -6,7 +6,7 @@ export interface Prefab {
   id: string;
   label: string;
   hint: string;
-  group: 'Basics' | 'Puzzle' | 'Story puzzles' | 'Story' | 'Light' | 'Enemies' | 'Logic' | 'World' | 'Your prefabs';
+  group: 'Basics' | 'Puzzle' | 'Story puzzles' | 'Story' | 'Light' | 'Enemies' | 'Logic' | 'World' | 'Decoration' | 'Your prefabs';
   /** Build entity data (without an id) standing at (x, y) on a floor at height h. */
   make(x: number, y: number, h: number): Omit<EntityData, 'id'>;
 }
@@ -183,6 +183,41 @@ export const PREFABS: Prefab[] = [
     group: 'Light',
     hint: 'Grows taller over time, faster near light. It becomes a taller solid block, so it can turn into a platform or wall.',
     make: (x, y, h) => thing('Rising dough', ['dough'], { color: 0xf3dfb1, w: 0.9, d: 0.9, height: 0.2 }, x, y, h, ['growing']),
+  },
+  {
+    id: 'flowers',
+    label: 'Flowers',
+    group: 'Decoration',
+    hint: 'A patch of flowers. Decoration has no collision: it is only there to look nice, and has its own layer.',
+    make: (x, y, h) => thing('Flowers', ['decoration'], { shape: 'diamond', color: 0xe86fa5, w: 0.7, d: 0.7, height: 0.12 }, x, y, h),
+  },
+  {
+    id: 'rug',
+    label: 'Rug',
+    group: 'Decoration',
+    hint: 'A flat rug for a floor. No collision.',
+    make: (x, y, h) => thing('Rug', ['decoration'], { shape: 'diamond', color: 0x9b3d4a, w: 2, d: 1.4, height: 0.04 }, x, y, h),
+  },
+  {
+    id: 'rock',
+    label: 'Rock',
+    group: 'Decoration',
+    hint: 'A small rock you can walk through. For a rock that blocks the way use a Pillar or a Crate.',
+    make: (x, y, h) => thing('Rock', ['decoration'], { color: 0x8a8d96, w: 0.5, d: 0.5, height: 0.35 }, x, y, h),
+  },
+  {
+    id: 'bush',
+    label: 'Bush',
+    group: 'Decoration',
+    hint: 'A leafy bush you can walk through.',
+    make: (x, y, h) => thing('Bush', ['decoration'], { color: 0x3f8f4a, w: 0.8, d: 0.8, height: 0.7 }, x, y, h),
+  },
+  {
+    id: 'banner',
+    label: 'Banner',
+    group: 'Decoration',
+    hint: 'A tall banner on a pole, for walls and halls. No collision.',
+    make: (x, y, h) => thing('Banner', ['decoration'], { color: 0xc9a227, w: 0.2, d: 0.2, height: 1.8 }, x, y, h),
   },
   {
     id: 'guard',

@@ -12,6 +12,7 @@ export * from './scene/components';
 export * from './input/input';
 export * from './input/keyboard';
 export * from './tilemap/tilemap';
+export * from './tilemap/autotile';
 export * from './lighting/lighting';
 export * from './render/camera';
 export * from './render/depth';

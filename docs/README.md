@@ -13,6 +13,7 @@ Start with the tutorial in the app (the project screen's **Take the tutorial** b
 | Enemies, stealth, bosses | [ai-and-combat.md](ai-and-combat.md) |
 | Conversations, cutscenes, items, saves, menus | [story-systems.md](story-systems.md) |
 | Draw and animate sprites | [sprite-studio.md](sprite-studio.md) |
+| Shores, edges and cliff faces that draw themselves; hide and lock layers | [autotiling-and-layers.md](autotiling-and-layers.md) |
 | Add sounds and music, hit shake, sparks | [sound-and-effects.md](sound-and-effects.md) |
 | Write scripts (TypeScript), breakpoints, watch | [code-window.md](code-window.md) |
 | Check a level, use the playbot, read crash reports | [checks-and-playbot.md](checks-and-playbot.md) |

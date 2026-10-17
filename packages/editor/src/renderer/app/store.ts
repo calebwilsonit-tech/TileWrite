@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import { SLOPE, extractPrefab, type CrashReport, type InputRecording, resolveInstance, type CutsceneData, type DialogueData, type EntityData, type ItemData, type PrefabData, type SceneData, type SlopeDir } from '@tilewright/runtime';
 import { EditorDoc } from '../model/doc';
+import { isWallTile } from '../model/layers';
 import { api, joinPath } from '../project/api';
 import { applyAccessibility, cleanAccessibility } from './accessibility';
 import { assetFs } from '../project/assetFs';
@@ -29,7 +30,7 @@ import {
   type OpenProject,
   type ProjectFs,
 } from '../project/io';
-import { newScene } from '@tilewright/runtime';
+import { DEFAULT_TILESET, groupOf, newScene, tilesetFromList, type AutotileRuleData, type TileDefData } from '@tilewright/runtime';
 
 export type ToolId =
   | 'select'
@@ -88,7 +89,13 @@ export interface ViewOptions {
   /** Frame time and what is slow, while playing. */
   profiler: boolean;
   ground: boolean;
+  /** Tiles marked as walls. */
+  walls: boolean;
   objects: boolean;
+  /** Objects tagged decoration. */
+  decoration: boolean;
+  /** Objects that shine. */
+  lightsLayer: boolean;
   regions: boolean;
 }
 
@@ -110,7 +117,7 @@ export interface AppState {
   tool: ToolId;
   options: ToolOptions;
   view: ViewOptions;
-  locks: { ground: boolean; objects: boolean; regions: boolean };
+  locks: { ground: boolean; walls: boolean; objects: boolean; decoration: boolean; lightsLayer: boolean; regions: boolean };
   selection: string[];
   selectedRegion: string | null;
   mode: Mode;
@@ -170,8 +177,8 @@ const initial: AppState = {
     outline: false,
     edge: 1,
   },
-  view: { grid: true, collision: false, heightLabels: false, triggers: false, ai: true, lights: false, depth: false, profiler: false, ground: true, objects: true, regions: true },
-  locks: { ground: false, objects: false, regions: false },
+  view: { grid: true, collision: false, heightLabels: false, triggers: false, ai: true, lights: false, depth: false, profiler: false, ground: true, walls: true, objects: true, decoration: true, lightsLayer: true, regions: true },
+  locks: { ground: false, walls: false, objects: false, decoration: false, lightsLayer: false, regions: false },
   selection: [],
   selectedRegion: null,
   mode: 'edit',
@@ -391,9 +398,60 @@ class AppStore {
     this.set({ recovery: null });
   }
 
+  /** Give the open scene the project's tiles and autotile rules, and the guard that keeps a locked Walls layer untouched. */
+  refreshTileContext(): void {
+    const doc = this.doc;
+    if (!doc) return;
+    const project = this.state.project?.project;
+    const tileset = tilesetFromList(project?.tileset ?? []) ?? DEFAULT_TILESET;
+    doc.autotile = project && project.autotile.length > 0 ? { tileset, rules: project.autotile } : null;
+    let warnedAt = 0;
+    doc.cellGuard = (before, after) => {
+      if (!this.state.locks.walls || (!isWallTile(tileset, before.tile) && !isWallTile(tileset, after.tile))) return true;
+      if (Date.now() - warnedAt > 3000) {
+        warnedAt = Date.now();
+        this.notify('warn', 'The walls layer is locked, so walls were left as they are. Unlock it in the Layers panel.');
+      }
+      return false;
+    };
+  }
+
+  /**
+   * Change the project's tiles and autotile rules (new variants, new colours, edited rules). Saved at once, like the
+   * rest of the project file. Cells that show a variant that no longer exists go back to its base tile.
+   */
+  async updateTiles(tileset: TileDefData[], autotile: AutotileRuleData[], opts: { reapply?: boolean } = {}): Promise<boolean> {
+    const p = this.state.project;
+    if (!p) return false;
+    const ok = await this.guard('Saving the tiles', async () => {
+      const old = tilesetFromList(p.project.tileset) ?? DEFAULT_TILESET;
+      const keep = new Set(tileset.map((t) => t.id));
+      const project = { ...p.project, tileset, autotile };
+      await saveProject(realFs, p.dir, project);
+      this.set({ project: { ...p, project }, docVersion: this.state.docVersion + 1 });
+      const doc = this.doc;
+      if (doc) {
+        const fix: { x: number; y: number; patch: { tile: number } }[] = [];
+        for (let y = 0; y < doc.map.height; y++) {
+          for (let x = 0; x < doc.map.width; x++) {
+            const t = doc.map.getTile(x, y);
+            if (t !== 0 && !keep.has(t)) fix.push({ x, y, patch: { tile: groupOf(old, t) } });
+          }
+        }
+        this.refreshTileContext();
+        doc.emit({ type: 'tiles' });
+        if (fix.length > 0) doc.paint('Remove autotile variants', fix);
+        if (opts.reapply) doc.reapplyAutotile('Apply autotiling');
+      }
+      return true;
+    });
+    return ok === true;
+  }
+
   private attachDoc(doc: EditorDoc, scenePath: string): void {
     this.unsubDoc?.();
     this.doc = doc;
+    this.refreshTileContext();
     this.unsubDoc = doc.subscribe(() => this.bumpDoc());
     this.set({ scenePath, selection: [], selectedRegion: null, mode: 'edit', paused: false, docVersion: this.state.docVersion + 1 });
   }

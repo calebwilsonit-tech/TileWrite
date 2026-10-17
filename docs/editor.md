@@ -16,9 +16,9 @@ Panels dock, tab, split and float: drag a tab. The layout is remembered; **Comma
 | --- | --- |
 | Viewport | The world. Middle-drag, right-drag or Space+drag to pan; mouse wheel zooms; Home frames the map. |
 | Tools | Every tool, grouped. The active tool shows a one-line explanation and its options. |
-| Tiles | The tile palette with search. |
+| Tiles | The tile palette with search, and the **Autotiling...** button (see [autotiling-and-layers.md](autotiling-and-layers.md)). |
 | Inspector | Edits whatever is selected: an object, a region, or (with nothing selected) the scene and map size. Fields apply on Enter or when you click away, so one edit is one undo step. |
-| Layers | Show/hide and lock Ground, Objects, Regions; overlays for the grid, collision colours and height numbers. |
+| Layers | Show/hide and lock Ground, Walls, Objects, Decoration, Lights and Regions (see [autotiling-and-layers.md](autotiling-and-layers.md)); overlays for the grid, collision colours and height numbers. |
 | History | The undo list. |
 | Problems | Mistakes found in the scene, in plain English, with **Go to**. |
 | Console | Messages from the editor and from the game while it runs. |
@@ -61,4 +61,4 @@ Ctrl+Z / Ctrl+Y undo and redo every change, whichever panel made it. Ctrl+S save
 **Commands → Shortcuts** lists every command with its key; click Change and press a new key. Conflicts are highlighted. **Light / Dark** switches the theme.
 
 ## Not yet in the editor
-Decoration, Walls and Lights layers, autotiling rules, hot reload while playing and a separate game window, a visual state-machine editor for enemies, a drawn dialogue graph and cutscene timeline, and vector drawing in the sprite studio. See KNOWN_ISSUES.md for the full list.
+Hot reload while playing and a separate game window, a visual state-machine editor for enemies, a drawn dialogue graph and cutscene timeline, and vector drawing in the sprite studio. See KNOWN_ISSUES.md for the full list.

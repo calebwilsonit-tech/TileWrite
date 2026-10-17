@@ -9,16 +9,30 @@ export interface TileDef {
   top: number;
   left: number;
   right: number;
+  /** This tile is a variant of another tile (autotiling): the base tile's id. */
+  group?: number;
+  /** Counts as part of the Walls layer (the Layers panel can hide or lock walls). */
+  wall?: boolean;
+  /** An outline along some sides of the top face and dots in some corners (edges and shores). */
+  rim?: { sides: number; corners: number; color: number };
 }
 
 export type TileSet = Record<number, TileDef>;
+
+/** A project's tile list as a lookup table (undefined for an empty list, which means the built-in tiles). */
+export function tilesetFromList(tiles: readonly ({ id: number } & TileDef)[]): TileSet | undefined {
+  if (tiles.length === 0) return undefined;
+  const set: TileSet = {};
+  for (const { id, ...def } of tiles) set[id] = def;
+  return set;
+}
 
 export const DEFAULT_TILESET: TileSet = {
   1: { name: 'grass', top: 0x6fae5b, left: 0x4f8a43, right: 0x3f7236 },
   2: { name: 'stone', top: 0xa3a7b3, left: 0x80848f, right: 0x666a75 },
   3: { name: 'sand', top: 0xe3d08e, left: 0xc4b374, right: 0xa8985f },
   4: { name: 'water', top: 0x4a90d9, left: 0x3a76b4, right: 0x2f6091 },
-  5: { name: 'brick', top: 0xb5654a, left: 0x934f39, right: 0x78402e },
+  5: { name: 'brick', top: 0xb5654a, left: 0x934f39, right: 0x78402e, wall: true },
   6: { name: 'wood', top: 0x9c6b3f, left: 0x7d5532, right: 0x634327 },
 };
 

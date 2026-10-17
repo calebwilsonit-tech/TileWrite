@@ -3,22 +3,20 @@ import { useApp, store } from '../app/store';
 import { collisionLegend } from '../viewport/palette';
 
 interface Row {
-  key: 'ground' | 'objects' | 'regions';
+  key: 'ground' | 'walls' | 'objects' | 'decoration' | 'lightsLayer' | 'regions';
   label: string;
   note: string;
 }
 
 const ROWS: Row[] = [
   { key: 'ground', label: 'Ground', note: 'tiles, heights, stairs, pits, water, bridges, blockers' },
-  { key: 'objects', label: 'Objects', note: 'player, crates, props' },
+  { key: 'walls', label: 'Walls', note: 'tiles marked as walls (brick by default; change it in Autotiling)' },
+  { key: 'objects', label: 'Objects', note: 'player, crates, props; hiding or locking this hides or locks decoration and lights too' },
+  { key: 'decoration', label: 'Decoration', note: 'flowers, rugs, rocks, bushes: things with the decoration tag' },
+  { key: 'lightsLayer', label: 'Lights', note: 'lanterns and anything else that shines' },
   { key: 'regions', label: 'Regions', note: 'rooms: camera, music, darkness' },
 ];
 
-const SOON = [
-  { label: 'Decoration', note: 'arrives with the sprite studio (M4)' },
-  { label: 'Walls', note: 'arrives with autotiling (M4)' },
-  { label: 'Lights', note: 'arrives with lighting (M6)' },
-];
 
 export function LayersPanel() {
   const [, setTick] = useState(0);
@@ -42,15 +40,6 @@ export function LayersPanel() {
             <label className="lock" title={`Lock the ${r.label.toLowerCase()} layer so tools cannot change it`}>
               <input data-testid={`lock-${r.key}`} type="checkbox" checked={locks[r.key]} onChange={(e) => store.set({ locks: { ...locks, [r.key]: e.target.checked } })} />
               <span>Lock</span>
-            </label>
-            <small>{r.note}</small>
-          </li>
-        ))}
-        {SOON.map((r) => (
-          <li key={r.label} className="disabled">
-            <label>
-              <input type="checkbox" disabled checked={false} readOnly />
-              <span>{r.label}</span>
             </label>
             <small>{r.note}</small>
           </li>

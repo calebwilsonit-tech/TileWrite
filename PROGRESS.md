@@ -3,7 +3,7 @@
 Boxes are ticked only when the milestone's tests pass and the sample has been played.
 Spec: `ENGINE_BUILD_PROMPT.md`. Read `DECISIONS.md` and `KNOWN_ISSUES.md` before continuing.
 
-**Next up:** all seven acceptance criteria hold (see the final summary below). What is left is the list of engine features still owed from the spec (autotiling, hot reload / separate game window, vector drawing, visual state machines, dialogue graph canvas, localization, video settings, minigames, skins, more assistant tools): bigger than polish, listed honestly in KNOWN_ISSUES.md.
+**Next up:** all seven acceptance criteria hold (see the final summary below). What is left is the list of engine features still owed from the spec (hot reload / separate game window, vector drawing, visual state machines, dialogue graph canvas, localization, video settings, minigames, skins, more assistant tools; autotiling and the layers were added after the first summary): bigger than polish, listed honestly in KNOWN_ISSUES.md.
 
 ## Final summary (2026-10-16)
 
@@ -26,13 +26,13 @@ An Electron + React editor and a PixiJS runtime in an npm-workspace monorepo (ru
 - Every picture is procedural box art; the slice looks like a prototype. The only drawn-art path is the sprite studio.
 - The playbot's walkthrough of the slice is a script for that game, not a general "play any game" solver.
 - The tutorial was driven by a test, never timed with a real beginner. Expect rough wording.
-- Whole spec areas are unfinished (autotiling, hot reload, vector drawing, state-machine editor, dialogue graph canvas, localization, minigames, skins). See KNOWN_ISSUES.md.
+- Whole spec areas are unfinished (hot reload, vector drawing, state-machine editor, dialogue graph canvas, localization, minigames, skins). See KNOWN_ISSUES.md.
 - Exported games are 250-300 MB (a full Electron runtime each), unsigned, Windows-tested only.
 
 ### What next
 1. Run the things that could not be run here: `npm run test:live` with a key, the CI workflow on a real remote, `npm run dist:win`, and listen to the audio.
 2. Watch a new user take the tutorial and fix what trips them.
-3. Real art and a second, longer game to find the engine's next gaps; then the owed editor features, starting with autotiling and the dialogue graph canvas, which every story game needs.
+3. Real art and a second, longer game to find the engine's next gaps; then the owed editor features, starting with the dialogue graph canvas, which every story game needs.
 ## Milestones
 
 - [x] M0 Foundations (repo, workspaces, lint, typecheck, tests, CI, Electron window, state docs)
@@ -76,7 +76,7 @@ Done and covered by tests (unit: `packages/editor/src/**/*.test.ts`; e2e: `e2e/m
 - [x] Sample built in the UI and played: bridge crossing, stairs onto a platform, pit fall (`e2e/m3-build.spec.ts`)
 
 Deliberately deferred (so the box above is honest):
-- [ ] Autotiling rules and their visual editor, Decoration / Walls / Lights layers (M4 / M6)
+- [x] Autotiling rules and their visual editor, Decoration / Walls / Lights layers (done after M14: `docs/autotiling-and-layers.md`)
 - [ ] Per-height collision painting (collision currently comes from heights, flags and decks)
 - [ ] Hot reload while the game is running; game in a separate window (M10 / M14)
 - [x] Asset import and asset browser (M4); "Explain / Fix with Claude" buttons (M11, done)
@@ -97,7 +97,7 @@ Done and covered by tests (unit: `packages/runtime/src/sprites`, `anim`, `packag
 - [x] Sample made in the UI and played: a character drawn and animated in the studio walks the room, turning and mirroring (`e2e/m4-studio.spec.ts`)
 
 Deferred:
-- [ ] Autotiling rules and editor, Decoration / Walls layers (tile art arrives with M5/M14)
+- [x] Autotiling rules and editor, Decoration / Walls layers (done after M14)
 - [ ] Vector drawing mode, free rotate/scale of selections, tile-art editing (the studio draws sprites; terrain is still procedural)
 - [ ] Aseprite import is covered by unit tests with a hand-built file, not yet by a real Aseprite-made file
 ## M5 checklist
@@ -167,7 +167,8 @@ Deferred:
 - [x] Sound and music (WebAudio engine: named sounds from `assets/audio`, pitch variation, a voice cap, music loops that crossfade, volumes from Settings), region music, event actions and cutscene steps, Assets panel Sounds section with preview, a warning for names that have no file (`docs/sound-and-effects.md`, `e2e/m14-feel.spec.ts`)
 - [x] Hit feel: hit-stop (the game window pauses stepping, so the simulation, bot and replays are unchanged), screen shake from hits, seven particle presets, event actions (burst, shake, freeze), Melee Attack settings, switched off by Settings or Reduce motion
 - [x] Sample game: the finished slice ships as 	emplates/last-storytender (project screen **See a finished game**, copied into a chosen folder; checked and replayed by e2e/m14-sample.spec.ts)
-- [ ] Autotiling, hot reload and a separate game window, vector drawing, visual state machine, dialogue graph canvas, localization, video settings, minigames, skins (owed since earlier milestones; see KNOWN_ISSUES)
+- [x] Autotiling (rules with a 3x3 visual editor, 30-variant edge sets, cliff faces, applied while painting, one undo step) and the Walls / Decoration / Lights layers with hide and lock (`e2e/m14-autotile.spec.ts`, `docs/autotiling-and-layers.md`)
+- [ ] Hot reload and a separate game window, vector drawing, visual state machine, dialogue graph canvas, localization, video settings, minigames, skins (owed since earlier milestones; see KNOWN_ISSUES)
 
 ## M13 checklist
 

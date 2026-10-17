@@ -166,8 +166,21 @@ export const TileDefSchema = z.object({
   top: z.number().int().min(0).max(0xffffff),
   left: z.number().int().min(0).max(0xffffff),
   right: z.number().int().min(0).max(0xffffff),
+  group: z.number().int().min(1).optional(),
+  wall: z.boolean().optional(),
+  rim: z.object({ sides: z.number().int().min(0).max(15), corners: z.number().int().min(0).max(15), color: z.number().int().min(0).max(0xffffff) }).optional(),
 });
 export type TileDefData = z.infer<typeof TileDefSchema>;
+
+export const AutotileRuleSchema = z.object({
+  id: z.string().min(1),
+  name: z.string(),
+  base: z.number().int().min(1),
+  /** Eight characters, one per neighbour (N, NE, E, SE, S, SW, W, NW): 1 same, 0 other, * any, L lower, H higher. */
+  pattern: z.string().regex(/^[01*LH]{8}$/),
+  result: z.number().int().min(1),
+});
+export type AutotileRuleData = z.infer<typeof AutotileRuleSchema>;
 
 export const IsoConfigSchema = z.object({
   tileW: z.number().int().min(8).default(64),
@@ -180,6 +193,8 @@ export const ProjectSchema = z.object({
   name: z.string().min(1),
   iso: IsoConfigSchema.default({ tileW: 64, tileH: 32, heightPx: 16 }),
   tileset: z.array(TileDefSchema).default([]),
+  /** Autotiling rules, tried in order for each cell (see tilemap/autotile.ts). */
+  autotile: z.array(AutotileRuleSchema).default([]),
   /** Scene file paths relative to the project folder. */
   scenes: z.array(z.string()).min(1),
   startScene: z.string(),

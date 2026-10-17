@@ -150,6 +150,8 @@ export class PlaySession {
     cam.smoothing = 0.2;
     cam.zoom = 1;
     renderer.setGroundVisible(true);
+    renderer.setWallsVisible(true);
+    renderer.entityHidden = null;
     renderer.entitiesVisible = true;
     renderer.setTileMap(sim.map!, o.tileset());
     renderer.focus = player.id;

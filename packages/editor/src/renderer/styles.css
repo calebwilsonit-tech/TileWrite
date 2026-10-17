@@ -1453,3 +1453,16 @@ button.small {
   animation: none !important;
   transition: none !important;
 }
+
+/* ---- autotiling dialog ---- */
+.dialog.autotile { max-height: 90vh; overflow: auto; }
+.autotile h3 { margin: 14px 0 6px; }
+.autotile .row.wrap { flex-wrap: wrap; gap: 8px; align-items: end; }
+.variant-strip { display: flex; flex-wrap: wrap; gap: 4px; min-height: 28px; align-items: center; }
+.rule-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.rule-list li { display: flex; gap: 12px; align-items: center; padding: 6px; border: 1px solid var(--border, #3a3d48); border-radius: 6px; }
+.rule-grid { display: grid; grid-template-columns: repeat(3, 28px); grid-template-rows: repeat(3, 28px); gap: 2px; }
+.rule-grid .nb { width: 28px; height: 28px; padding: 0; border: 1px solid var(--border, #3a3d48); border-radius: 3px; font-weight: 700; color: #000; }
+.rule-grid .centre { display: flex; align-items: center; justify-content: center; }
+.rule-body { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.problems-list li { color: var(--warn, #f0b429); }

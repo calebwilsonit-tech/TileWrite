@@ -10,17 +10,19 @@ import {
   gridToScreen,
   screenRect,
   screenToGrid,
+  tilesetFromList,
   type Cell,
   type TileSet,
   type TransformIso,
 } from '@tilewright/runtime';
 import { parsePoints } from '@tilewright/behaviors';
+import { objectLayerOf, type ObjectLayer } from '../model/layers';
 import { crashReport } from '@tilewright/runtime';
 import type { EditorDoc, DocEvent } from '../model/doc';
 import { store, type ToolId } from '../app/store';
 import { studio } from '../studio/store';
 import { TOOLS, toolMeta, type Pointer, type Preview, type ToolEnv } from '../tools/tools';
-import { prefabById } from '../tools/prefabs';
+import { PREFABS, prefabById } from '../tools/prefabs';
 import type { P } from '../tools/algorithms';
 import { OverlayDrawer, cellTopHeight } from './overlay';
 import { PlaySession } from './play-session';
@@ -62,6 +64,8 @@ export class ViewportController {
   private ghostG = new Graphics();
   private editWorld = new World();
   private docIdOf = new Map<number, string>();
+  /** Which layer each drawn object is on (Objects, Decoration, Lights). */
+  private layerOf = new Map<number, ObjectLayer>();
   private previews: Preview[] = [];
   private walk: Set<string> | null = null;
   private marqueeEl!: HTMLDivElement;
@@ -209,14 +213,12 @@ export class ViewportController {
 
   private tilesetFor(): TileSet | undefined {
     const p = store.state.project?.project.tileset;
-    if (!p || p.length === 0) return this.tileset;
-    const set: TileSet = {};
-    for (const t of p) set[t.id] = { name: t.name, top: t.top, left: t.left, right: t.right };
-    return set;
+    return (p && tilesetFromList(p)) ?? this.tileset;
   }
 
   private onDocEvent(e: DocEvent): void {
     if (e.type === 'cells') this.renderer.updateCells(e.cells);
+    else if (e.type === 'tiles' && this.doc) this.renderer.setTileMap(this.doc.map, this.tilesetFor());
     else if (e.type === 'wires') this.dirty = true;
     else if (e.type === 'map' && this.doc) {
       this.renderer.setTileMap(this.doc.map, this.tilesetFor());
@@ -230,6 +232,7 @@ export class ViewportController {
     const doc = this.doc;
     this.editWorld.clear();
     this.docIdOf.clear();
+    this.layerOf.clear();
     if (!doc) return;
     for (const e of doc.entities) {
       const t = e.components.transform as TransformIso | undefined;
@@ -237,6 +240,7 @@ export class ViewportController {
       if (!t || !s) continue;
       const ent = this.editWorld.spawn({ name: e.name, components: { [C.Transform]: { ...t }, [C.Sprite]: { ...s } } });
       this.docIdOf.set(ent.id, e.id);
+      this.layerOf.set(ent.id, objectLayerOf(e));
     }
   }
 
@@ -330,8 +334,7 @@ export class ViewportController {
           }
         }
         if ((store.focusRequest?.token ?? 0) !== last.focus && store.focusRequest) this.focusCell(store.focusRequest.x, store.focusRequest.y);
-        this.renderer.setGroundVisible(s.view.ground);
-        this.renderer.entitiesVisible = s.view.objects;
+        this.applyLayerView();
         this.dirty = true;
         const now = this.snapshotStore();
         const settled = now.tool === this.lastStore.tool && now.mode === this.lastStore.mode && now.paused === this.lastStore.paused && now.stepToken === this.lastStore.stepToken;
@@ -340,6 +343,27 @@ export class ViewportController {
     } finally {
       this.reacting = false;
     }
+  }
+
+  /** Show or hide ground, walls and the kinds of object, as the Layers panel says. */
+  private applyLayerView(): void {
+    const v = store.state.view;
+    this.renderer.setGroundVisible(v.ground);
+    this.renderer.setWallsVisible(v.walls);
+    this.renderer.entitiesVisible = v.objects;
+    this.renderer.entityHidden = this.play ? null : (e) => {
+      const k = this.layerOf.get(e.id);
+      return (k === 'decoration' && !store.state.view.decoration) || (k === 'lights' && !store.state.view.lightsLayer);
+    };
+  }
+
+  /** Whether a placed object can be picked right now: its layer must be visible and unlocked. */
+  private objectUsable(e: { tags: string[]; components: Record<string, unknown> }): boolean {
+    const k = objectLayerOf(e);
+    const { view, locks } = store.state;
+    if (k === 'decoration') return view.decoration && !locks.decoration;
+    if (k === 'lights') return view.lightsLayer && !locks.lightsLayer;
+    return true;
   }
 
   // ---- drawing ----
@@ -470,7 +494,7 @@ export class ViewportController {
     for (const e of doc.entities) {
       const t = e.components.transform as TransformIso | undefined;
       const s = e.components.sprite as SpriteLike | undefined;
-      if (!t || !s) continue;
+      if (!t || !s || !this.objectUsable(e)) continue;
       const r = this.entityScreenRect(t, s);
       if (w.x < r.left - 4 || w.x > r.right + 4 || w.y < r.top - 4 || w.y > r.bottom + 4) continue;
       const key = t.x + t.y + t.h * 0.01;
@@ -489,7 +513,7 @@ export class ViewportController {
     const out: string[] = [];
     for (const e of doc.entities) {
       const t = e.components.transform as TransformIso | undefined;
-      if (!t) continue;
+      if (!t || !this.objectUsable(e)) continue;
       const v = this.camera.worldToView(gridToScreen(t.x, t.y, t.h, this.renderer.iso));
       if (v.x >= x0 && v.x <= x1 && v.y >= y0 && v.y <= y1) out.push(e.id);
     }
@@ -570,6 +594,14 @@ export class ViewportController {
     if ((meta.edits === 'ground' && locks.ground) || (meta.edits === 'objects' && locks.objects) || (meta.edits === 'regions' && locks.regions)) {
       store.notify('warn', `The ${meta.edits} layer is locked. Unlock it in the Layers panel to use ${meta.label}.`);
       return;
+    }
+    if (meta.edits === 'objects' && (store.state.tool === 'place' || store.state.tool === 'props')) {
+      const prefab = PREFABS.find((x) => x.id === store.state.options.prefab);
+      const kind = prefab ? objectLayerOf(prefab.make(0, 0, 0)) : 'objects';
+      if ((kind === 'decoration' && locks.decoration) || (kind === 'lights' && locks.lightsLayer)) {
+        store.notify('warn', `The ${kind === 'lights' ? 'lights' : 'decoration'} layer is locked. Unlock it in the Layers panel to place this.`);
+        return;
+      }
     }
     const p = this.pointer(e);
     this.pointerDown = true;
@@ -740,8 +772,7 @@ export class ViewportController {
     this.renderer.overlay.visible = true;
     if (this.doc) {
       this.renderer.setTileMap(this.doc.map, this.tilesetFor());
-      this.renderer.setGroundVisible(store.state.view.ground);
-      this.renderer.entitiesVisible = store.state.view.objects;
+      this.applyLayerView();
     }
     this.dirty = true;
   }

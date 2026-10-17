@@ -1,6 +1,10 @@
 import {
   CURRENT_SCHEMA_VERSION,
   TileMap,
+  around,
+  resolveTile,
+  type AutotileRule,
+  type TileSet,
   collapseInstance,
   resolveInstance,
   type PrefabData,
@@ -19,6 +23,7 @@ import { History, type Command } from './history';
 export type DocEvent =
   | { type: 'cells'; cells: { x: number; y: number }[] }
   | { type: 'map' }
+  | { type: 'tiles' }
   | { type: 'entities' }
   | { type: 'regions' }
   | { type: 'wires' }
@@ -47,10 +52,49 @@ export class Stroke {
     const p = typeof patch === 'function' ? patch(before) : patch;
     const after = { ...before, ...p };
     if (sameCell(before, after)) return true;
+    if (this.doc.cellGuard && !this.doc.cellGuard(before, after)) return true; // a locked layer: the cell stays as it is
     writeCell(this.doc.map, x, y, after);
     this.buffer.record(x, y, before, after);
     this.doc.emit({ type: 'cells', cells: [{ x, y }] });
+    if (before.tile !== after.tile || before.height !== after.height) this.resolveAround(x, y);
     return true;
+  }
+
+  /** Autotiling: after a cell changed, its look and its neighbours' looks may have to change too. */
+  private resolveAround(x: number, y: number): void {
+    const at = this.doc.autotile;
+    if (!at || at.rules.length === 0) return;
+    const changed: { x: number; y: number }[] = [];
+    for (const c of around(this.doc.map, x, y)) {
+      const to = resolveTile(this.doc.map, at.tileset, at.rules, c.x, c.y);
+      const before = readCell(this.doc.map, c.x, c.y);
+      if (to === before.tile) continue;
+      const after = { ...before, tile: to };
+      writeCell(this.doc.map, c.x, c.y, after);
+      this.buffer.record(c.x, c.y, before, after);
+      changed.push(c);
+    }
+    if (changed.length > 0) this.doc.emit({ type: 'cells', cells: changed });
+  }
+
+  /** Work out the look of every cell again (after the rules changed). Returns how many cells changed. */
+  resolveAll(): number {
+    const at = this.doc.autotile;
+    if (!at) return 0;
+    const changed: { x: number; y: number }[] = [];
+    for (let y = 0; y < this.doc.map.height; y++) {
+      for (let x = 0; x < this.doc.map.width; x++) {
+        const before = readCell(this.doc.map, x, y);
+        const to = resolveTile(this.doc.map, at.tileset, at.rules, x, y);
+        if (to === before.tile) continue;
+        const after = { ...before, tile: to };
+        writeCell(this.doc.map, x, y, after);
+        this.buffer.record(x, y, before, after);
+        changed.push({ x, y });
+      }
+    }
+    if (changed.length > 0) this.doc.emit({ type: 'cells', cells: changed });
+    return changed.length;
   }
 
   get changed(): number {
@@ -87,6 +131,10 @@ export class EditorDoc {
   prefabs: ReadonlyMap<string, PrefabData> = new Map();
   private readonly listeners = new Set<DocListener>();
   private nextId = 1;
+  /** The project's tiles and autotile rules; when there are rules, painting keeps every cell's look up to date. */
+  autotile: { tileset: TileSet; rules: readonly AutotileRule[] } | null = null;
+  /** Returns false to refuse a change to a cell (a locked layer). */
+  cellGuard: ((before: CellData, after: CellData) => boolean) | null = null;
 
   constructor(
     public name: string,
@@ -159,6 +207,14 @@ export class EditorDoc {
 
   beginStroke(label: string): Stroke {
     return new Stroke(this, label);
+  }
+
+  /** Work out every cell's look from the autotile rules again, as one undo step. Returns how many cells changed. */
+  reapplyAutotile(label = 'Apply autotiling'): number {
+    const s = this.beginStroke(label);
+    const n = s.resolveAll();
+    s.commit();
+    return n;
   }
 
   /** One-shot edit of several cells as a single undo step. */

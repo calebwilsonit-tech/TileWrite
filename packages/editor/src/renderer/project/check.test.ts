@@ -60,6 +60,17 @@ describe('checkProject', () => {
     expect(await checkProject(fs, '/p', project, new Map(), story())).toEqual([]);
   });
 
+  it('warns about tiles a scene uses that the tile list lost, and about autotile rules that cannot work', async () => {
+    const { fs, project } = setup((main) => {
+      main.map.tiles[0]![0] = 42; // a tile id nobody defined
+    });
+    const lost = (await checkProject(fs, '/p', project, new Map(), story())).map((p) => p.message).join('\n');
+    expect(lost).toMatch(/uses tile number 42, which is not in the tile list any more/);
+    const broken = { ...project, autotile: [{ id: 'r', name: 'Shore', base: 4, pattern: '0*******', result: 99 }] };
+    const found = (await checkProject(fs, '/p', broken, new Map(), story())).map((p) => p.message).join('\n');
+    expect(found).toMatch(/Autotiling: Rule 1 \(Shore\) shows a tile that no longer exists/);
+  });
+
   it('finds doors that lead nowhere, in plain English', async () => {
     const { fs, project } = setup((main) => {
       main.entities.push(

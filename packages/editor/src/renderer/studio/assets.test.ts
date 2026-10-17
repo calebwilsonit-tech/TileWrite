@@ -177,7 +177,7 @@ describe('tags and references', () => {
     b.entities.push({ id: 'e1', name: 'Hero twin', tags: [], components: { animator: { asset: 'hero' } } });
     fs.files.set('/p/scenes/a.scene.json', stringifyScene(a));
     fs.files.set('/p/scenes/b.scene.json', stringifyScene(b));
-    const project = { schemaVersion: 1, name: 'x', iso: { tileW: 64, tileH: 32, heightPx: 16 }, tileset: [], scenes: ['scenes/a.scene.json', 'scenes/b.scene.json', 'scenes/gone.scene.json'], startScene: 'scenes/a.scene.json' };
+    const project = { schemaVersion: 1, name: 'x', iso: { tileW: 64, tileH: 32, heightPx: 16 }, tileset: [], autotile: [], scenes: ['scenes/a.scene.json', 'scenes/b.scene.json', 'scenes/gone.scene.json'], startScene: 'scenes/a.scene.json' };
     const refs = await findReferences(fs, '/p', project, 'hero');
     expect(refs.map((r) => `${r.scene}:${r.entityName}`)).toEqual(['scenes/a.scene.json:Player', 'scenes/b.scene.json:Hero twin']);
     expect(await findReferences(fs, '/p', project, 'nothing')).toEqual([]);

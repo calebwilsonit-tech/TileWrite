@@ -5,6 +5,7 @@ import { EditorDoc } from '../model/doc';
 import { validateScene } from '../model/validate';
 import { storyVariables } from '../model/story-vars';
 import { loadScene, type ProjectFs } from './io';
+import { checkRules, missingTiles, ownTiles } from './tiles';
 
 export interface ProjectProblem {
   id: string;
@@ -58,11 +59,15 @@ export async function checkProject(
   if (!project.scenes.includes(project.startScene)) {
     out.push({ id: 'start-scene', severity: 'error', scene: '', message: `The project starts in "${project.startScene}", which is not one of its scenes. Pick a starting scene.` });
   }
+  const tiles = ownTiles(project);
+  for (const text of checkRules(tiles, project.autotile)) out.push({ id: `autotile:${text}`, severity: 'warning', scene: '', message: `Autotiling: ${text}` });
   const itemIds = new Set(story.items.map((i) => i.id));
   const prefabNames = new Set(prefabs.keys());
 
   for (const [path, scene] of scenes) {
     const doc = EditorDoc.fromScene(scene, prefabs);
+    const lost = missingTiles(doc.map.tiles, tiles);
+    if (lost.length > 0) out.push({ id: `:tiles-missing`, severity: 'warning', scene: path, message: `This scene uses tile number ${lost.join(', ')}, which is not in the tile list any more, so it is drawn as a magenta square. Paint over those cells or run Autotiling -> Save and apply.` });
     for (const p of validateScene(doc, spriteNames, prefabNames, storyVariables(story.dialogues, story.cutscenes), soundNames)) {
       out.push({ id: `${path}:${p.id}`, severity: p.severity, scene: path, message: p.message, entity: p.target?.kind === 'entity' ? p.target.id : undefined, x: p.target?.x, y: p.target?.y });
     }

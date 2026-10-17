@@ -9,16 +9,16 @@ export function TilesPanel() {
   const projectTiles = useApp((s) => s.project?.project.tileset);
   const [query, setQuery] = useState('');
   const tiles = useMemo(() => {
-    const list =
-      projectTiles && projectTiles.length > 0
-        ? projectTiles
-        : Object.entries(DEFAULT_TILESET).map(([id, t]) => ({ id: Number(id), name: t.name, top: t.top, left: t.left, right: t.right }));
+    const list = (projectTiles && projectTiles.length > 0 ? projectTiles : Object.entries(DEFAULT_TILESET).map(([id, t]) => ({ id: Number(id), ...t }))).filter((t) => t.group === undefined); // variants are chosen by the autotile rules, not painted
     const q = query.trim().toLowerCase();
     return q ? list.filter((t) => t.name.toLowerCase().includes(q)) : list;
   }, [projectTiles, query]);
 
   return (
     <div className="panel tiles-panel" data-testid="tiles-panel">
+      <button data-testid="btn-autotile" onClick={() => document.dispatchEvent(new CustomEvent('tw:autotile'))} title="Edges, shores and cliff faces that appear by themselves">
+        Autotiling…
+      </button>
       <input data-testid="tile-search" className="search" type="search" placeholder="Search tiles…" value={query} onChange={(e) => setQuery(e.target.value)} aria-label="Search tiles" />
       <div className="tile-grid">
         {tiles.map((t) => (

@@ -60,6 +60,8 @@ interface TileView {
   box: DepthBox;
   /** Things that rise above the ground can hide the focus entity and fade out. */
   occluder: boolean;
+  /** The tile counts as a wall (Layers panel: Walls). */
+  wall: boolean;
 }
 
 /** Corner heights (levels, relative to the cell's base) at N(0,0) E(1,0) S(1,1) W(0,1). */
@@ -110,6 +112,10 @@ export class IsoRenderer {
   groundVisible = true;
   /** Hide entities - used by the editor's layer toggles. */
   entitiesVisible = true;
+  /** Hide walls only (tiles marked as walls), for the Layers panel. */
+  wallsVisible = true;
+  /** Hide some objects only (decoration, lights...), for the Layers panel. */
+  entityHidden: ((e: Entity) => boolean) | null = null;
   /** Pixels of screen shake this frame (set by the game runner). */
   shake = 0;
   /** Draw each object's depth-sort position as a number above it (a debugging aid). */
@@ -219,13 +225,14 @@ export class IsoRenderer {
     const flags = map.getFlags(x, y);
     const slope = map.getSlope(x, y);
     const views: TileView[] = [];
+    const wall = def.wall === true;
     const add = (gfx: Graphics, h: number, box: DepthBox, occluder: boolean): void => {
       const p = gridToScreen(x, y, h, this.iso);
       gfx.position.set(p.x, p.y);
-      gfx.visible = this.groundVisible;
+      gfx.visible = this.groundVisible && (this.wallsVisible || !wall);
       this.world.addChild(gfx);
       box.id = this.nextTileId++;
-      const view = { gfx, box, occluder };
+      const view = { gfx, box, occluder, wall };
       views.push(view);
       this.viewById.set(box.id, view);
     };
@@ -260,7 +267,17 @@ export class IsoRenderer {
   /** Show or hide the ground layer. */
   setGroundVisible(v: boolean): void {
     this.groundVisible = v;
-    for (const view of this.viewById.values()) view.gfx.visible = v;
+    this.applyTileVisibility();
+  }
+
+  /** Show or hide the tiles marked as walls. */
+  setWallsVisible(v: boolean): void {
+    this.wallsVisible = v;
+    this.applyTileVisibility();
+  }
+
+  private applyTileVisibility(): void {
+    for (const view of this.viewById.values()) view.gfx.visible = this.groundVisible && (this.wallsVisible || !view.wall);
   }
 
   private get tiles(): TileView[] {
@@ -288,6 +305,29 @@ export class IsoRenderer {
     g.poly([sx, sy, ex, ey, ebx, eby, sbx, sby]).fill(def.right);
     g.poly([nx, ny, ex, ey, sx, sy, wx, wy]).fill(def.top);
     g.poly([nx, ny, ex, ey, sx, sy, wx, wy]).stroke({ width: 1, color: shade(def.top, 0.85), alpha: 0.6 });
+    if (def.rim) this.drawRim(g, [nx, ny], [ex, ey], [sx, sy], [wx, wy], def.rim);
+  }
+
+  /** An outline along the sides of the top face that border something else, and a dot in the corners where only a diagonal does. */
+  private drawRim(g: Graphics, n: [number, number], e: [number, number], s: [number, number], w: [number, number], rim: { sides: number; corners: number; color: number }): void {
+    const line = (a: [number, number], b: [number, number]): void => {
+      g.moveTo(a[0], a[1]).lineTo(b[0], b[1]).stroke({ width: 4, color: rim.color, alpha: 0.95 });
+    };
+    if (rim.sides & 1) line(n, e); // north side of the cell
+    if (rim.sides & 2) line(e, s); // east
+    if (rim.sides & 4) line(w, s); // south
+    if (rim.sides & 8) line(n, w); // west
+    const cx = (n[0] + s[0]) / 2;
+    const cy = (n[1] + s[1]) / 2;
+    const dot = (p: [number, number]): void => {
+      const x = p[0] + (cx - p[0]) * 0.22;
+      const y = p[1] + (cy - p[1]) * 0.22;
+      g.poly([x, y - 4, x + 6, y, x, y + 4, x - 6, y]).fill({ color: rim.color, alpha: 0.95 });
+    };
+    if (rim.corners & 1) dot(e); // the north-east diagonal touches the east corner
+    if (rim.corners & 2) dot(s);
+    if (rim.corners & 4) dot(w);
+    if (rim.corners & 8) dot(n);
   }
 
   /** Stairs: STAIR_STEPS flat strips climbing one level, drawn far to near. */
@@ -363,7 +403,7 @@ export class IsoRenderer {
       const s = e.require<Sprite>(C.Sprite);
       seen.add(e.id);
       const view = this.viewFor(e, s);
-      view.gfx.visible = s.visible && this.entitiesVisible;
+      view.gfx.visible = s.visible && this.entitiesVisible && !(this.entityHidden?.(e) ?? false);
       view.gfx.alpha = s.alpha ?? 1;
       const p = gridToScreen(t.x, t.y, t.h, this.iso);
       view.gfx.position.set(p.x, p.y);

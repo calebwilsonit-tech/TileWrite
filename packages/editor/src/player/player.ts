@@ -1,5 +1,5 @@
 import 'pixi.js/unsafe-eval'; // Pixi's shader helpers without `new Function`, which the Content-Security-Policy forbids
-import { IsoRenderer, crashReport, formatCrashReport, type SpriteData, type TileSet } from '@tilewright/runtime';
+import { IsoRenderer, crashReport, formatCrashReport, tilesetFromList, type SpriteData } from '@tilewright/runtime';
 import { activate, defaultImporter, installScriptGlobals, loadScript, type Transpiler } from '@tilewright/behaviors';
 import { GameManifestSchema, ScriptsBundleSchema, type GameManifest } from '@tilewright/exporter';
 import { joinPath } from '../renderer/project/api';
@@ -110,13 +110,6 @@ function splash(text: string): { done(minMs: number): Promise<void> } {
   };
 }
 
-function tilesetOf(tiles: { id: number; name: string; top: number; left: number; right: number }[]): TileSet | undefined {
-  if (tiles.length === 0) return undefined;
-  const set: TileSet = {};
-  for (const t of tiles) set[t.id] = { name: t.name, top: t.top, left: t.left, right: t.right };
-  return set;
-}
-
 async function boot(): Promise<void> {
   const info = await game().info();
   const root = info.dataDir;
@@ -162,7 +155,7 @@ async function boot(): Promise<void> {
   const scenePath = project.startScene;
   const scene = await loadScene(assetFs, root, scenePath);
   if (!scene.entities.some((e) => e.tags.includes('player'))) throw new Error('This game has no player start in its first scene, so there is nothing to play.');
-  const tileset = tilesetOf(project.tileset);
+  const tileset = tilesetFromList(project.tileset);
 
   await splashScreen?.done(1500);
   const s: PlaySession = new PlaySession({

@@ -5,6 +5,7 @@ import { useApp, store } from './app/store';
 import { EditorShell } from './app/EditorShell';
 import { ProjectScreen } from './screens/ProjectScreen';
 import { AccessibilityDialog } from './app/AccessibilityDialog';
+import { AutotileDialog } from './app/AutotileDialog';
 import { studio } from './studio/store';
 
 declare global {
@@ -98,6 +99,7 @@ export function App() {
     <>
       {screen === 'editor' ? <EditorShell /> : <ProjectScreen />}
       <AccessibilityDialog />
+      <AutotileDialog />
     </>
   );
 }

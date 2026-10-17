@@ -57,7 +57,8 @@ function baseProject(name: string): ProjectData {
     schemaVersion: CURRENT_SCHEMA_VERSION,
     name,
     iso: { tileW: 64, tileH: 32, heightPx: 16 },
-    tileset: Object.entries(DEFAULT_TILESET).map(([id, t]) => ({ id: Number(id), name: t.name, top: t.top, left: t.left, right: t.right })),
+    tileset: Object.entries(DEFAULT_TILESET).map(([id, t]) => ({ id: Number(id), ...t })),
+    autotile: [],
     scenes: [MAIN_SCENE_PATH],
     startScene: MAIN_SCENE_PATH,
   };
