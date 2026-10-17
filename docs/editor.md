@@ -63,4 +63,4 @@ Ctrl+Z / Ctrl+Y undo and redo every change, whichever panel made it. Ctrl+S save
 **Commands → Shortcuts** lists every command with its key; click Change and press a new key. Conflicts are highlighted. **Light / Dark** switches the theme.
 
 ## Not yet in the editor
-Vector drawing in the sprite studio. See KNOWN_ISSUES.md for the full list.
+Free rotation and scaling of pixel selections, and tile art editing (terrain is still drawn from colours). See KNOWN_ISSUES.md for the full list.

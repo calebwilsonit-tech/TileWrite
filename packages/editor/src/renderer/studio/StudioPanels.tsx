@@ -4,7 +4,7 @@ import { NumberField, SelectField, TextField, CheckField } from '../panels/field
 import { store } from '../app/store';
 import { findReferences, spriteNameProblem } from './assets';
 import { formatFrameList, parseFrameList } from './paint';
-import { assetFs, studio, useStudio, type StudioTool } from './store';
+import { VECTOR_TOOLS, assetFs, studio, useStudio, type StudioTool } from './store';
 import { frameCanvas } from './render';
 
 const TOOLS: { id: StudioTool; label: string; key: string; hint: string }[] = [
@@ -20,6 +20,10 @@ const TOOLS: { id: StudioTool; label: string; key: string; hint: string }[] = [
   { id: 'origin', label: 'Feet point', key: 'F', hint: 'Click where the character stands on its cell.' },
   { id: 'hitbox', label: 'Hitbox', key: 'H', hint: 'Drag a box where this frame hurts things (for example a sword swing).' },
   { id: 'hurtbox', label: 'Hurtbox', key: 'J', hint: 'Drag a box where this frame can be hurt.' },
+  { id: 'vselect', label: 'Shape select', key: 'V', hint: 'On a vector layer: click a shape to select it; drag it to move it, drag a handle to resize it or move a path point. Delete removes it and the arrow keys nudge it.' },
+  { id: 'vrect', label: 'Shape rect', key: 'R', hint: 'On a vector layer: drag a rectangle that stays editable. Round its corners or turn it in the shape settings.' },
+  { id: 'vellipse', label: 'Shape ellipse', key: 'N', hint: 'On a vector layer: drag an ellipse that stays editable.' },
+  { id: 'vpath', label: 'Shape path', key: 'P', hint: 'On a vector layer: click to place points; double-click or Enter finishes, clicking the first point closes the shape, Esc cancels. Tick Smooth for curves.' },
 ];
 
 export const STUDIO_TOOL_KEYS = Object.fromEntries(TOOLS.map((t) => [t.key.toLowerCase(), t.id])) as Record<string, StudioTool>;
@@ -40,6 +44,7 @@ export function ToolBox() {
         ))}
       </div>
       <p className="hint">{tool.hint}</p>
+      {VECTOR_TOOLS.includes(s.tool) && <VectorOptions />}
       <label className="opt">
         <span>Brush size</span>
         <input data-testid="studio-size" type="range" min={1} max={8} value={s.size} onChange={(e) => studio.set({ size: Number(e.target.value) })} />
@@ -107,6 +112,95 @@ export function ToolBox() {
         ))}
       </div>
     </div>
+  );
+}
+
+/** Settings for the shapes the vector tools make, and for the shape that is selected. */
+function VectorOptions() {
+  const s = useStudio((x) => x);
+  useStudio((x) => x.docVersion);
+  const doc = studio.doc;
+  const shape = doc && doc.currentIsVector && doc.shape !== null ? doc.shapes()[doc.shape] : undefined;
+  const at = doc?.shape ?? 0;
+  return (
+    <fieldset data-testid="vector-options">
+      <legend>Shapes</legend>
+      {doc && !doc.currentIsVector && <p className="hint">The current layer is a pixel layer. Add a shape layer (the + Shape layer button in Layers) to draw shapes.</p>}
+      <div className="row">
+        <label className="check">
+          <input data-testid="vfill" type="checkbox" checked={s.vFill} onChange={(e) => studio.set({ vFill: e.target.checked })} /> Fill with the chosen colour
+        </label>
+      </div>
+      <div className="row">
+        <span>Outline:</span>
+        <button data-testid="vstroke-color" title="Outline new shapes with the chosen colour" onClick={() => studio.set({ vStroke: s.color })}>
+          Chosen colour
+        </button>
+        <button data-testid="vstroke-none" title="No outline on new shapes" onClick={() => studio.set({ vStroke: 0 })}>
+          None
+        </button>
+        <output data-testid="vstroke-value">{s.vStroke === 0 ? 'none' : `colour ${s.vStroke}`}</output>
+      </div>
+      <NumberField label="Outline width (px)" min={0.5} max={32} step={0.5} value={s.vStrokeWidth} onCommit={(v) => studio.set({ vStrokeWidth: v })} />
+      {s.tool === 'vpath' && (
+        <div className="row">
+          <label className="check">
+            <input data-testid="vclosed" type="checkbox" checked={s.vClosed} onChange={(e) => studio.set({ vClosed: e.target.checked })} /> Closed
+          </label>
+          <label className="check">
+            <input data-testid="vsmooth" type="checkbox" checked={s.vSmooth} onChange={(e) => studio.set({ vSmooth: e.target.checked })} /> Smooth
+          </label>
+        </div>
+      )}
+      {doc && shape && (
+        <div data-testid="shape-inspector">
+          <h4>Selected shape ({shape.type})</h4>
+          <div className="row">
+            <button data-testid="shape-fill-color" onClick={() => doc.updateShape(at, { fill: s.color })}>
+              Fill: chosen colour
+            </button>
+            <button data-testid="shape-fill-none" onClick={() => doc.updateShape(at, { fill: 0 })}>
+              No fill
+            </button>
+          </div>
+          <div className="row">
+            <button data-testid="shape-stroke-color" onClick={() => doc.updateShape(at, { stroke: s.color })}>
+              Outline: chosen colour
+            </button>
+            <button data-testid="shape-stroke-none" onClick={() => doc.updateShape(at, { stroke: 0 })}>
+              No outline
+            </button>
+          </div>
+          <NumberField label="Outline width (px)" testId="shape-stroke-width" min={0.5} max={64} step={0.5} value={shape.strokeWidth} onCommit={(v) => doc.updateShape(at, { strokeWidth: v })} />
+          {shape.type === 'rect' && <NumberField label="Rounded corners (px)" testId="shape-radius" min={0} max={256} step={1} value={shape.radius} onCommit={(v) => doc.updateShape(at, { radius: v })} />}
+          {(shape.type === 'rect' || shape.type === 'ellipse') && <NumberField label="Turn (degrees)" testId="shape-rotation" min={-360} max={360} step={5} value={shape.rotation} onCommit={(v) => doc.updateShape(at, { rotation: v })} />}
+          {shape.type === 'path' && (
+            <div className="row">
+              <label className="check">
+                <input data-testid="shape-closed" type="checkbox" checked={shape.closed} onChange={(e) => doc.updateShape(at, { closed: e.target.checked })} /> Closed
+              </label>
+              <label className="check">
+                <input data-testid="shape-smooth" type="checkbox" checked={shape.smooth} onChange={(e) => doc.updateShape(at, { smooth: e.target.checked })} /> Smooth
+              </label>
+            </div>
+          )}
+          <div className="row">
+            <button data-testid="shape-forward" onClick={() => doc.reorderShape(at, 1)}>
+              Bring forward
+            </button>
+            <button data-testid="shape-back" onClick={() => doc.reorderShape(at, -1)}>
+              Send back
+            </button>
+            <button data-testid="shape-dup" onClick={() => doc.duplicateShape(at)}>
+              Duplicate
+            </button>
+            <button data-testid="shape-delete" onClick={() => doc.removeShape(at)}>
+              Delete
+            </button>
+          </div>
+        </div>
+      )}
+    </fieldset>
   );
 }
 
@@ -187,12 +281,23 @@ export function LayersSection() {
               {l.visible ? '👁' : '—'}
             </button>
             <TextField label="" value={l.name} onCommit={(v) => doc.renameLayer(l.id, v)} testId={`layer-name-${l.id}`} />
+            {l.kind === 'vector' && (
+              <small className="hint" title="A vector layer: its shapes stay editable">
+                shapes
+              </small>
+            )}
           </li>
         ))}
       </ul>
       <div className="row">
         <button data-testid="layer-add" onClick={() => doc.addLayer()}>
           + Layer
+        </button>
+        <button data-testid="layer-add-vector" title="A layer of shapes (rectangles, ellipses, paths) that stay editable" onClick={() => doc.addVectorLayer()}>
+          + Shape layer
+        </button>
+        <button data-testid="layer-rasterize" disabled={!doc.currentIsVector} title="Turn the shapes of this layer into ordinary pixels" onClick={() => doc.rasterizeLayer()}>
+          Turn into pixels
         </button>
         <button disabled={doc.layers.length <= 1} onClick={() => doc.removeLayer()}>
           Delete
@@ -207,6 +312,16 @@ export function LayersSection() {
           ↓
         </button>
       </div>
+      {doc.currentIsVector && (
+        <ul className="layer-rows" data-testid="shape-list">
+          {doc.shapes().map((sh, i) => (
+            <li key={i} className={doc.shape === i ? 'on' : ''} data-testid={`shape-row-${i}`} onClick={() => doc.selectShape(i)}>
+              {sh.type === 'rect' ? 'Rectangle' : sh.type === 'ellipse' ? 'Ellipse' : sh.points.length + '-point path'} {i + 1}
+            </li>
+          ))}
+          {doc.shapes().length === 0 && <li className="hint">No shapes yet. Use the Shape tools.</li>}
+        </ul>
+      )}
     </div>
   );
 }

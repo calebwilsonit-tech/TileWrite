@@ -98,7 +98,8 @@ Done and covered by tests (unit: `packages/runtime/src/sprites`, `anim`, `packag
 
 Deferred:
 - [x] Autotiling rules and editor, Decoration / Walls layers (done after M14)
-- [ ] Vector drawing mode, free rotate/scale of selections, tile-art editing (the studio draws sprites; terrain is still procedural)
+- [x] Vector drawing mode (shape layers with rectangles, ellipses and paths; done after M14: `e2e/m15-vector.spec.ts`)
+- [ ] Free rotate/scale of pixel selections, tile-art editing (the studio draws sprites; terrain is still procedural)
 - [ ] Aseprite import is covered by unit tests with a hand-built file, not yet by a real Aseprite-made file
 ## M5 checklist
 

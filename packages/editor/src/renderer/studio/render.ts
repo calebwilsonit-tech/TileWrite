@@ -14,6 +14,8 @@ export interface Overlay {
   pixelColor?: string;
   /** A rectangle being dragged (selection or box). */
   rect?: { x: number; y: number; w: number; h: number; color: string };
+  /** The selected vector shape: its box, and the handles to drag (sprite pixel coordinates). */
+  gizmo?: { box: { x: number; y: number; w: number; h: number }; handles: { x: number; y: number }[] };
   /** The selection being moved: a lifted copy drawn at an offset. */
   floating?: { rect: { x: number; y: number; w: number; h: number }; dx: number; dy: number };
 }
@@ -145,6 +147,19 @@ export function renderStudio(ctx: CanvasRenderingContext2D, width: number, heigh
     ctx.setLineDash([4, 3]);
     ctx.strokeRect(view.x + sel.x * z + 0.5, view.y + sel.y * z + 0.5, sel.w * z, sel.h * z);
     ctx.setLineDash([]);
+  }
+  if (overlay.gizmo) {
+    const g = overlay.gizmo;
+    ctx.strokeStyle = '#6aa8ff';
+    ctx.setLineDash([4, 3]);
+    ctx.strokeRect(view.x + g.box.x * z + 0.5, view.y + g.box.y * z + 0.5, g.box.w * z, g.box.h * z);
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#ffffff';
+    ctx.strokeStyle = '#2b4c7e';
+    for (const h of g.handles) {
+      ctx.fillRect(view.x + h.x * z - 3, view.y + h.y * z - 3, 6, 6);
+      ctx.strokeRect(view.x + h.x * z - 3 + 0.5, view.y + h.y * z - 3 + 0.5, 5, 5);
+    }
   }
   if (overlay.rect) {
     const r = overlay.rect;

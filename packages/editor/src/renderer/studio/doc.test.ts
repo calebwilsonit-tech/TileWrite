@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { encodeRle, getPixel, newCel, newSprite, parseSprite, setPixel } from '@tilewright/runtime';
+import { encodeRle, getPixel, moveShape, newCel, newEllipseShape, newRectShape, newSprite, parseSprite, setPixel } from '@tilewright/runtime';
 import { SpriteDoc } from './doc';
 
 function doc(w = 8, h = 8): SpriteDoc {
@@ -293,5 +293,130 @@ describe('procedural shapes and saving', () => {
     expect(again.clips[0]!.name).toBe('idle');
     setPixel(again.cel(0, 'l1'), { w: 6, h: 6 }, 0, 0, 1);
     expect(px(d, 0, 0, 0, 'l1')).toBe(0); // independent copies
+  });
+});
+
+describe('vector layers', () => {
+  const shapesOf = (d: SpriteDoc) => d.shapes();
+
+  function withVector(w = 16, h = 16): SpriteDoc {
+    const d = doc(w, h);
+    d.addVectorLayer();
+    return d;
+  }
+
+  it('are added as a layer of shapes, which pixel tools cannot draw on', () => {
+    const d = withVector();
+    expect(d.currentIsVector).toBe(true);
+    expect(d.layers.map((l) => l.kind)).toEqual(['pixel', 'vector']);
+    expect(d.beginStroke('pencil')).toBeNull();
+    expect(d.beginVectorEdit('x')).not.toBeNull();
+    d.selectLayer('l1');
+    expect(d.beginVectorEdit('x')).toBeNull();
+  });
+
+  it('draw their pixels from the shapes, and undo and redo are one step per edit', () => {
+    const d = withVector();
+    expect(d.addShape(newRectShape(2, 2, 4, 4, 3))).toBe(true);
+    expect(px(d, 3, 3)).toBe(3);
+    expect(px(d, 7, 7)).toBe(0);
+    expect(d.shape).toBe(0);
+    d.updateShape(0, { fill: 5 });
+    expect(px(d, 3, 3)).toBe(5);
+    expect(d.history.labels).toEqual(['Change shape', 'Add shape', 'Add vector layer']);
+    d.history.undo();
+    expect(px(d, 3, 3)).toBe(3);
+    d.history.undo();
+    expect(shapesOf(d)).toHaveLength(0);
+    expect(px(d, 3, 3)).toBe(0);
+    d.history.redo();
+    d.history.redo();
+    expect(px(d, 3, 3)).toBe(5);
+  });
+
+  it('a drag is live and becomes one undo step when it ends, or nothing when cancelled', () => {
+    const d = withVector();
+    d.addShape(newRectShape(0, 0, 4, 4, 3));
+    const e = d.beginVectorEdit('Move shape')!;
+    e.shapes[0] = moveShape(e.shapes[0]!, 6, 6);
+    e.apply();
+    expect(px(d, 7, 7)).toBe(3);
+    expect(px(d, 1, 1)).toBe(0);
+    e.cancel();
+    expect(px(d, 1, 1)).toBe(3);
+    const n = d.history.labels.length;
+    const f = d.beginVectorEdit('Move shape')!;
+    f.shapes[0] = moveShape(f.shapes[0]!, 6, 6);
+    f.commit();
+    expect(d.history.labels).toHaveLength(n + 1);
+    d.history.undo();
+    expect(px(d, 1, 1)).toBe(3);
+  });
+
+  it('delete, reorder, duplicate and mirror shapes', () => {
+    const d = withVector();
+    d.addShape(newRectShape(0, 0, 6, 6, 3));
+    d.addShape(newRectShape(2, 2, 6, 6, 4));
+    expect(px(d, 3, 3)).toBe(4); // the second is on top
+    d.reorderShape(1, -1);
+    expect(px(d, 3, 3)).toBe(3);
+    d.duplicateShape(0);
+    expect(shapesOf(d)).toHaveLength(3);
+    d.removeShape(2);
+    expect(shapesOf(d)).toHaveLength(2);
+    d.transform('flipH');
+    expect(px(d, 15, 1)).toBe(3); // the first square (x 0..6) is now at the other side
+    expect(px(d, 1, 1)).toBe(0);
+    d.history.undo();
+    expect(px(d, 15, 1)).toBe(0);
+    expect(px(d, 1, 1)).toBe(3);
+  });
+
+  it('are saved with their shapes and come back editable; the file also holds the pixels for the game', () => {
+    const d = withVector();
+    d.addShape(newRectShape(2, 2, 4, 4, 3));
+    d.addShape(newEllipseShape(10, 10, 3, 3, 4));
+    const saved = d.toSprite();
+    expect(saved.layers[1]!.kind).toBe('vector');
+    expect(saved.layers[0]!.kind).toBeUndefined(); // pixel layers are written exactly as before
+    expect(saved.frames[0]!.vectors!['l2']).toHaveLength(2);
+    expect(saved.frames[0]!.cels['l2']).toBeTypeOf('string'); // the baked pixels
+    const back = SpriteDoc.fromSprite(parseSprite(JSON.parse(JSON.stringify(saved))).ok ? saved : saved);
+    expect(back.layers[1]!.kind).toBe('vector');
+    expect(back.shapes(0, 'l2')).toHaveLength(2);
+    expect(px(back, 3, 3, 0, 'l2')).toBe(3);
+    expect(px(back, 10, 10, 0, 'l2')).toBe(4);
+  });
+
+  it('turn into plain pixels on request, and are merged down as pixels', () => {
+    const d = withVector();
+    d.addShape(newRectShape(1, 1, 3, 3, 3));
+    d.rasterizeLayer();
+    expect(d.currentIsVector).toBe(false);
+    expect(d.shapes()).toHaveLength(0);
+    expect(px(d, 2, 2)).toBe(3);
+    expect(d.beginStroke('now pixels')).not.toBeNull();
+    d.history.undo();
+    expect(d.currentIsVector).toBe(true);
+    expect(d.shapes()).toHaveLength(1);
+    d.mergeDown();
+    expect(d.layers).toHaveLength(1);
+    expect(d.layers[0]!.kind).toBe('pixel');
+    expect(px(d, 2, 2)).toBe(3);
+  });
+
+  it('follow the canvas when it is resized, frames when they are duplicated, and colours when one is deleted', () => {
+    const d = withVector(8, 8);
+    d.addShape(newRectShape(1, 1, 3, 3, 4));
+    d.resize(16, 16, true);
+    expect(px(d, 6, 6)).toBe(4); // moved by 4 with the centred canvas
+    expect(px(d, 1, 1)).toBe(0);
+    d.addFrame(true);
+    expect(d.shapes(1, d.layer)).toHaveLength(1);
+    d.removeColor(3);
+    expect(d.shapes()[0]).toMatchObject({ fill: 3 }); // colour 4 became colour 3
+    expect(px(d, 6, 6)).toBe(3);
+    d.removeLayer();
+    expect(d.frames[0]!.vectors['l2']).toBeUndefined();
   });
 });

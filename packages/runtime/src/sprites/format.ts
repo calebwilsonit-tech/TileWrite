@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { FACING_NAMES } from '../iso/math';
+import { VectorShapeSchema } from './vector';
 
 /**
  * Sprite file format (`*.sprite.json`). Pixels are palette indices (0 = transparent) stored run-length
@@ -28,6 +29,8 @@ const FrameSchema = z.object({
   /** Layer id -> RLE-encoded palette indices (missing layer = empty). */
   cels: z.record(z.string(), z.string()),
   boxes: z.array(BoxSchema).default([]),
+  /** Vector layer id -> its shapes in this frame (the layer's `cels` entry is what they look like drawn). */
+  vectors: z.record(z.string(), z.array(VectorShapeSchema)).optional(),
 });
 
 const FrameListSchema = z.array(z.number().int().min(0));
@@ -69,7 +72,7 @@ export const SpriteSchema = z
     height: z.number().int().min(1).max(MAX_SPRITE_SIZE),
     /** "#rrggbbaa"; entry 0 is always fully transparent. */
     palette: z.array(z.string().regex(/^#[0-9a-fA-F]{8}$/)).min(1).max(MAX_PALETTE),
-    layers: z.array(z.object({ id: z.string().min(1), name: z.string(), visible: z.boolean().default(true) })).min(1),
+    layers: z.array(z.object({ id: z.string().min(1), name: z.string(), visible: z.boolean().default(true), kind: z.enum(['pixel', 'vector']).optional() })).min(1),
     frames: z.array(FrameSchema).min(1),
     /** The feet point: where the sprite stands on its cell, in pixels from the top-left. */
     origin: z.object({ x: z.number(), y: z.number() }),
@@ -79,6 +82,7 @@ export const SpriteSchema = z
   })
   .superRefine((s, ctx) => {
     const ids = new Set<string>();
+    const vectorIds = new Set(s.layers.filter((l) => l.kind === 'vector').map((l) => l.id));
     for (const l of s.layers) {
       if (ids.has(l.id)) ctx.addIssue({ code: 'custom', message: `layer id "${l.id}" is used twice`, path: ['layers'] });
       ids.add(l.id);
@@ -89,6 +93,11 @@ export const SpriteSchema = z
     s.frames.forEach((f, i) => {
       for (const id of Object.keys(f.cels)) {
         if (!ids.has(id)) ctx.addIssue({ code: 'custom', message: `frame ${i + 1} has pixels for a layer that does not exist ("${id}")`, path: ['frames', i, 'cels'] });
+      }
+    });
+    s.frames.forEach((f, i) => {
+      for (const id of Object.keys(f.vectors ?? {})) {
+        if (!vectorIds.has(id)) ctx.addIssue({ code: 'custom', message: `frame ${i + 1} has shapes for a layer that is not a vector layer ("${id}")`, path: ['frames', i, 'vectors'] });
       }
     });
     const n = s.frames.length;

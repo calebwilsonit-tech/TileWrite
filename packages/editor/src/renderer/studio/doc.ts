@@ -5,10 +5,13 @@ import {
   copyRect,
   decodeRle,
   encodeRle,
+  flipShape,
   flipH,
   flipV,
+  moveShape,
   newCel,
   pasteCel,
+  rasterizeShapes,
   rotate90,
   shift,
   type Cel,
@@ -17,6 +20,7 @@ import {
   type ShapeData,
   type SpriteBox,
   type SpriteData,
+  type VectorShape,
 } from '@tilewright/runtime';
 import { History } from '../model/history';
 
@@ -24,12 +28,16 @@ export interface LayerState {
   id: string;
   name: string;
   visible: boolean;
+  /** A vector layer keeps editable shapes; its pixels are what they look like drawn. */
+  kind: 'pixel' | 'vector';
 }
 
 export interface FrameState {
   duration: number;
   cels: Record<string, Cel>;
   boxes: SpriteBox[];
+  /** Shapes of the vector layers, by layer id. */
+  vectors: Record<string, VectorShape[]>;
 }
 
 interface State {
@@ -51,7 +59,7 @@ function cloneState(s: State): State {
     height: s.height,
     palette: [...s.palette],
     layers: s.layers.map((l) => ({ ...l })),
-    frames: s.frames.map((f) => ({ duration: f.duration, cels: Object.fromEntries(Object.entries(f.cels).map(([k, v]) => [k, v.slice()])), boxes: f.boxes.map((b) => ({ ...b })) })),
+    frames: s.frames.map((f) => ({ duration: f.duration, cels: Object.fromEntries(Object.entries(f.cels).map(([k, v]) => [k, v.slice()])), boxes: f.boxes.map((b) => ({ ...b })), vectors: structuredClone(f.vectors) })),
     origin: { ...s.origin },
     clips: structuredClone(s.clips),
     procedural: s.procedural ? structuredClone(s.procedural) : null,
@@ -122,6 +130,58 @@ export class CelStroke {
 }
 
 /**
+ * An in-progress edit of the shapes of one vector layer in one frame. The shapes (and so the pixels) change at once;
+ * `commit` makes one undo step, `cancel` puts everything back.
+ */
+export class VectorEdit {
+  private readonly before: VectorShape[];
+  shapes: VectorShape[];
+  private done = false;
+
+  constructor(
+    private readonly doc: SpriteDoc,
+    readonly label: string,
+    private readonly frame: number,
+    private readonly layerId: string,
+  ) {
+    this.before = structuredClone(doc.shapes(frame, layerId)) as VectorShape[];
+    this.shapes = structuredClone(this.before);
+  }
+
+  /** Show the working shapes (the pixels are redrawn from them). */
+  apply(): void {
+    if (this.done) return;
+    this.doc.setShapesLive(this.frame, this.layerId, this.shapes);
+  }
+
+  get changed(): boolean {
+    return JSON.stringify(this.shapes) !== JSON.stringify(this.before);
+  }
+
+  commit(): void {
+    if (this.done) return;
+    this.apply();
+    this.done = true;
+    if (!this.changed) return;
+    const after = structuredClone(this.shapes) as VectorShape[];
+    const before = this.before;
+    const { frame, layerId, doc } = this;
+    doc.history.push({
+      label: this.label,
+      redo: () => doc.setShapesLive(frame, layerId, structuredClone(after) as VectorShape[]),
+      undo: () => doc.setShapesLive(frame, layerId, structuredClone(before) as VectorShape[]),
+    });
+    doc.markChanged();
+  }
+
+  cancel(): void {
+    if (this.done) return;
+    this.done = true;
+    this.doc.setShapesLive(this.frame, this.layerId, this.before);
+  }
+}
+
+/**
  * The sprite being edited, in a form that is quick to draw on (decoded pixels), with undo.
  * Pixel strokes undo cheaply; structural edits (frames, layers, palette, clips...) snapshot the whole sprite.
  */
@@ -132,6 +192,8 @@ export class SpriteDoc {
   layer: string;
   /** Selected rectangle and a lifted copy of its pixels while it is being moved. */
   selection: { x: number; y: number; w: number; h: number } | null = null;
+  /** The selected shape of the current vector layer (index), if any. */
+  shape: number | null = null;
   private listeners = new Set<(e: StudioEvent) => void>();
   private nextLayer: number;
   private s: State;
@@ -151,12 +213,15 @@ export class SpriteDoc {
       duration: f.duration,
       cels: Object.fromEntries(data.layers.map((l) => [l.id, f.cels[l.id] === undefined ? newCel(data.width, data.height) : decodeRle(f.cels[l.id]!, n)])),
       boxes: f.boxes.map((b) => ({ ...b })),
+      vectors: structuredClone(f.vectors ?? {}),
     }));
+    // the pixels of a vector layer are always what its shapes draw (a file edited by hand cannot disagree with itself)
+    for (const f of frames) for (const l of data.layers) if (l.kind === 'vector') f.cels[l.id] = rasterizeShapes(f.vectors[l.id] ?? [], data.width, data.height);
     return new SpriteDoc(data.name, {
       width: data.width,
       height: data.height,
       palette: [...data.palette],
-      layers: data.layers.map((l) => ({ ...l })),
+      layers: data.layers.map((l) => ({ ...l, kind: l.kind ?? 'pixel' })),
       frames,
       origin: { ...data.origin },
       clips: structuredClone(data.clips),
@@ -171,12 +236,16 @@ export class SpriteDoc {
       width: this.s.width,
       height: this.s.height,
       palette: [...this.s.palette],
-      layers: this.s.layers.map((l) => ({ ...l })),
-      frames: this.s.frames.map((f) => ({
-        duration: f.duration,
-        cels: Object.fromEntries(Object.entries(f.cels).filter(([, c]) => c.some((v) => v !== 0)).map(([k, c]) => [k, encodeRle(c)])),
-        boxes: f.boxes.map((b) => ({ ...b })),
-      })),
+      layers: this.s.layers.map((l) => (l.kind === 'vector' ? { ...l } : { id: l.id, name: l.name, visible: l.visible })),
+      frames: this.s.frames.map((f) => {
+        const vectors = Object.fromEntries(Object.entries(f.vectors).filter(([id, v]) => v.length > 0 && this.s.layers.some((l) => l.id === id && l.kind === 'vector')));
+        return {
+          duration: f.duration,
+          cels: Object.fromEntries(Object.entries(f.cels).filter(([, c]) => c.some((v) => v !== 0)).map(([k, c]) => [k, encodeRle(c)])),
+          boxes: f.boxes.map((b) => ({ ...b })),
+          ...(Object.keys(vectors).length > 0 ? { vectors: structuredClone(vectors) } : {}),
+        };
+      }),
       origin: { ...this.s.origin },
       clips: structuredClone(this.s.clips),
       procedural: this.s.procedural ? structuredClone(this.s.procedural) : null,
@@ -245,12 +314,14 @@ export class SpriteDoc {
   selectFrame(i: number): void {
     this.frame = Math.max(0, Math.min(this.s.frames.length - 1, i));
     this.selection = null;
+    this.shape = null;
     this.emit({ type: 'structure' });
   }
 
   selectLayer(id: string): void {
     if (this.s.layers.some((l) => l.id === id)) {
       this.layer = id;
+      this.shape = null;
       this.emit({ type: 'structure' });
     }
   }
@@ -260,7 +331,7 @@ export class SpriteDoc {
   /** Start a pixel gesture on the current frame and layer. Locked/hidden layers cannot be drawn on. */
   beginStroke(label: string): CelStroke | null {
     const layer = this.s.layers.find((l) => l.id === this.layer);
-    if (!layer || !layer.visible) return null;
+    if (!layer || !layer.visible || layer.kind === 'vector') return null;
     return new CelStroke(this, label, this.frame, this.layer);
   }
 
@@ -276,6 +347,7 @@ export class SpriteDoc {
       this.frame = Math.min(sel.frame, this.s.frames.length - 1);
       this.layer = this.s.layers.some((l) => l.id === sel.layer) ? sel.layer : this.s.layers[0]!.id;
       this.selection = null;
+      this.shape = null;
       this.emit({ type: 'structure' });
       this.emit({ type: 'pixels' });
       this.emit({ type: 'palette' });
@@ -293,8 +365,8 @@ export class SpriteDoc {
     this.mutate(duplicate ? 'Duplicate frame' : 'Add frame', () => {
       const src = this.s.frames[this.frame]!;
       const copy: FrameState = duplicate
-        ? { duration: src.duration, cels: Object.fromEntries(Object.entries(src.cels).map(([k, v]) => [k, v.slice()])), boxes: src.boxes.map((b) => ({ ...b })) }
-        : { duration: src.duration, cels: {}, boxes: [] };
+        ? { duration: src.duration, cels: Object.fromEntries(Object.entries(src.cels).map(([k, v]) => [k, v.slice()])), boxes: src.boxes.map((b) => ({ ...b })), vectors: structuredClone(src.vectors) }
+        : { duration: src.duration, cels: {}, boxes: [], vectors: {} };
       this.s.frames.splice(this.frame + 1, 0, copy);
       this.shiftClips(this.frame + 1, 1);
       this.frame += 1;
@@ -348,16 +420,120 @@ export class SpriteDoc {
     this.mutate('Add layer', () => {
       const id = `l${this.nextLayer++}`;
       const at = this.s.layers.findIndex((l) => l.id === this.layer);
-      this.s.layers.splice(at + 1, 0, { id, name: `Layer ${this.s.layers.length + 1}`, visible: true });
+      this.s.layers.splice(at + 1, 0, { id, name: `Layer ${this.s.layers.length + 1}`, visible: true, kind: 'pixel' });
       this.layer = id;
     });
+  }
+
+  /** A layer of editable shapes (rectangles, ellipses, paths) instead of pixels. */
+  addVectorLayer(): void {
+    this.mutate('Add vector layer', () => {
+      const id = `l${this.nextLayer++}`;
+      const at = this.s.layers.findIndex((l) => l.id === this.layer);
+      this.s.layers.splice(at + 1, 0, { id, name: `Shapes ${this.s.layers.filter((l) => l.kind === 'vector').length + 1}`, visible: true, kind: 'vector' });
+      for (const f of this.s.frames) f.vectors[id] = [];
+      this.layer = id;
+    });
+  }
+
+  /** Turn a vector layer into an ordinary pixel layer: the pixels stay, the shapes are no longer editable. */
+  rasterizeLayer(id = this.layer): void {
+    const l = this.s.layers.find((x) => x.id === id);
+    if (!l || l.kind !== 'vector') return;
+    this.mutate('Turn shapes into pixels', () => {
+      l.kind = 'pixel';
+      for (const f of this.s.frames) delete f.vectors[id];
+    });
+  }
+
+  get currentIsVector(): boolean {
+    return this.s.layers.find((l) => l.id === this.layer)?.kind === 'vector';
+  }
+
+  // ---- vector shapes ----
+
+  /** The shapes of a vector layer in a frame (empty for pixel layers). */
+  shapes(frame = this.frame, layerId = this.layer): readonly VectorShape[] {
+    return this.s.frames[frame]?.vectors[layerId] ?? [];
+  }
+
+  /** Replace the shapes and redraw the layer's pixels from them, without an undo step (see `VectorEdit`). */
+  setShapesLive(frame: number, layerId: string, shapes: VectorShape[]): void {
+    const f = this.s.frames[frame];
+    if (!f) return;
+    f.vectors[layerId] = shapes;
+    f.cels[layerId] = rasterizeShapes(shapes, this.s.width, this.s.height);
+    if (this.shape !== null && this.shape >= shapes.length) this.shape = shapes.length > 0 ? shapes.length - 1 : null;
+    this.emit({ type: 'pixels' });
+    this.emit({ type: 'selection' });
+  }
+
+  /** Start editing the shapes of the current vector layer. Pixel layers and hidden layers cannot be edited this way. */
+  beginVectorEdit(label: string): VectorEdit | null {
+    const layer = this.s.layers.find((l) => l.id === this.layer);
+    if (!layer || !layer.visible || layer.kind !== 'vector') return null;
+    return new VectorEdit(this, label, this.frame, this.layer);
+  }
+
+  selectShape(index: number | null): void {
+    this.shape = index !== null && index >= 0 && index < this.shapes().length ? index : null;
+    this.emit({ type: 'selection' });
+  }
+
+  /** Add a shape on top and select it. */
+  addShape(shape: VectorShape, label = 'Add shape'): boolean {
+    const e = this.beginVectorEdit(label);
+    if (!e) return false;
+    e.shapes.push(shape);
+    e.commit();
+    this.selectShape(e.shapes.length - 1);
+    return true;
+  }
+
+  /** Change the settings of one shape (colours, thickness, corners...) as one undo step. */
+  updateShape(index: number, patch: Partial<VectorShape>, label = 'Change shape'): void {
+    const e = this.beginVectorEdit(label);
+    if (!e || !e.shapes[index]) return;
+    e.shapes[index] = { ...e.shapes[index]!, ...patch } as VectorShape;
+    e.commit();
+  }
+
+  removeShape(index = this.shape ?? -1): void {
+    const e = this.beginVectorEdit('Delete shape');
+    if (!e || !e.shapes[index]) return;
+    e.shapes.splice(index, 1);
+    e.commit();
+    this.selectShape(e.shapes.length > 0 ? Math.min(index, e.shapes.length - 1) : null);
+  }
+
+  /** Move a shape up (+1, drawn later, on top) or down (-1) the stack. */
+  reorderShape(index: number, delta: -1 | 1): void {
+    const e = this.beginVectorEdit(delta > 0 ? 'Bring shape forward' : 'Send shape back');
+    const j = index + delta;
+    if (!e || !e.shapes[index] || j < 0 || j >= e.shapes.length) return;
+    [e.shapes[index], e.shapes[j]] = [e.shapes[j]!, e.shapes[index]!];
+    e.commit();
+    this.selectShape(j);
+  }
+
+  duplicateShape(index: number): void {
+    const e = this.beginVectorEdit('Duplicate shape');
+    const s = e?.shapes[index];
+    if (!e || !s) return;
+    const copy = structuredClone(s) as VectorShape;
+    e.shapes.push(copy);
+    e.commit();
+    this.selectShape(e.shapes.length - 1);
   }
 
   removeLayer(id = this.layer): void {
     if (this.s.layers.length <= 1) return;
     this.mutate('Delete layer', () => {
       this.s.layers = this.s.layers.filter((l) => l.id !== id);
-      for (const f of this.s.frames) delete f.cels[id];
+      for (const f of this.s.frames) {
+        delete f.cels[id];
+        delete f.vectors[id];
+      }
       this.layer = this.s.layers[Math.max(0, this.s.layers.length - 1)]!.id;
     });
   }
@@ -400,6 +576,11 @@ export class SpriteDoc {
         for (let p = 0; p < top.length; p++) if (top[p] !== 0) dst[p] = top[p]!;
         delete f.cels[this.layer];
       }
+      for (const f of this.s.frames) {
+        delete f.vectors[this.layer];
+        delete f.vectors[below]; // the layer underneath now holds merged pixels, not shapes
+      }
+      this.s.layers[i - 1]!.kind = 'pixel';
       this.s.layers.splice(i, 1);
       this.layer = below;
     });
@@ -439,6 +620,12 @@ export class SpriteDoc {
             else if (v > index) cel[i] = v - 1;
           }
         }
+        // shapes use palette indices too: keep them pointing at the same colours, and redraw
+        const fix = (v: number): number => (v === index ? 0 : v > index ? v - 1 : v);
+        for (const [k, shapes] of Object.entries(f.vectors)) {
+          f.vectors[k] = shapes.map((sh) => ({ ...sh, fill: fix(sh.fill), stroke: fix(sh.stroke) }));
+          f.cels[k] = rasterizeShapes(f.vectors[k]!, this.s.width, this.s.height);
+        }
       }
     });
   }
@@ -463,7 +650,9 @@ export class SpriteDoc {
       const ox = centre ? Math.floor((w - this.s.width) / 2) : 0;
       const oy = centre ? Math.floor((h - this.s.height) / 2) : 0;
       for (const f of this.s.frames) {
+        for (const [k, shapes] of Object.entries(f.vectors)) f.vectors[k] = shapes.map((sh) => moveShape(sh, ox, oy));
         for (const [k, cel] of Object.entries(f.cels)) {
+          if (f.vectors[k]) continue; // vector layers are redrawn from their shapes below
           const out = newCel(w, h);
           for (let y = 0; y < this.s.height; y++) {
             for (let x = 0; x < this.s.width; x++) {
@@ -474,6 +663,7 @@ export class SpriteDoc {
           }
           f.cels[k] = out;
         }
+        for (const [k, shapes] of Object.entries(f.vectors)) f.cels[k] = rasterizeShapes(shapes, w, h);
         for (const b of f.boxes) {
           b.x += ox;
           b.y += oy;
@@ -521,6 +711,15 @@ export class SpriteDoc {
   /** Flip / rotate / shift the current cel (or the selected part of it) as one undo step. */
   transform(kind: 'flipH' | 'flipV' | 'rotate' | 'left' | 'right' | 'up' | 'down'): void {
     const { width: w, height: h } = this.s;
+    if (this.currentIsVector) {
+      // shapes can be mirrored; shifting or turning them is done by moving them
+      if (kind !== 'flipH' && kind !== 'flipV') return;
+      const e = this.beginVectorEdit(`Transform: ${kind}`);
+      if (!e) return;
+      e.shapes = e.shapes.map((s) => flipShape(s, kind === 'flipH' ? 'h' : 'v', kind === 'flipH' ? w : h));
+      e.commit();
+      return;
+    }
     if (kind === 'rotate' && w !== h) return;
     const sel = this.selection;
     const stroke = this.beginStroke(`Transform: ${kind}`);

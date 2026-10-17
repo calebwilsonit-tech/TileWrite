@@ -22,6 +22,14 @@ Tools (hotkeys while the studio is showing): Pencil (B), Eraser (E), Line (L), R
 - **Properties**: resize the canvas (kept centred), set the **feet point** (where the character stands on its cell), see and copy boxes.
 - **Hitboxes / hurtboxes** are boxes per frame (for example a sword swing on frame 3).
 
+## Vector layers (shapes that stay editable)
+**+ Shape layer** (Layers) adds a layer of shapes instead of pixels. On it the four **Shape** tools work: **Shape rect** (R, drag a box), **Shape ellipse** (N, drag its box), **Shape path** (P: click to place points, double-click or Enter to finish, click the first point to close it, Esc to cancel; tick **Smooth** for curves) and **Shape select** (V: click a shape to select it, drag to move it, drag a handle on its box to resize it, drag a point of a path to reshape it; Delete removes it and the arrow keys nudge it by a pixel).
+- New shapes use the chosen palette colour as their fill, an optional outline colour (the **Outline** buttons: the chosen colour or none) and the outline width. Shapes are on a list under the layers; the selected shape has its own settings: fill and outline colours, outline width, rounded corners and turn for rectangles, turn for ellipses, closed and smooth for paths, bring forward / send back, duplicate and delete. Later shapes draw over earlier ones.
+- Colours are palette numbers, as everywhere in the studio, so recolouring a palette entry recolours every shape using it (deleting a colour keeps shapes pointing at the same colours).
+- The layer's pixels are always what its shapes look like drawn at the sprite's size, and the sprite file keeps both. The game, sprite sheets and the world editor only ever see pixels, so nothing else needs to know about shapes. Edges are not anti-aliased (a sprite has a palette of at most 255 colours).
+- Pixel tools do not draw on a vector layer (you are told why); **Turn into pixels** makes it an ordinary layer (the shapes are gone, the picture stays); merging a shape layer down also makes pixels. Flip works on shapes; canvas resizing and duplicated frames carry shapes along.
+- Every shape edit, a whole drag included, is one undo step. Tested by `e2e/m15-vector.spec.ts`, `packages/runtime/src/sprites/vector.test.ts` and `packages/editor/src/renderer/studio/*.test.ts`.
+
 ## Animations and directions
 An animation is a named list of frames. Under **Animations**:
 - **Every direction** is the list used by any direction you leave empty.

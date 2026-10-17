@@ -136,7 +136,7 @@ export function StudioView() {
   const doc = studio.doc;
   const [pending, setPending] = useState<{ then: () => void } | null>(null);
 
-  /** Run 	hen now, or after asking what to do with unsaved drawing changes. */
+  /** Run `then` now, or after asking what to do with unsaved drawing changes. */
   const guard = (then: () => void): void => {
     if (studio.isDirty()) setPending({ then });
     else then();
@@ -236,7 +236,7 @@ export function StudioView() {
   );
 }
 
-const STUDIO_KEYS: Record<string, import('./store').StudioTool> = { b: 'pencil', e: 'eraser', l: 'line', u: 'rect', o: 'ellipse', g: 'fill', i: 'picker', m: 'select', x: 'isobox', f: 'origin', h: 'hitbox', j: 'hurtbox' };
+const STUDIO_KEYS: Record<string, import('./store').StudioTool> = { b: 'pencil', e: 'eraser', l: 'line', u: 'rect', o: 'ellipse', g: 'fill', i: 'picker', m: 'select', x: 'isobox', f: 'origin', h: 'hitbox', j: 'hurtbox', v: 'vselect', r: 'vrect', n: 'vellipse', p: 'vpath' };
 
 function Section({ title, open, children, testId }: { title: string; open?: boolean; children: React.ReactNode; testId?: string }) {
   return (

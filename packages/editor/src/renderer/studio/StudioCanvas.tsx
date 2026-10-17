@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { floodPoints, getPixel, type Pt } from '@tilewright/runtime';
+import { floodPoints, getPixel, moveShape, newEllipseShape, newPathShape, newRectShape, pickShape, resizeShape, shapeBounds, type Box, type Pt, type VectorShape } from '@tilewright/runtime';
 import { isoBoxPixels, shadeHex, shapePixels } from './paint';
 import { renderStudio, type Overlay, type View } from './render';
-import { studio, useStudio } from './store';
-import type { CelStroke } from './doc';
+import { VECTOR_TOOLS, studio, useStudio } from './store';
+import type { CelStroke, VectorEdit } from './doc';
+import { boxOfDrag, dragBox, handleAt, handlesOf, movePoint, snap, type HandleId } from './vector-tools';
 import { store } from '../app/store';
 
 declare global {
@@ -28,6 +29,12 @@ export function StudioCanvas() {
   const view = useRef<View>({ x: 40, y: 40 });
   const overlay = useRef<Overlay>({});
   const gesture = useRef<{ tool: string; start: Pt; last: Pt; stroke?: CelStroke | null; mode?: 'select' | 'move' | 'copy' } | null>(null);
+  /** A shape being drawn, moved or reshaped with the vector tools. */
+  const vgesture = useRef<{ kind: 'draw' | 'move' | 'handle'; tool: string; edit: VectorEdit; start: Pt; index: number; baseLength: number; orig?: VectorShape; origBox?: Box; handle?: HandleId } | null>(null);
+  /** A path being drawn point by point. */
+  const pathDraft = useRef<{ edit: VectorEdit; points: Pt[] } | null>(null);
+  /** Always the latest `finishPath` (the key handler is set up once). */
+  const finishRef = useRef<(close: boolean) => void>(() => {});
   const panning = useRef<{ x: number; y: number } | null>(null);
   const space = useRef(false);
   const [hover, setHover] = useState<Pt | null>(null);
@@ -79,13 +86,61 @@ export function StudioCanvas() {
     };
   }, []);
 
+  // a path in progress is dropped when another tool is chosen or another sprite opened
+  useEffect(() => {
+    return () => {
+      pathDraft.current?.edit.cancel();
+      pathDraft.current = null;
+    };
+  }, [state.tool, openName, doc?.layer]);
+
   useEffect(() => {
     const c = canvas.current;
     if (!c || !doc) return;
     c.width = size.w;
     c.height = size.h;
-    renderStudio(c.getContext('2d')!, size.w, size.h, doc, state, view.current, overlay.current);
+    const selected = VECTOR_TOOLS.includes(state.tool) && doc.currentIsVector && doc.shape !== null ? doc.shapes()[doc.shape] : undefined;
+    const gizmo = selected && vgesture.current?.kind !== 'draw' ? { box: shapeBounds({ ...selected, stroke: 0 }), handles: handlesOf(selected) } : undefined;
+    renderStudio(c.getContext('2d')!, size.w, size.h, doc, state, view.current, gizmo ? { ...overlay.current, gizmo } : overlay.current);
   });
+
+  // keys for the vector tools: Enter finishes a path, Escape cancels it, Delete removes the selected shape, arrows nudge it
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent): void => {
+      const d = studio.doc;
+      const t = e.target as HTMLElement | null;
+      if (!d || !VECTOR_TOOLS.includes(studio.state.tool) || e.ctrlKey || e.metaKey || e.altKey) return;
+      if (t && t.matches('input,textarea,select')) return;
+      if (store.state.workspace !== 'sprites') return;
+      const draft = pathDraft.current;
+      if (e.key === 'Enter' && draft) {
+        e.preventDefault();
+        finishRef.current(false);
+      } else if (e.key === 'Escape') {
+        if (draft) {
+          draft.edit.cancel();
+          pathDraft.current = null;
+        } else d.selectShape(null);
+        e.preventDefault();
+        setVersion((n) => n + 1);
+      } else if ((e.key === 'Delete' || e.key === 'Backspace') && d.shape !== null && !draft) {
+        e.preventDefault();
+        d.removeShape();
+      } else if (e.key.startsWith('Arrow') && d.shape !== null && !draft) {
+        e.preventDefault();
+        const dx = e.key === 'ArrowLeft' ? -1 : e.key === 'ArrowRight' ? 1 : 0;
+        const dy = e.key === 'ArrowUp' ? -1 : e.key === 'ArrowDown' ? 1 : 0;
+        const edit = d.beginVectorEdit('Nudge shape');
+        const s = edit?.shapes[d.shape];
+        if (edit && s) {
+          edit.shapes[d.shape] = moveShape(s, dx, dy);
+          edit.commit();
+        }
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   if (!doc) {
     return (
@@ -111,6 +166,157 @@ export function StudioCanvas() {
   };
 
   const refresh = (): void => bump((n) => n + 1);
+  const setVersion = bump;
+
+  // ---- vector shapes ----
+
+  const toF = (e: { clientX: number; clientY: number }): Pt => {
+    const r = canvas.current!.getBoundingClientRect();
+    return { x: (e.clientX - r.left - view.current.x) / state.zoom, y: (e.clientY - r.top - view.current.y) / state.zoom };
+  };
+
+  /** Fill and outline for a new shape, from the colour chosen and the shape options. */
+  const newStyle = (): { fill: number; stroke: number; strokeWidth: number } => {
+    let fill = state.vFill ? state.color : 0;
+    let stroke = state.vStroke;
+    if (fill === 0 && stroke === 0) stroke = state.color;
+    if (fill === 0 && stroke === 0) fill = 1;
+    return { fill, stroke, strokeWidth: state.vStrokeWidth };
+  };
+
+  const shapeFromDrag = (tool: string, b: Box): VectorShape => {
+    const st = newStyle();
+    const base = tool === 'vrect' ? newRectShape(b.x, b.y, b.w, b.h, st.fill, st.stroke) : newEllipseShape(b.x + b.w / 2, b.y + b.h / 2, b.w / 2, b.h / 2, st.fill, st.stroke);
+    return { ...base, strokeWidth: st.strokeWidth } as VectorShape;
+  };
+
+  const vectorNotice = (): void => {
+    if (!doc.currentIsVector) store.notify('warn', 'Shapes go on a vector layer. Pick one in the layer list, or add one with "+ Shape layer".');
+    else hiddenLayerNotice();
+  };
+
+  /** Finish the path being drawn (closing it if asked, or because the first point was clicked again). */
+  const finishPath = (close: boolean): void => {
+    const d = pathDraft.current;
+    if (!d) return;
+    pathDraft.current = null;
+    const points = d.points;
+    if (points.length < 2) {
+      d.edit.cancel();
+      refresh();
+      return;
+    }
+    const st = newStyle();
+    const closed = close || state.vClosed;
+    const base = newPathShape(points, st.fill, st.stroke, closed, state.vSmooth);
+    d.edit.shapes[d.edit.shapes.length - 1] = { ...base, strokeWidth: st.strokeWidth } as VectorShape;
+    d.edit.commit();
+    doc.selectShape(d.edit.shapes.length - 1);
+    refresh();
+  };
+
+  finishRef.current = finishPath;
+
+  const previewPath = (cursor: Pt | null): void => {
+    const d = pathDraft.current;
+    if (!d) return;
+    const st = newStyle();
+    const pts = cursor ? [...d.points, cursor] : [...d.points];
+    if (pts.length < 2) pts.push({ ...pts[0]! });
+    const base = newPathShape(pts, st.fill, st.stroke, state.vClosed, state.vSmooth);
+    d.edit.shapes[d.edit.shapes.length - 1] = { ...base, strokeWidth: st.strokeWidth } as VectorShape;
+    d.edit.apply();
+  };
+
+  const vectorDown = (e: React.PointerEvent): void => {
+    const tool = state.tool;
+    const f = toF(e);
+    if (!doc.currentIsVector) return vectorNotice();
+    if (tool === 'vrect' || tool === 'vellipse') {
+      const edit = doc.beginVectorEdit(tool === 'vrect' ? 'Draw rectangle' : 'Draw ellipse');
+      if (!edit) return vectorNotice();
+      vgesture.current = { kind: 'draw', tool, edit, start: { x: snap(f.x), y: snap(f.y) }, index: edit.shapes.length, baseLength: edit.shapes.length };
+      return;
+    }
+    if (tool === 'vpath') {
+      const pt = { x: snap(f.x, 0.5), y: snap(f.y, 0.5) };
+      const draft = pathDraft.current;
+      if (!draft) {
+        const edit = doc.beginVectorEdit('Draw path');
+        if (!edit) return vectorNotice();
+        edit.shapes.push(newPathShape([pt, pt], 1, 0));
+        pathDraft.current = { edit, points: [pt] };
+      } else {
+        const first = draft.points[0]!;
+        const last = draft.points[draft.points.length - 1]!;
+        if (draft.points.length >= 3 && Math.hypot(pt.x - first.x, pt.y - first.y) <= 1.5) return finishPath(true);
+        if (Math.hypot(pt.x - last.x, pt.y - last.y) > 0.01) draft.points.push(pt);
+      }
+      previewPath(null);
+      refresh();
+      return;
+    }
+    // select / move / reshape
+    const shapes = doc.shapes();
+    if (doc.shape !== null && shapes[doc.shape]) {
+      const s = shapes[doc.shape]!;
+      const h = handleAt(s, f.x, f.y, 6 / state.zoom);
+      const edit = h ? doc.beginVectorEdit(h.id.startsWith('p') ? 'Move point' : 'Resize shape') : null;
+      if (h && edit) {
+        vgesture.current = { kind: 'handle', tool, edit, start: f, index: doc.shape, baseLength: 0, orig: s, origBox: shapeBounds({ ...s, stroke: 0 }), handle: h.id };
+        return;
+      }
+    }
+    const hit = pickShape(shapes, f.x, f.y);
+    doc.selectShape(hit >= 0 ? hit : null);
+    if (hit < 0) return refresh();
+    const edit = doc.beginVectorEdit('Move shape');
+    if (edit) vgesture.current = { kind: 'move', tool, edit, start: f, index: hit, baseLength: 0, orig: shapes[hit]! };
+    refresh();
+  };
+
+  const vectorMove = (e: React.PointerEvent): boolean => {
+    const f = toF(e);
+    const g = vgesture.current;
+    if (!g) {
+      if (pathDraft.current) {
+        previewPath({ x: snap(f.x, 0.5), y: snap(f.y, 0.5) });
+        refresh();
+        return true;
+      }
+      return false;
+    }
+    if (g.kind === 'draw') {
+      const b = boxOfDrag(g.start, { x: snap(f.x), y: snap(f.y) });
+      g.edit.shapes = g.edit.shapes.slice(0, g.baseLength);
+      if (b) g.edit.shapes.push(shapeFromDrag(g.tool, b));
+      g.edit.apply();
+    } else if (g.kind === 'move' && g.orig) {
+      g.edit.shapes[g.index] = moveShape(g.orig, snap(f.x - g.start.x), snap(f.y - g.start.y));
+      g.edit.apply();
+    } else if (g.kind === 'handle' && g.orig && g.origBox && g.handle) {
+      if (g.handle.startsWith('p')) g.edit.shapes[g.index] = movePoint(g.orig, Number(g.handle.slice(1)), { x: snap(f.x, 0.5), y: snap(f.y, 0.5) });
+      else g.edit.shapes[g.index] = resizeShape(g.orig, g.origBox, dragBox(g.origBox, g.handle, snap(f.x), snap(f.y)));
+      g.edit.apply();
+    }
+    refresh();
+    return true;
+  };
+
+  const vectorUp = (): boolean => {
+    const g = vgesture.current;
+    if (!g) return false;
+    vgesture.current = null;
+    if (g.kind === 'draw') {
+      if (g.edit.shapes.length > g.baseLength) {
+        g.edit.commit();
+        doc.selectShape(g.edit.shapes.length - 1);
+      } else g.edit.cancel();
+    } else if (g.edit.changed) g.edit.commit();
+    else g.edit.cancel();
+    refresh();
+    return true;
+  };
 
   const onDown = (e: React.PointerEvent): void => {
     canvas.current!.setPointerCapture(e.pointerId);
@@ -121,6 +327,7 @@ export function StudioCanvas() {
     if (e.button !== 0) return;
     const p = toPx(e);
     const tool = state.tool;
+    if (VECTOR_TOOLS.includes(tool)) return vectorDown(e);
     if (tool === 'picker') {
       // topmost visible layer's colour under the pixel
       let found = 0;
@@ -169,7 +376,8 @@ export function StudioCanvas() {
     if (tool === 'hitbox' || tool === 'hurtbox') gesture.current = { tool, start: p, last: p };
   };
 
-  const hiddenLayerNotice = (): void => store.notify('warn', 'This layer is hidden. Show it (eye button) before drawing on it.');
+  const hiddenLayerNotice = (): void =>
+    store.notify('warn', doc.currentIsVector ? 'This is a vector layer: draw with the shape tools, or turn it into pixels first (the Turn into pixels button in Layers).' : 'This layer is hidden. Show it (eye button) before drawing on it.');
 
   const stampIsoBox = (p: Pt): void => {
     const stroke = doc.beginStroke('Iso box');
@@ -195,6 +403,7 @@ export function StudioCanvas() {
     }
     const p = toPx(e);
     setHover(p);
+    if (VECTOR_TOOLS.includes(state.tool) && vectorMove(e)) return;
     const g = gesture.current;
     if (!g) {
       if (state.tool === 'isobox') {
@@ -231,6 +440,7 @@ export function StudioCanvas() {
       panning.current = null;
       return;
     }
+    if (vectorUp()) return;
     const g = gesture.current;
     gesture.current = null;
     if (!g) return;
@@ -288,6 +498,7 @@ export function StudioCanvas() {
           }
         }}
         onWheel={onWheel}
+        onDoubleClick={() => state.tool === 'vpath' && finishPath(false)}
         onContextMenu={(e) => e.preventDefault()}
       />
       <div className="studio-status" data-testid="studio-status">

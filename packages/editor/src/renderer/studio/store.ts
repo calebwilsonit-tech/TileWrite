@@ -20,7 +20,10 @@ import { joinPath } from '../project/api';
 import { AUDIO_EXTENSIONS } from '@tilewright/runtime';
 import { SpriteDoc } from './doc';
 
-export type StudioTool = 'pencil' | 'eraser' | 'line' | 'rect' | 'ellipse' | 'fill' | 'picker' | 'select' | 'isobox' | 'origin' | 'hitbox' | 'hurtbox';
+export type StudioTool = 'pencil' | 'eraser' | 'line' | 'rect' | 'ellipse' | 'fill' | 'picker' | 'select' | 'isobox' | 'origin' | 'hitbox' | 'hurtbox' | 'vselect' | 'vrect' | 'vellipse' | 'vpath';
+
+/** The tools that work on the shapes of a vector layer. */
+export const VECTOR_TOOLS: readonly StudioTool[] = ['vselect', 'vrect', 'vellipse', 'vpath'];
 
 export interface StudioState {
   tool: StudioTool;
@@ -37,6 +40,14 @@ export interface StudioState {
   isoGrid: boolean;
   showBoxes: boolean;
   isoBox: { w: number; d: number; h: number; s: number };
+  /** New shapes: filled with the chosen colour? */
+  vFill: boolean;
+  /** New shapes: palette index of the outline (0 = none). */
+  vStroke: number;
+  vStrokeWidth: number;
+  /** New paths: closed, and curved through their points. */
+  vClosed: boolean;
+  vSmooth: boolean;
   /** Names of the sprites in the project. */
   names: string[];
   openName: string | null;
@@ -62,6 +73,11 @@ const initial: StudioState = {
   isoGrid: false,
   showBoxes: true,
   isoBox: { w: 1, d: 1, h: 24, s: 16 },
+  vFill: true,
+  vStroke: 0,
+  vStrokeWidth: 1,
+  vClosed: false,
+  vSmooth: false,
   names: [],
   openName: null,
   docVersion: 0,
