@@ -1,4 +1,4 @@
-import { Bot, extractPushPuzzle, solvePush, type PlayReport } from '@tilewright/playbot';
+import { Bot, extractPushPuzzle, solvePuzzles, solvePush, type PlayReport } from '@tilewright/playbot';
 import { store, useApp } from '../app/store';
 
 /** The bot that plays the open scene with the same buttons a player has, and the playthroughs it (or you) recorded. */
@@ -75,6 +75,27 @@ export function PlaybotPanel() {
           }}
         >
           Solve the crate puzzle
+        </button>
+        <button
+          data-testid="bot-search"
+          title="Tries short plans (record an echo onto a plate, stand on one, flip a lever, push the crates) until one lets the bot reach the goal"
+          onClick={() => {
+            const ref = needGoal();
+            const setup = store.headlessSetup();
+            if (!ref || !setup) return;
+            store.botSay('info', 'Searching for a way to the goal...');
+            // let the message show before the search takes over the window for a moment
+            window.setTimeout(() => {
+              try {
+                const r = solvePuzzles(setup, { goal: ref, maxMs: 40_000 });
+                store.botSay(r.found ? 'info' : 'warn', r.message + (r.found ? ` (${r.plans} plan${r.plans === 1 ? '' : 's'} tried)` : ''));
+              } catch (e) {
+                store.botSay('error', `The search did not work: ${e instanceof Error ? e.message : String(e)}`);
+              }
+            }, 30);
+          }}
+        >
+          Search for a solution
         </button>
         <button
           data-testid="bot-echo"

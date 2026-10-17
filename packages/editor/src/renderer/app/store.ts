@@ -10,7 +10,7 @@ import { deletePrefab, loadAllPrefabs, prefabNameProblem, savePrefab } from '../
 import { analyseLevel, analysePushPuzzles, type LevelIssue } from '@tilewright/playbot';
 import { checkProject, type ProjectProblem } from '../project/check';
 import { deletePlaythrough, listPlaythroughs, loadPlaythrough, nextPlaythroughName, savePlaythrough } from '../project/playthroughs';
-import { Game, newPlaythrough, replayPlaythrough } from '@tilewright/playbot';
+import { Game, newPlaythrough, replayPlaythrough, type GameSetup } from '@tilewright/playbot';
 import { eventsToScript } from '@tilewright/behaviors';
 import { reloadScripts, type BreakHit, type ScriptProblemEntry } from '../code/script-manager';
 import { deleteScript as deleteScriptFile, loadScripts as loadScriptFiles, saveScript as saveScriptFile } from '../project/scripts';
@@ -814,6 +814,13 @@ class AppStore {
     } catch (e) {
       this.notify('error', e instanceof Error ? e.message : 'The playthrough could not be saved.');
     }
+  }
+
+  /** What a headless game is made from, for tools that start several games (the puzzle solver). */
+  headlessSetup(): GameSetup | null {
+    const scene = this.doc?.toScene();
+    if (!scene) return null;
+    return { scene, scenePath: this.state.scenePath ?? '', prefabs: this.prefabs, items: this.story.items, dialogues: this.story.dialogues, cutscenes: this.story.cutscenes, minigames: this.minigames };
   }
 
   /** The game, headless, from the open scene as it is now (unsaved edits included). */
