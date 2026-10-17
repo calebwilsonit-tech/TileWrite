@@ -12,7 +12,7 @@ Tools (hotkeys while the studio is showing): Pencil (B), Eraser (E), Line (L), R
 - Brush size, filled/outline shapes, **mirror left/right** and **mirror up/down** (everything you draw is mirrored about the canvas centre).
 - **Iso box**: click to stamp an isometric block (top plus two shaded sides, shades added to your palette) at the correct 2:1 angles. Set its size in cells and its height in pixels; "cell half-width" 32 matches the game's 64 x 32 tiles.
 - **Iso guide** draws 2:1 guide lines through the feet point. **Onion skin** shows the previous frame in red and the next in green.
-- Select (drag a box, drag inside to move, Alt-drag to copy); Flip, Rotate (square canvases) and nudge act on the selection or the whole layer.
+- Select (drag a box, drag inside to move, Alt-drag to copy); Flip, Rotate (square canvases) and nudge act on the selection or the whole layer. **Turn by (degrees)** turns the selection (or the layer) clockwise by any angle around its middle (what turns off the edge is lost), and **Scale to (percent)** makes it bigger or smaller around its middle (the selection follows); both pick the nearest pixel so the art stays crisp, are one undo step each, and work on pixel layers (a shape layer has its own turn and size settings).
 - Space+drag or right-drag pans; the wheel zooms. Ctrl+Z / Ctrl+Y undo and redo; every stroke is one step.
 
 ## Layers, palette, frames

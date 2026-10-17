@@ -17,6 +17,8 @@ import {
   pasteCel,
   rectPoints,
   rotate90,
+  rotateAny,
+  scaleCel,
   setPixel,
   shift,
 } from './raster';
@@ -416,5 +418,50 @@ describe('format basics', () => {
     expect(s.schemaVersion).toBe(SPRITE_SCHEMA_VERSION);
     expect(s.palette[0]).toBe('#00000000');
     expect(parseSprite(s).ok).toBe(true);
+  });
+});
+
+describe('turning and scaling pictures', () => {
+  const pic = (w: number, h: number, set: [number, number, number][]): Uint8Array => {
+    const c = new Uint8Array(w * h);
+    for (const [x, y, v] of set) c[y * w + x] = v;
+    return c;
+  };
+
+  it('turns by multiples of 90 degrees exactly, like the dedicated turn', () => {
+    const c = pic(4, 4, [[0, 0, 5], [3, 0, 6], [1, 2, 7]]);
+    const r90 = rotateAny(c, { w: 4, h: 4 }, 90);
+    expect(Array.from(r90)).toEqual(Array.from(rotate90(c, { w: 4, h: 4 }).cel));
+    expect(Array.from(rotateAny(rotateAny(c, { w: 4, h: 4 }, 90), { w: 4, h: 4 }, 270))).toEqual(Array.from(c));
+    expect(Array.from(rotateAny(c, { w: 4, h: 4 }, 180))).toEqual(Array.from(flipH(flipV(c, { w: 4, h: 4 }), { w: 4, h: 4 })));
+    expect(Array.from(rotateAny(c, { w: 4, h: 4 }, 0))).toEqual(Array.from(c));
+    expect(Array.from(rotateAny(c, { w: 4, h: 4 }, 360))).toEqual(Array.from(c));
+  });
+
+  it('turns a line by 45 degrees into a diagonal, keeping it in the same canvas', () => {
+    const c = new Uint8Array(11 * 11);
+    for (let x = 0; x < 11; x++) c[5 * 11 + x] = 3; // a horizontal bar through the middle
+    const out = rotateAny(c, { w: 11, h: 11 }, 45);
+    expect(out).toHaveLength(121);
+    const lit = [...out].filter((v) => v === 3).length;
+    expect(lit).toBeGreaterThanOrEqual(6);
+    expect(out[5 * 11 + 5]).toBe(3); // the middle stays
+    expect(out[0]).toBe(0);
+    // the bar now runs from the top left to the bottom right
+    expect(out[2 * 11 + 2]).toBe(3);
+    expect(out[8 * 11 + 8]).toBe(3);
+    expect(out[2 * 11 + 8]).toBe(0);
+  });
+
+  it('scales by a factor with the nearest pixel, and the size follows', () => {
+    const c = pic(2, 2, [[0, 0, 1], [1, 0, 2], [0, 1, 3], [1, 1, 4]]);
+    const big = scaleCel(c, { w: 2, h: 2 }, 2);
+    expect(big.size).toEqual({ w: 4, h: 4 });
+    expect(Array.from(big.cel)).toEqual([1, 1, 2, 2, 1, 1, 2, 2, 3, 3, 4, 4, 3, 3, 4, 4]);
+    const small = scaleCel(big.cel, big.size, 0.5);
+    expect(small.size).toEqual({ w: 2, h: 2 });
+    expect(Array.from(small.cel)).toEqual([1, 2, 3, 4]);
+    expect(scaleCel(c, { w: 2, h: 2 }, 0.01).size).toEqual({ w: 1, h: 1 }); // never vanishes
+    expect(scaleCel(c, { w: 2, h: 2 }, 1.5).size).toEqual({ w: 3, h: 3 });
   });
 });

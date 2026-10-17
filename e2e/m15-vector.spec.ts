@@ -146,6 +146,20 @@ test('M15: draw with vector shapes in the sprite studio, edit them later, and th
   await page.getByTestId('swatch-2').click();
   await click(page, 1, 1);
   expect(await pixel(page, 1, 1)).toBe(2); // now an ordinary pixel layer
+
+  // ---- turn and scale: by an angle, clockwise around the middle ----
+  await page.getByTestId('turn-degrees').fill('90');
+  await page.getByTestId('turn-degrees').press('Enter');
+  await page.getByTestId('turn-apply').click();
+  expect(await pixel(page, 1, 1)).toBe(0);
+  expect(await pixel(page, 22, 1)).toBe(2); // the top left corner went to the top right
+  await page.getByTestId('studio-undo').click();
+  expect(await pixel(page, 1, 1)).toBe(2);
+  await page.getByTestId('scale-percent').fill('50');
+  await page.getByTestId('scale-percent').press('Enter');
+  await page.getByTestId('scale-apply').click();
+  expect(await pixel(page, 1, 1)).toBe(0); // half size around the middle: the corner pixel moved in
+
   expect(errors).toEqual([]);
   await app.close();
 });

@@ -105,6 +105,18 @@ export function ToolBox() {
         <button disabled={!doc || doc.width !== doc.height} title="Needs a square canvas" onClick={() => doc?.transform('rotate')}>Rotate ↻</button>
       </div>
       <div className="row">
+        <NumberField label="Turn by (degrees)" testId="turn-degrees" value={s.turnDegrees} min={-360} max={360} step={5} onCommit={(v) => studio.set({ turnDegrees: v })} />
+        <button data-testid="turn-apply" disabled={!doc || doc.currentIsVector} title="Turn the selection (or the whole layer) clockwise by this angle, around its middle" onClick={() => doc?.rotateFree(s.turnDegrees)}>
+          Turn
+        </button>
+      </div>
+      <div className="row">
+        <NumberField label="Scale to (percent)" testId="scale-percent" value={s.scalePercent} min={10} max={800} step={10} onCommit={(v) => studio.set({ scalePercent: v })} />
+        <button data-testid="scale-apply" disabled={!doc || doc.currentIsVector} title="Make the selection (or the whole layer) bigger or smaller, around its middle" onClick={() => doc?.scaleFree(s.scalePercent / 100)}>
+          Scale
+        </button>
+      </div>
+      <div className="row">
         {(['left', 'up', 'down', 'right'] as const).map((d) => (
           <button key={d} disabled={!doc} aria-label={`Nudge ${d}`} onClick={() => doc?.transform(d)}>
             {{ left: '←', up: '↑', down: '↓', right: '→' }[d]}

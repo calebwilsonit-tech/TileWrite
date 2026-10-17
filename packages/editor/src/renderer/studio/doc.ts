@@ -13,6 +13,8 @@ import {
   pasteCel,
   rasterizeShapes,
   rotate90,
+  rotateAny,
+  scaleCel,
   shift,
   type Cel,
   type ClipData,
@@ -740,6 +742,48 @@ export class SpriteDoc {
     for (let y = 0; y < area.h; y++) for (let x = 0; x < area.w; x++) stroke.set(area.x + x, area.y + y, out[y * area.w + x]!);
     stroke.commit();
     this.emit({ type: 'pixels' });
+  }
+
+  /** Turn the selected pixels (or the whole layer) by any angle, clockwise, around their middle. Returns false when nothing could be done. */
+  rotateFree(degrees: number): boolean {
+    if (this.currentIsVector || !Number.isFinite(degrees) || degrees % 360 === 0) return false;
+    const stroke = this.beginStroke(`Turn by ${Math.round(degrees * 10) / 10} degrees`);
+    if (!stroke) return false;
+    const { width: w, height: h } = this.s;
+    const area = this.selection ?? { x: 0, y: 0, w, h };
+    const part = copyRect(this.currentCel, { w, h }, area);
+    const out = rotateAny(part, { w: area.w, h: area.h }, degrees);
+    for (let y = 0; y < area.h; y++) for (let x = 0; x < area.w; x++) stroke.set(area.x + x, area.y + y, out[y * area.w + x]!);
+    stroke.commit();
+    this.emit({ type: 'pixels' });
+    return true;
+  }
+
+  /** Make the selected pixels (or the whole layer) bigger or smaller by a factor, around their middle. The selection follows. */
+  scaleFree(factor: number): boolean {
+    if (this.currentIsVector || !Number.isFinite(factor) || factor <= 0 || factor === 1) return false;
+    const stroke = this.beginStroke(`Scale to ${Math.round(factor * 100)} percent`);
+    if (!stroke) return false;
+    const { width: w, height: h } = this.s;
+    const size = { w, h };
+    const area = this.selection ?? { x: 0, y: 0, w, h };
+    const part = copyRect(this.currentCel, size, area);
+    const scaled = scaleCel(part, { w: area.w, h: area.h }, factor);
+    const nx = Math.round(area.x + area.w / 2 - scaled.size.w / 2);
+    const ny = Math.round(area.y + area.h / 2 - scaled.size.h / 2);
+    for (let y = 0; y < area.h; y++) for (let x = 0; x < area.w; x++) stroke.set(area.x + x, area.y + y, 0);
+    for (let y = 0; y < scaled.size.h; y++) for (let x = 0; x < scaled.size.w; x++) stroke.set(nx + x, ny + y, scaled.cel[y * scaled.size.w + x]!);
+    stroke.commit();
+    if (this.selection) {
+      const x0 = Math.max(0, nx);
+      const y0 = Math.max(0, ny);
+      const x1 = Math.min(w, nx + scaled.size.w);
+      const y1 = Math.min(h, ny + scaled.size.h);
+      this.selection = x1 > x0 && y1 > y0 ? { x: x0, y: y0, w: x1 - x0, h: y1 - y0 } : null;
+      this.emit({ type: 'selection' });
+    }
+    this.emit({ type: 'pixels' });
+    return true;
   }
 
   /** Move (or copy) the selected pixels by (dx, dy). The selection follows. */

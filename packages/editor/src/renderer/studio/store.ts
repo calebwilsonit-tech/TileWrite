@@ -48,6 +48,9 @@ export interface StudioState {
   /** New paths: closed, and curved through their points. */
   vClosed: boolean;
   vSmooth: boolean;
+  /** The angle and size for turning and scaling a selection. */
+  turnDegrees: number;
+  scalePercent: number;
   /** Names of the sprites in the project. */
   names: string[];
   openName: string | null;
@@ -78,6 +81,8 @@ const initial: StudioState = {
   vStrokeWidth: 1,
   vClosed: false,
   vSmooth: false,
+  turnDegrees: 45,
+  scalePercent: 200,
   names: [],
   openName: null,
   docVersion: 0,

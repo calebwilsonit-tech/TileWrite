@@ -198,6 +198,46 @@ export function rotate90(cel: Cel, s: Size): { cel: Cel; size: Size } {
   return { cel: out, size };
 }
 
+/**
+ * Turn the picture by any angle (degrees, clockwise) around its middle, picking the nearest pixel of the original for each
+ * pixel of the result. The result has the same size: what turns off the edge is lost and what is uncovered is transparent.
+ * Multiples of 90 degrees are exact.
+ */
+export function rotateAny(cel: Cel, s: Size, degrees: number): Cel {
+  const out = newCel(s.w, s.h);
+  const a = (degrees * Math.PI) / 180;
+  const cos = Math.cos(a);
+  const sin = Math.sin(a);
+  const cx = s.w / 2;
+  const cy = s.h / 2;
+  for (let y = 0; y < s.h; y++) {
+    for (let x = 0; x < s.w; x++) {
+      // where in the original does this pixel's middle come from? (turn it back by the angle)
+      const dx = x + 0.5 - cx;
+      const dy = y + 0.5 - cy;
+      const sx = Math.floor(cx + dx * cos + dy * sin + 1e-9);
+      const sy = Math.floor(cy - dx * sin + dy * cos + 1e-9);
+      if (inBounds(s, sx, sy)) out[y * s.w + x] = cel[sy * s.w + sx]!;
+    }
+  }
+  return out;
+}
+
+/** Make the picture bigger or smaller by a factor (nearest pixel, so it stays crisp). The size follows, at least 1 x 1. */
+export function scaleCel(cel: Cel, s: Size, factor: number): { cel: Cel; size: Size } {
+  const f = Math.max(0.05, Math.min(16, factor));
+  const size = { w: Math.max(1, Math.round(s.w * f)), h: Math.max(1, Math.round(s.h * f)) };
+  const out = newCel(size.w, size.h);
+  for (let y = 0; y < size.h; y++) {
+    for (let x = 0; x < size.w; x++) {
+      const sx = Math.min(s.w - 1, Math.floor(((x + 0.5) / size.w) * s.w));
+      const sy = Math.min(s.h - 1, Math.floor(((y + 0.5) / size.h) * s.h));
+      out[y * size.w + x] = cel[sy * s.w + sx]!;
+    }
+  }
+  return { cel: out, size };
+}
+
 /** Shift the picture; pixels moved off the canvas are lost, uncovered pixels are transparent. */
 export function shift(cel: Cel, s: Size, dx: number, dy: number): Cel {
   const out = newCel(s.w, s.h);

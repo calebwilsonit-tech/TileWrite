@@ -420,3 +420,59 @@ describe('vector layers', () => {
     expect(d.frames[0]!.vectors['l2']).toBeUndefined();
   });
 });
+
+describe('turning and scaling', () => {
+  it('turns the whole layer by an angle as one undo step', () => {
+    const d = doc(8, 8);
+    const s = d.beginStroke('x')!;
+    s.set(1, 1, 3);
+    s.commit();
+    expect(d.rotateFree(90)).toBe(true);
+    expect(px(d, 1, 1)).toBe(0);
+    expect(px(d, 6, 1)).toBe(3); // clockwise: top left goes to top right
+    d.history.undo();
+    expect(px(d, 1, 1)).toBe(3);
+    expect(d.rotateFree(0)).toBe(false);
+    expect(d.rotateFree(720)).toBe(false);
+    expect(d.rotateFree(Number.NaN)).toBe(false);
+  });
+
+  it('turns only the selected part', () => {
+    const d = doc(8, 8);
+    const s = d.beginStroke('x')!;
+    s.setMany([{ x: 0, y: 0 }, { x: 5, y: 5 }], 3);
+    s.commit();
+    d.setSelection({ x: 4, y: 4, w: 4, h: 4 });
+    expect(d.rotateFree(180)).toBe(true);
+    expect(px(d, 0, 0)).toBe(3); // outside the selection: untouched
+    expect(px(d, 5, 5)).toBe(0);
+    expect(px(d, 6, 6)).toBe(3);
+  });
+
+  it('scales the selection around its middle and keeps the selection around the result', () => {
+    const d = doc(16, 16);
+    const s = d.beginStroke('x')!;
+    s.setMany([{ x: 6, y: 6 }, { x: 7, y: 6 }, { x: 6, y: 7 }, { x: 7, y: 7 }], 4);
+    s.commit();
+    d.setSelection({ x: 6, y: 6, w: 2, h: 2 });
+    expect(d.scaleFree(2)).toBe(true);
+    expect(d.selection).toEqual({ x: 5, y: 5, w: 4, h: 4 });
+    expect(px(d, 5, 5)).toBe(4);
+    expect(px(d, 8, 8)).toBe(4);
+    expect(px(d, 4, 4)).toBe(0);
+    d.history.undo();
+    expect(px(d, 5, 5)).toBe(0);
+    expect(px(d, 6, 6)).toBe(4);
+    expect(d.scaleFree(1)).toBe(false);
+  });
+
+  it('refuses vector layers and hidden layers', () => {
+    const d = doc(8, 8);
+    d.addVectorLayer();
+    expect(d.rotateFree(45)).toBe(false);
+    expect(d.scaleFree(2)).toBe(false);
+    d.selectLayer('l1');
+    d.setLayerVisible('l1', false);
+    expect(d.rotateFree(45)).toBe(false);
+  });
+});
