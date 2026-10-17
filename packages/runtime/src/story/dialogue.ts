@@ -2,6 +2,7 @@ import { z } from 'zod';
 import '../project/schema'; // sets up Zod before the schemas below are built
 import { CURRENT_SCHEMA_VERSION, VariableValueSchema, type VariableValue } from '../project/schema';
 import { addItem, autoSlot, itemCount, type ItemData } from './items';
+import { richTextProblems } from './richtext';
 
 /**
  * Dialogue graphs: lines, choices (with conditions), set a variable, give or take an item, branch on a
@@ -200,6 +201,7 @@ export function checkDialogue(d: DialogueData, known: { items: ReadonlySet<strin
       case 'line':
         target(n.id, n.next, 'The next step');
         if (n.text.trim() === '') out.push({ node: n.id, text: `The line "${n.id}" has no text.` });
+        for (const p of richTextProblems(n.text)) out.push({ node: n.id, text: `In the line "${n.id}": ${p}` });
         break;
       case 'choice':
         if (n.options.length === 0) out.push({ node: n.id, text: `The choice "${n.id}" has no options, so the conversation would just end.` });
@@ -207,6 +209,7 @@ export function checkDialogue(d: DialogueData, known: { items: ReadonlySet<strin
           target(n.id, o.next, `Option ${i + 1}`);
           if (o.if) checkCond(n.id, o.if);
           if (o.text.trim() === '') out.push({ node: n.id, text: `Option ${i + 1} of "${n.id}" has no text.` });
+          for (const p of richTextProblems(o.text)) out.push({ node: n.id, text: `In option ${i + 1} of "${n.id}": ${p}` });
         });
         break;
       case 'set':

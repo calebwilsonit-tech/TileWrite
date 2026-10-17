@@ -8,6 +8,7 @@ import {
   bindingLabel,
   carried,
   languageChoices,
+  parseRichText,
   quickSlots,
   type GameSettings,
   type InputMapDef,
@@ -123,6 +124,25 @@ const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls = '', text = ''):
   const e = document.createElement(tag);
   if (cls) e.className = cls;
   if (text) e.textContent = text;
+  return e;
+};
+
+/** An element holding text with inline formatting ([b], [i], [u], [s], [color=...]) as spans; never parsed as HTML. */
+const rich = <K extends keyof HTMLElementTagNameMap>(tag: K, cls: string, text: string): HTMLElementTagNameMap[K] => {
+  const e = el(tag, cls);
+  for (const s of parseRichText(text)) {
+    if (!s.bold && !s.italic && !s.underline && !s.strike && !s.color) {
+      e.appendChild(document.createTextNode(s.text));
+      continue;
+    }
+    const span = document.createElement('span');
+    span.textContent = s.text;
+    if (s.bold) span.style.fontWeight = 'bold';
+    if (s.italic) span.style.fontStyle = 'italic';
+    if (s.underline || s.strike) span.style.textDecoration = [s.underline ? 'underline' : '', s.strike ? 'line-through' : ''].filter(Boolean).join(' ');
+    if (s.color) span.style.color = s.color;
+    e.appendChild(span);
+  }
   return e;
 };
 
@@ -252,7 +272,7 @@ export class GameUi {
     const sig = this.toastList.map((t) => t.text).join('|');
     if (this.toasts.dataset.sig !== sig) {
       this.toasts.dataset.sig = sig;
-      this.toasts.replaceChildren(...this.toastList.map((t) => el('div', 'tw-toast', t.text)));
+      this.toasts.replaceChildren(...this.toastList.map((t) => rich('div', 'tw-toast', t.text)));
     }
   }
 
@@ -448,22 +468,22 @@ export class GameUi {
     box.dataset.sig = sig;
     box.setAttribute('data-testid', 'tw-dialogue');
     const speaker = d.view.speaker;
-    if (speaker) box.appendChild(el('div', 'speaker', speaker));
+    if (speaker) box.appendChild(rich('div', 'speaker', speaker));
     if (d.view.kind === 'line') {
-      const t = el('div', 'text', d.view.text);
+      const t = rich('div', 'text', d.view.text);
       t.setAttribute('data-testid', 'tw-dialogue-text');
       box.appendChild(t);
       box.appendChild(el('div', 'more', this.tr('E / click: continue')));
       box.onclick = () => confirmDialogue(contextOf(sim));
     } else {
       if (d.view.prompt) {
-        const t = el('div', 'text', d.view.prompt);
+        const t = rich('div', 'text', d.view.prompt);
         t.setAttribute('data-testid', 'tw-dialogue-text');
         box.appendChild(t);
       }
       const list = el('div', 'tw-choices');
       d.view.options.forEach((o, i) => {
-        const c = el('div', `tw-choice${i === d.selected ? ' on' : ''}`, o.text);
+        const c = rich('div', `tw-choice${i === d.selected ? ' on' : ''}`, o.text);
         c.setAttribute('data-testid', `tw-choice-${i}`);
         c.onclick = (ev) => {
           ev.stopPropagation();
