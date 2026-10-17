@@ -1,8 +1,9 @@
-import { CutsceneSchema, DialogueSchema, ItemSchema, LanguageSchema, checkCutscene, checkDialogue, newLanguage, type CutsceneData, type DialogueData, type ItemData, type RegionData } from '@tilewright/runtime';
+import { CutsceneSchema, DialogueSchema, ItemSchema, LanguageSchema, MinigameSchema, MixerSchema, SkinSchema, WorldMapSchema, checkCutscene, checkDialogue, checkMinigame, checkMixer, checkWorldMap, newLanguage, type CutsceneData, type DialogueData, type ItemData, type MinigameData, type MixerData, type RegionData, type SkinData, type WorldMapData } from '@tilewright/runtime';
 import { lineDiff, type ToolOutput } from '@tilewright/assistant';
 import { store } from '../app/store';
 import { assetFs } from '../project/assetFs';
 import { collectStrings, coverage, deleteLanguage, loadLanguages, saveLanguage } from '../project/localization';
+import { skinProblems } from '../project/story';
 import { studio } from '../studio/store';
 import { ToolProblem, fail, json, requireEditing, undoTop, type Proposal } from './tool-core';
 
@@ -55,6 +56,10 @@ export async function runStoryRead(name: string, input: Record<string, unknown>)
             items: store.story.items,
             dialogues: [...store.story.dialogues.values()].map((d) => ({ name: d.name, start: d.start, steps: d.nodes.length, problems: dialogueProblems(d) })),
             cutscenes: [...store.story.cutscenes.values()].map((c) => ({ name: c.name, steps: c.steps.length, problems: cutsceneProblems(c) })),
+            minigames: store.minigames.map((m) => ({ ...m, problems: checkMinigame(m, { items: knownItems() }) })),
+            skins: store.skins,
+            worldMap: store.worldMap ? { ...store.worldMap, problems: checkWorldMap(store.worldMap, store.state.project?.project.scenes ?? []) } : null,
+            mixer: { buses: studio.mixer.buses, ducking: studio.mixer.ducking, soundSettings: Object.keys(studio.mixer.sounds), musicSettings: Object.keys(studio.mixer.music), sounds: studio.sounds.map((s) => s.name), problems: checkMixer(studio.mixer, new Set(studio.sounds.map((s) => s.name))) },
             languages: languages.map((l) => {
               const c = coverage(l, sources);
               return { code: l.code, name: l.name, translated: c.done, of: c.total };
@@ -170,6 +175,132 @@ function writeItems(input: Record<string, unknown>): Proposal {
   };
 }
 
+const lines = (v: unknown): string => JSON.stringify(v, null, 1);
+
+function writeMinigames(input: Record<string, unknown>): Proposal {
+  const raw = input.minigames as unknown[];
+  const list: MinigameData[] = [];
+  for (const r of raw) {
+    const p = MinigameSchema.safeParse(r);
+    if (!p.success) fail(`A minigame is not valid: ${p.error.issues.slice(0, 3).map((i) => `${i.path.join('.')}: ${i.message}`).join('; ')}`);
+    else list.push(p.data);
+  }
+  const names = list.map((m) => m.name);
+  const dup = names.find((n, i) => names.indexOf(n) !== i);
+  if (dup) fail(`Two minigames share the name "${dup}".`);
+  const previous = store.minigames;
+  const problems = list.flatMap((m) => checkMinigame(m, { items: knownItems() }));
+  const label = 'Claude: change the minigames';
+  return {
+    tool: 'write_minigames',
+    title: 'Change the minigames',
+    lines: [`The minigame list goes from ${previous.length} to ${list.length}.`, ...problems.map((p) => `Warning: ${p}`)],
+    diff: { name: 'minigames.json', lines: lineDiff(previous.map((m) => lines(m)).join('\n'), list.map((m) => lines(m)).join('\n')) },
+    async apply() {
+      store.asStoryStep(label, () => store.setMinigames(list));
+      await store.flushStory();
+      return `The project now has ${list.length} minigame(s).${problems.length ? ` The checker still reports: ${problems.join(' | ')}` : ' The checker found no problems.'}`;
+    },
+    undo: undoStory(label),
+  };
+}
+
+function writeSkins(input: Record<string, unknown>): Proposal {
+  const raw = input.skins as unknown[];
+  const list: SkinData[] = [];
+  for (const r of raw) {
+    const p = SkinSchema.safeParse(r);
+    if (!p.success) fail(`A skin is not valid: ${p.error.issues.slice(0, 3).map((i) => `${i.path.join('.')}: ${i.message}`).join('; ')}`);
+    else list.push(p.data);
+  }
+  const ids = list.map((s) => s.id);
+  const dup = ids.find((id, i) => ids.indexOf(id) !== i);
+  if (dup) fail(`Two skins share the id "${dup}".`);
+  const previous = store.skins;
+  const problems = skinProblems(list, { sprites: new Set(studio.assets.keys()), items: knownItems() });
+  const label = 'Claude: change the skins';
+  return {
+    tool: 'write_skins',
+    title: 'Change the skins',
+    lines: [`The skin list goes from ${previous.length} to ${list.length}.`, ...problems.map((p) => `Warning: ${p}`)],
+    diff: { name: 'skins.json', lines: lineDiff(previous.map((s) => lines(s)).join('\n'), list.map((s) => lines(s)).join('\n')) },
+    async apply() {
+      store.asStoryStep(label, () => store.setSkins(list));
+      await store.flushStory();
+      return `The project now has ${list.length} skin(s).${problems.length ? ` The checker still reports: ${problems.join(' | ')}` : ''}`;
+    },
+    undo: undoStory(label),
+  };
+}
+
+function writeWorldMap(input: Record<string, unknown>): Proposal {
+  const previous = store.worldMap;
+  const scenes = store.state.project?.project.scenes ?? [];
+  const label = 'Claude: change the world map';
+  if (input.remove === true) {
+    if (!previous) fail('There is no world map to remove.');
+    return {
+      tool: 'write_world_map',
+      title: 'Remove the world map',
+      lines: ['The game goes back to the plain list of lit lanterns for M.'],
+      async apply() {
+        store.asStoryStep(label, () => void store.removeWorldMap());
+        await store.flushStory();
+        return 'The world map is removed.';
+      },
+      undo: undoStory(label),
+    };
+  }
+  const parsed = WorldMapSchema.safeParse({ title: input.title ?? previous?.title ?? 'Map', nodes: input.nodes ?? previous?.nodes ?? [], links: input.links ?? previous?.links ?? [] });
+  if (!parsed.success) return fail(`The map is not valid: ${parsed.error.issues.slice(0, 3).map((i) => `${i.path.join('.')}: ${i.message}`).join('; ')}`);
+  const map: WorldMapData = parsed.data;
+  const problems = checkWorldMap(map, scenes);
+  return {
+    tool: 'write_world_map',
+    title: previous ? 'Change the world map' : 'Make a world map',
+    lines: [`${map.nodes.length} place${map.nodes.length === 1 ? '' : 's'} and ${map.links.length} path${map.links.length === 1 ? '' : 's'} on the map.`, ...problems.map((p) => `Warning: ${p}`)],
+    diff: { name: 'worldmap.json', lines: lineDiff(previous ? lines(previous) : '', lines(map)) },
+    async apply() {
+      store.asStoryStep(label, () => store.setWorldMap(map));
+      await store.flushStory();
+      return `The world map has ${map.nodes.length} place(s).${problems.length ? ` The checker still reports: ${problems.join(' | ')}` : ' The checker found no problems.'}`;
+    },
+    undo: undoStory(label),
+  };
+}
+
+function writeMixer(input: Record<string, unknown>): Proposal {
+  const previous: MixerData = studio.mixer;
+  const merge = <T extends object>(base: T, patch: unknown): T => ({ ...base, ...((patch as object | undefined) ?? {}) });
+  const next = {
+    ...previous,
+    buses: merge(previous.buses, input.buses),
+    ducking: merge(previous.ducking, input.ducking),
+    sounds: { ...previous.sounds, ...Object.fromEntries(Object.entries((input.sounds as Record<string, object> | undefined) ?? {}).map(([k, v]) => [k, { ...(previous.sounds[k] ?? {}), ...v }])) },
+    music: { ...previous.music, ...Object.fromEntries(Object.entries((input.music as Record<string, object> | undefined) ?? {}).map(([k, v]) => [k, { ...(previous.music[k] ?? {}), ...v }])) },
+  };
+  const parsed = MixerSchema.safeParse(next);
+  if (!parsed.success) return fail(`The mix is not valid: ${parsed.error.issues.slice(0, 3).map((i) => `${i.path.join('.')}: ${i.message}`).join('; ')}`);
+  const mix = parsed.data;
+  const problems = checkMixer(mix, new Set(studio.sounds.map((s) => s.name)));
+  return {
+    tool: 'write_mixer',
+    title: 'Change the sound mix',
+    lines: ['Update the mix (assets/audio/mixer.json).', ...problems.map((p) => `Warning: ${p}`)],
+    diff: { name: 'mixer.json', lines: lineDiff(lines(previous), lines(mix)) },
+    async apply() {
+      studio.setMixer(mix);
+      await studio.flushMixer().catch(() => undefined);
+      return `The mix is updated.${problems.length ? ` The checker still reports: ${problems.join(' | ')}` : ' The checker found no problems.'}`;
+    },
+    async undo() {
+      studio.setMixer(previous);
+      await studio.flushMixer().catch(() => undefined);
+      return true;
+    },
+  };
+}
+
 function setRegions(input: Record<string, unknown>): Proposal {
   const doc = requireEditing();
   const list = input.regions as { id?: string; name: string; x: number; y: number; w: number; h: number; cameraBounds?: boolean; music?: string; darkness?: number; bossActive?: boolean }[];
@@ -246,6 +377,14 @@ export async function prepareStoryAction(name: string, input: Record<string, unk
       return writeCutscene(input);
     case 'write_items':
       return writeItems(input);
+    case 'write_minigames':
+      return writeMinigames(input);
+    case 'write_skins':
+      return writeSkins(input);
+    case 'write_world_map':
+      return writeWorldMap(input);
+    case 'write_mixer':
+      return writeMixer(input);
     case 'set_regions':
       return setRegions(input);
     case 'write_translation':

@@ -30,6 +30,7 @@ import { storyVariables } from '../model/story-vars';
 import { validateScene } from '../model/validate';
 import { api, joinPath } from '../project/api';
 import { storyNameProblem } from '../project/story';
+import { prefabNameProblem } from '../project/prefabs';
 import { studio } from '../studio/store';
 import { allPrefabs } from '../tools/prefabs';
 
@@ -618,6 +619,89 @@ function setEventSheet(input: Record<string, unknown>): Proposal {
   };
 }
 
+type RowOperation = { op: 'add'; row: RowInput; after?: string } | { op: 'update'; id: string; row: Partial<RowInput> } | { op: 'remove'; id: string };
+
+/** Add, change and remove single rows of the event sheet. */
+function editEventRows(input: Record<string, unknown>): Proposal {
+  const doc = requireEditing();
+  const ops = input.operations as RowOperation[];
+  let rows = structuredClone(doc.events) as EventRow[];
+  const index = (id: string): number => {
+    const i = rows.findIndex((r) => r.id === id);
+    if (i < 0) fail(`There is no top-level row with the id "${id}". The rows are: ${rows.map((r) => r.id).join(', ') || '(none)'} (get_event_sheet shows them).`);
+    return i;
+  };
+  const lines: string[] = [];
+  for (const op of ops) {
+    if (op.op === 'add') {
+      const row = buildRow(doc, op.row);
+      if (op.after === undefined || op.after === 'end') rows.push(row);
+      else if (op.after === 'start') rows.unshift(row);
+      else rows.splice(index(op.after) + 1, 0, row);
+      lines.push(`Add a row${op.row.comment ? ` ("${op.row.comment}")` : ''}`);
+    } else if (op.op === 'update') {
+      const at = index(op.id);
+      const r = rows[at]!;
+      const patch = op.row;
+      if (patch.comment !== undefined) r.comment = patch.comment;
+      if (patch.mode !== undefined) r.mode = patch.mode;
+      if (patch.once !== undefined) r.once = patch.once;
+      if (patch.forEach !== undefined) r.forEach = patch.forEach ? normaliseRef(doc, patch.forEach) : '';
+      if (patch.repeat !== undefined) r.repeat = patch.repeat;
+      if (patch.enabled !== undefined) r.enabled = patch.enabled;
+      if (patch.conditions) r.conditions = patch.conditions.length > 0 ? patch.conditions.map((c) => ({ type: c.type, params: buildParams(doc, 'condition', c.type, c.params), negate: c.negate ?? false })) : [newCondition('always')];
+      if (patch.actions) r.actions = patch.actions.map((a) => ({ type: a.type, params: buildParams(doc, 'action', a.type, a.params) }));
+      if (patch.children) r.children = patch.children.map((c) => buildRow(doc, c));
+      lines.push(`Change the row ${op.id}`);
+    } else {
+      rows.splice(index(op.id), 1);
+      lines.push(`Remove the row ${op.id}`);
+    }
+  }
+  rows = rows.map((r) => r);
+  const n = names(doc);
+  const before = rowText(doc.events, n).join('\n');
+  const after = rowText(rows, n).join('\n');
+  const problems = checkSheet(rows, eventFacts(doc), n).map((p) => p.text);
+  const undoLabel = 'Claude: edit event rows';
+  return {
+    tool: 'edit_event_rows',
+    title: 'Edit event rows',
+    lines: [...lines, ...problems.map((p) => `Warning: ${p}`)],
+    diff: { name: 'Event sheet', lines: lineDiff(before, after) },
+    async apply() {
+      doc.setEvents(undoLabel, rows);
+      return `The event sheet now has ${rows.length} row(s).${problems.length ? ` The sheet checker still reports: ${problems.join(' | ')}` : ' The sheet checker found no problems.'}`;
+    },
+    undo: undoTop(doc, undoLabel),
+  };
+}
+
+/** Turn an object into a prefab. */
+function createPrefab(input: Record<string, unknown>): Proposal {
+  const doc = requireEditing();
+  const e = resolveTarget(doc, String(input.object));
+  const name = String(input.name).trim();
+  const bad = prefabNameProblem(name, store.state.prefabNames);
+  if (bad) fail(bad);
+  const undoLabel = `Make prefab "${name}"`;
+  return {
+    tool: 'create_prefab',
+    title: `Make the prefab "${name}"`,
+    lines: [`Turn ${label(e)} into the prefab "${name}"; it becomes the first instance. Objects made from the prefab follow it except for settings changed on them.`],
+    async apply() {
+      const ok = await store.createPrefab(e.id, name);
+      return ok ? `Made the prefab "${name}" from ${label(e)}. place_objects can now place it with prefab "${name}".` : fail('The prefab could not be made (the Problems panel or a toast says why).');
+    },
+    async undo() {
+      if (store.doc !== doc || doc.history.undoLabel !== undoLabel) return false;
+      doc.undo();
+      await store.removePrefab(name);
+      return true;
+    },
+  };
+}
+
 // ----- scripts and notes -----
 
 function writeScript(input: Record<string, unknown>): Proposal {
@@ -687,6 +771,10 @@ export async function prepareAction(name: string, input: Record<string, unknown>
       return removeWires(input);
     case 'set_event_sheet':
       return setEventSheet(input);
+    case 'edit_event_rows':
+      return editEventRows(input);
+    case 'create_prefab':
+      return createPrefab(input);
     case 'write_script':
       return writeScript(input);
     case 'write_project_notes': {

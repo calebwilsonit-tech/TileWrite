@@ -328,6 +328,101 @@ export const TOOLS: ToolSpec[] = [
     }),
   },
   {
+    name: 'write_minigames',
+    kind: 'act',
+    description: 'Replace the project\'s whole list of minigames (start from story_overview and send everything back, changed). A minigame has a name, a kind and settings: "timing" {rounds, zone, speed, shrink, allowedMisses}, "sequence" {length, buttons (2-4), showSeconds, allowedMistakes} or "pairs" {pairs, allowedMisses}; all kinds can have title, instructions, winVariable, scoreVariable, rewardItem (an item id, given for the first win) and canQuit. Players reach one through an object with the minigameStation behaviour (settings {"minigame": "<name>"}) or the playMinigame action.',
+    schema: z.object({
+      minigames: z
+        .array(
+          z
+            .object({
+              name: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9 _-]{0,39}$/, 'Letters, digits, spaces, _ and - only.'),
+              kind: z.enum(['timing', 'sequence', 'pairs']),
+            })
+            .catchall(z.unknown()),
+        )
+        .max(40),
+    }),
+  },
+  {
+    name: 'write_skins',
+    kind: 'act',
+    description: 'Replace the project\'s whole list of player skins (start from story_overview). A skin has an id (letters, digits, - and _), a name, an optional colour as a number (-1 keeps the original), an optional sprite name, and when it is available: unlock {"kind":"always"} or {"kind":"variable","name":"won","atLeast":1} or {"kind":"item","item":"cape"}.',
+    schema: z.object({
+      skins: z
+        .array(
+          z.object({
+            id: z.string().min(1),
+            name: z.string().min(1),
+            color: z.number().int().min(-1).max(0xffffff).optional(),
+            sprite: z.string().optional(),
+            unlock: z.union([z.object({ kind: z.literal('always') }), z.object({ kind: z.literal('variable'), name: z.string(), atLeast: z.number().optional() }), z.object({ kind: z.literal('item'), item: z.string() })]).optional(),
+          }),
+        )
+        .max(40),
+    }),
+  },
+  {
+    name: 'write_world_map',
+    kind: 'act',
+    description: 'Create or replace the world map the player opens with M (places joined by paths) or remove it. Each place has an id, a label, a scene file (as project_overview lists scenes), x (0-1000) and y (0-600) on the board, an icon (pin, town, dungeon, cave, forest, tower, castle, camp, harbor), unlock ({"kind":"visited"} default, "always", {"kind":"variable","name":...,"atLeast":1} or "lantern") and optionally spawn (an object name or "x,y") and hidden. Paths join two place ids.',
+    schema: z.object({
+      remove: z.boolean().optional().describe('True removes the map (nothing else is needed).'),
+      title: z.string().optional(),
+      nodes: z
+        .array(
+          z.object({
+            id: z.string().regex(/^[A-Za-z0-9_-]+$/),
+            label: z.string().min(1),
+            scene: z.string(),
+            x: z.number().min(0).max(1000).optional(),
+            y: z.number().min(0).max(600).optional(),
+            icon: z.enum(['pin', 'town', 'dungeon', 'cave', 'forest', 'tower', 'castle', 'camp', 'harbor']).optional(),
+            unlock: z.union([z.object({ kind: z.literal('visited') }), z.object({ kind: z.literal('always') }), z.object({ kind: z.literal('lantern') }), z.object({ kind: z.literal('variable'), name: z.string(), atLeast: z.number().optional() })]).optional(),
+            spawn: z.string().optional(),
+            hidden: z.boolean().optional(),
+          }),
+        )
+        .max(60)
+        .optional(),
+      links: z.array(z.object({ a: z.string(), b: z.string() })).max(200).optional(),
+    }),
+  },
+  {
+    name: 'write_mixer',
+    kind: 'act',
+    description: 'Change the project\'s sound mix: only what you name changes. buses {master, music, sfx, voice} are levels 0-1.5; ducking {enabled, amount, attack, release} lowers the music while a voice-bus sound plays; sounds maps a sound name to {volume 0-2, bus "sfx"|"voice", pitchVariation, volumeVariation, cooldown, variants [other sound names]}; music maps a sound name to {volume, loopStart, loopEnd (seconds), fade}. Sound names are the files in Assets > Sounds.',
+    schema: z.object({
+      buses: z.record(z.string(), z.number()).optional(),
+      ducking: z.record(z.string(), z.unknown()).optional(),
+      sounds: z.record(z.string(), z.record(z.string(), z.unknown())).optional(),
+      music: z.record(z.string(), z.record(z.string(), z.unknown())).optional(),
+    }),
+  },
+  {
+    name: 'edit_event_rows',
+    kind: 'act',
+    description: 'Change single rows of the open scene\'s event sheet without sending the whole sheet: operations run in order. {"op":"add","row":{...},"after":"<row id>"|"start"|"end"}, {"op":"update","id":"<row id>","row":{...the fields to change; conditions/actions/children you give replace the old ones...}}, {"op":"remove","id":"<row id>"}. Row ids come from get_event_sheet. Rows have the same shape as in set_event_sheet.',
+    schema: z.object({
+      operations: z
+        .array(
+          z.discriminatedUnion('op', [
+            z.object({ op: z.literal('add'), row: eventRow, after: z.string().optional() }),
+            z.object({ op: z.literal('update'), id: z.string().min(1), row: z.object({ ...Object.fromEntries(Object.entries(rowFields).map(([k, v]) => [k, (v as z.ZodType).optional()])), children: z.array(leafRow).optional() }) }),
+            z.object({ op: z.literal('remove'), id: z.string().min(1) }),
+          ]),
+        )
+        .min(1)
+        .max(40),
+    }),
+  },
+  {
+    name: 'create_prefab',
+    kind: 'act',
+    description: 'Turn an object in the open scene into a prefab (a reusable template; the object becomes its first instance). Objects made from a prefab follow it except for settings changed on them.',
+    schema: z.object({ object: target, name: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9 _-]{0,39}$/, 'Letters, digits, spaces, _ and - only.') }),
+  },
+  {
     name: 'set_regions',
     kind: 'act',
     description: 'Replace the open scene\'s regions (rooms): each has a name and a rectangle of cells, and can keep the camera inside it, play music (a sound name), darken it (0 to 1) and make bosses inside it only act while the player is there. Read scene_summary first and send every region back, changed. Regions without an id are new.',
