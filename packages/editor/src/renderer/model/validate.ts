@@ -1,4 +1,4 @@
-import { behaviorList, checkMachine, checkSheet, getBehavior, parsePoints, type StateMachine } from '@tilewright/behaviors';
+import { behaviorList, checkMachine, checkSheet, checkTree, getBehavior, parsePoints, type BehaviorTree, type StateMachine } from '@tilewright/behaviors';
 import { EMPTY_TILE, FLAG, SLOPE_RISE, findPath, groundHeightAt, reachableCells, textBridgeCells } from '@tilewright/runtime';
 import { highSide, lowSide, meetsTop } from '../tools/algorithms';
 import type { EditorDoc } from './doc';
@@ -79,6 +79,17 @@ export function validateScene(doc: EditorDoc, sprites?: ReadonlySet<string>, pre
     for (const text of checkMachine(m, (b) => e.components[b] !== undefined)) {
       out.push({ id: `machine-${e.id}-${out.length}`, severity: 'warning', message: `The state machine of "${e.name}": ${text}`, target: t ? pos('entity', e.id, t) : undefined });
     }
+  }
+
+  // behaviour trees: nodes and branches that cannot work
+  for (const e of doc.entities) {
+    const tr = e.components.behaviorTree as BehaviorTree | undefined;
+    if (!tr) continue;
+    const t = e.components.transform as T | undefined;
+    for (const text of checkTree(tr, (b) => e.components[b] !== undefined)) {
+      out.push({ id: `tree-${e.id}-${out.length}`, severity: 'warning', message: `The behaviour tree of "${e.name}": ${text}`, target: t ? pos('entity', e.id, t) : undefined });
+    }
+    if (e.components.stateMachine !== undefined) out.push({ id: `tree-machine-${e.id}`, severity: 'warning', message: `"${e.name}" has both a Behaviour Tree and a State Machine, which would fight over which behaviours are switched on. Use one of them.`, target: t ? pos('entity', e.id, t) : undefined });
   }
 
   // behaviours that need something the object does not have

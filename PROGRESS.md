@@ -140,7 +140,7 @@ Done and covered by tests (unit: `packages/runtime/src/ai`, `packages/behaviors/
 - [x] Sample built in the UI and played: a stealth guard that is heard and defeated, and a three-phase boss in an arena whose defeat opens a gate (`e2e/m7-combat.spec.ts`, screenshots inspected)
 
 Deferred:
-- [ ] Visual state-machine editor for enemies and bosses; behaviour trees; ranged enemy attacks; guards avoiding each other; hearing blocked by walls
+- [x] Behaviour trees (a tree editor in the Inspector with live results), ranged enemy attacks (Ranged Attack, damaging Projectile), guards avoiding each other, hearing muffled by walls (done after M14: `e2e/m15-ai.spec.ts`)
 - [ ] Light/resource bar and lantern fuel; art and animation for the quill and dodge
 
 ## M8 checklist

@@ -41,7 +41,7 @@ export interface BehaviorDef<S extends object = Record<string, unknown>> {
   inputs: SignalSpec[];
   outputs: SignalSpec[];
   /** Settings that are not simple fields have their own editor in the Inspector (a graph, for state machines). */
-  editor?: 'stateMachine';
+  editor?: 'stateMachine' | 'behaviorTree';
   /** Components that must exist for it to work, with the defaults to add when they are missing. */
   requires: Record<string, unknown>;
   /** Runs once per tick for every object that has this behaviour. */

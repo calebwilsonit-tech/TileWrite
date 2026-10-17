@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { attachBehavior, behaviorList, getBehavior, type BehaviorDef, type FieldSpec, type StateMachine } from '@tilewright/behaviors';
+import { attachBehavior, behaviorList, getBehavior, type BehaviorDef, type BehaviorTree, type FieldSpec, type StateMachine } from '@tilewright/behaviors';
 import type { EntityData } from '@tilewright/runtime';
 import { useApp } from '../app/store';
 import { CheckField, NumberField, SelectField, TextField } from './fields';
 import { StateMachineEditor } from './StateMachineEditor';
+import { BehaviorTreeEditor } from './BehaviorTreeEditor';
 
 type Edit = (label: string, fn: (x: EntityData) => void) => void;
 
@@ -74,6 +75,18 @@ function BehaviorCard({ entity, def, edit, prefabs }: { entity: EntityData; def:
           has={behaviorList().filter((b) => b.id !== def.id && entity.components[b.id] !== undefined).map((b) => b.id)}
           onChange={(next) =>
             edit('Edit the state machine', (x) => {
+              x.components[def.id] = structuredClone(next);
+            })
+          }
+        />
+      )}
+      {def.editor === 'behaviorTree' && (
+        <BehaviorTreeEditor
+          tree={complete as unknown as BehaviorTree}
+          has={behaviorList().filter((b) => b.id !== def.id && entity.components[b.id] !== undefined).map((b) => b.id)}
+          sceneId={entity.id}
+          onChange={(next) =>
+            edit('Edit the behaviour tree', (x) => {
               x.components[def.id] = structuredClone(next);
             })
           }

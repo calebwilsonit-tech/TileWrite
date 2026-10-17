@@ -1,5 +1,6 @@
 import {
   C,
+  blockersBetween,
   facingOfGridDir,
   findPath,
   lineClear,
@@ -46,6 +47,27 @@ function obstacleCells(ctx: SimContext, self: Entity): Set<string> {
     }
   }
   return out;
+}
+
+/** A push (up to about 0.7 of a walker's speed) away from other walkers that are closer than 0.9 cells. */
+function separation(ctx: SimContext, self: Entity, t: TransformIso): { x: number; y: number } {
+  let px = 0;
+  let py = 0;
+  for (const o of ctx.world.query('state:aiFlags', C.Transform, C.Body)) {
+    if (o === self || !o.alive) continue;
+    const ot = transform(o);
+    if (Math.abs(ot.h - t.h) > 1) continue;
+    const dx = t.x - ot.x;
+    const dy = t.y - ot.y;
+    const d = Math.hypot(dx, dy);
+    if (d >= 0.9) continue;
+    // exactly on top of each other: the one with the lower id steps aside one way, the other the other way
+    const [ux, uy] = d < 0.001 ? [self.id < o.id ? 1 : -1, 0] : [dx / d, dy / d];
+    const k = (0.9 - d) / 0.9;
+    px += ux * k * 0.7;
+    py += uy * k * 0.7;
+  }
+  return { x: px, y: py };
 }
 
 /**
@@ -98,8 +120,19 @@ export function steerTo(ctx: SimContext, e: Entity, goal: Cell2, speed: number, 
     b.vx = b.vy = 0;
     return 'moving';
   }
-  b.vx = (dx / len) * speed;
-  b.vy = (dy / len) * speed;
+  let vx = (dx / len) * speed;
+  let vy = (dy / len) * speed;
+  // other walkers with a mind of their own are not walked through: a gentle push away from anyone too close
+  const push = separation(ctx, e, t);
+  vx += push.x * speed;
+  vy += push.y * speed;
+  const mag = Math.hypot(vx, vy);
+  if (mag > speed && mag > 0) {
+    vx = (vx / mag) * speed;
+    vy = (vy / mag) * speed;
+  }
+  b.vx = vx;
+  b.vy = vy;
   t.facing = facingOfGridDir(dx, dy);
   return 'moving';
 }
@@ -126,6 +159,8 @@ export interface Vision {
   angle: number;
   /** How far it hears footsteps (cells); running is louder. */
   hearing: number;
+  /** Each wall between it and the footsteps counts as this many extra cells of distance. */
+  muffle: number;
   /** Tag of what it looks for. */
   target: string;
   /** In the dark it only sees things this close. */
@@ -148,11 +183,12 @@ export const vision = defineBehavior<Vision>({
   category: 'AI',
   description: 'Sees things in front of it, within a distance and a cone. Walls block its view, and it cannot see far into the dark. It also hears footsteps nearby. Chase uses this to notice you.',
   phase: 'source',
-  defaults: { range: 6, angle: 100, hearing: 3, target: 'player', closeRange: 1.3, darkThreshold: 0.3 },
+  defaults: { range: 6, angle: 100, hearing: 3, muffle: 3, target: 'player', closeRange: 1.3, darkThreshold: 0.3 },
   fields: [
     { key: 'range', label: 'How far it sees (cells)', type: 'number', min: 1, max: 30, step: 0.5 },
     { key: 'angle', label: 'Width of the view (degrees)', type: 'number', min: 10, max: 360, step: 5 },
     { key: 'hearing', label: 'How far it hears footsteps (cells)', type: 'number', min: 0, max: 20, step: 0.5 },
+    { key: 'muffle', label: 'Each wall in the way muffles footsteps by (cells)', type: 'number', min: 0, max: 20, step: 0.5, help: 'Walls between it and the footsteps count as extra distance, so a guard does not hear you through a thick wall. 0 = walls do not matter.' },
     { key: 'target', label: 'Looks for things tagged', type: 'text' },
     { key: 'closeRange', label: 'Always notices within (cells), even in the dark', type: 'number', min: 0, max: 5, step: 0.1 },
     { key: 'darkThreshold', label: 'Cannot see where it is darker than', type: 'number', min: 0, max: 1, step: 0.05 },
@@ -191,7 +227,7 @@ export const vision = defineBehavior<Vision>({
       const moving = ob ? Math.hypot(ob.vx, ob.vy) : 0;
       if (moving > 0.5) {
         const noise = s.hearing * (moving > 5 ? 1.5 : 1);
-        if (d <= noise) {
+        if (d + blockersBetween(model, t.x, t.y, ot.x, ot.y, t.h + 0.5) * s.muffle <= noise) {
           st.heard = true;
           st.last = { x: ot.x, y: ot.y };
         }
@@ -254,7 +290,7 @@ export const chase = defineBehavior<Chase>({
     { name: 'alert', label: 'Is chasing or searching' },
     { name: 'chasing', label: 'Is chasing' },
   ],
-  requires: { vision: { range: 6, angle: 100, hearing: 3, target: 'player', closeRange: 1.3, darkThreshold: 0.3 } },
+  requires: { vision: { range: 6, angle: 100, hearing: 3, muffle: 3, target: 'player', closeRange: 1.3, darkThreshold: 0.3 } },
   summary: (s) => `Chases at ${s.speed} cells per second, searches ${s.searchSeconds} s${s.returnHome ? ', then goes back' : ''}.`,
   update(ctx, e, s) {
     const st = stateOf<ChaseState>(e, 'chase', () => ({ mode: 'idle', timer: 0, home: null, nav: newNav(), lookTimer: 0 }));

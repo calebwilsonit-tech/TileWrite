@@ -56,6 +56,31 @@ export function ambientDarkness(model: LightingModel, x: number, y: number): num
   return d;
 }
 
+/** How many cells between (ax, ay) and (bx, by) would stop something at height h (never the start or end cell). */
+export function blockersBetween(model: LightingModel, ax: number, ay: number, bx: number, by: number, h: number): number {
+  const dx = bx - ax;
+  const dy = by - ay;
+  const steps = Math.ceil(Math.hypot(dx, dy) * 4);
+  const sx = Math.floor(ax);
+  const sy = Math.floor(ay);
+  const ex = Math.floor(bx);
+  const ey = Math.floor(by);
+  let lastX = sx;
+  let lastY = sy;
+  let count = 0;
+  for (let i = 1; i < steps; i++) {
+    const t = i / steps;
+    const cx = Math.floor(ax + dx * t);
+    const cy = Math.floor(ay + dy * t);
+    if (cx === lastX && cy === lastY) continue;
+    lastX = cx;
+    lastY = cy;
+    if ((cx === sx && cy === sy) || (cx === ex && cy === ey)) continue;
+    if (model.blocked(cx, cy, h)) count++;
+  }
+  return count;
+}
+
 /** Is there a clear line from (ax, ay) to (bx, by)? Walks the cells in between (never the start or end cell). */
 export function lineClear(model: LightingModel, ax: number, ay: number, bx: number, by: number, h: number): boolean {
   const dx = bx - ax;

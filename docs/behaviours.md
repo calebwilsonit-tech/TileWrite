@@ -4,10 +4,10 @@
 
 A behaviour is ready-made logic you add to an object in the Inspector (**Behaviours -> Add**). Its settings appear as fields; its signals can be joined to other objects with the Wire tool. Each behaviour has an id (the key under which it is saved) shown in `code`.
 
-There are 34 behaviours. Behaviours made by scripts (see [code-window.md](code-window.md)) appear in the same list under "Scripts".
+There are 36 behaviours. Behaviours made by scripts (see [code-window.md](code-window.md)) appear in the same list under "Scripts".
 
-- [AI](#ai) (Vision Cone, Chase, Patrol, Boss Phases, State Machine)
-- [Combat](#combat) (Health, Damage on Touch, Melee Attack (quill), Dodge)
+- [AI](#ai) (Vision Cone, Chase, Patrol, Boss Phases, State Machine, Behaviour Tree)
+- [Combat](#combat) (Health, Damage on Touch, Melee Attack (quill), Dodge, Ranged Attack)
 - [Light](#light) (Light, Light Sensor, Growing Object)
 - [Logic](#logic) (Logic Gate)
 - [Player](#player) (Echo Recorder)
@@ -17,6 +17,18 @@ There are 34 behaviours. Behaviours made by scripts (see [code-window.md](code-w
 - [World](#world) (Spawner, Pickup, Moving Platform, Falling Floor, Projectile, Follow Camera)
 
 ## AI
+
+### Behaviour Tree
+
+Id: `behaviorTree`. Each update it brain.
+
+Gives an object a way of deciding what to do, as a tree of questions and actions that is asked many times a second. A sequence does things in order and stops at the first that fails; a selector tries things until one works; conditions ask ("does it see the player?"), actions do ("walk toward it", "wait", "switch a behaviour off"). Because the tree is asked again every moment, a high-priority branch (chase the player) interrupts a low-priority one (wander) the instant its condition holds. Draw it in the tree under the settings, or start from the Guard, Archer or Wanderer example. Use either a Behaviour Tree or a State Machine on one object, not both.
+
+| Setting | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Looks at and moves toward things tagged | `target` | text | "player" |  |
+
+Receives: **Trigger** (`trigger`, A "a wire sends it a signal" condition is true while this is on.).
 
 ### Boss Phases
 
@@ -91,6 +103,7 @@ Sees things in front of it, within a distance and a cone. Walls block its view, 
 | How far it sees (cells) | `range` | number | 6 | 1 to 30 |
 | Width of the view (degrees) | `angle` | number | 100 | 10 to 360 |
 | How far it hears footsteps (cells) | `hearing` | number | 3 | 0 to 20 |
+| Each wall in the way muffles footsteps by (cells) | `muffle` | number | 3 | 0 to 20. Walls between it and the footsteps count as extra distance, so a guard does not hear you through a thick wall. 0 = walls do not matter. |
 | Looks for things tagged | `target` | text | "player" |  |
 | Always notices within (cells), even in the dark | `closeRange` | number | 1.3 | 0 to 5 |
 | Cannot see where it is darker than | `darkThreshold` | number | 0.3 | 0 to 1 |
@@ -162,6 +175,30 @@ Press the Attack button (J) to swing in the direction you face, hurting enemies 
 | Hurts | `hurts` | select | "enemies" | `enemies`, `anything`, `player` |
 | Freeze on a hit (seconds) | `hitStop` | number | 0.05 | 0 to 0.2 |
 | Screen shake on a hit (pixels) | `shake` | number | 2 | 0 to 14 |
+
+### Ranged Attack
+
+Id: `rangedAttack`. Each update it reacts to signals (runs last).
+
+Shoots at its target from a distance: when the target is in range (and nothing blocks the way) it stands still for a moment taking aim, then fires one shot or a quick volley, then waits before the next. A shot is a plain glowing ball, or a copy of a prefab with the Projectile behaviour. Combine with Patrol, Chase or a State Machine; a State Machine state can switch it on and off.
+
+| Setting | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Shoots at things tagged | `target` | text | "player" |  |
+| Shoots up to (cells) | `range` | number | 8 | 1 to 30 |
+| Does not shoot closer than (cells) | `minRange` | number | 0 | 0 to 20 |
+| Seconds between volleys | `cooldown` | number | 2 | 0.1 to 30 |
+| Seconds taking aim first | `windup` | number | 0.4 | 0 to 5 |
+| Shots in a volley | `volley` | number | 1 | 1 to 8 |
+| Seconds between the shots of a volley | `volleyGap` | number | 0.15 | 0.03 to 2 |
+| Shot speed (cells per second) | `speed` | number | 7 | 1 to 30 |
+| Damage of a shot | `damage` | number | 1 | 0 to 99 |
+| Seconds a shot flies | `lifetime` | number | 2.5 | 0.2 to 20 |
+| Only when no wall is in the way | `needSight` | boolean | true |  |
+| Shoot a prefab (empty = a plain ball) | `prefab` | prefab | (empty) |  |
+| Sound at each shot (a file in Assets -> Sounds) | `sound` | text | (empty) |  |
+
+Sends: **Is taking aim or shooting** (`aiming`); **Just fired** (`shot`).
 
 ## Light
 
@@ -564,6 +601,9 @@ Flies in a straight line and disappears when it hits a wall or a solid object (o
 | Fly the way the object faces | `useFacing` | boolean | true |  |
 | Direction X | `dirX` | number | 1 | -1 to 1 |
 | Direction Y | `dirY` | number | 0 | -1 to 1 |
+| Damage to what it hits (0 = none) | `damage` | number | 0 | 0 to 99 |
+| Hurts | `hurts` | select | "player" | `player`, `enemies`, `anything` |
+| Knockback (cells per second) | `knockback` | number | 5 | 0 to 20 |
 
 ### Spawner
 
