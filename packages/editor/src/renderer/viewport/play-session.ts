@@ -79,6 +79,8 @@ export interface PlayOptions {
   record: boolean;
   /** Switch the window to or from full screen (only a game in its own window can). */
   setFullscreen?: (on: boolean) => void;
+  /** The project's prefabs, sprites and story as they are now (for hot reload while playing in the editor). */
+  liveAssets?: () => { prefabs: ReadonlyMap<string, PrefabData>; sprites: ReadonlyMap<string, SpriteData>; story: PlayOptions['story'] };
 }
 
 /**
@@ -214,6 +216,51 @@ export class PlaySession {
       this.raf = requestAnimationFrame(loop);
     };
     this.raf = requestAnimationFrame(loop);
+  }
+
+  // ---------- hot reload ----------
+
+  /**
+   * Bring the running game up to date with the edits made since it started: the open scene is loaded again (objects go
+   * back to where they start), and prefabs, sprites, items, conversations and cutscenes are replaced. The player stays
+   * where they are with their items, flags, health and the event rows that already ran.
+   */
+  hotReload(): string {
+    const { sim, o } = this;
+    const live = o.liveAssets?.();
+    if (live) {
+      for (const [name, data] of live.sprites) sim.assets.sprites.set(name, data);
+      sim.assets.prefabs.clear();
+      for (const [name, data] of live.prefabs) sim.assets.prefabs.set(name, data);
+      sim.assets.items.clear();
+      for (const item of live.story.items) sim.assets.items.set(item.id, item);
+      sim.assets.dialogues.clear();
+      for (const [name, d] of live.story.dialogues) sim.assets.dialogues.set(name, d);
+      sim.assets.cutscenes.clear();
+      for (const [name, c] of live.story.cutscenes) sim.assets.cutscenes.set(name, c);
+    }
+    const scene = o.currentScene(this.scenePath);
+    if (!scene) return 'Reloaded the story and prefabs. This scene has no editing copy, so it was left as it is.';
+    if (!scene.entities.some((e) => e.tags.includes('player'))) return 'The scene has no player start, so the game was left as it is.';
+    const old = sim.world.withTag('player')[0];
+    const at = old?.get<TransformIso>(C.Transform);
+    const keep = at ? { x: at.x, y: at.y, h: at.h, facing: at.facing } : null;
+    const health = old?.get<Record<string, unknown>>('state:health');
+    const rows = sim.runtime.rowState;
+    const prefabs = live?.prefabs ?? o.prefabs;
+    const byId = loadScene(sim, scene, { prefabs, scene: this.scenePath, travel: true });
+    for (const problem of byId.problems) o.notify('warn', problem);
+    sim.runtime.rowState = rows;
+    o.renderer.setTileMap(sim.map!, o.tileset());
+    const player = sim.world.withTag('player')[0]!;
+    this.runner.follow = player.id;
+    o.renderer.focus = player.id;
+    if (keep) {
+      this.placeAt(player, keep.x, keep.y, keep.h);
+      player.require<TransformIso>(C.Transform).facing = keep.facing;
+      if (health) player.set('state:health', { ...health, trail: [], knock: null });
+    }
+    return 'Reloaded the game with your changes.';
   }
 
   // ---------- sound and effects ----------

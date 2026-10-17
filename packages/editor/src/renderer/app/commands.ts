@@ -140,9 +140,11 @@ export function buildCommands(): Command[] {
     { id: 'edit.deselect', label: 'Deselect', category: 'Edit', keys: 'Escape', run: () => store.select([]), enabled: () => editing() && (store.state.selection.length > 0 || store.state.selectedRegion !== null) },
     { id: 'edit.rotate', label: 'Rotate selection', category: 'Edit', keys: 'R', run: rotateSelection, enabled: () => editing() && store.state.tool === 'select' && store.state.selection.length > 0 },
     { id: 'play.toggle', label: 'Play', category: 'Play', keys: 'F5', run: () => (store.state.mode === 'play' ? store.togglePause() : store.play()), enabled: inEditor },
+    { id: 'play.window', label: 'Run the game in its own window', category: 'Play', keys: 'F8', run: () => void store.runInWindow(), enabled: inEditor },
     { id: 'play.stop', label: 'Stop', category: 'Play', keys: 'Shift+F5', run: () => store.stop(), enabled: () => store.state.mode === 'play' },
     { id: 'play.stop2', label: 'Stop (Escape)', category: 'Play', keys: 'Escape', run: () => store.stop(), enabled: () => store.state.mode === 'play' },
     { id: 'play.pause', label: 'Pause / resume', category: 'Play', keys: 'F6', run: () => store.togglePause(), enabled: () => store.state.mode === 'play' },
+    { id: 'play.reload', label: 'Reload the game with my edits', category: 'Play', keys: 'F7', run: () => store.requestHotReload(), enabled: () => store.state.mode === 'play' },
     { id: 'play.step', label: 'Step one frame', category: 'Play', keys: 'F10', run: () => store.step(), enabled: () => store.state.mode === 'play' },
     {
       id: 'play.fromHere',

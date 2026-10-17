@@ -73,6 +73,17 @@ export function buildManifest(s: ExportSettings, startScene: string, scripts: st
   };
 }
 
+/** What "Run in a window" is told to do: the game's files and generated data, the way an export would copy them, but into a throw-away folder. */
+export interface PreviewJob {
+  projectDir: string;
+  files: string[];
+  generated: { path: string; text: string }[];
+  gameName: string;
+  version: string;
+  width: number;
+  height: number;
+}
+
 /** What the export step is told to do, as plain data (the main process carries it out). */
 export interface ExportJob {
   projectDir: string;

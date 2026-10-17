@@ -1,6 +1,9 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
-const invoke = <T>(channel: string, ...args: unknown[]): Promise<T> => ipcRenderer.invoke(channel, ...args) as Promise<T>;
+// An exported game uses plain channel names. The editor's "Run in a window" starts the same page with
+// `--tw-prefix=preview:` so its channels cannot be confused with the editor's own.
+const prefix = process.argv.find((a) => a.startsWith('--tw-prefix='))?.slice('--tw-prefix='.length) ?? '';
+const invoke = <T>(channel: string, ...args: unknown[]): Promise<T> => ipcRenderer.invoke(prefix + channel, ...args) as Promise<T>;
 
 /** The only door between a game and the computer: its own data (read), its saves (read and write), a crash log, quit. */
 contextBridge.exposeInMainWorld('tilewright', {

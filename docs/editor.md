@@ -51,6 +51,8 @@ Two more workspaces sit beside **World** at the top: **Sprites** (draw and anima
 ## Playing
 - **Play** (F5) runs the scene in the viewport; **From here** (Ctrl+Enter) starts at the cell under the mouse. Pause (F6), Step one frame (F10), Stop (Shift+F5 or Esc).
 - Playing never changes the scene you are editing. If something breaks, the game pauses and the Console explains.
+- **Apply edits** (F7) while playing puts the edits you have made since Play into the running game: the scene is loaded again (objects go back to where they start) and prefabs, sprites, items, conversations and cutscenes are replaced, but you keep your place, items, flags, health and the event rows that already ran. Tick **As I edit** to do it automatically a moment after each change. (Scripts already reload by themselves while you type.)
+- **In a window** (F8) runs the game in a window of its own, the way an exported game runs, while the editor stays open. It saves the open scene, compiles the scripts and starts a throw-away copy; press it again to restart with your latest edits. The window's title says it is running from the editor; it saves into the project's saves folder, can only read its own copy of the files, and closes when you close the editor.
 - Controls: WASD / arrows move, Shift runs, Space jumps.
 - A region with **Keep the camera inside this room** limits the camera while the player is in it.
 
@@ -61,4 +63,4 @@ Ctrl+Z / Ctrl+Y undo and redo every change, whichever panel made it. Ctrl+S save
 **Commands → Shortcuts** lists every command with its key; click Change and press a new key. Conflicts are highlighted. **Light / Dark** switches the theme.
 
 ## Not yet in the editor
-Hot reload while playing and a separate game window, a visual state-machine editor for enemies, a drawn dialogue graph and cutscene timeline, and vector drawing in the sprite studio. See KNOWN_ISSUES.md for the full list.
+A visual state-machine editor for enemies, vector drawing in the sprite studio, minigames and skins. See KNOWN_ISSUES.md for the full list.

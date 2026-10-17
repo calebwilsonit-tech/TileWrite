@@ -264,6 +264,10 @@ hr {
 .toolbar .project-name {
   color: var(--muted);
   margin-right: 6px;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .toolbar .sep {
@@ -1489,3 +1493,4 @@ button.small {
 .ct-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
 .ct-canvas { display: block; user-select: none; touch-action: none; }
 .dg-overlay .ct-scroll { max-height: 45vh; overflow: auto; }
+.field.check.inline { display: inline-flex; align-items: center; gap: 4px; margin: 0 6px; flex-direction: row; }

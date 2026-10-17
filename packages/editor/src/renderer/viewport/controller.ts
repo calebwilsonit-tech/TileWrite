@@ -78,7 +78,7 @@ export class ViewportController {
   private pointerDown = false;
   private activeTool: ToolId | null = null;
   private play: PlayState | null = null;
-  private lastStore = { tool: '', mode: '', paused: false, stepToken: 0, focus: 0 };
+  private lastStore = { tool: '', mode: '', paused: false, stepToken: 0, hot: 0, focus: 0 };
   private disposed = false;
   private reacting = false;
   private unsubStudio: (() => void) | null = null;
@@ -302,7 +302,7 @@ export class ViewportController {
 
   private snapshotStore() {
     const s = store.state;
-    return { tool: s.tool, mode: s.mode, paused: s.paused, stepToken: store.stepToken, focus: store.focusRequest?.token ?? 0 };
+    return { tool: s.tool, mode: s.mode, paused: s.paused, stepToken: store.stepToken, hot: store.hotToken, focus: store.focusRequest?.token ?? 0 };
   }
 
   /**
@@ -333,11 +333,12 @@ export class ViewportController {
             this.play.runner.step();
           }
         }
+        if (store.hotToken !== last.hot && this.play) store.notify('info', this.play.session.hotReload());
         if ((store.focusRequest?.token ?? 0) !== last.focus && store.focusRequest) this.focusCell(store.focusRequest.x, store.focusRequest.y);
         this.applyLayerView();
         this.dirty = true;
         const now = this.snapshotStore();
-        const settled = now.tool === this.lastStore.tool && now.mode === this.lastStore.mode && now.paused === this.lastStore.paused && now.stepToken === this.lastStore.stepToken;
+        const settled = now.tool === this.lastStore.tool && now.mode === this.lastStore.mode && now.paused === this.lastStore.paused && now.stepToken === this.lastStore.stepToken && now.hot === this.lastStore.hot;
         if (settled) break;
       }
     } finally {
@@ -736,6 +737,7 @@ export class ViewportController {
         autoPlay,
         flags: () => store.state.view,
         record,
+        liveAssets: () => ({ prefabs: store.prefabs, sprites: studio.assets, story: store.story }),
       });
     } catch (e) {
       store.notify('error', `The game could not start: ${e instanceof Error ? e.message : String(e)}`);

@@ -157,6 +157,8 @@ export interface AppState {
   testMode: boolean;
   /** Bumped whenever the document changes, so React panels re-render. */
   docVersion: number;
+  /** While playing, reload the game with every edit (otherwise only when asked). */
+  hotReload: boolean;
   /** Set when a crash left unsaved work behind. */
   recovery: { scene: ReturnType<EditorDoc['toScene']> } | null;
 }
@@ -191,6 +193,7 @@ const initial: AppState = {
   busy: false,
   prefabNames: [],
   storyVersion: 0,
+  hotReload: false,
   analysis: null,
   projectCheck: null,
   runtimeError: null,
@@ -232,6 +235,9 @@ class AppStore {
   playFrom: { x: number; y: number } | null = null;
   /** Bumped to ask the viewport to step one frame while paused. */
   stepToken = 0;
+  /** Bumped to ask the running game to reload with the edits made while it runs. */
+  hotToken = 0;
+  private hotTimer: number | undefined;
   private listeners = new Set<Listener>();
   private unsubDoc: (() => void) | null = null;
   private autosaveTimer: number | undefined;
@@ -284,7 +290,7 @@ class AppStore {
     const info = await api().info();
     const settings = await api().settings.get();
     const recent = await api().recent.list();
-    this.set({ testMode: info.testMode, recent, theme: settings.theme === 'light' ? 'light' : 'dark' });
+    this.set({ testMode: info.testMode, recent, theme: settings.theme === 'light' ? 'light' : 'dark', hotReload: settings.hotReload === true });
     document.documentElement.dataset.theme = this.state.theme;
     applyAccessibility(cleanAccessibility(settings.accessibility));
   }
@@ -459,6 +465,7 @@ class AppStore {
 
   /** Coalesce bursts of document events into one React update per frame. */
   private bumpDoc(): void {
+    this.maybeHotReload();
     if (this.docTick !== null) return;
     this.docTick = window.requestAnimationFrame(() => {
       this.docTick = null;
@@ -570,6 +577,7 @@ class AppStore {
   setItems(items: ItemData[]): void {
     this.story = { ...this.story, items };
     this.set({ storyVersion: this.state.storyVersion + 1 });
+    this.maybeHotReload();
     const p = this.state.project;
     if (p) this.persistLater('items', () => saveItems(assetFs, p.dir, this.story.items));
   }
@@ -577,6 +585,7 @@ class AppStore {
   putDialogue(d: DialogueData): void {
     this.story = { ...this.story, dialogues: new Map(this.story.dialogues).set(d.name, d) };
     this.set({ storyVersion: this.state.storyVersion + 1 });
+    this.maybeHotReload();
     const p = this.state.project;
     if (p) this.persistLater(`d:${d.name}`, () => saveDialogue(assetFs, p.dir, d));
   }
@@ -594,6 +603,7 @@ class AppStore {
   putCutscene(c: CutsceneData): void {
     this.story = { ...this.story, cutscenes: new Map(this.story.cutscenes).set(c.name, c) };
     this.set({ storyVersion: this.state.storyVersion + 1 });
+    this.maybeHotReload();
     const p = this.state.project;
     if (p) this.persistLater(`c:${c.name}`, () => saveCutscene(assetFs, p.dir, c));
   }
@@ -950,6 +960,35 @@ class AppStore {
       this.hitContext = null;
       this.set({ paused: !this.state.paused, debugHit: null });
     }
+  }
+
+  /** Start the game in a window of its own, beside the editor (saves the open scene first). */
+  async runInWindow(): Promise<void> {
+    await this.guard('Starting the game window', async () => {
+      const { runInWindow } = await import('../export/export');
+      const problem = await runInWindow();
+      if (problem) this.notify('error', problem);
+      else this.notify('info', 'The game is running in its own window. Press this button again to restart it with your latest edits.');
+    });
+  }
+
+  /** Turn the running game into one that has the edits made since it started (objects go back to their start; the player, items, flags and health stay). */
+  requestHotReload(): void {
+    if (this.state.mode !== 'play') return;
+    this.hotToken++;
+    this.set({ docVersion: this.state.docVersion });
+  }
+
+  setHotReload(on: boolean): void {
+    this.set({ hotReload: on });
+    void this.saveSetting('hotReload', on);
+  }
+
+  /** With 'Reload as I edit' on, an edit made while playing reloads the game a moment after the last change. */
+  private maybeHotReload(): void {
+    if (this.state.mode !== 'play' || !this.state.hotReload) return;
+    window.clearTimeout(this.hotTimer);
+    this.hotTimer = window.setTimeout(() => this.requestHotReload(), 450);
   }
 
   step(): void {

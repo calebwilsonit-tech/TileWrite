@@ -65,6 +65,7 @@ function Toolbar() {
   const scenePath = useApp((s) => s.scenePath);
   const mode = useApp((s) => s.mode);
   const paused = useApp((s) => s.paused);
+  const hotReload = useApp((s) => s.hotReload);
   const theme = useApp((s) => s.theme);
   const ws = useApp((s) => s.workspace);
   useApp((s) => s.docVersion);
@@ -141,6 +142,9 @@ function Toolbar() {
               >
                 ▶ Play
               </button>
+              <button data-testid="btn-run-window" aria-label="Run in a window" onClick={() => void store.runInWindow()} title="Run the game in a window of its own while you keep editing (F8). Press again to restart it with your latest edits.">
+                Window
+              </button>
               {ws === 'world' && (
                 <button data-testid="btn-play-here" onClick={run('play.fromHere')} title="Play starting at the cell under the mouse (Ctrl+Enter)">
                   ▶ From here
@@ -155,6 +159,13 @@ function Toolbar() {
               <button data-testid="btn-step" onClick={() => store.step()} title="Advance one frame (F10)">
                 ⏭ Step
               </button>
+              <button data-testid="btn-hot-reload" onClick={() => store.requestHotReload()} title="Put the edits you made while playing into the running game (F7). Objects go back to their start; you, your items, flags and health stay.">
+                ↻ Apply edits
+              </button>
+              <label className="field check inline" title="Reload the game a moment after every edit you make while it runs">
+                <input data-testid="chk-hot-reload" type="checkbox" checked={hotReload} onChange={(e) => store.setHotReload(e.target.checked)} />
+                <span>As I edit</span>
+              </label>
               <button data-testid="btn-stop" className="stop" onClick={() => store.stop()} title="Stop and return to editing (Shift+F5 or Esc)">
                 ■ Stop
               </button>

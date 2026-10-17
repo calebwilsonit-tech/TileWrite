@@ -58,6 +58,9 @@ contextBridge.exposeInMainWorld('tilewright', {
       return () => ipcRenderer.removeListener('export:progress', l);
     },
   },
+  preview: {
+    open: (job: unknown) => invoke<{ windows: number }>('preview:open', job),
+  },
   samples: {
     list: () => invoke<{ id: string; name: string }[]>('sample:list'),
     copy: (id: string, parentDir: string) => invoke<string>('sample:copy', id, parentDir),

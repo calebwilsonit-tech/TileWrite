@@ -52,6 +52,15 @@ export async function checkForExport(settings: ExportSettings): Promise<ExportCh
     else if (!(await assetFs.exists(joinPath(p.dir, ...settings.icon.split('/'))))) problems.push({ severity: 'error', text: `The icon file "${settings.icon}" does not exist in the project.` });
   }
 
+  const compiled = await compileScripts();
+  problems.push(...compiled.problems);
+  return { problems, scripts: compiled.scripts };
+}
+
+/** Compile every script the way an export does (and report each one that does not compile, or whose name is taken twice). */
+export async function compileScripts(): Promise<{ problems: ExportProblem[]; scripts: ScriptsBundle }> {
+  const problems: ExportProblem[] = [];
+  const scripts: ScriptsBundle = { format: 1, scripts: {} };
   const transpiler = store.scripts.size > 0 ? await getTranspiler() : null;
   const importer = defaultImporter();
   const names = new Set<string>();
@@ -67,6 +76,39 @@ export async function checkForExport(settings: ExportSettings): Promise<ExportCh
     if (found.length === 0) scripts.scripts[name] = { js: out.js, ...(out.map ? { map: out.map } : {}) };
   }
   return { problems, scripts };
+}
+
+/**
+ * Run the game in a window of its own, beside the editor. The open scene is saved first (the game is made from the
+ * files, like an export), scripts are compiled, and a throw-away copy of the game is started. Returns a problem in
+ * plain English, or null when the window opened.
+ */
+export async function runInWindow(): Promise<string | null> {
+  const p = store.state.project;
+  if (!p) return 'No project is open.';
+  if (store.doc?.dirty) await store.save();
+  await store.flushScripts();
+  await store.flushStory();
+  const compiled = await compileScripts();
+  if (compiled.problems.length > 0) return compiled.problems.map((x) => x.text).join(' ');
+  const { settings } = await loadExportSettings();
+  const files = await listGameFiles(assetFs, p.dir, joinPath);
+  const names = Object.keys(compiled.scripts.scripts).sort((a, b) => a.localeCompare(b));
+  // the window title says it is a test run, so it is never mistaken for the finished game
+  const manifest = buildManifest({ ...settings, gameName: `${settings.gameName} (running from the editor)` }, p.project.startScene, names, 'editor run');
+  await api().preview.open({
+    projectDir: p.dir,
+    files,
+    generated: [
+      { path: 'game.json', text: `${JSON.stringify(manifest, null, 2)}\n` },
+      { path: 'scripts.json', text: JSON.stringify(compiled.scripts) },
+    ],
+    gameName: settings.gameName,
+    version: settings.version,
+    width: settings.windowWidth,
+    height: settings.windowHeight,
+  });
+  return null;
 }
 
 /** Make the game. Returns where it is. Throws a UserError-style message if the main process refuses. */

@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { registerAssistant } from './assistant';
 import { registerExport } from './export';
 import { registerSamples } from './samples';
+import { registerPreview } from './preview';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 
@@ -48,6 +49,7 @@ function registerIpc(): void {
   registerAssistant();
   registerExport({ resolveInside, distDir: path.join(here, '..') });
   registerSamples({ resolveInside, distDir: path.join(here, '..') });
+  registerPreview({ resolveInside, distDir: path.join(here, '..'), testMode: TEST_DIR !== undefined });
   ipcMain.handle('app:info', () => ({
     version: app.getVersion(),
     userData: app.getPath('userData'),
@@ -167,6 +169,11 @@ function createWindow(): BrowserWindow {
       sandbox: true,
       autoplayPolicy: 'no-user-gesture-required',
     },
+  });
+
+  // closing the editor closes any game windows it started
+  win.on('close', () => {
+    for (const w of BrowserWindow.getAllWindows()) if (w !== win) w.close();
   });
 
   const devUrl = process.env.VITE_DEV_SERVER_URL;

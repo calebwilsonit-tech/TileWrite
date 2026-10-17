@@ -1,4 +1,4 @@
-import type { ExportJob, ExportResult } from '@tilewright/exporter';
+import type { ExportJob, ExportResult, PreviewJob } from '@tilewright/exporter';
 
 export interface AssistantStatus {
   hasKey: boolean;
@@ -58,6 +58,9 @@ export interface TilewrightApi {
     info(): Promise<{ platform: string; canExport: boolean; version: string }>;
     build(job: ExportJob): Promise<ExportResult>;
     onProgress(fn: (text: string) => void): () => void;
+  };
+  preview: {
+    open(job: PreviewJob): Promise<{ windows: number }>;
   };
   samples: {
     list(): Promise<{ id: string; name: string }[]>;
