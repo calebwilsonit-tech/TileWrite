@@ -205,3 +205,62 @@ describe('sound source', () => {
     ]);
   });
 });
+
+describe('puzzle event blocks (echoes, light, words)', () => {
+  const act = (type: string, params: Record<string, unknown> = {}) => ({ ...newAction(type), params: { ...newAction(type).params, ...params } });
+  const cond = (type: string, params: Record<string, unknown> = {}) => ({ ...newCondition(type), params: { ...newCondition(type).params, ...params } });
+
+  it('a sentence stone can be read and changed by event rows', () => {
+    const { scene } = flatScene();
+    scene.variables.push({ name: 'holds', value: 0 }, { name: 'breaks', value: 0 });
+    scene.entities.push(player('p', 5.5, 5.5), thing('stone', 'Stone', 8.5, 5.5, { sentenceStone: { before: 'The bridge', words: 'breaks, holds, shakes', after: '', selected: 0 } }));
+    scene.events = [
+      { ...newRow('swap'), once: true, conditions: [cond('start')], actions: [act('setWord', { stone: 'name:Stone', word: 'Holds' })] },
+      { ...newRow('says'), conditions: [cond('stoneSays', { stone: 'name:Stone', word: 'holds' })], actions: [act('setVariable', { name: 'holds', op: 'set', value: '1' })] },
+      { ...newRow('old'), conditions: [cond('stoneSays', { stone: 'name:Stone', word: 'breaks' })], actions: [act('setVariable', { name: 'breaks', op: 'set', value: '1' })] },
+    ];
+    const r = rig(scene);
+    const changes: unknown[] = [];
+    r.sim.events.on('sentence-changed', (e) => void changes.push(e.word));
+    r.run(5);
+    expect(r.sim.runtime.vars.holds).toBe(1);
+    expect(r.sim.runtime.vars.breaks).toBe(0); // the swap came first in the same tick
+    expect(changes).toEqual(['holds']);
+    expect(output(r.get('stone'), 'word2')).toBe(true);
+  });
+
+  it('a text block can be asked about and formatted by event rows', () => {
+    const { scene } = flatScene();
+    scene.variables.push({ name: 'bridge', value: 0 });
+    scene.entities.push(player('p', 5.5, 5.5), thing('t', 'Text', 8.5, 5.5, { textBlock: { text: 'BRIDGE', format: 'plain', playerCanFormat: false } }));
+    scene.events = [
+      { ...newRow('fmt'), once: true, conditions: [cond('start')], actions: [act('formatText', { block: 'name:Text', format: 'underline' })] },
+      { ...newRow('is'), conditions: [cond('textIs', { block: 'name:Text', format: 'underline' })], actions: [act('setVariable', { name: 'bridge', op: 'set', value: '1' })] },
+    ];
+    const r = rig(scene);
+    r.run(5);
+    expect(r.sim.runtime.vars.bridge).toBe(1);
+  });
+
+  it('echoes can be counted and cleared, and a spot can be asked whether it is lit', () => {
+    const { scene } = flatScene();
+    scene.regions.push({ id: 'd', name: 'Dark', x: 0, y: 0, w: 24, h: 24, cameraBounds: false, music: '', darkness: 0.95, bossActive: false });
+    scene.variables.push({ name: 'twoEchoes', value: 0 }, { name: 'gone', value: 0 }, { name: 'dark', value: 0 }, { name: 'lit', value: 0 });
+    const hero = player('p', 5.5, 5.5);
+    scene.entities.push(hero, thing('lamp', 'Lamp', 12.5, 12.5, { light: { radius: 3, flicker: 0 } }), thing('mark', 'Mark', 12.5, 12.5, {}), thing('far', 'Far', 20.5, 3.5, {}));
+    scene.events = [
+      { ...newRow('l'), conditions: [cond('litAt', { where: 'name:Mark', state: 'lit' })], actions: [act('setVariable', { name: 'lit', op: 'set', value: '1' })] },
+      { ...newRow('d'), conditions: [cond('litAt', { where: 'name:Far', state: 'dark' })], actions: [act('setVariable', { name: 'dark', op: 'set', value: '1' })] },
+      { ...newRow('two'), conditions: [cond('echoCount', { atLeast: 2 })], actions: [act('setVariable', { name: 'twoEchoes', op: 'set', value: '1' }), act('clearEchoes')] },
+    ];
+    const r = rig(scene);
+    r.run(4);
+    expect(r.sim.runtime.vars.lit).toBe(1);
+    expect(r.sim.runtime.vars.dark).toBe(1);
+    expect(r.sim.runtime.vars.twoEchoes).toBe(0);
+    for (let i = 0; i < 2; i++) r.sim.world.spawn({ name: 'Echo', tags: ['echo'], components: { echoReplay: {} } });
+    r.run(3);
+    expect(r.sim.runtime.vars.twoEchoes).toBe(1);
+    expect(r.sim.world.withTag('echo')).toHaveLength(0);
+  });
+});

@@ -85,6 +85,9 @@ const CSS = `
 .tw-hud { position: absolute; top: 10px; left: 12px; right: 12px; display: flex; flex-direction: column; gap: 6px; align-items: flex-start; text-shadow: 0 1px 3px #000; }
 .tw-hearts { font-size: 22px; letter-spacing: 3px; }
 .tw-hearts .full { color: #ff5d6c; } .tw-hearts .empty { color: #8a8f9c; }
+.tw-lightbar { width: 160px; height: 10px; background: #1b1d24; border: 1px solid #000; border-radius: 6px; overflow: hidden; display: none; }
+.tw-lightbar .fill { height: 100%; background: linear-gradient(90deg, #d9a21a, #ffe27a); }
+.tw-lightbar.low .fill { background: linear-gradient(90deg, #8a3a1a, #d9701a); }
 .tw-slots { display: flex; gap: 6px; }
 .tw-slot { width: 44px; height: 44px; border: 2px solid #ffffff55; border-radius: 8px; background: #14161bcc; display: flex; align-items: center; justify-content: center; position: relative; font-size: 11px; }
 .tw-slot .key { position: absolute; top: 1px; left: 4px; opacity: .7; }
@@ -134,6 +137,7 @@ export class GameUi {
   private readonly root = el('div', 'tw-ui');
   private readonly hud = el('div', 'tw-hud');
   private readonly hearts = el('div', 'tw-hearts');
+  private readonly lightBar = el('div', 'tw-lightbar');
   private readonly slotsEl = el('div', 'tw-slots');
   private readonly bosses = el('div');
   private readonly toasts = el('div', 'tw-toasts');
@@ -173,7 +177,8 @@ export class GameUi {
     this.root.setAttribute('data-testid', 'tw-ui');
     this.hud.setAttribute('data-testid', 'tw-hud');
     this.hearts.setAttribute('data-testid', 'tw-hearts');
-    this.hud.append(this.hearts, this.slotsEl, this.bosses);
+    this.lightBar.setAttribute('data-testid', 'tw-lightbar');
+    this.hud.append(this.hearts, this.lightBar, this.slotsEl, this.bosses);
     this.root.append(this.style, this.hud, this.toasts, this.fade, this.skip);
     parent.appendChild(this.root);
     const ev = host.sim.events;
@@ -365,13 +370,23 @@ export class GameUi {
     const sim = this.host.sim;
     const player = sim.world.withTag('player')[0];
     const h = player ? healthOf(player) : undefined;
-    const sig = JSON.stringify([h?.hp, h?.max, quickSlots(sim.runtime.vars), carried(sim.runtime.vars), sim.world.withTag('boss').map((b) => healthOf(b)?.hp)]);
+    const lantern = player?.has('lightResource') ? Math.round(((Number(sim.runtime.vars.light) || 0) / Math.max(1, Number(sim.runtime.vars.lightMax) || 100)) * 100) : null;
+    const sig = JSON.stringify([h?.hp, h?.max, lantern, quickSlots(sim.runtime.vars), carried(sim.runtime.vars), sim.world.withTag('boss').map((b) => healthOf(b)?.hp)]);
     if (sig === this.lastDraw && !this.menuEl) {
       /* nothing changed */
     }
     const key = `hud:${sig}`;
     if (this.hud.dataset.sig === key) return;
     this.hud.dataset.sig = key;
+    this.lightBar.replaceChildren();
+    this.lightBar.style.display = lantern === null ? 'none' : 'block';
+    if (lantern !== null) {
+      this.lightBar.setAttribute('aria-label', `Light ${lantern} percent`);
+      this.lightBar.classList.toggle('low', lantern <= 25);
+      const fill = el('div', 'fill');
+      fill.style.width = `${Math.max(0, Math.min(100, lantern))}%`;
+      this.lightBar.appendChild(fill);
+    }
     this.hearts.replaceChildren();
     if (h) {
       this.hearts.setAttribute('aria-label', `Health ${h.hp} of ${h.max}`);

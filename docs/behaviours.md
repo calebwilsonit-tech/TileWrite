@@ -4,11 +4,11 @@
 
 A behaviour is ready-made logic you add to an object in the Inspector (**Behaviours -> Add**). Its settings appear as fields; its signals can be joined to other objects with the Wire tool. Each behaviour has an id (the key under which it is saved) shown in `code`.
 
-There are 36 behaviours. Behaviours made by scripts (see [code-window.md](code-window.md)) appear in the same list under "Scripts".
+There are 37 behaviours. Behaviours made by scripts (see [code-window.md](code-window.md)) appear in the same list under "Scripts".
 
 - [AI](#ai) (Vision Cone, Chase, Patrol, Boss Phases, State Machine, Behaviour Tree)
 - [Combat](#combat) (Health, Damage on Touch, Melee Attack (quill), Dodge, Ranged Attack)
-- [Light](#light) (Light, Light Sensor, Growing Object)
+- [Light](#light) (Light, Light Resource (lantern fuel), Light Sensor, Growing Object)
 - [Logic](#logic) (Logic Gate)
 - [Player](#player) (Echo Recorder)
 - [Puzzle](#puzzle) (Pressure Plate, Trigger Zone, Lever, Timer, Gate / Door, Pushable)
@@ -237,6 +237,27 @@ Lights up the area around it so dark rooms are visible. Walls and tall objects c
 | When it shines | `mode` | select | "always" | `always`, `whenOn`, `whenOff` |
 
 Receives: **Switch** (`switch`, Turns the light on or off, depending on the "When it shines" setting.).
+
+### Light Resource (lantern fuel)
+
+Id: `lightResource`. Each update it makes signals.
+
+Makes light a resource, like health: the lantern burns down, its glow shrinks as it empties, and the player must find light to refill it (stand near a lantern post or torch, or rest at a lantern post). The amount is the variable "light" (out of "lightMax"), so event rows, items and conversations can read it and add to it; the game shows a bar under the hearts. Put it on the player, next to a Light.
+
+| Setting | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Most light it holds | `max` | number | 100 | 1 to 1000 |
+| Burns down per second | `burn` | number | 2 | 0 to 100 |
+| Regained per second near another light | `refillNearLight` | number | 12 | 0 to 200 |
+| How bright another light must make this spot (0 to 1) | `nearLightLevel` | number | 0.45 | 0.05 to 1 |
+| Damage every two seconds in the dark when empty (0 = none) | `hurtWhenEmpty` | number | 0 | 0 to 20 |
+| Its glow reaches this far when empty (cells) | `emptyRadius` | number | 1.5 | 0 to 20 |
+| Flickers and signals Low below (percent) | `lowPercent` | number | 25 | 0 to 100 |
+| Resting at a lantern post fills it up | `refillOnRest` | boolean | true |  |
+
+Sends: **Is running low** (`low`); **Is empty** (`empty`).
+
+Adds automatically: `light`.
 
 ### Light Sensor
 

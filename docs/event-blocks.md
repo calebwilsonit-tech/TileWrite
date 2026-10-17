@@ -4,7 +4,7 @@
 
 An event sheet is a list of rows, each reading like a sentence: **when** its conditions hold, **do** its actions. Rows can have sub-events that run only while the row holds. Objects are chosen as "the player", "anything tagged ...", or a particular object. See [logic.md](logic.md).
 
-There are 15 conditions and 24 actions.
+There are 19 conditions and 28 actions.
 
 ## Conditions
 
@@ -139,6 +139,44 @@ Id: `minigameWon`.
 | --- | --- | --- | --- | --- |
 | Minigame (name) | `minigame` | text | (empty) |  |
 
+### Puzzles
+
+#### Echoes exist
+
+Id: `echoCount`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| At least how many | `atLeast` | number | 1 | at least 0 |
+
+#### A spot is lit (or dark)
+
+Id: `litAt`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Where | `where` | entity | "player" |  |
+| It is | `state` | select | "lit" | `lit`, `dark` |
+| Brightness that counts as lit (0 to 1) | `threshold` | number | 0.5 | 0.05 to 1 |
+
+#### A sentence stone shows a word
+
+Id: `stoneSays`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Which stone | `stone` | entity | (empty) |  |
+| The word (as written in the stone) | `word` | text | (empty) |  |
+
+#### A text block is formatted a certain way
+
+Id: `textIs`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Which text block | `block` | entity | (empty) |  |
+| Formatting | `format` | select | "underline" | `plain`, `underline`, `bold`, `italic` |
+
 ### Input
 
 #### The player presses a button
@@ -165,6 +203,14 @@ Id: `setVariable`.
 | Variable | `name` | variable | (empty) |  |
 | Do | `op` | select | "set" | `set`, `add`, `subtract`, `multiply`, `toggle` |
 | Value | `value` | text | "1" |  |
+
+#### Add to (or take from) the lantern's light
+
+Id: `addLight`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Amount (negative takes light away; 0 fills it up) | `amount` | number | 0 |  |
 
 ### Objects
 
@@ -352,6 +398,32 @@ Id: `emit`.
 | Parameter | Key | Kind | Starts as | Choices and notes |
 | --- | --- | --- | --- | --- |
 | Event name | `name` | text | "my-event" |  |
+
+### Puzzles
+
+#### Change the word of a sentence stone
+
+Id: `setWord`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Which stone | `stone` | entity | (empty) |  |
+| The word to show (as written in the stone) | `word` | text | (empty) |  |
+
+#### Format a text block
+
+Id: `formatText`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Which text block | `block` | entity | (empty) |  |
+| Formatting | `format` | select | "underline" | `plain`, `underline`, `bold`, `italic` |
+
+#### Make every echo vanish
+
+Id: `clearEchoes`.
+
+No parameters.
 
 ### Effects
 

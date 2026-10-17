@@ -7,6 +7,7 @@ import {
   emitFx,
   requestHitStop,
   itemCount,
+  lightLevel,
   minigameWon,
   C,
   expandEntities,
@@ -24,6 +25,8 @@ import {
 import { input, output, setOutput } from '../signals';
 import { damage, heal, healthOf } from '../builtins/combat';
 import { beginDialogue, beginMinigame, playCutscene } from '../story/director';
+import { echoEntities } from '../builtins/echo';
+import { effectiveFormat, sentenceWords, TEXT_FORMATS, type SentenceStone, type TextBlock, type TextFormat } from '../builtins/text';
 
 /**
  * Event sheets: "When [conditions] do [actions]" rows in plain English, with sub-events, AND/OR,
@@ -263,6 +266,62 @@ export const CONDITIONS: ConditionDef[] = [
     params: [{ key: 'minigame', label: 'Minigame (name)', type: 'text', default: '' }],
     describe: (p) => `the minigame "${str(p, 'minigame') || '(minigame)'}" has been won`,
     test: (ctx, p) => minigameWon(ctx.runtime.vars, str(p, 'minigame')),
+  },
+  {
+    id: 'echoCount',
+    label: 'Echoes exist',
+    category: 'Puzzles',
+    params: [{ key: 'atLeast', label: 'At least how many', type: 'number', default: 1, min: 0, step: 1 }],
+    describe: (p) => `there are at least ${num(p, 'atLeast', 1)} echoes`,
+    test: (ctx, p) => echoEntities(ctx).length >= num(p, 'atLeast', 1),
+  },
+  {
+    id: 'litAt',
+    label: 'A spot is lit (or dark)',
+    category: 'Puzzles',
+    params: [
+      entityParam('where', 'Where', 'player'),
+      { key: 'state', label: 'It is', type: 'select', default: 'lit', options: [{ value: 'lit', label: 'lit' }, { value: 'dark', label: 'dark' }] },
+      { key: 'threshold', label: 'Brightness that counts as lit (0 to 1)', type: 'number', default: 0.5, min: 0.05, max: 1, step: 0.05 },
+    ],
+    describe: (p, n) => `the place of ${describeRef(str(p, 'where'), n)} is ${str(p, 'state') === 'dark' ? 'dark' : 'lit'}`,
+    test: (ctx, p, row) => {
+      const model = ctx.runtime.lighting;
+      const e = resolveRef(ctx, str(p, 'where'), row.picked)[0];
+      const t = e?.get<TransformIso>(C.Transform);
+      if (!model || !t) return false;
+      const lit = lightLevel(model, t.x, t.y, t.h) >= num(p, 'threshold', 0.5);
+      return str(p, 'state') === 'dark' ? !lit : lit;
+    },
+  },
+  {
+    id: 'stoneSays',
+    label: 'A sentence stone shows a word',
+    category: 'Puzzles',
+    params: [entityParam('stone', 'Which stone', ''), { key: 'word', label: 'The word (as written in the stone)', type: 'text', default: '' }],
+    describe: (p, n) => `${describeRef(str(p, 'stone'), n)} shows the word "${str(p, 'word') || '(word)'}"`,
+    test: (ctx, p, row) =>
+      resolveRef(ctx, str(p, 'stone'), row.picked).some((e) => {
+        const s = e.get<SentenceStone>('sentenceStone');
+        if (!s) return false;
+        const words = sentenceWords(s);
+        return words.length > 0 && words[((s.selected % words.length) + words.length) % words.length]!.toLowerCase() === str(p, 'word').trim().toLowerCase();
+      }),
+  },
+  {
+    id: 'textIs',
+    label: 'A text block is formatted a certain way',
+    category: 'Puzzles',
+    params: [
+      entityParam('block', 'Which text block', ''),
+      { key: 'format', label: 'Formatting', type: 'select', default: 'underline', options: TEXT_FORMATS.map((f) => ({ value: f, label: f })) },
+    ],
+    describe: (p, n) => `${describeRef(str(p, 'block'), n)} is ${str(p, 'format')}`,
+    test: (ctx, p, row) =>
+      resolveRef(ctx, str(p, 'block'), row.picked).some((e) => {
+        const s = e.get<TextBlock>('textBlock');
+        return !!s && effectiveFormat(e, s.format) === str(p, 'format');
+      }),
   },
   {
     id: 'inside',
@@ -662,6 +721,64 @@ export const ACTIONS: ActionDef[] = [
       const volume = p.volume === undefined ? 1 : num(p, 'volume');
       const source = str(p, 'at') ? resolveRef(ctx, str(p, 'at'), row.picked)[0]?.get<TransformIso>(C.Transform) : undefined;
       emitFx(ctx.runtime, { kind: 'sound', name, volume, ...(source ? { at: { x: source.x, y: source.y, near: 2, far: p.far === undefined ? 16 : num(p, 'far') } } : {}) });
+    },
+  },
+  {
+    id: 'setWord',
+    label: 'Change the word of a sentence stone',
+    category: 'Puzzles',
+    params: [entityParam('stone', 'Which stone', ''), { key: 'word', label: 'The word to show (as written in the stone)', type: 'text', default: '' }],
+    describe: (p, n) => `make ${describeRef(str(p, 'stone'), n)} show "${str(p, 'word') || '(word)'}"`,
+    run(ctx, p, row) {
+      for (const e of resolveRef(ctx, str(p, 'stone'), row.picked)) {
+        const s = e.get<SentenceStone>('sentenceStone');
+        if (!s) continue;
+        const at = sentenceWords(s).findIndex((w) => w.toLowerCase() === str(p, 'word').trim().toLowerCase());
+        if (at >= 0 && at !== s.selected) {
+          s.selected = at;
+          ctx.events.emit('sentence-changed', { entity: e.id, word: sentenceWords(s)[at] });
+        }
+      }
+    },
+  },
+  {
+    id: 'formatText',
+    label: 'Format a text block',
+    category: 'Puzzles',
+    params: [
+      entityParam('block', 'Which text block', ''),
+      { key: 'format', label: 'Formatting', type: 'select', default: 'underline', options: TEXT_FORMATS.map((f) => ({ value: f, label: f })) },
+    ],
+    describe: (p, n) => `make ${describeRef(str(p, 'block'), n)} ${str(p, 'format')}`,
+    run(ctx, p, row) {
+      for (const e of resolveRef(ctx, str(p, 'block'), row.picked)) {
+        const s = e.get<TextBlock>('textBlock');
+        if (s && s.format !== str(p, 'format')) {
+          s.format = str(p, 'format') as TextFormat;
+          ctx.events.emit('text-formatted', { entity: e.id, format: s.format });
+        }
+      }
+    },
+  },
+  {
+    id: 'clearEchoes',
+    label: 'Make every echo vanish',
+    category: 'Puzzles',
+    params: [],
+    describe: () => 'make every echo vanish',
+    run: (ctx) => void echoEntities(ctx).forEach((e) => ctx.world.destroy(e)),
+  },
+  {
+    id: 'addLight',
+    label: 'Add to (or take from) the lantern\'s light',
+    category: 'Variables',
+    params: [{ key: 'amount', label: 'Amount (negative takes light away; 0 fills it up)', type: 'number', default: 0, step: 5 }],
+    describe: (p) => (num(p, 'amount') === 0 ? 'fill the lantern with light' : `${num(p, 'amount') > 0 ? 'add' : 'take'} ${Math.abs(num(p, 'amount'))} ${num(p, 'amount') > 0 ? 'to' : 'from'} the lantern's light`),
+    run(ctx, p) {
+      const max = typeof ctx.runtime.vars.lightMax === 'number' ? ctx.runtime.vars.lightMax : 100;
+      const now = typeof ctx.runtime.vars.light === 'number' ? ctx.runtime.vars.light : max;
+      const amount = num(p, 'amount');
+      ctx.runtime.vars.light = amount === 0 ? max : Math.max(0, Math.min(max, now + amount));
     },
   },
   {
