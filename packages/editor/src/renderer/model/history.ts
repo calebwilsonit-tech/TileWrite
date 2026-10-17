@@ -82,6 +82,11 @@ export class History {
     return this.redoStack.length > 0;
   }
 
+  /** The command that would be undone next. */
+  get top(): Command | undefined {
+    return this.undoStack.at(-1);
+  }
+
   get undoLabel(): string | undefined {
     return this.undoStack.at(-1)?.label;
   }

@@ -33,6 +33,23 @@ import {
 } from '../project/io';
 import { DEFAULT_TILESET, groupOf, newScene, tilesetFromList, type AutotileRuleData, type MinigameData, type SkinData, type WorldMapData, type TileDefData } from '@tilewright/runtime';
 
+/** Everything the Story panel edits, as it is at one moment (the parts are replaced, never changed in place). */
+interface StorySnapshot {
+  items: ItemData[];
+  dialogues: Map<string, DialogueData>;
+  cutscenes: Map<string, CutsceneData>;
+  skins: SkinData[];
+  minigames: MinigameData[];
+  worldMap: WorldMapData | null;
+}
+
+interface StoryCommand {
+  label: string;
+  after: StorySnapshot;
+  redo(): void;
+  undo(): void;
+}
+
 export type ToolId =
   | 'select'
   | 'paint'
@@ -552,6 +569,68 @@ class AppStore {
   autoPlay: { cutscene?: string; dialogue?: string; minigame?: string } | null = null;
   private storyTimers = new Map<string, number>();
 
+  // ---- undo for story edits (items, conversations, cutscenes, skins, minigames, the world map) ----
+
+  private storySnapshot(): StorySnapshot {
+    return { items: this.story.items, dialogues: this.story.dialogues, cutscenes: this.story.cutscenes, skins: this.skins, minigames: this.minigames, worldMap: this.worldMap };
+  }
+
+  /** Put the story back as it was in a snapshot (the files follow: removed conversations and cutscenes are deleted from disk). */
+  private restoreStory(s: StorySnapshot): void {
+    const p = this.state.project;
+    const goneDialogues = [...this.story.dialogues.keys()].filter((n) => !s.dialogues.has(n));
+    const goneCutscenes = [...this.story.cutscenes.keys()].filter((n) => !s.cutscenes.has(n));
+    const hadMap = this.worldMap !== null;
+    this.story = { items: s.items, dialogues: s.dialogues, cutscenes: s.cutscenes };
+    this.skins = s.skins;
+    this.minigames = s.minigames;
+    this.worldMap = s.worldMap;
+    this.set({ storyVersion: this.state.storyVersion + 1 });
+    this.maybeHotReload();
+    if (!p) return;
+    void (async () => {
+      for (const n of goneDialogues) await deleteDialogue(assetFs, p.dir, n).catch(() => undefined);
+      for (const n of goneCutscenes) await deleteCutscene(assetFs, p.dir, n).catch(() => undefined);
+      if (hadMap && !s.worldMap) await assetFs.remove(joinPath(p.dir, 'assets/worldmap.json')).catch(() => undefined);
+      await this.flushStory();
+    })().catch((e) => this.notify('error', e instanceof UserError ? e.message : `Could not save: ${(e as Error).message}`));
+  }
+
+  private lastStory: { cmd: StoryCommand; key: string; at: number } | null = null;
+  /** While set, story edits are recorded under this label and never merged (Claude's changes are single steps). */
+  private storyStepLabel: string | null = null;
+
+  /** Run a story edit as one named step of the undo history. */
+  asStoryStep<T>(label: string, fn: () => T): T {
+    this.storyStepLabel = label;
+    try {
+      return fn();
+    } finally {
+      this.storyStepLabel = null;
+    }
+  }
+
+  /**
+   * Record the edit just made as an undo step on the open scene's history. Quick edits to the same thing (typing in a
+   * field) join the step before them instead of making one step per keystroke.
+   */
+  private recordStory(label: string, key: string, before: StorySnapshot): void {
+    const doc = this.doc;
+    if (!doc) return;
+    const after = this.storySnapshot();
+    const forced = this.storyStepLabel;
+    const last = this.lastStory;
+    if (!forced && last && last.key === key && Date.now() - last.at < 1200 && doc.history.top === last.cmd) {
+      last.cmd.after = after;
+      last.at = Date.now();
+      return;
+    }
+    const cmd: StoryCommand = { label: forced ?? label, after, redo: () => this.restoreStory(cmd.after), undo: () => this.restoreStory(before) };
+    doc.history.push(cmd);
+    doc.emit({ type: 'history' });
+    this.lastStory = { cmd, key, at: Date.now() };
+  }
+
   async loadStory(): Promise<void> {
     const p = this.state.project;
     if (!p) {
@@ -597,7 +676,9 @@ class AppStore {
   }
 
   setItems(items: ItemData[]): void {
+    const before = this.storySnapshot();
     this.story = { ...this.story, items };
+    this.recordStory('Edit the items', 'items', before);
     this.set({ storyVersion: this.state.storyVersion + 1 });
     this.maybeHotReload();
     const p = this.state.project;
@@ -605,7 +686,9 @@ class AppStore {
   }
 
   setSkins(skins: SkinData[]): void {
+    const before = this.storySnapshot();
     this.skins = skins;
+    this.recordStory('Edit the skins', 'skins', before);
     this.set({ storyVersion: this.state.storyVersion + 1 });
     this.maybeHotReload();
     const p = this.state.project;
@@ -613,7 +696,9 @@ class AppStore {
   }
 
   setMinigames(minigames: MinigameData[]): void {
+    const before = this.storySnapshot();
     this.minigames = minigames;
+    this.recordStory('Edit the minigames', 'minigames', before);
     this.set({ storyVersion: this.state.storyVersion + 1 });
     this.maybeHotReload();
     const p = this.state.project;
@@ -621,7 +706,9 @@ class AppStore {
   }
 
   setWorldMap(map: WorldMapData | null): void {
+    const before = this.storySnapshot();
     this.worldMap = map;
+    this.recordStory('Edit the world map', 'worldmap', before);
     this.set({ storyVersion: this.state.storyVersion + 1 });
     this.maybeHotReload();
     const p = this.state.project;
@@ -631,14 +718,18 @@ class AppStore {
   /** Remove the world map (the game then has none, and the M key opens the travel list). */
   async removeWorldMap(): Promise<void> {
     const p = this.state.project;
+    const before = this.storySnapshot();
     this.worldMap = null;
+    this.recordStory('Remove the world map', 'worldmap-removed', before);
     this.set({ storyVersion: this.state.storyVersion + 1 });
     this.maybeHotReload();
     if (p) await assetFs.remove(joinPath(p.dir, 'assets/worldmap.json')).catch(() => undefined);
   }
 
   putDialogue(d: DialogueData): void {
+    const before = this.storySnapshot();
     this.story = { ...this.story, dialogues: new Map(this.story.dialogues).set(d.name, d) };
+    this.recordStory(before.dialogues.has(d.name) ? `Edit the conversation "${d.name}"` : `Add the conversation "${d.name}"`, `d:${d.name}`, before);
     this.set({ storyVersion: this.state.storyVersion + 1 });
     this.maybeHotReload();
     const p = this.state.project;
@@ -649,14 +740,18 @@ class AppStore {
     const p = this.state.project;
     const next = new Map(this.story.dialogues);
     next.delete(name);
+    const before = this.storySnapshot();
     this.story = { ...this.story, dialogues: next };
+    this.recordStory(`Delete the conversation "${name}"`, `d-del:${name}`, before);
     window.clearTimeout(this.storyTimers.get(`d:${name}`));
     this.set({ storyVersion: this.state.storyVersion + 1 });
     if (p) await deleteDialogue(assetFs, p.dir, name).catch(() => undefined);
   }
 
   putCutscene(c: CutsceneData): void {
+    const before = this.storySnapshot();
     this.story = { ...this.story, cutscenes: new Map(this.story.cutscenes).set(c.name, c) };
+    this.recordStory(before.cutscenes.has(c.name) ? `Edit the cutscene "${c.name}"` : `Add the cutscene "${c.name}"`, `c:${c.name}`, before);
     this.set({ storyVersion: this.state.storyVersion + 1 });
     this.maybeHotReload();
     const p = this.state.project;
@@ -667,7 +762,9 @@ class AppStore {
     const p = this.state.project;
     const next = new Map(this.story.cutscenes);
     next.delete(name);
+    const before = this.storySnapshot();
     this.story = { ...this.story, cutscenes: next };
+    this.recordStory(`Delete the cutscene "${name}"`, `c-del:${name}`, before);
     window.clearTimeout(this.storyTimers.get(`c:${name}`));
     this.set({ storyVersion: this.state.storyVersion + 1 });
     if (p) await deleteCutscene(assetFs, p.dir, name).catch(() => undefined);

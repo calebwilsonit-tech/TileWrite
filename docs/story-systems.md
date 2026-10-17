@@ -2,6 +2,8 @@
 
 Made in the **Story** panel (bottom dock: Items, Dialogues, Cutscenes), the Place tool's **Story** group, and the Inspector's Behaviours. Code: `packages/runtime/src/story/*`, `packages/behaviors/src/story/*`, `packages/behaviors/src/builtins/story.ts`, `packages/behaviors/src/ui/game-ui.ts`, and the editor's `viewport/play-session.ts`.
 
+**Undo works here too.** Every edit made in the Story panel (items, conversations, cutscenes, minigames, skins, the world map) is a step of the same Ctrl+Z / Ctrl+Y history as everything done in the world, shown in the History panel ("Edit the items", "Edit the conversation \"Elder\"", "Delete the cutscene \"Intro\""...). Edits made together (typing in a field) are one step; the files on disk follow, so undoing a deleted conversation brings its file back. The history belongs to the open scene, so switching scenes starts a fresh list. Claude's story changes are single steps too.
+
 ## Flags, counters and inventory are one thing
 Variables (declared on the scene, or created by event rows, dialogues and cutscenes) hold flags, counters, text and — as `item:<id>` — how many of each item the player carries. Quick slots are `slot:1`..`slot:4`. Everything saves, loads and shows up in event rows with no special cases.
 

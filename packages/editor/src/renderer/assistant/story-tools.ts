@@ -8,6 +8,15 @@ import { ToolProblem, fail, json, requireEditing, undoTop, type Proposal } from 
 
 const text = (t: string): ToolOutput => ({ content: t });
 
+/** Take back a story change Claude just made, if it is still the last thing done (it is one step of the history like any other). */
+const undoStory = (label: string) => async (): Promise<boolean> => {
+  const doc = store.doc;
+  if (!doc || doc.history.undoLabel !== label) return false;
+  doc.undo();
+  await store.flushStory();
+  return true;
+};
+
 const knownItems = (): Set<string> => new Set(store.story.items.map((i) => i.id));
 
 function dialogueProblems(d: DialogueData): string[] {
@@ -98,16 +107,11 @@ function writeDialogue(input: Record<string, unknown>): Proposal {
     lines: [`${previous ? 'Replace' : 'Create'} the conversation "${name}" (${d.nodes.length} steps).`, ...problems.map((p) => `Warning: ${p}`)],
     diff: { name: `${name}.dialogue.json`, lines: lineDiff(previous ? describeDialogue(previous) : '', describeDialogue(d)) },
     async apply() {
-      store.putDialogue(d);
+      store.asStoryStep('Claude: write a conversation', () => store.putDialogue(d));
       await store.flushStory();
       return `Saved the conversation "${name}".${problems.length ? ` The checker still reports: ${problems.join(' | ')}` : ' The checker found no problems.'}`;
     },
-    async undo() {
-      if (previous) store.putDialogue(previous);
-      else await store.removeDialogue(name);
-      await store.flushStory();
-      return true;
-    },
+    undo: undoStory('Claude: write a conversation'),
   };
 }
 
@@ -128,16 +132,11 @@ function writeCutscene(input: Record<string, unknown>): Proposal {
     lines: [`${previous ? 'Replace' : 'Create'} the cutscene "${name}" (${c.steps.length} steps).`, ...problems.map((p) => `Warning: ${p}`)],
     diff: { name: `${name}.cutscene.json`, lines: lineDiff(previous ? describeCutscene(previous) : '', describeCutscene(c)) },
     async apply() {
-      store.putCutscene(c);
+      store.asStoryStep('Claude: write a cutscene', () => store.putCutscene(c));
       await store.flushStory();
       return `Saved the cutscene "${name}".${problems.length ? ` The checker still reports: ${problems.join(' | ')}` : ' The checker found no problems.'}`;
     },
-    async undo() {
-      if (previous) store.putCutscene(previous);
-      else await store.removeCutscene(name);
-      await store.flushStory();
-      return true;
-    },
+    undo: undoStory('Claude: write a cutscene'),
   };
 }
 
@@ -163,15 +162,11 @@ function writeItems(input: Record<string, unknown>): Proposal {
     lines: [`The item list goes from ${previous.length} to ${items.length} item${items.length === 1 ? '' : 's'}.`, ...orphaned.map((id) => `Warning: a conversation gives the item "${id}", which is no longer in the list.`)],
     diff: { name: 'items.json', lines: lineDiff(describe(previous), describe(items)) },
     async apply() {
-      store.setItems(items);
+      store.asStoryStep('Claude: change the items', () => store.setItems(items));
       await store.flushStory();
       return `The project now has ${items.length} item(s).`;
     },
-    async undo() {
-      store.setItems(previous as ItemData[]);
-      await store.flushStory();
-      return true;
-    },
+    undo: undoStory('Claude: change the items'),
   };
 }
 
