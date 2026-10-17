@@ -7,6 +7,7 @@ import {
   emitFx,
   requestHitStop,
   itemCount,
+  minigameWon,
   C,
   expandEntities,
   teleportBody,
@@ -22,7 +23,7 @@ import {
 } from '@tilewright/runtime';
 import { input, output, setOutput } from '../signals';
 import { damage, heal, healthOf } from '../builtins/combat';
-import { beginDialogue, playCutscene } from '../story/director';
+import { beginDialogue, beginMinigame, playCutscene } from '../story/director';
 
 /**
  * Event sheets: "When [conditions] do [actions]" rows in plain English, with sub-events, AND/OR,
@@ -254,7 +255,16 @@ export const CONDITIONS: ConditionDef[] = [
     params: [{ key: 'item', label: 'Item (id)', type: 'text', default: '' }, { key: 'atLeast', label: 'At least how many', type: 'number', default: 1, min: 1, step: 1 }],
     describe: (p) => `the player has at least ${num(p, 'atLeast', 1)} of "${str(p, 'item') || '(item)'}"`,
     test: (ctx, p) => itemCount(ctx.runtime.vars, str(p, 'item')) >= num(p, 'atLeast', 1),
-  },  {
+  },
+  {
+    id: 'minigameWon',
+    label: 'A minigame has been won',
+    category: 'Story',
+    params: [{ key: 'minigame', label: 'Minigame (name)', type: 'text', default: '' }],
+    describe: (p) => `the minigame "${str(p, 'minigame') || '(minigame)'}" has been won`,
+    test: (ctx, p) => minigameWon(ctx.runtime.vars, str(p, 'minigame')),
+  },
+  {
     id: 'inside',
     label: 'Something is inside an area',
     category: 'Objects',
@@ -326,6 +336,8 @@ export const CONDITIONS: ConditionDef[] = [
           { value: 'text-formatted', label: 'a text block is reformatted' },
           { value: 'dialogue-started', label: 'a conversation starts' },
           { value: 'dialogue-ended', label: 'a conversation ends' },
+          { value: 'minigame-started', label: 'a minigame starts' },
+          { value: 'minigame-ended', label: 'a minigame ends' },
           { value: 'cutscene-started', label: 'a cutscene starts' },
           { value: 'cutscene-ended', label: 'a cutscene ends' },
           { value: 'lantern-lit', label: 'a lantern is lit' },
@@ -363,6 +375,8 @@ const COND_EVENT_TEXT: Record<string, string> = {
   'text-formatted': 'a text block is reformatted',
   'dialogue-started': 'a conversation starts',
   'dialogue-ended': 'a conversation ends',
+  'minigame-started': 'a minigame starts',
+  'minigame-ended': 'a minigame ends',
   'cutscene-started': 'a cutscene starts',
   'cutscene-ended': 'a cutscene ends',
   'lantern-lit': 'a lantern is lit',
@@ -541,6 +555,14 @@ export const ACTIONS: ActionDef[] = [
     params: [{ key: 'dialogue', label: 'Dialogue (name)', type: 'text', default: '' }],
     describe: (p) => `start the conversation "${str(p, 'dialogue') || '(dialogue)'}"`,
     run: (ctx, p) => void beginDialogue(ctx, str(p, 'dialogue')),
+  },
+  {
+    id: 'playMinigame',
+    label: 'Play a minigame',
+    category: 'Story',
+    params: [{ key: 'minigame', label: 'Minigame (name)', type: 'text', default: '' }],
+    describe: (p) => `play the minigame "${str(p, 'minigame') || '(minigame)'}"`,
+    run: (ctx, p) => void beginMinigame(ctx, str(p, 'minigame')),
   },
   {
     id: 'playCutscene',

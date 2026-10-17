@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DialogueSchema, FLAG, ItemSchema, tileMapToRows, type SceneData } from '@tilewright/runtime';
+import { DialogueSchema, FLAG, ItemSchema, newMinigame, tileMapToRows, type MinigameData, type SceneData } from '@tilewright/runtime';
 import { attachBehavior, output } from '@tilewright/behaviors';
 import { flatScene, player, thing } from '@tilewright/behaviors/src/testing';
 import { Bot, formatTime } from './bot';
@@ -92,6 +92,36 @@ describe('interacting', () => {
     bot.talkThrough((options) => options.indexOf('Yes'));
     expect(game.sim.runtime.dialogue).toBeNull();
     expect(game.sim.runtime.vars['item:key']).toBe(1);
+  });
+});
+
+describe('minigames', () => {
+  const kinds = ['timing', 'sequence', 'pairs'] as const;
+  for (const kind of kinds) {
+    it(`walks to an arcade and wins the ${kind} minigame with the buttons, then the gate it guards opens`, () => {
+      const fs = flatScene(14, 10);
+      const arcade = thing('arcade', 'Arcade', 9.5, 5.5, { minigameStation: { minigame: 'Game' } });
+      const game = new Game({
+        scene: sceneOf(fs, player('p', 2.5, 5.5), arcade),
+        items: [ItemSchema.parse({ id: 'medal', name: 'Medal' })],
+        minigames: [{ ...newMinigame(kind, 'Game'), rewardItem: 'medal', winVariable: 'won_game' } as MinigameData],
+        seed: 5,
+      });
+      const bot = new Bot(game);
+      expect(bot.interact('name:Arcade').ok).toBe(true);
+      expect(game.sim.runtime.minigame).not.toBeNull();
+      const r = bot.playMinigame();
+      expect(r.ok, r.message).toBe(true);
+      expect(r.message).toMatch(/^Won the minigame "Game"/);
+      expect(game.sim.runtime.minigame).toBeNull();
+      expect(game.sim.runtime.vars['won_game']).toBe(true);
+      expect(game.sim.runtime.vars['item:medal']).toBe(1);
+    });
+  }
+
+  it('says so when no minigame is open', () => {
+    const game = new Game({ scene: sceneOf(flatScene(6, 6), player('p', 2.5, 2.5)) });
+    expect(new Bot(game).playMinigame().message).toBe('There is no minigame open.');
   });
 });
 

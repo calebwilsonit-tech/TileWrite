@@ -6,6 +6,7 @@ import {
   physicsSystem,
   teleportBody,
   type CutsceneData,
+  type MinigameData,
   type DialogueData,
   type Entity,
   type ItemData,
@@ -27,6 +28,7 @@ export interface GameSetup {
   items?: readonly ItemData[];
   dialogues?: ReadonlyMap<string, DialogueData>;
   cutscenes?: ReadonlyMap<string, CutsceneData>;
+  minigames?: readonly MinigameData[];
   sprites?: ReadonlyMap<string, SpriteData>;
   seed?: number;
 }
@@ -49,6 +51,7 @@ export class Game {
     for (const i of setup.items ?? []) this.sim.assets.items.set(i.id, i);
     for (const [k, v] of setup.dialogues ?? []) this.sim.assets.dialogues.set(k, v);
     for (const [k, v] of setup.cutscenes ?? []) this.sim.assets.cutscenes.set(k, v);
+    for (const m of setup.minigames ?? []) this.sim.assets.minigames.set(m.name, m);
     for (const [k, v] of setup.sprites ?? []) this.sim.assets.sprites.set(k, v);
     this.problems = loadScene(this.sim, setup.scene, { prefabs: setup.prefabs, scene: setup.scenePath ?? '' }).problems;
     addStandardSystems(this.sim, physicsSystem);

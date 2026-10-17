@@ -1,5 +1,5 @@
 import { checkDialogue } from '@tilewright/runtime';
-import { checkCutscene, expandEntities, type SkinData, type CutsceneData, type DialogueData, type LanguageData, type EventRow, type ItemData, type PrefabData, type ProjectData, type SceneData } from '@tilewright/runtime';
+import { checkCutscene, checkMinigame, expandEntities, type MinigameData, type SkinData, type CutsceneData, type DialogueData, type LanguageData, type EventRow, type ItemData, type PrefabData, type ProjectData, type SceneData } from '@tilewright/runtime';
 import { analyseLevel, analysePushPuzzles } from '@tilewright/playbot';
 import { EditorDoc } from '../model/doc';
 import { validateScene } from '../model/validate';
@@ -50,6 +50,7 @@ export async function checkProject(
   soundNames?: ReadonlySet<string>,
   languages: readonly LanguageData[] = [],
   skins: readonly SkinData[] = [],
+  minigames: readonly MinigameData[] = [],
 ): Promise<ProjectProblem[]> {
   const out: ProjectProblem[] = [];
   const scenes = new Map<string, SceneData>();
@@ -67,6 +68,7 @@ export async function checkProject(
   for (const text of checkRules(tiles, project.autotile)) out.push({ id: `autotile:${text}`, severity: 'warning', scene: '', message: `Autotiling: ${text}` });
   const itemIds = new Set(story.items.map((i) => i.id));
   const prefabNames = new Set(prefabs.keys());
+  const minigameNames = new Set(minigames.map((m) => m.name));
 
   for (const [path, scene] of scenes) {
     const doc = EditorDoc.fromScene(scene, prefabs);
@@ -104,6 +106,11 @@ export async function checkProject(
         if (!npc.dialogue) out.push({ id: `${path}:npc-empty-${e.id}`, severity: 'warning', scene: path, entity: e.id, ...at(e), message: `"${e.name}" has no conversation chosen, so talking to it does nothing.` });
         else if (!story.dialogues.has(npc.dialogue)) out.push({ id: `${path}:npc-missing-${e.id}`, severity: 'error', scene: path, entity: e.id, ...at(e), message: `"${e.name}" talks using the dialogue "${npc.dialogue}", which does not exist (check the Story panel).` });
       }
+      const station = e.components.minigameStation as { minigame?: string } | undefined;
+      if (station) {
+        if (!station.minigame) out.push({ id: `${path}:mg-empty-${e.id}`, severity: 'warning', scene: path, entity: e.id, ...at(e), message: `"${e.name}" has no minigame chosen, so using it does nothing.` });
+        else if (!minigameNames.has(station.minigame)) out.push({ id: `${path}:mg-missing-${e.id}`, severity: 'error', scene: path, entity: e.id, ...at(e), message: `"${e.name}" plays the minigame "${station.minigame}", which does not exist (check Story -> Minigames).` });
+      }
       const trig = e.components.cutsceneTrigger as { cutscene?: string } | undefined;
       if (trig && (!trig.cutscene || !story.cutscenes.has(trig.cutscene))) {
         out.push({ id: `${path}:cut-missing-${e.id}`, severity: 'error', scene: path, entity: e.id, ...at(e), message: trig.cutscene ? `"${e.name}" plays the cutscene "${trig.cutscene}", which does not exist.` : `"${e.name}" has no cutscene chosen.` });
@@ -118,6 +125,7 @@ export async function checkProject(
         const p = a.params;
         const name = (k: string): string => String(p[k] ?? '');
         if (a.type === 'startDialogue' && !story.dialogues.has(name('dialogue'))) out.push({ id: `${path}:row-${row.id}-dlg`, severity: 'warning', scene: path, message: `An event row starts the dialogue "${name('dialogue')}", which does not exist.` });
+        if (a.type === 'playMinigame' && !minigameNames.has(name('minigame'))) out.push({ id: `${path}:row-${row.id}-mg`, severity: 'warning', scene: path, message: `An event row plays the minigame "${name('minigame')}", which does not exist.` });
         if (a.type === 'playCutscene' && !story.cutscenes.has(name('cutscene'))) out.push({ id: `${path}:row-${row.id}-cut`, severity: 'warning', scene: path, message: `An event row plays the cutscene "${name('cutscene')}", which does not exist.` });
         if ((a.type === 'giveItem' || a.type === 'takeItem') && !itemIds.has(name('item'))) out.push({ id: `${path}:row-${row.id}-item`, severity: 'warning', scene: path, message: `An event row uses the item "${name('item')}", which is not in the Items list.` });
         if (a.type === 'travel' && name('scene') !== '' && !project.scenes.includes(name('scene'))) out.push({ id: `${path}:row-${row.id}-travel`, severity: 'warning', scene: path, message: `An event row goes to the scene "${name('scene')}", which is not part of this project.` });
@@ -126,7 +134,7 @@ export async function checkProject(
   }
 
   if (languages.length > 0) {
-    const sources = collectStrings(story, [...scenes].map(([p, scene]) => ({ path: p, scene })));
+    const sources = collectStrings(story, [...scenes].map(([p, scene]) => ({ path: p, scene })), undefined, minigames);
     for (const l of languages) {
       const c = coverage(l, sources);
       if (c.missing.length > 0) out.push({ id: `language:${l.code}`, severity: 'warning', scene: '', message: `The language ${l.name} is missing ${c.missing.length} of ${c.total} lines (for example "${c.missing[0]!.text}"), so players will see those in the original text. Open Story -> Translations.` });
@@ -137,6 +145,7 @@ export async function checkProject(
   for (const [name, d] of story.dialogues) for (const p of checkDialogue(d, known)) out.push({ id: `dialogue:${name}:${p.text}`, severity: 'warning', scene: '', message: `Dialogue "${name}": ${p.text}` });
   const cknown = { dialogues: new Set(story.dialogues.keys()), items: itemIds, ...(soundNames ? { sounds: soundNames } : {}) };
   for (const [name, c] of story.cutscenes) for (const p of checkCutscene(c, cknown)) out.push({ id: `cutscene:${name}:${p.text}`, severity: 'warning', scene: '', message: `Cutscene "${name}": ${p.text}` });
+  for (const m of minigames) for (const text of checkMinigame(m, { items: itemIds })) out.push({ id: `minigame:${m.name}:${text}`, severity: 'warning', scene: '', message: text });
   for (const text of skinProblems(skins, { sprites: spriteNames, items: itemIds })) out.push({ id: `skin:${text}`, severity: 'warning', scene: '', message: text });
   return out;
 }

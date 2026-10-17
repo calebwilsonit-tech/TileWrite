@@ -6,12 +6,16 @@ import {
   chooseDialogue,
   emitFx,
   facingOfGridDir,
+  minigameKey,
   startDialogue,
+  startMinigame,
+  stepMinigame,
   teleportBody,
   type CutsceneEffect,
   type CutsceneState,
   type CutsceneStep,
   type DialogueHost,
+  type MinigameOutcome,
   type Entity,
   type SimContext,
   type TransformIso,
@@ -52,7 +56,7 @@ export function sayLine(ctx: SimContext, speaker: string, text: string): void {
 
 function endDialogue(ctx: SimContext, name: string): void {
   ctx.runtime.dialogue = null;
-  ctx.events.emit('dialogue-ended', { name });
+  ctx.runtime.announce.push({ type: 'dialogue-ended', data: { name } });
 }
 
 /** The player pressed Continue / picked the highlighted option. */
@@ -78,6 +82,8 @@ export function selectChoice(ctx: SimContext, delta: number, absolute?: number):
 
 /** Runs first each tick: the conversation on screen listens to the real buttons (the world is frozen under it). */
 export function dialogueSystem(ctx: SimContext): void {
+  // news from a frozen tick (a conversation or minigame that just ended) goes out now, where event rows can see it
+  for (const a of ctx.runtime.announce.splice(0)) ctx.events.emit(a.type, a.data);
   const st = ctx.runtime.dialogue;
   if (!st) return;
   const ui = ctx.uiInput;
@@ -86,6 +92,83 @@ export function dialogueSystem(ctx: SimContext): void {
     if (ui.pressed('move_down')) selectChoice(ctx, 1);
   }
   if (ui.pressed('interact') || ui.pressed('ui_confirm')) confirmDialogue(ctx);
+}
+
+// ---------- minigames ----------
+
+/** Open a minigame. Returns false when there is none by that name or one is already open. */
+export function beginMinigame(ctx: SimContext, name: string): boolean {
+  const m = ctx.assets.minigames.get(name);
+  if (!m) {
+    ctx.events.emit('problem', { text: `Something wants to start the minigame "${name}", which does not exist.` });
+    return false;
+  }
+  if (ctx.runtime.minigame) return false;
+  ctx.runtime.minigame = startMinigame(m, ctx.rng);
+  ctx.events.emit('minigame-started', { name });
+  return true;
+}
+
+/** Write down how a play went: the standard variables, the ones the minigame names, and the reward for a first win. */
+export function endMinigame(ctx: SimContext, name: string, outcome: MinigameOutcome): void {
+  const vars = ctx.runtime.vars;
+  const m = ctx.assets.minigames.get(name);
+  const firstWin = outcome.won && vars[minigameKey(name, 'won')] !== true;
+  vars[minigameKey(name, 'played')] = (typeof vars[minigameKey(name, 'played')] === 'number' ? (vars[minigameKey(name, 'played')] as number) : 0) + 1;
+  const best = vars[minigameKey(name, 'best')];
+  if (typeof best !== 'number' || outcome.score > best) vars[minigameKey(name, 'best')] = outcome.score;
+  if (outcome.won) vars[minigameKey(name, 'won')] = true;
+  if (m) {
+    if (m.scoreVariable) vars[m.scoreVariable] = outcome.score;
+    if (outcome.won && m.winVariable) vars[m.winVariable] = true;
+    if (firstWin && m.rewardItem) {
+      const got = addItem(vars, m.rewardItem, m.rewardAmount, ctx.assets.items.get(m.rewardItem));
+      if (got > 0) {
+        autoSlot(vars, m.rewardItem);
+        ctx.events.emit('item-given', { item: m.rewardItem, amount: got });
+      }
+    }
+  }
+  ctx.runtime.minigame = null;
+  // the event sheet is frozen in this tick, so the news goes out at the start of the next one
+  ctx.runtime.announce.push({ type: 'minigame-ended', data: { name, won: outcome.won, score: outcome.score, quit: outcome.quit } });
+}
+
+/** A click on the screen standing for the confirm button (start, or leave the result). */
+export function confirmMinigame(ctx: SimContext): void {
+  const st = ctx.runtime.minigame;
+  const m = st && ctx.assets.minigames.get(st.name);
+  if (!st || !m) return;
+  if (st.phase === 'play' || st.phase === 'show') return; // clicks in the middle of a game go to the arrows and cards
+  const outcome = stepMinigame(m, st, { confirm: true }, 0, ctx.rng);
+  if (outcome) endMinigame(ctx, st.name, outcome);
+}
+
+/** Runs first each tick: the minigame on screen listens to the real buttons (the world is frozen under it). */
+export function minigameSystem(ctx: SimContext): void {
+  const st = ctx.runtime.minigame;
+  if (!st) return;
+  const m = ctx.assets.minigames.get(st.name);
+  if (!m) {
+    ctx.runtime.minigame = null;
+    return;
+  }
+  const ui = ctx.uiInput;
+  const outcome = stepMinigame(
+    m,
+    st,
+    {
+      left: ui.pressed('move_left'),
+      right: ui.pressed('move_right'),
+      up: ui.pressed('move_up'),
+      down: ui.pressed('move_down'),
+      confirm: ui.pressed('interact') || ui.pressed('ui_confirm'),
+      cancel: ui.pressed('pause'),
+    },
+    ctx.dt,
+    ctx.rng,
+  );
+  if (outcome) endMinigame(ctx, st.name, outcome);
 }
 
 // ---------- cutscenes ----------

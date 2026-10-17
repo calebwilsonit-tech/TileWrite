@@ -62,7 +62,7 @@ Tick an item when the engine can make it **without code**, verified by a test or
 - [ ] Settings menu (audio, video, controls) - volumes, difficulty, screen shake and hit freeze and controls done; video options not done
 - [x] Full input remapping, gamepad support
 - [x] Pause menu, HUD
-- [ ] Minigames inside the game
+- [x] Minigames inside the game (Story -> Minigames: timing bar, repeat the pattern, match the pairs; the Arcade object; the playbot plays them)
 - [x] Cosmetic skins (Story -> Skins, Settings -> Appearance), difficulty options
 
 ## Feel

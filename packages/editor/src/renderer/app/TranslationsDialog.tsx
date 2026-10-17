@@ -23,7 +23,7 @@ export function TranslationsDialog() {
 
   const scan = async (): Promise<SourceString[]> => {
     const scenes = await store.loadAllScenes();
-    const found = collectStrings(store.story, [...scenes].map(([path, scene]) => ({ path, scene })));
+    const found = collectStrings(store.story, [...scenes].map(([path, scene]) => ({ path, scene })), undefined, store.minigames);
     setSources(found);
     return found;
   };

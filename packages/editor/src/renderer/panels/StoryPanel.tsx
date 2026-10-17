@@ -8,6 +8,12 @@ import {
   newCutscene,
   newDialogue,
   newSkin,
+  newMinigame,
+  checkMinigame,
+  defaultInstructions,
+  MINIGAME_KINDS,
+  type MinigameData,
+  type MinigameKind,
   type SkinData,
   type CutsceneData,
   type CutsceneStep,
@@ -25,7 +31,7 @@ import { CutsceneTimeline } from './CutsceneTimeline';
 import { connect, linkTarget, nodeHeight, portsOf, spotForNew } from '../model/dialogue-graph';
 import { CheckField, NumberField, SelectField, TextField, hexToNumber, numberToHex } from './fields';
 
-type Tab = 'items' | 'dialogues' | 'cutscenes' | 'skins';
+type Tab = 'items' | 'dialogues' | 'cutscenes' | 'minigames' | 'skins';
 
 export function StoryPanel() {
   useApp((s) => s.storyVersion);
@@ -33,7 +39,7 @@ export function StoryPanel() {
   return (
     <div className="story-panel" data-testid="story-panel">
       <div className="seg" role="tablist">
-        {(['items', 'dialogues', 'cutscenes', 'skins'] as Tab[]).map((t) => (
+        {(['items', 'dialogues', 'cutscenes', 'minigames', 'skins'] as Tab[]).map((t) => (
           <button key={t} role="tab" aria-selected={tab === t} className={tab === t ? 'on' : ''} data-testid={`story-tab-${t}`} onClick={() => setTab(t)}>
             {t[0]!.toUpperCase() + t.slice(1)}
           </button>
@@ -47,6 +53,7 @@ export function StoryPanel() {
       {tab === 'items' && <ItemsTab />}
       {tab === 'dialogues' && <DialoguesTab />}
       {tab === 'cutscenes' && <CutscenesTab />}
+      {tab === 'minigames' && <MinigamesTab />}
       {tab === 'skins' && <SkinsTab />}
     </div>
   );
@@ -639,6 +646,103 @@ function CutsceneEditor({ c, onDeleted }: { c: CutsceneData; onDeleted(): void }
           Delete cutscene
         </button>
       </div>
+    </div>
+  );
+}
+
+// ---------- minigames ----------
+
+function MinigamesTab() {
+  const list = store.minigames;
+  const [fresh, setFresh] = useState('');
+  const [kind, setKind] = useState<MinigameKind>('timing');
+  const known = { items: new Set(store.story.items.map((i) => i.id)) };
+  const update = (i: number, patch: Partial<MinigameData>): void => store.setMinigames(list.map((m, j) => (j === i ? ({ ...m, ...patch } as MinigameData) : m)));
+  const create = (): void => {
+    const problem = storyNameProblem(fresh, list.map((m) => m.name), 'minigame');
+    if (problem) return store.notify('warn', problem);
+    store.setMinigames([...list, newMinigame(kind, fresh.trim())]);
+    setFresh('');
+  };
+  return (
+    <div className="story-body" data-testid="minigames-tab">
+      <p className="hint">Small games inside your game. Give an object the Minigame behaviour (or use the "Play a minigame" action) to let the player play one. Winning sets a flag, can give an item once, and the "A minigame has been won" condition lets event rows react.</p>
+      <div className="row">
+        <input data-testid="minigame-new-name" placeholder="New minigame name" value={fresh} onChange={(e) => setFresh(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && create()} />
+        <select data-testid="minigame-new-kind" value={kind} onChange={(e) => setKind(e.target.value as MinigameKind)}>
+          {MINIGAME_KINDS.map((k) => (
+            <option key={k.kind} value={k.kind}>
+              {k.label}
+            </option>
+          ))}
+        </select>
+        <button data-testid="minigame-new" onClick={create}>
+          Create
+        </button>
+      </div>
+      <p className="hint">{MINIGAME_KINDS.find((k) => k.kind === kind)?.blurb}</p>
+      {list.map((m, i) => {
+        const problems = checkMinigame(m, known);
+        const id = m.name.replace(/[^A-Za-z0-9]+/g, '-');
+        return (
+          <fieldset key={m.name} className="story-card" data-testid={`minigame-${id}`}>
+            <legend>
+              {m.name} ({MINIGAME_KINDS.find((k) => k.kind === m.kind)?.label})
+            </legend>
+            <TextField label="Heading shown to the player" testId={`minigame-title-${id}`} value={m.title} placeholder={m.name} onCommit={(v) => update(i, { title: v })} />
+            <TextField label="What to do" value={m.instructions} placeholder={defaultInstructions(m.kind)} onCommit={(v) => update(i, { instructions: v })} />
+            {m.kind === 'timing' && (
+              <>
+                <NumberField label="Rounds to win" testId={`minigame-rounds-${id}`} value={m.rounds} min={1} max={12} step={1} onCommit={(v) => update(i, { rounds: Math.round(v) })} />
+                <NumberField label="Width of the zone (0.05 - 0.6 of the bar)" value={m.zone} min={0.05} max={0.6} step={0.01} onCommit={(v) => update(i, { zone: v })} />
+                <NumberField label="Speed of the marker" value={m.speed} min={0.2} max={4} step={0.1} onCommit={(v) => update(i, { speed: v })} />
+                <CheckField label="The zone shrinks every round" value={m.shrink} onChange={(v) => update(i, { shrink: v })} />
+                <NumberField label="Misses allowed" value={m.allowedMisses} min={0} max={9} step={1} onCommit={(v) => update(i, { allowedMisses: Math.round(v) })} />
+              </>
+            )}
+            {m.kind === 'sequence' && (
+              <>
+                <NumberField label="Length of the pattern" testId={`minigame-length-${id}`} value={m.length} min={2} max={14} step={1} onCommit={(v) => update(i, { length: Math.round(v) })} />
+                <NumberField label="Different arrows (2 - 4)" value={m.buttons} min={2} max={4} step={1} onCommit={(v) => update(i, { buttons: Math.round(v) })} />
+                <NumberField label="Seconds each arrow is shown" value={m.showSeconds} min={0.15} max={2} step={0.05} onCommit={(v) => update(i, { showSeconds: v })} />
+                <NumberField label="Mistakes allowed" value={m.allowedMistakes} min={0} max={9} step={1} onCommit={(v) => update(i, { allowedMistakes: Math.round(v) })} />
+              </>
+            )}
+            {m.kind === 'pairs' && (
+              <>
+                <NumberField label="Pairs of cards" testId={`minigame-pairs-${id}`} value={m.pairs} min={2} max={10} step={1} onCommit={(v) => update(i, { pairs: Math.round(v) })} />
+                <NumberField label="Wrong guesses allowed" value={m.allowedMisses} min={0} max={40} step={1} onCommit={(v) => update(i, { allowedMisses: Math.round(v) })} />
+              </>
+            )}
+            <TextField label="Variable set to true when won (optional)" value={m.winVariable} onCommit={(v) => update(i, { winVariable: v.trim() })} />
+            <TextField label="Variable that receives the score (optional)" value={m.scoreVariable} onCommit={(v) => update(i, { scoreVariable: v.trim() })} />
+            <SelectField<string> label="Item given for the first win" value={m.rewardItem} options={[{ value: '', label: '(none)' }, ...store.story.items.map((n) => ({ value: n.id, label: n.name }))]} onChange={(v) => update(i, { rewardItem: v })} />
+            <CheckField label="The player may give up (Esc / P)" value={m.canQuit} onChange={(v) => update(i, { canQuit: v })} />
+            {problems.map((p) => (
+              <p key={p} className="hint warn">
+                {p}
+              </p>
+            ))}
+            <div className="row">
+              <button
+                data-testid={`minigame-test-${id}`}
+                onClick={() => {
+                  void store.flushStory().then(() => {
+                    store.autoPlay = { minigame: m.name };
+                    store.play();
+                  });
+                }}
+              >
+                Test in the game
+              </button>
+              <button className="small" onClick={() => store.setMinigames(list.filter((_, j) => j !== i))}>
+                Delete minigame
+              </button>
+            </div>
+          </fieldset>
+        );
+      })}
+      {list.length === 0 && <p className="hint">No minigames yet.</p>}
     </div>
   );
 }

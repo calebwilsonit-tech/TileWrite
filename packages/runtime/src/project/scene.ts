@@ -144,6 +144,8 @@ export function loadScene(sim: Simulation, scene: SceneData, opts: LoadOptions =
   sim.runtime.scene = opts.scene ?? sim.runtime.scene;
   sim.runtime.persistentIds = entities.filter((e) => e.tags.includes('persistent')).map((e) => e.id);
   sim.runtime.dialogue = null;
+  sim.runtime.minigame = null;
+  sim.runtime.announce = [];
   sim.runtime.cutscene = null;
   sim.runtime.travel = null;
   sim.runtime.view = newView();

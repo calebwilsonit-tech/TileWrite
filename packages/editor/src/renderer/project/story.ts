@@ -3,6 +3,8 @@ import {
   DialogueSchema,
   ItemsFileSchema,
   SkinsFileSchema,
+  MinigamesFileSchema,
+  type MinigameData,
   CURRENT_SCHEMA_VERSION,
   type SkinData,
   type CutsceneData,
@@ -16,6 +18,7 @@ import { UserError } from './io';
 
 export const ITEMS_FILE = 'assets/items.json';
 export const SKINS_FILE = 'assets/skins.json';
+export const MINIGAMES_FILE = 'assets/minigames.json';
 export const DIALOGUE_DIR = 'assets/dialogues';
 export const CUTSCENE_DIR = 'assets/cutscenes';
 const DIALOGUE_EXT = '.dialogue.json';
@@ -76,6 +79,29 @@ export async function saveItems(fs: AssetFs, dir: string, items: readonly ItemDa
     ids.add(i.id);
   }
   await fs.write(joinPath(dir, ITEMS_FILE), json({ schemaVersion: CURRENT_SCHEMA_VERSION, items }));
+}
+
+// ---------- minigames ----------
+
+export async function loadMinigames(fs: AssetFs, dir: string): Promise<{ minigames: MinigameData[]; problems: string[] }> {
+  const file = joinPath(dir, MINIGAMES_FILE);
+  try {
+    if (!(await fs.exists(file))) return { minigames: [], problems: [] };
+    const r = MinigamesFileSchema.safeParse(JSON.parse(await fs.read(file)));
+    if (!r.success) return { minigames: [], problems: [`The minigames file is not valid: ${r.error.issues[0]?.message ?? 'unknown problem'}.`] };
+    return { minigames: r.data.minigames, problems: [] };
+  } catch (e) {
+    return { minigames: [], problems: [`The minigames file could not be read (${(e as Error).message}).`] };
+  }
+}
+
+export async function saveMinigames(fs: AssetFs, dir: string, minigames: readonly MinigameData[]): Promise<void> {
+  const names = new Set<string>();
+  for (const m of minigames) {
+    if (names.has(m.name)) throw new UserError(`Two minigames share the name "${m.name}". Minigame names must be different.`);
+    names.add(m.name);
+  }
+  await fs.write(joinPath(dir, MINIGAMES_FILE), json({ schemaVersion: CURRENT_SCHEMA_VERSION, minigames }));
 }
 
 // ---------- skins ----------

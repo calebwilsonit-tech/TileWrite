@@ -4,7 +4,7 @@
 
 A behaviour is ready-made logic you add to an object in the Inspector (**Behaviours -> Add**). Its settings appear as fields; its signals can be joined to other objects with the Wire tool. Each behaviour has an id (the key under which it is saved) shown in `code`.
 
-There are 32 behaviours. Behaviours made by scripts (see [code-window.md](code-window.md)) appear in the same list under "Scripts".
+There are 33 behaviours. Behaviours made by scripts (see [code-window.md](code-window.md)) appear in the same list under "Scripts".
 
 - [AI](#ai) (Vision Cone, Chase, Patrol, Boss Phases, State Machine)
 - [Combat](#combat) (Health, Damage on Touch, Melee Attack (quill), Dodge)
@@ -12,7 +12,7 @@ There are 32 behaviours. Behaviours made by scripts (see [code-window.md](code-w
 - [Logic](#logic) (Logic Gate)
 - [Player](#player) (Echo Recorder)
 - [Puzzle](#puzzle) (Pressure Plate, Trigger Zone, Lever, Timer, Gate / Door, Pushable)
-- [Story](#story) (NPC Talk, Lantern Post (checkpoint), Scene Portal, Cutscene Trigger)
+- [Story](#story) (NPC Talk, Minigame, Lantern Post (checkpoint), Scene Portal, Cutscene Trigger)
 - [Story puzzles](#story-puzzles) (Sentence Stone, Formattable Text Block)
 - [World](#world) (Spawner, Pickup, Moving Platform, Falling Floor, Projectile, Follow Camera)
 
@@ -374,6 +374,23 @@ The player presses Interact (E) next to it to light it and rest. Resting heals, 
 | Resting heals the player fully | `heals` | boolean | true |  |
 
 Sends: **Is lit** (`lit`).
+
+Adds automatically: `collider`.
+
+### Minigame
+
+Id: `minigameStation`. Each update it moves things (runs first).
+
+The player presses Interact (E) next to it to play a small game: a timing bar, a pattern to repeat or a card-matching game. Make the minigame in Story -> Minigames and choose it here. Winning can open a gate, give an item or set a flag.
+
+| Setting | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Minigame (name) | `minigame` | text | (empty) | Create it in Story -> Minigames; the name must match. |
+| How close the player must be (cells) | `reach` | number | 1.7 | 0.5 to 6 |
+| Cannot be played again after winning | `onlyUntilWon` | boolean | false |  |
+| Show "E: play" when the player is close | `hint` | boolean | true |  |
+
+Sends: **Is being played** (`playing`); **Has been won (stays on)** (`won`); **Has been played (stays on)** (`played`).
 
 Adds automatically: `collider`.
 

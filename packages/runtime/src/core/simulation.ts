@@ -10,6 +10,7 @@ import type { DialogueData, DialogueState } from '../story/dialogue';
 import type { ItemData } from '../story/items';
 import { StringTables } from '../story/strings';
 import type { SkinData } from '../story/skins';
+import type { MinigameData, MinigameState } from '../story/minigames';
 import type { TileMap } from '../tilemap/tilemap';
 import { EventBus } from './events';
 import { Profiler, SystemError } from './profiler';
@@ -28,6 +29,8 @@ export interface Assets {
   strings: StringTables;
   /** Skins the player can pick from (see story/skins.ts). */
   skins: SkinData[];
+  /** Small games inside the game (see story/minigames.ts). */
+  minigames: Map<string, MinigameData>;
 }
 
 /** A lantern post the player lit or rested at: where death sends them. */
@@ -60,6 +63,10 @@ export interface SceneRuntime {
   scene: string;
   /** The conversation on screen, if any. The game is frozen while it is open. */
   dialogue: DialogueState | null;
+  /** The minigame on screen, if any. The game is frozen while it is open. */
+  minigame: MinigameState | null;
+  /** Events to announce at the start of the next tick: the tick that caused them was frozen, so its event sheet never ran. */
+  announce: { type: string; data: Record<string, unknown> }[];
   /** The cutscene playing, if any. The player cannot act while it runs. */
   cutscene: CutsceneState | null;
   /** Where to come back to after dying. Survives scene changes and saves. */
@@ -149,6 +156,8 @@ export function newSceneRuntime(): SceneRuntime {
     regions: [],
     scene: '',
     dialogue: null,
+    minigame: null,
+    announce: [],
     cutscene: null,
     checkpoint: null,
     travel: null,
@@ -172,7 +181,7 @@ export class Simulation {
   readonly uiInput = new InputState();
   readonly events = new EventBus();
   readonly tweens = new Tweens();
-  readonly assets: Assets = { sprites: new Map(), prefabs: new Map(), dialogues: new Map(), items: new Map(), cutscenes: new Map(), strings: new StringTables(), skins: [] };
+  readonly assets: Assets = { sprites: new Map(), prefabs: new Map(), dialogues: new Map(), items: new Map(), cutscenes: new Map(), strings: new StringTables(), skins: [], minigames: new Map() };
   readonly runtime: SceneRuntime = newSceneRuntime();
   readonly rng: Rng;
   readonly profiler = new Profiler();
@@ -195,7 +204,7 @@ export class Simulation {
   /** Which kind of tick this is, from what is on screen. */
   get modal(): Modal {
     const r = this.runtime;
-    if (r.menuOpen || r.dialogue) return 'freeze';
+    if (r.menuOpen || r.dialogue || r.minigame) return 'freeze';
     if (r.cutscene) return 'scripted';
     return 'none';
   }
@@ -263,6 +272,7 @@ export class Simulation {
       r.vars,
       r.rowState,
       r.dialogue,
+      r.minigame,
       r.cutscene,
       r.checkpoint,
       this.world.all().map((e) => [e.id, e.name, [...e.tags].sort(), [...e.components.entries()]]),

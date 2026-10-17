@@ -24,7 +24,7 @@ Panels dock, tab, split and float: drag a tab. The layout is remembered; **Comma
 | Console | Messages from the editor and from the game while it runs. |
 | Assets | The project's sprites, with search, tags and "find where it is used" (see [sprite-studio.md](sprite-studio.md)); its prefabs; and its sounds and music (see [sound-and-effects.md](sound-and-effects.md)). |
 | Events | The scene's event sheet: rows that read like sentences, variables, and a "Convert to code" button (see [logic.md](logic.md)). |
-| Story | Items, conversations (a graph of lines, choices, flags and gifts) and cutscenes (see [story-systems.md](story-systems.md)), and the **Translations...** button (see [translations-and-settings.md](translations-and-settings.md)). |
+| Story | Items, conversations (a graph of lines, choices, flags and gifts), cutscenes, minigames and skins (see [story-systems.md](story-systems.md)), and the **Translations...** button (see [translations-and-settings.md](translations-and-settings.md)). |
 | Playbot | Lets a bot play the open scene with only a player's buttons and reports how it went; keeps and replays playthroughs (see [checks-and-playbot.md](checks-and-playbot.md)). |
 | Claude | A chat that can look at your project and propose changes you approve (see [assistant.md](assistant.md)). |
 
@@ -63,4 +63,4 @@ Ctrl+Z / Ctrl+Y undo and redo every change, whichever panel made it. Ctrl+S save
 **Commands → Shortcuts** lists every command with its key; click Change and press a new key. Conflicts are highlighted. **Light / Dark** switches the theme.
 
 ## Not yet in the editor
-A visual state-machine editor for enemies, vector drawing in the sprite studio, minigames and skins. See KNOWN_ISSUES.md for the full list.
+Vector drawing in the sprite studio. See KNOWN_ISSUES.md for the full list.

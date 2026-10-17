@@ -1,4 +1,4 @@
-import { LanguageSchema, newLanguage, type CutsceneData, type DialogueData, type EventRow, type ItemData, type LanguageData, type SceneData } from '@tilewright/runtime';
+import { LanguageSchema, defaultInstructions, newLanguage, type MinigameData, type CutsceneData, type DialogueData, type EventRow, type ItemData, type LanguageData, type SceneData } from '@tilewright/runtime';
 import { uiStrings } from '@tilewright/behaviors';
 import { joinPath } from './api';
 import { UserError } from './io';
@@ -30,6 +30,7 @@ export function collectStrings(
   story: { items: readonly ItemData[]; dialogues: ReadonlyMap<string, DialogueData>; cutscenes: ReadonlyMap<string, CutsceneData> },
   scenes: readonly { path: string; scene: SceneData }[],
   menus: readonly string[] = uiStrings(),
+  minigames: readonly MinigameData[] = [],
 ): SourceString[] {
   const seen = new Map<string, string>();
   const add = (text: unknown, where: string): void => {
@@ -60,6 +61,10 @@ export function collectStrings(
     add(i.name, `Item ${i.name}`);
     add(i.description, `Item ${i.name}`);
     add(i.use?.message, `Item ${i.name}`);
+  }
+  for (const m of minigames) {
+    add(m.title || m.name, `Minigame ${m.name}`);
+    add(m.instructions || defaultInstructions(m.kind), `Minigame ${m.name}`);
   }
   for (const { path, scene } of scenes) {
     const label = `Scene ${path.replace(/^.*\//, '').replace('.scene.json', '')}`;

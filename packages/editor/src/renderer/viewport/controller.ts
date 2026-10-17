@@ -738,7 +738,8 @@ export class ViewportController {
         flags: () => store.state.view,
         record,
         skins: store.skins,
-        liveAssets: () => ({ prefabs: store.prefabs, sprites: studio.assets, story: store.story, skins: store.skins }),
+        minigames: store.minigames,
+        liveAssets: () => ({ prefabs: store.prefabs, sprites: studio.assets, story: store.story, skins: store.skins, minigames: store.minigames }),
       });
     } catch (e) {
       store.notify('error', `The game could not start: ${e instanceof Error ? e.message : String(e)}`);

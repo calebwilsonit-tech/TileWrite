@@ -130,6 +130,13 @@ export const PREFABS: Prefab[] = [
     make: (x, y, h) => thing('Villager', ['npc'], { color: 0x3d8fe8, w: 0.6, d: 0.6, height: 1.2 }, x, y, h, ['npcTalk']),
   },
   {
+    id: 'minigame',
+    label: 'Minigame (arcade)',
+    group: 'Story',
+    hint: 'The player plays a small game with Interact. Choose its minigame in the Inspector; make minigames in the Story panel.',
+    make: (x, y, h) => thing('Arcade', ['minigame'], { color: 0xd06a1a, w: 0.7, d: 0.7, height: 1.2 }, x, y, h, ['minigameStation']),
+  },
+  {
     id: 'lanternpost',
     label: 'Lantern post (checkpoint)',
     group: 'Story',

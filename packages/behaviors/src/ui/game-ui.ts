@@ -15,6 +15,7 @@ import { litPosts, type LitPost } from '../builtins/story';
 import { contextOf } from '../story/context';
 import { confirmDialogue, selectChoice } from '../story/director';
 import { useItem } from '../story/inventory';
+import { MINIGAME_CSS, MINIGAME_STRINGS, MinigameView } from './minigame-ui';
 
 /** What the screens need from whoever is running the game (the editor's Play, or an exported game). */
 export interface GameUiHost {
@@ -42,6 +43,7 @@ export interface GameUiHost {
  * menus too; `{name}`-style parts are filled in after translating. (A test keeps this list complete.)
  */
 export const UI_STRINGS: readonly string[] = [
+  ...MINIGAME_STRINGS,
   'Paused', 'Resume', 'Inventory', 'Travel to a lit lantern', 'Save game', 'Load game', 'Settings', 'Restart this area', 'Quit',
   '{n} lit', 'You are carrying nothing.', 'press E to use', 'slot {n}', 'E: use   A / D: choose its quick slot   Esc: back',
   'No lanterns lit yet. Light one by pressing E beside it.', 'this area', 'Autosave', 'Slot {n}', 'damaged', 'empty',
@@ -126,6 +128,7 @@ export class GameUi {
   private readonly fade = el('div', 'tw-fade');
   private readonly skip = el('div', 'tw-skip');
   private dialogueEl: HTMLElement | null = null;
+  private readonly minigame: MinigameView;
   private menuEl: HTMLElement | null = null;
   private readonly style = el('style');
   private screen: Screen = 'main';
@@ -153,7 +156,8 @@ export class GameUi {
     private readonly parent: HTMLElement,
     private readonly host: GameUiHost,
   ) {
-    this.style.textContent = CSS;
+    this.style.textContent = CSS + MINIGAME_CSS;
+    this.minigame = new MinigameView(this.root, host.sim);
     this.root.setAttribute('data-testid', 'tw-ui');
     this.hud.setAttribute('data-testid', 'tw-hud');
     this.hearts.setAttribute('data-testid', 'tw-hearts');
@@ -185,7 +189,7 @@ export class GameUi {
 
   openMenu(screen: Screen = 'main'): void {
     const r = this.host.sim.runtime;
-    if (r.dialogue || r.cutscene) return;
+    if (r.dialogue || r.cutscene || r.minigame) return;
     r.menuOpen = true;
     this.go(screen);
   }
@@ -221,6 +225,7 @@ export class GameUi {
     }
     this.drawHud();
     this.drawDialogue();
+    this.minigame.update();
     this.drawMenu();
     this.fade.style.opacity = String(r.view.fade.alpha);
     this.fade.style.background = hex(r.view.fade.color);
@@ -238,7 +243,7 @@ export class GameUi {
     const sim = this.host.sim;
     const ui = sim.uiInput;
     if (!this.menuOpen) {
-      if (sim.runtime.dialogue || sim.runtime.cutscene) return;
+      if (sim.runtime.dialogue || sim.runtime.cutscene || sim.runtime.minigame) return;
       if (ui.pressed('pause')) this.openMenu('main');
       else if (ui.pressed('inventory')) this.openMenu('inventory');
       else if (ui.pressed('map')) this.openMenu('travel');

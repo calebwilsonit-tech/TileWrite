@@ -30,6 +30,7 @@ import {
   type InputRecording,
   type PrefabData,
   type SkinData,
+  type MinigameData,
   type SaveData,
   type SceneData,
   type SpriteData,
@@ -40,6 +41,7 @@ import {
   GameUi,
   addStandardSystems,
   beginDialogue,
+  beginMinigame,
   contextOf,
   litPosts,
   placeAtSpawn,
@@ -75,7 +77,7 @@ export interface PlayOptions {
   onError(error: unknown): void;
   /** Quit the game (back to editing). */
   quit(): void;
-  autoPlay: { cutscene?: string; dialogue?: string } | null;
+  autoPlay: { cutscene?: string; dialogue?: string; minigame?: string } | null;
   /** Which debugging aids are on right now (read every frame). */
   flags: () => { ai: boolean; triggers: boolean; lights: boolean; depth: boolean; profiler: boolean };
   /** Record the buttons pressed, to save as a playthrough. */
@@ -83,9 +85,11 @@ export interface PlayOptions {
   /** Switch the window to or from full screen (only a game in its own window can). */
   setFullscreen?: (on: boolean) => void;
   /** The project's prefabs, sprites and story as they are now (for hot reload while playing in the editor). */
-  liveAssets?: () => { prefabs: ReadonlyMap<string, PrefabData>; sprites: ReadonlyMap<string, SpriteData>; story: PlayOptions['story']; skins?: readonly SkinData[] };
+  liveAssets?: () => { prefabs: ReadonlyMap<string, PrefabData>; sprites: ReadonlyMap<string, SpriteData>; story: PlayOptions['story']; skins?: readonly SkinData[]; minigames?: readonly MinigameData[] };
   /** The player's other looks. */
   skins?: readonly SkinData[];
+  /** The project's minigames. */
+  minigames?: readonly MinigameData[];
 }
 
 /**
@@ -129,6 +133,7 @@ export class PlaySession {
     for (const item of o.story.items) sim.assets.items.set(item.id, item);
     for (const [name, d] of o.story.dialogues) sim.assets.dialogues.set(name, d);
     for (const [name, c] of o.story.cutscenes) sim.assets.cutscenes.set(name, c);
+    for (const m of o.minigames ?? []) sim.assets.minigames.set(m.name, m);
     this.saves = new SaveManager(
       {
         read: (p) => assetFs.read(p),
@@ -215,6 +220,7 @@ export class PlaySession {
         if (this.disposed) return;
         if (auto.cutscene) playCutscene(contextOf(sim), auto.cutscene);
         else if (auto.dialogue) beginDialogue(contextOf(sim), auto.dialogue);
+        else if (auto.minigame) beginMinigame(contextOf(sim), auto.minigame);
       });
     }
     this.runner.start();
@@ -247,6 +253,10 @@ export class PlaySession {
       for (const [name, d] of live.story.dialogues) sim.assets.dialogues.set(name, d);
       sim.assets.cutscenes.clear();
       for (const [name, c] of live.story.cutscenes) sim.assets.cutscenes.set(name, c);
+      if (live.minigames) {
+        sim.assets.minigames.clear();
+        for (const m of live.minigames) sim.assets.minigames.set(m.name, m);
+      }
     }
     const scene = o.currentScene(this.scenePath);
     if (!scene) return 'Reloaded the story and prefabs. This scene has no editing copy, so it was left as it is.';
@@ -275,6 +285,11 @@ export class PlaySession {
   }
 
   // ---------- sound and effects ----------
+
+  /** Open a minigame by name, as an event row's "Play a minigame" action would (for tests and the Console). */
+  openMinigame(name: string): boolean {
+    return beginMinigame(contextOf(this.sim), name);
+  }
 
   /** Put the skin the player chose on the player character (nothing changes while it is already worn). */
   private applySkinToPlayer(): void {

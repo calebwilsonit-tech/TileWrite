@@ -15,7 +15,7 @@ import { eventsToScript } from '@tilewright/behaviors';
 import { reloadScripts, type BreakHit, type ScriptProblemEntry } from '../code/script-manager';
 import { deleteScript as deleteScriptFile, loadScripts as loadScriptFiles, saveScript as saveScriptFile } from '../project/scripts';
 import { storyNameProblem } from '../project/story';
-import { deleteCutscene, deleteDialogue, loadCutscenes, loadDialogues, loadItems, loadSkins, saveCutscene, saveDialogue, saveItems, saveSkins } from '../project/story';
+import { deleteCutscene, deleteDialogue, loadCutscenes, loadDialogues, loadItems, loadMinigames, loadSkins, saveCutscene, saveDialogue, saveItems, saveMinigames, saveSkins } from '../project/story';
 import {
   UserError,
   autosaveScene,
@@ -31,7 +31,7 @@ import {
   type OpenProject,
   type ProjectFs,
 } from '../project/io';
-import { DEFAULT_TILESET, groupOf, newScene, tilesetFromList, type AutotileRuleData, type SkinData, type TileDefData } from '@tilewright/runtime';
+import { DEFAULT_TILESET, groupOf, newScene, tilesetFromList, type AutotileRuleData, type MinigameData, type SkinData, type TileDefData } from '@tilewright/runtime';
 
 export type ToolId =
   | 'select'
@@ -537,8 +537,10 @@ class AppStore {
   story = { items: [] as ItemData[], dialogues: new Map<string, DialogueData>(), cutscenes: new Map<string, CutsceneData>() };
   /** The player's other looks (Settings -> Appearance), saved in ssets/skins.json. */
   skins: SkinData[] = [];
+  /** Small games inside the game (Story -> Minigames), saved in assets/minigames.json. */
+  minigames: MinigameData[] = [];
   /** Something to start as soon as the next Play begins (the Story panel's "Test" buttons). */
-  autoPlay: { cutscene?: string; dialogue?: string } | null = null;
+  autoPlay: { cutscene?: string; dialogue?: string; minigame?: string } | null = null;
   private storyTimers = new Map<string, number>();
 
   async loadStory(): Promise<void> {
@@ -546,13 +548,15 @@ class AppStore {
     if (!p) {
       this.story = { items: [], dialogues: new Map(), cutscenes: new Map() };
       this.skins = [];
+      this.minigames = [];
       return;
     }
-    const [items, dialogues, cutscenes, skins] = await Promise.all([loadItems(assetFs, p.dir), loadDialogues(assetFs, p.dir), loadCutscenes(assetFs, p.dir), loadSkins(assetFs, p.dir)]);
+    const [items, dialogues, cutscenes, skins, minigames] = await Promise.all([loadItems(assetFs, p.dir), loadDialogues(assetFs, p.dir), loadCutscenes(assetFs, p.dir), loadSkins(assetFs, p.dir), loadMinigames(assetFs, p.dir)]);
     this.skins = skins.skins;
+    this.minigames = minigames.minigames;
     this.story = { items: items.items, dialogues: dialogues.items, cutscenes: cutscenes.items };
     this.set({ storyVersion: this.state.storyVersion + 1 });
-    for (const problem of [...items.problems, ...dialogues.problems, ...cutscenes.problems, ...skins.problems]) this.notify('warn', problem);
+    for (const problem of [...items.problems, ...dialogues.problems, ...cutscenes.problems, ...skins.problems, ...minigames.problems]) this.notify('warn', problem);
   }
 
   /** Save a story file a moment after the last edit (typing in a field must not write a file per keystroke). */
@@ -575,6 +579,7 @@ class AppStore {
     if (!p) return;
     await saveItems(assetFs, p.dir, this.story.items);
     if (this.skins.length > 0 || (await assetFs.exists(joinPath(p.dir, 'assets/skins.json')))) await saveSkins(assetFs, p.dir, this.skins);
+    if (this.minigames.length > 0 || (await assetFs.exists(joinPath(p.dir, 'assets/minigames.json')))) await saveMinigames(assetFs, p.dir, this.minigames);
     for (const d of this.story.dialogues.values()) await saveDialogue(assetFs, p.dir, d);
     for (const c of this.story.cutscenes.values()) await saveCutscene(assetFs, p.dir, c);
   }
@@ -593,6 +598,14 @@ class AppStore {
     this.maybeHotReload();
     const p = this.state.project;
     if (p) this.persistLater('skins', () => saveSkins(assetFs, p.dir, this.skins));
+  }
+
+  setMinigames(minigames: MinigameData[]): void {
+    this.minigames = minigames;
+    this.set({ storyVersion: this.state.storyVersion + 1 });
+    this.maybeHotReload();
+    const p = this.state.project;
+    if (p) this.persistLater('minigames', () => saveMinigames(assetFs, p.dir, this.minigames));
   }
 
   putDialogue(d: DialogueData): void {
@@ -837,7 +850,7 @@ class AppStore {
     if (!p) return [];
     await this.flushStory().catch(() => undefined);
     const { studio } = await import('../studio/store');
-    const problems = await checkProject(realFs, p.dir, p.project, this.prefabs, this.story, new Set(studio.assets.keys()), new Set(studio.sounds.map((s) => s.name)), (await loadLanguages(assetFs, p.dir)).languages, this.skins);
+    const problems = await checkProject(realFs, p.dir, p.project, this.prefabs, this.story, new Set(studio.assets.keys()), new Set(studio.sounds.map((s) => s.name)), (await loadLanguages(assetFs, p.dir)).languages, this.skins, this.minigames);
     this.set({ projectCheck: { problems, at: Date.now() } });
     return problems;
   }

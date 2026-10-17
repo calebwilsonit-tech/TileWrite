@@ -29,7 +29,7 @@ function describeCutscene(c: CutsceneData): string {
 
 async function allSources() {
   const scenes = await store.loadAllScenes();
-  return collectStrings(store.story, [...scenes].map(([path, scene]) => ({ path, scene })));
+  return collectStrings(store.story, [...scenes].map(([path, scene]) => ({ path, scene })), undefined, store.minigames);
 }
 
 /** Reading tools about the story data. Returns null when the name is not one of them. */

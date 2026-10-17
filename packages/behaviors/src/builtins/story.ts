@@ -1,7 +1,7 @@
-import { C, type Entity, type TransformIso, type SimContext, facingOfGridDir, type VariableValue } from '@tilewright/runtime';
+import { C, type Entity, type TransformIso, type SimContext, facingOfGridDir, minigameWon, type VariableValue } from '@tilewright/runtime';
 import { defineBehavior, stateOf } from '../framework';
 import { input, setOutput } from '../signals';
-import { beginDialogue, playCutscene } from '../story/director';
+import { beginDialogue, beginMinigame, playCutscene } from '../story/director';
 import { heal } from './combat';
 import { interactedBy } from './text';
 import { occupants } from './puzzle';
@@ -82,6 +82,59 @@ export const npcTalk = defineBehavior<NpcTalk>({
     }
     setOutput(e, 'talking', st.talking);
     setOutput(e, 'talked', st.talked);
+  },
+});
+
+// ---------- minigame station ----------
+
+export interface MinigameStation {
+  /** Name of the minigame to play (see Story -> Minigames). */
+  minigame: string;
+  reach: number;
+  /** Once the player has won, it cannot be played again. */
+  onlyUntilWon: boolean;
+  /** Show "E: play" when the player is close. */
+  hint: boolean;
+}
+
+export const minigameStation = defineBehavior<MinigameStation>({
+  id: 'minigameStation',
+  name: 'Minigame',
+  category: 'Story',
+  description: 'The player presses Interact (E) next to it to play a small game: a timing bar, a pattern to repeat or a card-matching game. Make the minigame in Story -> Minigames and choose it here. Winning can open a gate, give an item or set a flag.',
+  phase: 'control',
+  defaults: { minigame: '', reach: 1.7, onlyUntilWon: false, hint: true },
+  fields: [
+    { key: 'minigame', label: 'Minigame (name)', type: 'text', help: 'Create it in Story -> Minigames; the name must match.' },
+    { key: 'reach', label: 'How close the player must be (cells)', type: 'number', min: 0.5, max: 6, step: 0.1 },
+    { key: 'onlyUntilWon', label: 'Cannot be played again after winning', type: 'boolean' },
+    { key: 'hint', label: 'Show "E: play" when the player is close', type: 'boolean' },
+  ],
+  inputs: [],
+  outputs: [
+    { name: 'playing', label: 'Is being played' },
+    { name: 'won', label: 'Has been won (stays on)' },
+    { name: 'played', label: 'Has been played (stays on)' },
+  ],
+  requires: {
+    collider: { w: 0.7, d: 0.7, height: 1.0, solid: true, trigger: false, layer: 16, mask: 65535, enabled: true, inside: [] },
+  },
+  summary: (s) => (s.minigame ? `Plays the minigame "${s.minigame}" when used.` : 'Choose which minigame it plays.'),
+  update(ctx, e, s) {
+    const st = stateOf(e, 'minigameStation', () => ({ playing: false, played: false }));
+    if (st.playing && !ctx.runtime.minigame) {
+      st.playing = false;
+      st.played = true;
+    }
+    const won = s.minigame !== '' && minigameWon(ctx.runtime.vars, s.minigame);
+    const canPlay = s.minigame !== '' && !(s.onlyUntilWon && won);
+    const near = nearestPlayer(ctx, e, s.reach);
+    if (s.hint && canPlay && near && !ctx.runtime.minigame) hint(e, 'E: play');
+    else hint(e, null);
+    if (canPlay && !st.playing && interactedBy(ctx, e, s.reach, 'minigameStation') && beginMinigame(ctx, s.minigame)) st.playing = true;
+    setOutput(e, 'playing', st.playing);
+    setOutput(e, 'won', won);
+    setOutput(e, 'played', st.played);
   },
 });
 

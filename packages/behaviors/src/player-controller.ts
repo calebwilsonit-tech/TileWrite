@@ -11,7 +11,7 @@ import {
   type TransformIso,
 } from '@tilewright/runtime';
 import { eventSheetSystem } from './events/sheet';
-import { cutsceneSystem, dialogueSystem } from './story/director';
+import { cutsceneSystem, dialogueSystem, minigameSystem } from './story/director';
 import { quickSlotSystem } from './story/inventory';
 import { behaviorSystems } from './signals';
 
@@ -56,6 +56,7 @@ export function driveBody(cfg: PlayerController, b: Body, t: TransformIso, input
 export function addStandardSystems(sim: Simulation, physics: (ctx: SimContext) => void): void {
   // conversations and cutscenes listen to the real buttons and run even while the world is frozen
   sim.addSystem('dialogue', dialogueSystem, 'always');
+  sim.addSystem('minigame', minigameSystem, 'always');
   sim.addSystem('cutscene', cutsceneSystem, 'always');
   sim.addSystem('player-controller', playerControllerSystem, 'player');
   sim.addSystem('quick-slots', quickSlotSystem, 'player');

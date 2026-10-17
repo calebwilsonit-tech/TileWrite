@@ -4,7 +4,7 @@
 
 An event sheet is a list of rows, each reading like a sentence: **when** its conditions hold, **do** its actions. Rows can have sub-events that run only while the row holds. Objects are chosen as "the player", "anything tagged ...", or a particular object. See [logic.md](logic.md).
 
-There are 14 conditions and 23 actions.
+There are 15 conditions and 24 actions.
 
 ## Conditions
 
@@ -46,7 +46,7 @@ Id: `onEvent`.
 
 | Parameter | Key | Kind | Starts as | Choices and notes |
 | --- | --- | --- | --- | --- |
-| What happens | `name` | select | "pickup" | `pickup`, `pushed`, `landed`, `fell`, `floor-fell`, `projectile-hit`, `spawned`, `anim-event`, `damaged`, `died`, `attack`, `dodge`, `noticed`, `lost`, `state-changed`, `boss-phase`, `boss-defeated`, `echo-made`, `sentence-changed`, `text-formatted`, `dialogue-started`, `dialogue-ended`, `cutscene-started`, `cutscene-ended`, `lantern-lit`, `rested`, `item-given`, `portal` |
+| What happens | `name` | select | "pickup" | `pickup`, `pushed`, `landed`, `fell`, `floor-fell`, `projectile-hit`, `spawned`, `anim-event`, `damaged`, `died`, `attack`, `dodge`, `noticed`, `lost`, `state-changed`, `boss-phase`, `boss-defeated`, `echo-made`, `sentence-changed`, `text-formatted`, `dialogue-started`, `dialogue-ended`, `minigame-started`, `minigame-ended`, `cutscene-started`, `cutscene-ended`, `lantern-lit`, `rested`, `item-given`, `portal` |
 
 ### Variables
 
@@ -130,6 +130,14 @@ Id: `hasItem`.
 | --- | --- | --- | --- | --- |
 | Item (id) | `item` | text | (empty) |  |
 | At least how many | `atLeast` | number | 1 | at least 1 |
+
+#### A minigame has been won
+
+Id: `minigameWon`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Minigame (name) | `minigame` | text | (empty) |  |
 
 ### Input
 
@@ -263,6 +271,14 @@ Id: `startDialogue`.
 | Parameter | Key | Kind | Starts as | Choices and notes |
 | --- | --- | --- | --- | --- |
 | Dialogue (name) | `dialogue` | text | (empty) |  |
+
+#### Play a minigame
+
+Id: `playMinigame`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Minigame (name) | `minigame` | text | (empty) |  |
 
 #### Play a cutscene
 
