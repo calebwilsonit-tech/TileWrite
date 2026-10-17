@@ -17,6 +17,9 @@ import {
 import { store, useApp } from '../app/store';
 import { storyNameProblem } from '../project/story';
 import { SoundField } from './SoundField';
+import { DialogueGraph } from './DialogueGraph';
+import { CutsceneTimeline } from './CutsceneTimeline';
+import { connect, linkTarget, nodeHeight, portsOf, spotForNew } from '../model/dialogue-graph';
 import { CheckField, NumberField, SelectField, TextField, hexToNumber, numberToHex } from './fields';
 
 type Tab = 'items' | 'dialogues' | 'cutscenes';
@@ -157,6 +160,23 @@ function DialoguesTab() {
 
 function DialogueEditor({ d, onDeleted }: { d: DialogueData; onDeleted(): void }) {
   const items = store.story.items;
+  const [mode, setMode] = useState<'list' | 'graph'>(() => {
+    try {
+      return localStorage.getItem('tw.dialogueView') === 'graph' ? 'graph' : 'list';
+    } catch {
+      return 'list';
+    }
+  });
+  const [sel, setSel] = useState<string | null>(null);
+  const [big, setBig] = useState(false);
+  const chooseMode = (m: 'list' | 'graph'): void => {
+    setMode(m);
+    try {
+      localStorage.setItem('tw.dialogueView', m);
+    } catch {
+      /* the choice just is not remembered */
+    }
+  };
   const known = { items: new Set(items.map((i) => i.id)), variables: new Set<string>() };
   const problems = checkDialogue(d, known);
   const put = (next: DialogueData): void => store.putDialogue(next);
@@ -170,9 +190,23 @@ function DialogueEditor({ d, onDeleted }: { d: DialogueData; onDeleted(): void }
     put({ ...d, nodes });
   };
   return (
-    <div data-testid="dialogue-editor">
+    <div data-testid="dialogue-editor" className={mode === 'graph' && big ? 'dg-overlay' : ''}>
       <SelectField<string> label="Starts at" testId="dialogue-start" value={d.start} options={[{ value: '', label: '(choose)' }, ...d.nodes.map((n) => ({ value: n.id, label: `${n.id}: ${describeNode(n)}` }))]} onChange={(v) => put({ ...d, start: v })} />
-      {d.nodes.map((n, i) => (
+      <div className="seg" role="group" aria-label="How to show the conversation">
+        <button className={mode === 'list' ? 'on' : ''} data-testid="dialogue-view-list" aria-pressed={mode === 'list'} onClick={() => chooseMode('list')}>
+          List
+        </button>
+        <button className={mode === 'graph' ? 'on' : ''} data-testid="dialogue-view-graph" aria-pressed={mode === 'graph'} onClick={() => chooseMode('graph')}>
+          Graph
+        </button>
+        {mode === 'graph' && (
+          <button data-testid="dg-big" aria-pressed={big} onClick={() => setBig(!big)} title="Fill the window with the conversation, for more room">
+            {big ? 'Back to the panel' : 'Make it bigger'}
+          </button>
+        )}
+      </div>
+      {mode === 'graph' && <DialogueGraph d={d} selected={sel} onSelect={setSel} onChange={put} />}
+      {d.nodes.map((n, i) => (mode === 'graph' && n.id !== sel ? null : (
         <fieldset key={n.id} className="story-card" data-testid={`dnode-${n.id}`}>
           <legend>
             {n.id} - {NODE_TYPES.find((t) => t.value === n.type)?.label}
@@ -190,7 +224,7 @@ function DialogueEditor({ d, onDeleted }: { d: DialogueData; onDeleted(): void }
             </button>
           </div>
         </fieldset>
-      ))}
+      )))}
       <div className="row wrap">
         {NODE_TYPES.map((t) => (
           <button
@@ -199,6 +233,18 @@ function DialogueEditor({ d, onDeleted }: { d: DialogueData; onDeleted(): void }
             data-testid={`dnode-add-${t.value}`}
             onClick={() => {
               const node = freshNode(d, t.value);
+              if (mode === 'graph') {
+                // in the graph a new card goes under the others, and joins the selected card's first free link
+                const spot = spotForNew(d, sel ?? undefined, nodeHeight(node));
+                const placed = { ...node, ...spot } as DialogueNode;
+                let next = { ...d, nodes: [...d.nodes, placed], start: d.start === '' || d.nodes.length === 0 ? placed.id : d.start };
+                const from = d.nodes.find((n) => n.id === sel);
+                const free = from ? portsOf(from).find((p) => !linkTarget(from, p)) : undefined;
+                if (from && free) next = connect(next, from.id, free, placed.id);
+                put(next);
+                setSel(placed.id);
+                return;
+              }
               // a new step joins the end of the chain: the previous step (if it has a "next") now goes to it
               const nodes = [...d.nodes];
               const last = nodes[nodes.length - 1];
@@ -439,6 +485,23 @@ function CutsceneEditor({ c, onDeleted }: { c: CutsceneData; onDeleted(): void }
   const known = { dialogues: new Set(store.story.dialogues.keys()), items: new Set(store.story.items.map((i) => i.id)) };
   const problems = checkCutscene(c, known);
   const put = (next: CutsceneData): void => store.putCutscene(next);
+  const [mode, setMode] = useState<'list' | 'timeline'>(() => {
+    try {
+      return localStorage.getItem('tw.cutsceneView') === 'timeline' ? 'timeline' : 'list';
+    } catch {
+      return 'list';
+    }
+  });
+  const [sel, setSel] = useState<string | null>(null);
+  const [big, setBig] = useState(false);
+  const chooseMode = (m: 'list' | 'timeline'): void => {
+    setMode(m);
+    try {
+      localStorage.setItem('tw.cutsceneView', m);
+    } catch {
+      /* the choice just is not remembered */
+    }
+  };
   const setStep = (i: number, step: CutsceneStep): void => put({ ...c, steps: c.steps.map((s, j) => (j === i ? step : s)) });
   const freshId = (): string => {
     let n = c.steps.length + 1;
@@ -453,9 +516,23 @@ function CutsceneEditor({ c, onDeleted }: { c: CutsceneData; onDeleted(): void }
     put({ ...c, steps });
   };
   return (
-    <div data-testid="cutscene-editor">
+    <div data-testid="cutscene-editor" className={mode === 'timeline' && big ? 'dg-overlay' : ''}>
       <CheckField label="The player can skip it" value={c.skippable} onChange={(v) => put({ ...c, skippable: v })} />
-      {c.steps.map((s, i) => (
+      <div className="seg" role="group" aria-label="How to show the cutscene">
+        <button className={mode === 'list' ? 'on' : ''} data-testid="cutscene-view-list" aria-pressed={mode === 'list'} onClick={() => chooseMode('list')}>
+          List
+        </button>
+        <button className={mode === 'timeline' ? 'on' : ''} data-testid="cutscene-view-timeline" aria-pressed={mode === 'timeline'} onClick={() => chooseMode('timeline')}>
+          Timeline
+        </button>
+        {mode === 'timeline' && (
+          <button data-testid="ct-big" aria-pressed={big} onClick={() => setBig(!big)} title="Fill the window with the cutscene, for more room">
+            {big ? 'Back to the panel' : 'Make it bigger'}
+          </button>
+        )}
+      </div>
+      {mode === 'timeline' && <CutsceneTimeline c={c} selected={sel} onSelect={setSel} onChange={put} />}
+      {c.steps.map((s, i) => (mode === 'timeline' && s.id !== sel ? null : (
         <fieldset key={s.id} className="story-card" data-testid={`cstep-${i}`}>
           <legend>
             {i + 1}. {CUTSCENE_STEP_LABELS[s.type]}
@@ -506,7 +583,25 @@ function CutsceneEditor({ c, onDeleted }: { c: CutsceneData; onDeleted(): void }
             </button>
           </div>
         </fieldset>
-      ))}
+      )))}
+      {mode === 'timeline' && (
+        <div className="row wrap">
+          {(Object.keys(CUTSCENE_STEP_LABELS) as CutsceneStep['type'][]).map((t) => (
+            <button
+              key={t}
+              className="small"
+              data-testid={`cstep-add-${t}`}
+              onClick={() => {
+                const step = CutsceneStepSchema.parse({ id: freshId(), type: t });
+                put({ ...c, steps: [...c.steps, step] });
+                setSel(step.id);
+              }}
+            >
+              + {CUTSCENE_STEP_LABELS[t]}
+            </button>
+          ))}
+        </div>
+      )}
       <button data-testid="cstep-add" onClick={() => put({ ...c, steps: [...c.steps, CutsceneStepSchema.parse({ id: freshId(), type: 'wait' })] })}>
         Add a step
       </button>

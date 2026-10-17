@@ -69,7 +69,7 @@ export async function checkProject(
   for (const [path, scene] of scenes) {
     const doc = EditorDoc.fromScene(scene, prefabs);
     const lost = missingTiles(doc.map.tiles, tiles);
-    if (lost.length > 0) out.push({ id: `:tiles-missing`, severity: 'warning', scene: path, message: `This scene uses tile number ${lost.join(', ')}, which is not in the tile list any more, so it is drawn as a magenta square. Paint over those cells or run Autotiling -> Save and apply.` });
+    if (lost.length > 0) out.push({ id: `${path}:tiles-missing`, severity: 'warning', scene: path, message: `This scene uses tile number ${lost.join(', ')}, which is not in the tile list any more, so it is drawn as a magenta square. Paint over those cells or run Autotiling -> Save and apply.` });
     for (const p of validateScene(doc, spriteNames, prefabNames, storyVariables(story.dialogues, story.cutscenes), soundNames)) {
       out.push({ id: `${path}:${p.id}`, severity: p.severity, scene: path, message: p.message, entity: p.target?.kind === 'entity' ? p.target.id : undefined, x: p.target?.x, y: p.target?.y });
     }

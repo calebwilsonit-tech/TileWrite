@@ -165,3 +165,8 @@ Occlusion fade: renderer-only (not simulation state). Tiles taller than the focu
 - The simulation does the translating where text is produced (conversations, cutscene lines, messages), through `assets.strings`, because those strings are put into the state the UI draws; the game UI translates its own fixed texts at draw time. The language is a player setting, not part of a save, and does not enter the replayable state.
 - Built-in menu text is in `UI_STRINGS`, kept complete by a test that scans `game-ui.ts`.
 - Video settings are player settings like volume: camera zoom and the frame counter are applied by `PlaySession`; full screen is offered only when the host window can do it (`GameUiHost.fullscreen`).
+
+## D022 - Graph and timeline are views of the same data (2026-10-17)
+- The dialogue graph and the cutscene timeline read and write the same lists the form editors use, so nothing in the runtime, the checker or the saved files changed except optional card positions (`x`, `y`) on dialogue nodes. Switching between list and graph never loses anything, and old files open as before.
+- Layout is computed (columns by distance from the start; time from step order) and only a moved card stores a position, so a graph never needs tidying to be readable.
+- The graph and timeline have a full-window mode because the dock panel is too short for a canvas; the same component is used in both.

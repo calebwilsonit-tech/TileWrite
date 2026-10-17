@@ -116,8 +116,8 @@ export function checkCutscene(c: CutsceneData, known: { dialogues: ReadonlySet<s
       if (s.dialogue === '') out.push({ step: s.id, text: `${label} has no dialogue chosen.` });
       else if (!known.dialogues.has(s.dialogue)) out.push({ step: s.id, text: `${label} uses the dialogue "${s.dialogue}", which does not exist.` });
     }
-    if ((s.type === 'sound' || s.type === 'music') && s.name !== '' && known.sounds && !known.sounds.has(s.name)) out.push({ step: s.id, text: ` uses the sound "${s.name}", which is not in Assets -> Sounds.` });
-    if (s.type === 'sound' && s.name === '') out.push({ step: s.id, text: ` has no sound chosen.` });
+    if ((s.type === 'sound' || s.type === 'music') && s.name !== '' && known.sounds && !known.sounds.has(s.name)) out.push({ step: s.id, text: `${label} uses the sound "${s.name}", which is not in Assets -> Sounds.` });
+    if (s.type === 'sound' && s.name === '') out.push({ step: s.id, text: `${label} has no sound chosen.` });
     if (s.type === 'give' && !known.items.has(s.item)) out.push({ step: s.id, text: `${label} gives "${s.item}", which is not in your items list.` });
     if (s.type === 'move' && s.to === '') out.push({ step: s.id, text: `${label} does not say where to walk.` });
     if (s.type === 'face' && s.toward === '') out.push({ step: s.id, text: `${label} does not say what to turn towards.` });

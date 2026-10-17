@@ -1460,12 +1460,12 @@ button.small {
 .autotile .row.wrap { flex-wrap: wrap; gap: 8px; align-items: end; }
 .variant-strip { display: flex; flex-wrap: wrap; gap: 4px; min-height: 28px; align-items: center; }
 .rule-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
-.rule-list li { display: flex; gap: 12px; align-items: center; padding: 6px; border: 1px solid var(--border, #3a3d48); border-radius: 6px; }
+.rule-list li { display: flex; gap: 12px; align-items: center; padding: 6px; border: 1px solid var(--line); border-radius: 6px; }
 .rule-grid { display: grid; grid-template-columns: repeat(3, 28px); grid-template-rows: repeat(3, 28px); gap: 2px; }
-.rule-grid .nb { width: 28px; height: 28px; padding: 0; border: 1px solid var(--border, #3a3d48); border-radius: 3px; font-weight: 700; color: #000; }
+.rule-grid .nb { width: 28px; height: 28px; padding: 0; border: 1px solid var(--line); border-radius: 3px; font-weight: 700; color: #000; }
 .rule-grid .centre { display: flex; align-items: center; justify-content: center; }
 .rule-body { flex: 1; display: flex; flex-direction: column; gap: 4px; }
-.problems-list li { color: var(--warn, #f0b429); }
+.problems-list li { color: var(--warn); }
 
 /* ---- translations dialog ---- */
 .dialog.translations { max-height: 90vh; overflow: auto; }
@@ -1474,3 +1474,18 @@ button.small {
 .tr-source { display: flex; flex-direction: column; gap: 2px; }
 .tr-source small { opacity: 0.65; }
 .tr-row textarea { width: 100%; resize: vertical; }
+
+/* ---- dialogue graph ---- */
+.dgraph { margin: 8px 0; }
+.dg-canvas { width: 100%; height: 360px; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; touch-action: none; cursor: grab; user-select: none; }
+.dg-canvas:focus-visible { outline: 2px solid #6aa8ff; }
+.dg-port { cursor: crosshair; }
+.dg-edge { pointer-events: none; }
+.dg-overlay { position: fixed; inset: 4vh 4vw; z-index: 60; background: var(--panel); border: 2px solid var(--line); border-radius: 10px; padding: 14px; overflow: auto; box-shadow: 0 10px 40px #000a; }
+.dg-overlay .dg-canvas { height: 52vh; }
+
+/* ---- cutscene timeline ---- */
+.ctimeline { margin: 8px 0; }
+.ct-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
+.ct-canvas { display: block; user-select: none; touch-action: none; }
+.dg-overlay .ct-scroll { max-height: 45vh; overflow: auto; }

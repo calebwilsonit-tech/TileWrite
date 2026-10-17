@@ -3,7 +3,7 @@
 Boxes are ticked only when the milestone's tests pass and the sample has been played.
 Spec: `ENGINE_BUILD_PROMPT.md`. Read `DECISIONS.md` and `KNOWN_ISSUES.md` before continuing.
 
-**Next up:** all seven acceptance criteria hold (see the final summary below). What is left is the list of engine features still owed from the spec (hot reload / separate game window, vector drawing, visual state machines, dialogue graph canvas, minigames, skins, more assistant tools; autotiling, the layers, localization and video settings were added after the first summary): bigger than polish, listed honestly in KNOWN_ISSUES.md.
+**Next up:** all seven acceptance criteria hold (see the final summary below). What is left is the list of engine features still owed from the spec (hot reload / separate game window, vector drawing, visual state machines, minigames, skins, more assistant tools; autotiling, the layers, localization, video settings, the dialogue graph and the cutscene timeline were added after the first summary): bigger than polish, listed honestly in KNOWN_ISSUES.md.
 
 ## Final summary (2026-10-16)
 
@@ -26,13 +26,13 @@ An Electron + React editor and a PixiJS runtime in an npm-workspace monorepo (ru
 - Every picture is procedural box art; the slice looks like a prototype. The only drawn-art path is the sprite studio.
 - The playbot's walkthrough of the slice is a script for that game, not a general "play any game" solver.
 - The tutorial was driven by a test, never timed with a real beginner. Expect rough wording.
-- Whole spec areas are unfinished (hot reload, vector drawing, state-machine editor, dialogue graph canvas, minigames, skins). See KNOWN_ISSUES.md.
+- Whole spec areas are unfinished (hot reload, vector drawing, state-machine editor, minigames, skins). See KNOWN_ISSUES.md.
 - Exported games are 250-300 MB (a full Electron runtime each), unsigned, Windows-tested only.
 
 ### What next
 1. Run the things that could not be run here: `npm run test:live` with a key, the CI workflow on a real remote, `npm run dist:win`, and listen to the audio.
 2. Watch a new user take the tutorial and fix what trips them.
-3. Real art and a second, longer game to find the engine's next gaps; then the owed editor features, starting with the dialogue graph canvas, which every story game needs.
+3. Real art and a second, longer game to find the engine's next gaps; then the owed editor features, starting with hot reload and the state-machine editor.
 ## Milestones
 
 - [x] M0 Foundations (repo, workspaces, lint, typecheck, tests, CI, Electron window, state docs)
@@ -154,7 +154,7 @@ Done and covered by tests (unit: `packages/runtime/src/story`, `packages/behavio
 - [x] Sample built in the UI and played: a hub (keeper, lantern, bread, portal, intro cutscene) and a cave, including saving, loading, remapping and fast travel (`e2e/m8-story.spec.ts`, screenshots inspected)
 
 Deferred:
-- [ ] Dialogue node-graph canvas and a visual cutscene timeline; [x] localization string tables (added after M14)
+- [x] Dialogue node-graph canvas and a visual cutscene timeline; [x] localization string tables (added after M14)
 - [x] Audio engine and hit-stop (M14)
 - [x] Video settings (added after M14)
 - [ ] Minigames, cosmetic skins, drawn world map
@@ -170,7 +170,8 @@ Deferred:
 - [x] Sample game: the finished slice ships as 	emplates/last-storytender (project screen **See a finished game**, copied into a chosen folder; checked and replayed by e2e/m14-sample.spec.ts)
 - [x] Autotiling (rules with a 3x3 visual editor, 30-variant edge sets, cliff faces, applied while painting, one undo step) and the Walls / Decoration / Lights layers with hide and lock (`e2e/m14-autotile.spec.ts`, `docs/autotiling-and-layers.md`)
 - [x] Localization (language files, a Translations dialog with progress, CSV for translators, translated conversations, cutscenes, items, messages and the game's own menus, a Language setting) and video settings (camera zoom, full screen in exported games, frame-rate counter): `e2e/m14-translations.spec.ts`, `e2e/m14-video.spec.ts`, `docs/translations-and-settings.md`
-- [ ] Hot reload and a separate game window, vector drawing, visual state machine, dialogue graph canvas, minigames, skins (owed since earlier milestones; see KNOWN_ISSUES)
+- [x] Dialogue graph canvas (cards, arrows, drag to move and connect, add beside the selected card, full-window mode) and a cutscene timeline (four tracks, side-by-side steps, stretch timed blocks by dragging): `e2e/m14-dialogue-graph.spec.ts`, `e2e/m14-cutscene-timeline.spec.ts`, `docs/story-systems.md`
+- [ ] Hot reload and a separate game window, vector drawing, visual state machine, minigames, skins (owed since earlier milestones; see KNOWN_ISSUES)
 
 ## M13 checklist
 

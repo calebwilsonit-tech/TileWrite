@@ -16,7 +16,8 @@ export const DialogueConditionSchema = z.discriminatedUnion('kind', [
 ]);
 export type DialogueCondition = z.infer<typeof DialogueConditionSchema>;
 
-const base = { id: z.string().min(1) };
+/** x and y are where the node sits in the graph view (unset = placed automatically). */
+const base = { id: z.string().min(1), x: z.number().optional(), y: z.number().optional() };
 
 export const DialogueNodeSchema = z.discriminatedUnion('type', [
   z.object({ ...base, type: z.literal('line'), speaker: z.string().default(''), text: z.string().default(''), next: z.string().optional() }),

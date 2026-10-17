@@ -11,8 +11,21 @@ Items (`assets/items.json`): id, name, description, colour, carry limit, and wha
 ## Dialogues
 `assets/dialogues/<name>.dialogue.json`: lines, choices (an option can require an item or a variable), set a variable, give or take an item, branch on a condition, end. `{variable}` in text shows its value. The Story panel edits them as a list of steps (with plain-English problems: steps that lead nowhere, missing items, lines nobody can reach); **Test in the game** starts one at once. Put one on a character with **NPC Talk** (press E beside it; "E: talk" shows when close). While a conversation is open the world is frozen; W/S choose, E confirms, or click.
 
+### The graph view of a conversation
+Above the steps, **Graph** shows the conversation as cards joined by arrows: a card for every step (blue lines, orange choices with a row per option, purple variable changes, green items, pink branches, grey ends) and an arrow for every "then go to". The start card says **start**; cards nothing leads to are faded.
+- **Move** a card by dragging it (its place is remembered). **Tidy up** forgets the places and lays everything out again by distance from the start.
+- **Connect** by dragging from the blue dot on a card's right edge to another card. Dropping on empty space cuts that link. A choice has one dot per option; a branch has *yes* and *no*.
+- **Add** a step with the buttons under the graph. If a card is selected the new card appears beside it and joins its first free link.
+- **Select** a card to edit its words and settings in the form under the graph. **Delete the selected card** (or the Delete key) removes it and every link to it.
+- Drag the background to pan, use the wheel or the **Zoom** buttons, **Fit** to see everything, and **Make it bigger** for a full-window editor. **List** goes back to the step list; both show the same conversation.
+
+
 ## Cutscenes
 `assets/cutscenes/<name>.cutscene.json`: steps run one after another; a step marked *keep going* runs alongside the next. Steps: wait, wait for a button, say a line, run a dialogue, move the camera (and zoom), camera back, walk somebody (around obstacles), turn somebody, fade the screen, play an animation, shake the screen, sound, set a variable, give an item, show a message. A **Cutscene Trigger** plays one when the player walks in (once, if you like) or the *Play a cutscene* action does. During a cutscene the world keeps moving but the player's controls are off; P / Start skips it (everything still happens, instantly) unless it says it cannot be skipped.
+
+### The timeline view of a cutscene
+**Timeline** lays a cutscene out in time: a row each for *Camera and screen*, *People*, *Talking* and *World and sound*. A step starts when the one before it ends, unless the one before was marked **keep going**, which draws the two side by side. Instant steps (a sound, a flag) are diamonds. Speech and walks last as long as the player takes to read or the walk takes, so they are drawn with a dashed edge and the total says "more when the player reads or walks".
+- Click a block to edit that step below. Drag the right edge of a **wait, camera move, fade or shake** to change how long it lasts (to the nearest tenth of a second). Add steps with the buttons under the timeline.
 
 ## Lantern posts, travel, portals
 - **Lantern Post**: Interact lights it and rests (heals). The last post rested at is where the player returns after being defeated (even in another scene). Lit posts are listed in the pause menu's **Travel** screen (fast travel between scenes). Lighting a lantern autosaves.
