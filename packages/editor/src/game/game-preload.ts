@@ -19,5 +19,6 @@ contextBridge.exposeInMainWorld('tilewright', {
     crash: (text: string) => invoke<string>('game:crash', text),
     quit: () => invoke<void>('game:quit'),
     toggleFullscreen: () => invoke<void>('game:fullscreen'),
+    setFullscreen: (on: boolean) => invoke<void>('game:fullscreen', on),
   },
 });

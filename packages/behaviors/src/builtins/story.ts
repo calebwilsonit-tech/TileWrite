@@ -154,9 +154,9 @@ export const checkpoint = defineBehavior<Checkpoint>({
       const spot = { x: t.x, y: t.y + 1, h: t.h };
       if (!lit) {
         ctx.runtime.vars[key] = `${s.name}|${spot.x}|${spot.y}|${spot.h}`;
-        ctx.events.emit('message', { text: `${s.name} is lit.` });
+        ctx.events.emit('message', { text: ctx.assets.strings.fmt('{name} is lit.', { name: s.name }) });
         ctx.events.emit('lantern-lit', { entity: e.id, name: s.name });
-      } else ctx.events.emit('message', { text: `Rested at ${s.name}.` });
+      } else ctx.events.emit('message', { text: ctx.assets.strings.fmt('Rested at {name}.', { name: s.name }) });
       ctx.runtime.checkpoint = { scene: ctx.runtime.scene, x: spot.x, y: spot.y, h: spot.h, name: s.name };
       if (s.heals) {
         const hs = near.get<{ max?: number }>('health');

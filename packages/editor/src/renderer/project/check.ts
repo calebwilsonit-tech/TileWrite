@@ -1,11 +1,12 @@
 import { checkDialogue } from '@tilewright/runtime';
-import { checkCutscene, expandEntities, type CutsceneData, type DialogueData, type EventRow, type ItemData, type PrefabData, type ProjectData, type SceneData } from '@tilewright/runtime';
+import { checkCutscene, expandEntities, type CutsceneData, type DialogueData, type LanguageData, type EventRow, type ItemData, type PrefabData, type ProjectData, type SceneData } from '@tilewright/runtime';
 import { analyseLevel, analysePushPuzzles } from '@tilewright/playbot';
 import { EditorDoc } from '../model/doc';
 import { validateScene } from '../model/validate';
 import { storyVariables } from '../model/story-vars';
 import { loadScene, type ProjectFs } from './io';
 import { checkRules, missingTiles, ownTiles } from './tiles';
+import { collectStrings, coverage } from './localization';
 
 export interface ProjectProblem {
   id: string;
@@ -46,6 +47,7 @@ export async function checkProject(
   story: StoryData,
   spriteNames: ReadonlySet<string> = new Set(),
   soundNames?: ReadonlySet<string>,
+  languages: readonly LanguageData[] = [],
 ): Promise<ProjectProblem[]> {
   const out: ProjectProblem[] = [];
   const scenes = new Map<string, SceneData>();
@@ -118,6 +120,14 @@ export async function checkProject(
         if ((a.type === 'giveItem' || a.type === 'takeItem') && !itemIds.has(name('item'))) out.push({ id: `${path}:row-${row.id}-item`, severity: 'warning', scene: path, message: `An event row uses the item "${name('item')}", which is not in the Items list.` });
         if (a.type === 'travel' && name('scene') !== '' && !project.scenes.includes(name('scene'))) out.push({ id: `${path}:row-${row.id}-travel`, severity: 'warning', scene: path, message: `An event row goes to the scene "${name('scene')}", which is not part of this project.` });
       }
+    }
+  }
+
+  if (languages.length > 0) {
+    const sources = collectStrings(story, [...scenes].map(([p, scene]) => ({ path: p, scene })));
+    for (const l of languages) {
+      const c = coverage(l, sources);
+      if (c.missing.length > 0) out.push({ id: `language:${l.code}`, severity: 'warning', scene: '', message: `The language ${l.name} is missing ${c.missing.length} of ${c.total} lines (for example "${c.missing[0]!.text}"), so players will see those in the original text. Open Story -> Translations.` });
     }
   }
 

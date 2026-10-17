@@ -21,7 +21,7 @@ import { resolveRef } from '../events/sheet';
 
 /** What conversations can read and change in a running game. */
 function hostOf(ctx: SimContext): DialogueHost {
-  return { vars: ctx.runtime.vars, items: ctx.assets.items, emit: (type, data) => void ctx.events.emit(type, data) };
+  return { vars: ctx.runtime.vars, items: ctx.assets.items, emit: (type, data) => void ctx.events.emit(type, data), tr: (s) => ctx.assets.strings.t(s) };
 }
 
 // ---------- dialogue ----------
@@ -46,7 +46,8 @@ export function beginDialogue(ctx: SimContext, name: string): boolean {
 
 /** One line of speech with nothing around it (cutscenes use this). */
 export function sayLine(ctx: SimContext, speaker: string, text: string): void {
-  ctx.runtime.dialogue = { dialogue: '', node: '', selected: 0, view: { kind: 'line', speaker, text } };
+  const t = (s: string): string => ctx.assets.strings.t(s);
+  ctx.runtime.dialogue = { dialogue: '', node: '', selected: 0, view: { kind: 'line', speaker: t(speaker), text: t(text) } };
 }
 
 function endDialogue(ctx: SimContext, name: string): void {
@@ -231,7 +232,7 @@ function startStep(ctx: SimContext, cs: CutsceneState, step: CutsceneStep, insta
       break;
     }
     case 'message':
-      ctx.events.emit('message', { text: step.text });
+      ctx.events.emit('message', { text: ctx.assets.strings.t(step.text) });
       break;
   }
 }

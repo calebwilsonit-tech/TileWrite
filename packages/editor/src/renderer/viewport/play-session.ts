@@ -48,6 +48,7 @@ import { assetFs } from '../project/assetFs';
 import { joinPath } from '../project/api';
 import { loadScene as loadSceneFile } from '../project/io';
 import { loadSounds } from '../studio/audio';
+import { loadLanguages } from '../project/localization';
 import type { CutsceneData, DialogueData, ItemData } from '@tilewright/runtime';
 
 export interface PlayOptions {
@@ -76,6 +77,8 @@ export interface PlayOptions {
   flags: () => { ai: boolean; triggers: boolean; lights: boolean; depth: boolean; profiler: boolean };
   /** Record the buttons pressed, to save as a playthrough. */
   record: boolean;
+  /** Switch the window to or from full screen (only a game in its own window can). */
+  setFullscreen?: (on: boolean) => void;
 }
 
 /**
@@ -103,6 +106,7 @@ export class PlaySession {
   private disposed = false;
   private readonly debugLayer = new Container();
   private readonly debugG = new Graphics();
+  private readonly fpsEl = document.createElement('div');
 
   constructor(private readonly o: PlayOptions) {
     const { sim } = this;
@@ -171,8 +175,18 @@ export class PlaySession {
     });
     this.applyFeelSettings();
     this.applyVolumes();
+    this.fpsEl.setAttribute('data-testid', 'tw-fps');
+    Object.assign(this.fpsEl.style, { position: 'absolute', right: '10px', top: '8px', font: '12px/1.2 monospace', color: '#9fe6a0', background: '#0b0c10aa', padding: '3px 6px', borderRadius: '4px', pointerEvents: 'none', zIndex: '5', display: 'none' });
+    o.uiParent.appendChild(this.fpsEl);
+    this.applyVideo(true);
     window.addEventListener('keydown', this.unlockAudio);
     window.addEventListener('pointerdown', this.unlockAudio);
+    // translations load first, so a conversation started on the first frame is already in the player's language
+    const languagesReady = loadLanguages(assetFs, o.projectDir).then(({ languages, problems }) => {
+      for (const p of problems) o.notify('warn', p);
+      for (const l of languages) sim.assets.strings.set(l);
+      this.applyLanguage();
+    });
     void loadSounds(assetFs, o.projectDir, this.audio).then((problems) => {
       for (const p of problems) o.notify('warn', p);
       this.roomMusic = null; // start the room's music now that it can play
@@ -184,8 +198,14 @@ export class PlaySession {
     if (o.record) this.runner.recorder = new InputRecorder();
     this.ui = new GameUi(o.uiParent, this.uiHost());
     this.startedAt = performance.now();
-    if (o.autoPlay?.cutscene) playCutscene(contextOf(sim), o.autoPlay.cutscene);
-    else if (o.autoPlay?.dialogue) beginDialogue(contextOf(sim), o.autoPlay.dialogue);
+    const auto = o.autoPlay;
+    if (auto) {
+      void languagesReady.then(() => {
+        if (this.disposed) return;
+        if (auto.cutscene) playCutscene(contextOf(sim), auto.cutscene);
+        else if (auto.dialogue) beginDialogue(contextOf(sim), auto.dialogue);
+      });
+    }
     this.runner.start();
     const loop = (): void => {
       if (this.disposed) return;
@@ -197,6 +217,20 @@ export class PlaySession {
   }
 
   // ---------- sound and effects ----------
+
+  /** The player's language, if the game has it; otherwise the text as written. */
+  private applyLanguage(): void {
+    const tables = this.sim.assets.strings;
+    tables.language = tables.get(this.settings.language) ? this.settings.language : '';
+  }
+
+  /** Camera zoom, the frame-rate corner and (in an exported game) full screen, from the player's settings. */
+  private applyVideo(initial = false): void {
+    const s = this.settings;
+    if (!this.sim.runtime.view.cameraZoom) this.o.renderer.camera.zoom = s.cameraZoom;
+    this.fpsEl.style.display = s.showFps ? 'block' : 'none';
+    if (initial && s.fullscreen !== undefined) this.o.setFullscreen?.(s.fullscreen);
+  }
 
   private applyVolumes(): void {
     const s = this.settings;
@@ -342,6 +376,7 @@ export class PlaySession {
     const now = performance.now();
     if (now - this.lastStats >= 700) {
       this.fps = (this.frames * 1000) / (now - this.lastStats || 1);
+      if (this.settings.showFps) this.fpsEl.textContent = `${this.fps.toFixed(0)} fps`;
       this.frames = 0;
       this.lastStats = now;
       if (flags.profiler) this.showProfile();
@@ -399,6 +434,8 @@ export class PlaySession {
         this.setSettings({ ...this.settings, ...patch });
         this.applyFeelSettings();
         this.applyVolumes();
+        this.applyLanguage();
+        this.applyVideo();
       },
       rebind: (action, binding) => {
         const next = rebind(effectiveBindings(this.settings), action, binding);
@@ -425,6 +462,7 @@ export class PlaySession {
         } else void this.enterScene(post.scene, { at: { x: post.x, y: post.y, h: post.h } });
       },
       quit: () => this.o.quit(),
+      fullscreen: this.o.setFullscreen ? { get: () => window.outerWidth >= screen.width && window.outerHeight >= screen.height, set: (on) => this.o.setFullscreen?.(on) } : undefined,
     };
     return this.hostObj;
   }
@@ -471,6 +509,7 @@ export class PlaySession {
     this.o.renderer.debugDepth = false;
     this.sim.profiler.enabled = false;
     this.profilerEl?.remove();
+    this.fpsEl.remove();
     this.debugLayer.destroy({ children: true });
   }
 }

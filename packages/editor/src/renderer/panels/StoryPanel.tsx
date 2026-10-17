@@ -33,6 +33,11 @@ export function StoryPanel() {
           </button>
         ))}
       </div>
+      <div className="row">
+        <button data-testid="btn-translations" onClick={() => document.dispatchEvent(new CustomEvent('tw:translations'))} title="Add languages and translate every line of text">
+          Translations…
+        </button>
+      </div>
       {tab === 'items' && <ItemsTab />}
       {tab === 'dialogues' && <DialoguesTab />}
       {tab === 'cutscenes' && <CutscenesTab />}

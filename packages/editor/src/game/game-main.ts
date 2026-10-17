@@ -84,9 +84,9 @@ function registerIpc(): void {
   ipcMain.handle('game:info', () => ({ name: gameName, version: manifest?.version ?? '', dataDir, savesDir, logsDir, platform: process.platform, testMode }));
   ipcMain.handle('game:crash', async (_e, text: string) => writeLog('crash', String(text).slice(0, 200_000)));
   ipcMain.handle('game:quit', () => app.quit());
-  ipcMain.handle('game:fullscreen', (e) => {
+  ipcMain.handle('game:fullscreen', (e, on?: unknown) => {
     const win = BrowserWindow.fromWebContents(e.sender);
-    win?.setFullScreen(!win.isFullScreen());
+    win?.setFullScreen(typeof on === 'boolean' ? on : !win.isFullScreen());
   });
   ipcMain.handle('fs:read', async (_e, file: string) => fs.readFile(readable(file), 'utf8'));
   ipcMain.handle('fs:readBinary', async (_e, file: string) => new Uint8Array(await fs.readFile(readable(file))));

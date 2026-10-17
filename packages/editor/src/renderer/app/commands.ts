@@ -94,6 +94,7 @@ export function buildCommands(): Command[] {
       enabled: inEditor,
     },
     { id: 'file.newScene', label: 'New scene…', category: 'File', keys: '', run: () => document.dispatchEvent(new CustomEvent('tw:new-scene')), enabled: inEditor },
+    { id: 'story.translations', label: 'Translations: languages and text…', category: 'Story', keys: '', run: () => document.dispatchEvent(new CustomEvent('tw:translations')) },
     { id: 'tiles.autotile', label: 'Autotiling: edges, shores and cliff faces…', category: 'Tiles', keys: '', run: () => document.dispatchEvent(new CustomEvent('tw:autotile')) },
     { id: 'view.accessibility', label: 'Accessibility: text size, colours, motion…', category: 'View', keys: '', run: () => document.dispatchEvent(new CustomEvent('tw:accessibility')) },
     { id: 'help.tutorial', label: 'Start the tutorial', category: 'Help', keys: '', run: () => void import('../tutorial/store').then((m) => m.tutorial.start()), enabled: inEditor },

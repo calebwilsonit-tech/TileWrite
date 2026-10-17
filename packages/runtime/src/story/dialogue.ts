@@ -55,6 +55,8 @@ export interface DialogueHost {
   items: ReadonlyMap<string, ItemData>;
   /** Called when something noteworthy happens (an item is given, a variable set). */
   emit?(type: string, data: Record<string, unknown>): void;
+  /** Turns written text into the player's language (before {placeholders} are filled in). */
+  tr?(text: string): string;
 }
 
 /** What the player sees right now. */
@@ -109,17 +111,18 @@ const MAX_HOPS = 200;
  */
 function settle(d: DialogueData, nodeId: string | undefined, host: DialogueHost): DialogueState | null {
   let id = nodeId;
+  const tr = host.tr ?? ((s: string): string => s);
   for (let hops = 0; hops < MAX_HOPS; hops++) {
     if (!id) return null;
     const n = d.nodes.find((x) => x.id === id);
     if (!n || n.type === 'end') return null;
     switch (n.type) {
       case 'line':
-        return { dialogue: d.name, node: n.id, selected: 0, view: { kind: 'line', speaker: n.speaker, text: fillText(n.text, host.vars) } };
+        return { dialogue: d.name, node: n.id, selected: 0, view: { kind: 'line', speaker: tr(n.speaker), text: fillText(tr(n.text), host.vars) } };
       case 'choice': {
-        const options = n.options.map((o, index) => ({ o, index })).filter(({ o }) => !o.if || evalCondition(o.if, host.vars)).map(({ o, index }) => ({ text: fillText(o.text, host.vars), index }));
+        const options = n.options.map((o, index) => ({ o, index })).filter(({ o }) => !o.if || evalCondition(o.if, host.vars)).map(({ o, index }) => ({ text: fillText(tr(o.text), host.vars), index }));
         if (options.length === 0) return null;
-        return { dialogue: d.name, node: n.id, selected: 0, view: { kind: 'choice', speaker: n.speaker, prompt: fillText(n.prompt, host.vars), options } };
+        return { dialogue: d.name, node: n.id, selected: 0, view: { kind: 'choice', speaker: tr(n.speaker), prompt: fillText(tr(n.prompt), host.vars), options } };
       }
       case 'set': {
         const cur = host.vars[n.variable];

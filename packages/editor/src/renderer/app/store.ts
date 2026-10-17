@@ -2,6 +2,7 @@ import { useSyncExternalStore } from 'react';
 import { SLOPE, extractPrefab, type CrashReport, type InputRecording, resolveInstance, type CutsceneData, type DialogueData, type EntityData, type ItemData, type PrefabData, type SceneData, type SlopeDir } from '@tilewright/runtime';
 import { EditorDoc } from '../model/doc';
 import { isWallTile } from '../model/layers';
+import { loadLanguages } from '../project/localization';
 import { api, joinPath } from '../project/api';
 import { applyAccessibility, cleanAccessibility } from './accessibility';
 import { assetFs } from '../project/assetFs';
@@ -813,7 +814,7 @@ class AppStore {
     if (!p) return [];
     await this.flushStory().catch(() => undefined);
     const { studio } = await import('../studio/store');
-    const problems = await checkProject(realFs, p.dir, p.project, this.prefabs, this.story, new Set(studio.assets.keys()), new Set(studio.sounds.map((s) => s.name)));
+    const problems = await checkProject(realFs, p.dir, p.project, this.prefabs, this.story, new Set(studio.assets.keys()), new Set(studio.sounds.map((s) => s.name)), (await loadLanguages(assetFs, p.dir)).languages);
     this.set({ projectCheck: { problems, at: Date.now() } });
     return problems;
   }

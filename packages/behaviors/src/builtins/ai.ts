@@ -482,7 +482,7 @@ export const bossPhases = defineBehavior<BossPhases>({
         flags.speedScale = Math.pow(s.speedUp, phase - 1);
         flags.damageScale = Math.pow(s.damageUp, phase - 1);
         ctx.events.emit('boss-phase', { entity: e.id, phase });
-        ctx.events.emit('message', { text: `${e.name} gets angry!` });
+        ctx.events.emit('message', { text: ctx.assets.strings.fmt('{name} gets angry!', { name: e.name }) });
         if (s.summonPrefab) {
           for (let i = 0; i < s.summonCount; i++) {
             const a = (i / s.summonCount) * Math.PI * 2;
@@ -494,7 +494,7 @@ export const bossPhases = defineBehavior<BossPhases>({
     if (h?.dead && !st.defeated) {
       st.defeated = true;
       ctx.events.emit('boss-defeated', { entity: e.id });
-      ctx.events.emit('message', { text: `${e.name} is defeated!` });
+      ctx.events.emit('message', { text: ctx.assets.strings.fmt('{name} is defeated!', { name: e.name }) });
     }
     setOutput(e, 'active', active);
     setOutput(e, 'phase2', st.phase >= 2);

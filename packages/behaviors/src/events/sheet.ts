@@ -571,7 +571,7 @@ export const ACTIONS: ActionDef[] = [
     category: 'Basics',
     params: [{ key: 'text', label: 'Text (use {variable} to show a value)', type: 'text', default: 'Hello!' }],
     describe: (p) => `show the message "${str(p, 'text')}"`,
-    run: (ctx, p) => void ctx.events.emit('message', { text: interpolate(str(p, 'text'), ctx.runtime.vars) }),
+    run: (ctx, p) => void ctx.events.emit('message', { text: interpolate(ctx.assets.strings.t(str(p, 'text')), ctx.runtime.vars) }),
   },
   {
     id: 'setVisible',

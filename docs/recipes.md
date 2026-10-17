@@ -73,6 +73,11 @@ Short, step-by-step ways to make common things. Names in **bold** are buttons, p
 ## See the floor behind a tall wall
 **Layers -> Walls**: untick it to hide every wall tile (brick), tick **Lock** to keep tools from painting over them. Flowers, rugs and bushes from the Place tool's Decoration group have their own layer, so you can hide them while you work on puzzles.
 
+## A game in two languages
+1. **Story -> Translations...**, add a language (code r, name Français).
+2. Type a translation beside each line, **Save**. Untranslated lines show the original.
+3. In Play or an exported game, **Pause -> Settings -> Language** switches it. See [translations-and-settings.md](translations-and-settings.md).
+
 ## Reuse an object (prefabs)
 1. Select an object and press **Make a prefab from this object...**, give it a name.
 2. Place it from the **Place** tool's "Your prefabs" group. Change the prefab and every copy follows, except for settings you changed on a copy.

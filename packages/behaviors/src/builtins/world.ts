@@ -159,7 +159,7 @@ export const pickup = defineBehavior<Pickup>({
       if (got > 0) autoSlot(ctx.runtime.vars, s.item);
       ctx.events.emit('item-given', { item: s.item, amount: got });
     }
-    if (s.message) ctx.events.emit('message', { text: s.message });
+    if (s.message) ctx.events.emit('message', { text: ctx.assets.strings.t(s.message) });
     ctx.events.emit('pickup', { entity: e.id, by: hit.id, variable: s.variable, amount: s.amount });
     ctx.world.destroy(e);
   },

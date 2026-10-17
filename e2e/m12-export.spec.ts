@@ -138,6 +138,20 @@ test('M12: export a game from the editor, run it with no editor, see its script 
   expect(Math.hypot(c.player.x - b.player.x, c.player.y - b.player.y)).toBeGreaterThan(0.5); // the real keyboard moves the player
   await g.page.screenshot({ path: shot('m12-exported-game.png') });
 
+  // the pause menu's video settings: a game in its own window can go full screen (the editor's Play cannot offer that)
+  await g.page.keyboard.down('p');
+  await g.page.waitForTimeout(150);
+  await g.page.keyboard.up('p');
+  await g.page.getByTestId('tw-row-settings').click();
+  await expect(g.page.getByTestId('tw-row-set-zoom')).toBeVisible();
+  await g.page.getByTestId('tw-row-set-fullscreen').click();
+  await expect.poll(() => g.app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]!.isFullScreen())).toBe(true);
+  await g.page.getByTestId('tw-row-set-fullscreen').click();
+  await expect.poll(() => g.app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]!.isFullScreen())).toBe(false);
+  await g.page.keyboard.down('p');
+  await g.page.waitForTimeout(150);
+  await g.page.keyboard.up('p');
+
   // it may only touch its own files
   const probe = await g.page.evaluate(async () => {
     const fsApi = window.tilewright.fs;

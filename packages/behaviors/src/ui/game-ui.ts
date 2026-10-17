@@ -2,6 +2,7 @@ import {
   ACTION_LABELS,
   bindingLabel,
   carried,
+  languageChoices,
   quickSlots,
   type GameSettings,
   type InputMapDef,
@@ -31,7 +32,28 @@ export interface GameUiHost {
   slots(): Promise<SlotInfo[]>;
   travelTo(post: LitPost): void;
   quit?(): void;
+  /** Full screen on and off; only a game running in its own window can offer it. */
+  fullscreen?: { get(): boolean; set(on: boolean): void };
 }
+
+/**
+ * Every fixed piece of text in the game's own screens. The translation tables list these so a language can cover the
+ * menus too; `{name}`-style parts are filled in after translating. (A test keeps this list complete.)
+ */
+export const UI_STRINGS: readonly string[] = [
+  'Paused', 'Resume', 'Inventory', 'Travel to a lit lantern', 'Save game', 'Load game', 'Settings', 'Restart this area', 'Quit',
+  '{n} lit', 'You are carrying nothing.', 'press E to use', 'slot {n}', 'E: use   A / D: choose its quick slot   Esc: back',
+  'No lanterns lit yet. Light one by pressing E beside it.', 'this area', 'Autosave', 'Slot {n}', 'damaged', 'empty',
+  'Master volume', 'Music volume', 'Effects volume', 'Difficulty', 'easy', 'normal', 'hard', 'Screen shake and hit freeze', 'on', 'off',
+  'Camera zoom', 'Full screen', 'Show frame rate', 'Language', 'Default', 'Controls', 'press a key or button...', 'not set', 'Reset all controls',
+  'E: change the selected control, then press the new key or button', 'W / S to choose, E to select, Esc or P to go back',
+  'E / click: continue', 'P / Start: skip', 'Received {item}', 'Used {item}', 'You were defeated.',
+  'Echo made.', 'You cannot make echoes yet.', 'Recording... press Echo again to finish.',
+  '{name} is lit.', 'Rested at {name}.', '{name} gets angry!', '{name} is defeated!',
+];
+
+/** Every fixed text of the game's screens, including the names of the controls. */
+export const uiStrings = (): string[] => [...new Set([...UI_STRINGS, ...Object.values(ACTION_LABELS)])];
 
 type Screen = 'main' | 'inventory' | 'travel' | 'save' | 'load' | 'settings' | 'controls';
 
@@ -117,6 +139,15 @@ export class GameUi {
   private readonly offs: (() => void)[] = [];
   private slotCache: SlotInfo[] = [];
 
+  /** Text in the player's language (as written when there is no translation). */
+  private tr(text: string): string {
+    return this.host.sim.assets.strings.t(text);
+  }
+
+  private fmt(template: string, values: Record<string, string | number>): string {
+    return this.host.sim.assets.strings.fmt(template, values);
+  }
+
   constructor(
     private readonly parent: HTMLElement,
     private readonly host: GameUiHost,
@@ -130,11 +161,15 @@ export class GameUi {
     parent.appendChild(this.root);
     const ev = host.sim.events;
     this.offs.push(
-      ev.on('message', (e) => this.toast(String(e.text ?? ''))),
-      ev.on('item-given', (e) => e.amount && this.toast(`Received ${host.sim.assets.items.get(String(e.item))?.name ?? String(e.item)}`)),
-      ev.on('item-used', (e) => this.toast(`Used ${host.sim.assets.items.get(String(e.item))?.name ?? String(e.item)}`)),
-      ev.on('died', (e) => host.sim.world.get(Number(e.entity))?.tags.has('player') && this.toast('You were defeated.')),
+      ev.on('message', (e) => this.toast(this.tr(String(e.text ?? '')))),
+      ev.on('item-given', (e) => e.amount && this.toast(this.fmt('Received {item}', { item: this.itemName(String(e.item)) }))),
+      ev.on('item-used', (e) => this.toast(this.fmt('Used {item}', { item: this.itemName(String(e.item)) }))),
+      ev.on('died', (e) => host.sim.world.get(Number(e.entity))?.tags.has('player') && this.toast(this.tr('You were defeated.'))),
     );
+  }
+
+  private itemName(id: string): string {
+    return this.tr(this.host.sim.assets.items.get(id)?.name ?? id);
   }
 
   private toast(text: string): void {
@@ -188,7 +223,7 @@ export class GameUi {
     this.drawMenu();
     this.fade.style.opacity = String(r.view.fade.alpha);
     this.fade.style.background = hex(r.view.fade.color);
-    this.skip.textContent = r.cutscene && sim.assets.cutscenes.get(r.cutscene.name)?.skippable ? 'P / Start: skip' : '';
+    this.skip.textContent = r.cutscene && sim.assets.cutscenes.get(r.cutscene.name)?.skippable ? this.tr('P / Start: skip') : '';
     const now = performance.now();
     while (this.toastList.length && this.toastList[0]!.until < now) this.toastList.shift();
     const sig = this.toastList.map((t) => t.text).join('|');
@@ -301,7 +336,7 @@ export class GameUi {
       const t = el('div', 'text', d.view.text);
       t.setAttribute('data-testid', 'tw-dialogue-text');
       box.appendChild(t);
-      box.appendChild(el('div', 'more', 'E / click: continue'));
+      box.appendChild(el('div', 'more', this.tr('E / click: continue')));
       box.onclick = () => confirmDialogue(contextOf(sim));
     } else {
       if (d.view.prompt) {
@@ -338,7 +373,7 @@ export class GameUi {
       case 'main':
         rows.push({ label: 'Resume', run: () => this.closeMenu(), testId: 'resume' });
         rows.push({ label: 'Inventory', run: () => this.go('inventory'), testId: 'inventory' });
-        rows.push({ label: 'Travel to a lit lantern', detail: `${litPosts(sim.runtime.vars).length} lit`, run: () => this.go('travel'), testId: 'travel' });
+        rows.push({ label: 'Travel to a lit lantern', detail: this.fmt('{n} lit', { n: litPosts(sim.runtime.vars).length }), run: () => this.go('travel'), testId: 'travel' });
         rows.push({ label: 'Save game', run: () => this.go('save'), testId: 'save' });
         rows.push({ label: 'Load game', run: () => this.go('load'), testId: 'load' });
         rows.push({ label: 'Settings', run: () => this.go('settings'), testId: 'settings' });
@@ -360,8 +395,8 @@ export class GameUi {
           const def = sim.assets.items.get(id);
           const slot = quickSlots(sim.runtime.vars).indexOf(id);
           rows.push({
-            label: `${def?.name ?? id} x${n}`,
-            detail: [def?.description, def?.use ? 'press E to use' : '', slot >= 0 ? `slot ${slot + 1}` : ''].filter(Boolean).join(' - '),
+            label: `${this.itemName(id)} x${n}`,
+            detail: [this.tr(def?.description ?? ''), def?.use ? this.tr('press E to use') : '', slot >= 0 ? this.fmt('slot {n}', { n: slot + 1 }) : ''].filter(Boolean).join(' - '),
             run: () => {
               if (def?.use && useItem(contextOf(sim), id)) this.lastDraw = '';
             },
@@ -401,7 +436,7 @@ export class GameUi {
         for (const s of this.slotCache) {
           if (saving && s.slot === 'autosave') continue;
           rows.push({
-            label: s.slot === 'autosave' ? 'Autosave' : `Slot ${s.slot.replace('slot', '')}`,
+            label: s.slot === 'autosave' ? 'Autosave' : this.fmt('Slot {n}', { n: s.slot.replace('slot', '') }),
             detail: s.damaged ? 'damaged' : s.exists ? [s.label, s.savedAt.slice(0, 16).replace('T', ' ')].filter(Boolean).join(' - ') : 'empty',
             run: () => {
               if (!saving && !s.exists) return;
@@ -436,6 +471,31 @@ export class GameUi {
         };
         rows.push({ label: 'Difficulty', detail: set.difficulty, adjust: cycle, run: () => cycle(1), testId: 'set-difficulty' });
         rows.push({ label: 'Screen shake and hit freeze', detail: set.screenShake ? 'on' : 'off', run: () => h.changeSettings({ screenShake: !set.screenShake }), adjust: () => h.changeSettings({ screenShake: !set.screenShake }), testId: 'set-shake' });
+        const zooms = [0.75, 1, 1.25, 1.5];
+        const zoom = (d: number): void => {
+          const at = zooms.findIndex((z) => Math.abs(z - set.cameraZoom) < 0.01);
+          h.changeSettings({ cameraZoom: zooms[(Math.max(at, 1) + d + zooms.length) % zooms.length]! });
+        };
+        rows.push({ label: 'Camera zoom', detail: `${Math.round(set.cameraZoom * 100)}%`, adjust: zoom, run: () => zoom(1), testId: 'set-zoom' });
+        const full = h.fullscreen;
+        if (full) {
+          const toggle = (): void => {
+            const on = !full.get();
+            full.set(on);
+            h.changeSettings({ fullscreen: on });
+          };
+          rows.push({ label: 'Full screen', detail: full.get() ? 'on' : 'off', run: toggle, adjust: toggle, testId: 'set-fullscreen' });
+        }
+        rows.push({ label: 'Show frame rate', detail: set.showFps ? 'on' : 'off', run: () => h.changeSettings({ showFps: !set.showFps }), adjust: () => h.changeSettings({ showFps: !set.showFps }), testId: 'set-fps' });
+        const languages = languageChoices(sim.assets.strings);
+        if (languages.length > 1) {
+          const lang = (d: number): void => {
+            const next = languages[(languages.findIndex((l) => l.code === set.language) + d + languages.length) % languages.length]!;
+            h.changeSettings({ language: next.code });
+          };
+          // each language is shown by its own name, so a player who cannot read the current one can still find theirs
+          rows.push({ label: 'Language', detail: languages.find((l) => l.code === set.language)?.name ?? languages[0]!.name, adjust: lang, run: () => lang(1), testId: 'set-language' });
+        }
         rows.push({ label: 'Controls', run: () => this.go('controls'), testId: 'set-controls' });
         break;
       }
@@ -474,18 +534,18 @@ export class GameUi {
     }
     const { title, hint } = this.buildRows();
     this.focus = Math.min(this.focus, Math.max(0, this.rows.length - 1));
-    const sig = JSON.stringify([this.screen, this.focus, this.rows.map((r) => [r.label, r.detail]), this.message, this.capturing]);
+    const sig = JSON.stringify([this.screen, this.focus, this.rows.map((r) => [r.label, r.detail]), this.message, this.capturing, this.host.sim.assets.strings.language]);
     if (this.menuEl && this.menuEl.dataset.sig === sig) return;
     this.menuEl?.remove();
     const wrap = el('div', 'tw-menu');
     wrap.dataset.sig = sig;
     wrap.setAttribute('data-testid', 'tw-menu');
     const panel = el('div', 'tw-panel');
-    panel.appendChild(el('h2', '', title));
+    panel.appendChild(el('h2', '', this.tr(title)));
     this.rows.forEach((r, i) => {
       const row = el('div', `tw-row${i === this.focus ? ' on' : ''}`);
-      row.appendChild(el('span', '', r.label));
-      if (r.detail) row.appendChild(el('span', 'detail', r.detail));
+      row.appendChild(el('span', '', this.tr(r.label)));
+      if (r.detail) row.appendChild(el('span', 'detail', this.tr(r.detail)));
       if (r.testId) row.setAttribute('data-testid', `tw-row-${r.testId}`);
       row.onclick = () => {
         this.focus = i;
@@ -493,8 +553,8 @@ export class GameUi {
       };
       panel.appendChild(row);
     });
-    if (this.message) panel.appendChild(el('div', 'tw-hint', this.message));
-    panel.appendChild(el('div', 'tw-hint', hint));
+    if (this.message) panel.appendChild(el('div', 'tw-hint', this.tr(this.message)));
+    panel.appendChild(el('div', 'tw-hint', this.tr(hint)));
     wrap.appendChild(panel);
     this.root.appendChild(wrap);
     this.menuEl = wrap;

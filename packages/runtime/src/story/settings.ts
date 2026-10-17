@@ -11,7 +11,14 @@ export const SettingsSchema = z.object({
   difficulty: z.enum(['easy', 'normal', 'hard']).default('normal'),
   /** Screen shake on hits and in cutscenes, and the short freeze when a hit lands. */
   screenShake: z.boolean().default(true),
-  /** Replaces the default input bindings, per action. */
+  /** Full screen (exported games only). Unset = whatever the game was exported with. */
+  fullscreen: z.boolean().optional(),
+  /** How close the camera is: 1 is the normal view. */
+  cameraZoom: z.number().min(0.5).max(2).default(1),
+  /** Show the frames per second in a corner. */
+  showFps: z.boolean().default(false),
+  /** The language of conversations and menus: a code from the game's languages, or '' for the text as written. */
+  language: z.string().default(''),
   bindings: z.record(z.string(), z.array(z.string())).default({}),
 });
 export type GameSettings = z.infer<typeof SettingsSchema>;

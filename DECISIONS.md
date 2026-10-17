@@ -159,3 +159,9 @@ Occlusion fade: renderer-only (not simulation state). Tiles taller than the focu
 - The rule is applied inside `Stroke.apply` (and `resolveAll` for a whole scene), so every tool gets it, edits to neighbours are part of the same undo step, and tools never need to know. The cost is that rule changes only reach scenes that are opened and re-applied.
 - Edge sets are generated (30 variants, 30 exclusive rules) and then editable; cliff faces use `L` on the camera-facing sides. A rim is drawn on the top face by the renderer, so edges show before there is any art.
 - Layers are classifications, not storage: Walls = tiles marked `wall`, Decoration = objects tagged `decoration`, Lights = objects with a light (not the player). Hide and lock are editor-only view state. A second map layer would have meant changing collision, saves, the bot and the checks for little gain.
+
+## D021 - Translations keyed by the original text, settings in the player's browser storage (2026-10-17)
+- A language maps the original text to its translation (`assets/localization/<code>.strings.json`); no generated ids. A writer never has to manage keys, and anything untranslated simply shows as written. The cost is that rewording a line orphans its translations; the dialog reports unused entries.
+- The simulation does the translating where text is produced (conversations, cutscene lines, messages), through `assets.strings`, because those strings are put into the state the UI draws; the game UI translates its own fixed texts at draw time. The language is a player setting, not part of a save, and does not enter the replayable state.
+- Built-in menu text is in `UI_STRINGS`, kept complete by a test that scans `game-ui.ts`.
+- Video settings are player settings like volume: camera zoom and the frame counter are applied by `PlaySession`; full screen is offered only when the host window can do it (`GameUiHost.fullscreen`).

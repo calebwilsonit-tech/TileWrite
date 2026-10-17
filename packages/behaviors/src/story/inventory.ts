@@ -18,7 +18,7 @@ export function useItem(ctx: SimContext, id: string): boolean {
     heal(ctx, player, u.heal);
   }
   if (u.setVariable) ctx.runtime.vars[u.setVariable] = u.setValue;
-  if (u.message) ctx.events.emit('message', { text: u.message });
+  if (u.message) ctx.events.emit('message', { text: ctx.assets.strings.t(u.message) });
   if (u.consume) addItem(ctx.runtime.vars, id, -1);
   ctx.events.emit('item-used', { item: id });
   return true;

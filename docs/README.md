@@ -12,6 +12,7 @@ Start with the tutorial in the app (the project screen's **Take the tutorial** b
 | Echoes, lights and words | [echoes-light-words.md](echoes-light-words.md) |
 | Enemies, stealth, bosses | [ai-and-combat.md](ai-and-combat.md) |
 | Conversations, cutscenes, items, saves, menus | [story-systems.md](story-systems.md) |
+| Translate the game, player settings (zoom, full screen, language) | [translations-and-settings.md](translations-and-settings.md) |
 | Draw and animate sprites | [sprite-studio.md](sprite-studio.md) |
 | Shores, edges and cliff faces that draw themselves; hide and lock layers | [autotiling-and-layers.md](autotiling-and-layers.md) |
 | Add sounds and music, hit shake, sparks | [sound-and-effects.md](sound-and-effects.md) |

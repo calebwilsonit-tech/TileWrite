@@ -20,6 +20,7 @@ interface GameApi {
   crash(text: string): Promise<string>;
   quit(): Promise<void>;
   toggleFullscreen(): Promise<void>;
+  setFullscreen(on: boolean): Promise<void>;
 }
 const game = (): GameApi => (window.tilewright as unknown as { game: GameApi }).game;
 
@@ -180,6 +181,7 @@ async function boot(): Promise<void> {
       void showCrash(report.headline, formatCrashReport(report));
     },
     quit: () => void game().quit(),
+    setFullscreen: (on) => void game().setFullscreen(on),
     autoPlay: null,
     flags: () => ({ ai: false, triggers: false, lights: false, depth: false, profiler: false }),
     record: false,
