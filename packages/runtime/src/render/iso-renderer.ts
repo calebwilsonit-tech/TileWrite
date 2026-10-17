@@ -6,6 +6,7 @@ import { C, LABEL, type Label, type Sprite, type TransformIso } from '../scene/c
 import { LightingLayer } from './lighting-layer';
 import { ParticleLayer } from './particles';
 import type { SpriteData } from '../sprites/format';
+import { compositeFrame } from '../sprites/raster';
 import { exportSheet, type Atlas } from '../sprites/sheet';
 import type { Entity, EntityId, World } from '../scene/world';
 import { DEFAULT_TILESET, FLAG, SLOPE, TileMap, type TileDef, type TileSet } from '../tilemap/tilemap';
@@ -139,6 +140,9 @@ export class IsoRenderer {
   private nextTileId = 0;
   private readonly entityViews = new Map<number, EntityView>();
   private readonly sprites = new Map<string, SpriteSheetTextures>();
+  /** Sprites kept whole (not trimmed) for covering the top faces of tiles, and the textures made from them on first use. */
+  private readonly artSources = new Map<string, SpriteData>();
+  private readonly artTextures = new Map<string, Texture>();
   private spriteVersion = 0;
   private ready = false;
   private tileset: TileSet = DEFAULT_TILESET;
@@ -303,9 +307,37 @@ export class IsoRenderer {
     const [ebx, eby] = P(1, 0, bottom);
     g.poly([wx, wy, sx, sy, sbx, sby, wbx, wby]).fill(def.left);
     g.poly([sx, sy, ex, ey, ebx, eby, sbx, sby]).fill(def.right);
-    g.poly([nx, ny, ex, ey, sx, sy, wx, wy]).fill(def.top);
-    g.poly([nx, ny, ex, ey, sx, sy, wx, wy]).stroke({ width: 1, color: shade(def.top, 0.85), alpha: 0.6 });
+    g.poly([nx, ny, ex, ey, sx, sy, wx, wy]).fill(this.topFill(def));
+    g.poly([nx, ny, ex, ey, sx, sy, wx, wy]).stroke({ width: 1, color: shade(def.top, 0.85), alpha: this.hasTileArt(def) ? 0.15 : 0.6 });
     if (def.rim) this.drawRim(g, [nx, ny], [ex, ey], [sx, sy], [wx, wy], def.rim);
+  }
+
+  /** What fills a tile's top face: its art stretched over the face (the art's own picture of a diamond), or its flat colour. */
+  private topFill(def: TileDef): number | { texture: Texture; textureSpace: 'local' } {
+    const t = def.art ? this.artTexture(def.art) : null;
+    return t ? { texture: t, textureSpace: 'local' } : def.top;
+  }
+
+  /** Whether this tile's art is available now. */
+  hasTileArt(def: TileDef): boolean {
+    return !!def.art && this.artSources.has(def.art);
+  }
+
+  private artTexture(name: string): Texture | null {
+    const cached = this.artTextures.get(name);
+    if (cached) return cached;
+    const data = this.artSources.get(name);
+    if (!data) return null;
+    const canvas = document.createElement('canvas');
+    canvas.width = data.width;
+    canvas.height = data.height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+    ctx.putImageData(new ImageData(new Uint8ClampedArray(compositeFrame(data, 0)), data.width, data.height), 0, 0);
+    const tex = Texture.from(canvas);
+    tex.source.scaleMode = 'nearest';
+    this.artTextures.set(name, tex);
+    return tex;
   }
 
   /** An outline along the sides of the top face that border something else, and a dot in the corners where only a diagonal does. */
@@ -559,6 +591,8 @@ export class IsoRenderer {
    */
   registerSprite(data: SpriteData): void {
     this.unregisterSprite(data.name);
+    this.artSources.set(data.name, data);
+    if (Object.values(this.tileset).some((d) => d.art === data.name)) this.rebuildTiles();
     const sheet = exportSheet(data, { powerOfTwo: false, padding: 1, png: false });
     const canvas = document.createElement('canvas');
     canvas.width = sheet.width;
@@ -573,6 +607,9 @@ export class IsoRenderer {
   }
 
   unregisterSprite(name: string): void {
+    this.artSources.delete(name);
+    this.artTextures.get(name)?.destroy(true);
+    this.artTextures.delete(name);
     const old = this.sprites.get(name);
     if (!old) return;
     for (const t of old.textures) t.destroy(false);

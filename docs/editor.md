@@ -16,7 +16,7 @@ Panels dock, tab, split and float: drag a tab. The layout is remembered; **Comma
 | --- | --- |
 | Viewport | The world. Middle-drag, right-drag or Space+drag to pan; mouse wheel zooms; Home frames the map. |
 | Tools | Every tool, grouped. The active tool shows a one-line explanation and its options. |
-| Tiles | The tile palette with search, and the **Autotiling...** button (see [autotiling-and-layers.md](autotiling-and-layers.md)). |
+| Tiles | The tile palette with search, **Tile art** (cover a tile with a sprite, make a tile from a sprite or import a PNG as a tile) and the **Autotiling...** button (see [autotiling-and-layers.md](autotiling-and-layers.md)). |
 | Inspector | Edits whatever is selected: an object, a region, or (with nothing selected) the scene and map size. Fields apply on Enter or when you click away, so one edit is one undo step. |
 | Layers | Show/hide and lock Ground, Walls, Objects, Decoration, Lights and Regions (see [autotiling-and-layers.md](autotiling-and-layers.md)); overlays for the grid, collision colours and height numbers. |
 | History | The undo list. |

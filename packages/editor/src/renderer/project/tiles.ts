@@ -1,4 +1,4 @@
-import { DEFAULT_TILESET, PATTERN_CHARS, type AutotileRule, type GeneratedSet, type ProjectData, type TileDefData } from '@tilewright/runtime';
+import { DEFAULT_TILESET, PATTERN_CHARS, compositeFrame, type AutotileRule, type GeneratedSet, type ProjectData, type SpriteData, type TileDefData } from '@tilewright/runtime';
 
 /** The project's tiles; a project that never customised them uses the built-in set, which is copied in so it can be extended. */
 export function ownTiles(project: Pick<ProjectData, 'tileset'>): TileDefData[] {
@@ -58,4 +58,53 @@ export function checkRules(tiles: readonly TileDefData[], rules: readonly Autoti
 export function missingTiles(tileIds: Iterable<number>, tiles: readonly TileDefData[]): number[] {
   const have = new Set(tiles.map((t) => t.id));
   return [...new Set(tileIds)].filter((id) => id !== 0 && !have.has(id)).sort((a, b) => a - b);
+}
+
+// ---------- tile art ----------
+
+const shadeInt = (c: number, k: number): number => {
+  const ch = (shift: number): number => Math.max(0, Math.min(255, Math.round(((c >> shift) & 255) * k)));
+  return (ch(16) << 16) | (ch(8) << 8) | ch(0);
+};
+
+/** The average colour of what a sprite's first frame shows (0xRRGGBB); grey for a blank sprite. */
+export function averageColor(sprite: SpriteData): number {
+  const rgba = compositeFrame(sprite, 0);
+  let r = 0;
+  let g = 0;
+  let b = 0;
+  let n = 0;
+  for (let i = 0; i < rgba.length; i += 4) {
+    const a = rgba[i + 3]! / 255;
+    if (a < 0.5) continue;
+    r += rgba[i]!;
+    g += rgba[i + 1]!;
+    b += rgba[i + 2]!;
+    n++;
+  }
+  return n === 0 ? 0x9a9a9a : (Math.round(r / n) << 16) | (Math.round(g / n) << 8) | Math.round(b / n);
+}
+
+/** A new tile whose top face is drawn by a sprite; its sides take darker shades of the picture's average colour. */
+export function tileFromSprite(tiles: readonly TileDefData[], sprite: SpriteData): TileDefData {
+  const avg = averageColor(sprite);
+  let name = sprite.name;
+  for (let n = 2; tiles.some((t) => t.name.toLowerCase() === name.toLowerCase()); n++) name = `${sprite.name} ${n}`;
+  return { id: nextTileId(tiles), name, top: avg, left: shadeInt(avg, 0.78), right: shadeInt(avg, 0.6), art: sprite.name };
+}
+
+/** Give a tile a sprite for its top face, or take its art away (undefined). Its variants follow it. */
+export function setTileArt(tiles: readonly TileDefData[], id: number, art: string | undefined): TileDefData[] {
+  return tiles.map((t) => {
+    if (t.id !== id && t.group !== id) return t;
+    const { art: _old, ...rest } = t;
+    return art ? { ...rest, art } : rest;
+  });
+}
+
+/** Tiles whose art is not a sprite of this project, in plain English. */
+export function tileArtProblems(tiles: readonly TileDefData[], sprites: ReadonlySet<string>): string[] {
+  const out: string[] = [];
+  for (const t of tiles) if (t.art && !sprites.has(t.art)) out.push(`The tile "${t.name}" is covered by the sprite "${t.art}", which is not in this project, so it is drawn as a flat colour.`);
+  return out;
 }

@@ -173,6 +173,8 @@ export const TileDefSchema = z.object({
   group: z.number().int().min(1).optional(),
   wall: z.boolean().optional(),
   rim: z.object({ sides: z.number().int().min(0).max(15), corners: z.number().int().min(0).max(15), color: z.number().int().min(0).max(0xffffff) }).optional(),
+  /** Name of a sprite that covers the top face. */
+  art: z.string().optional(),
 });
 export type TileDefData = z.infer<typeof TileDefSchema>;
 

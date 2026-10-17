@@ -31,6 +31,9 @@ A variant is a tile whose `group` is the plain tile; the Tiles panel shows only 
 
 Rules are stored in `project.json` (`autotile`) and the variants in its tile list (`tileset`). They apply while editing; the game just draws the tile each cell holds, so autotiling costs nothing while playing.
 
+## Tile art
+Tiles are flat colours until you give them art. In the **Tiles** panel, **Tile art** lets you cover the top of the selected tile with a sprite (pick it from the list; draw it in the **Sprites** tab first, or **Import a PNG as a tile...**, which makes the sprite and a tile covered by it in one go). **New tile from a sprite** makes another tile from any sprite you already have. The tile's sides keep darker shades of the picture's average colour, so tall columns still read as solid. A 64 x 32 picture of a diamond fits a tile exactly (the corners can be see-through); a square picture is stretched over the top face and cut to the diamond. Variants made by autotiling follow their base tile's art. Taking the art away goes back to the flat colour, and the project check warns about a tile whose sprite is missing (it is drawn as a flat colour until the sprite is back). Art works the same in Play, in the game window and in exported games. Tested by `e2e/m15-tile-art.spec.ts` (it reads the colours on the screen) and the tile helper tests.
+
 ## Layers
 The **Layers** panel shows and locks things in groups. A hidden layer is not drawn in the editor; a locked layer cannot be changed by tools.
 

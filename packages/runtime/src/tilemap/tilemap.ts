@@ -15,6 +15,8 @@ export interface TileDef {
   wall?: boolean;
   /** An outline along some sides of the top face and dots in some corners (edges and shores). */
   rim?: { sides: number; corners: number; color: number };
+  /** A sprite (drawn or imported in the sprite studio) that covers the top face instead of the flat colour. */
+  art?: string;
 }
 
 export type TileSet = Record<number, TileDef>;

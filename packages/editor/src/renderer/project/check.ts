@@ -5,7 +5,7 @@ import { EditorDoc } from '../model/doc';
 import { validateScene } from '../model/validate';
 import { storyVariables } from '../model/story-vars';
 import { loadScene, type ProjectFs } from './io';
-import { checkRules, missingTiles, ownTiles } from './tiles';
+import { checkRules, missingTiles, ownTiles, tileArtProblems } from './tiles';
 import { collectStrings, coverage } from './localization';
 import { skinProblems } from './story';
 
@@ -150,6 +150,7 @@ export async function checkProject(
   if (worldMap && worldMap.nodes.length > 0) for (const text of checkWorldMap(worldMap, project.scenes)) out.push({ id: `worldmap:${text}`, severity: 'warning', scene: '', message: `World map: ${text}` });
   if (mixer && soundNames) for (const text of checkMixer(mixer, soundNames)) out.push({ id: `mixer:${text}`, severity: 'warning', scene: '', message: `Mixer: ${text}` });
   for (const m of minigames) for (const text of checkMinigame(m, { items: itemIds })) out.push({ id: `minigame:${m.name}:${text}`, severity: 'warning', scene: '', message: text });
+  for (const text of tileArtProblems(tiles, spriteNames)) out.push({ id: `tile-art:${text}`, severity: 'warning', scene: '', message: text });
   for (const text of skinProblems(skins, { sprites: spriteNames, items: itemIds })) out.push({ id: `skin:${text}`, severity: 'warning', scene: '', message: text });
   return out;
 }
