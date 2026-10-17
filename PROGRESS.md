@@ -3,7 +3,7 @@
 Boxes are ticked only when the milestone's tests pass and the sample has been played.
 Spec: `ENGINE_BUILD_PROMPT.md`. Read `DECISIONS.md` and `KNOWN_ISSUES.md` before continuing.
 
-**Next up:** M13 the acceptance game - rebuild a vertical slice of The Last Storytender using only the editor UI (hub area, a dungeon with height levels and stairs, an echo puzzle with two plates and a gate, a crate puzzle, a sentence stone that changes a bridge, a lantern post checkpoint with death-respawn, a pause menu with Restart/Travel, a stealth enemy with a vision cone, a two-phase boss, an NPC conversation with a choice that sets a flag, save/load, a settings menu with input remapping), driven through Playwright, then check it with the validators and finish it with the playbot, and export it to an .exe (see docs/reference_game.md). Then M14 polish (onboarding tutorial, docs pass, templates, performance, accessibility, audio engine, autotiling, particles, hit-stop...). Owed: autotiling rules + Decoration/Walls/Lights layers, separate game window, vector drawing in the studio, visual state-machine editor, audio engine, dialogue graph canvas, localization string tables, assistant tools for story data/prefabs/regions.
+**Next up:** M14 polish - the interactive first-run tutorial (build a room with a plate and a gate in under 15 minutes), docs for every panel/behaviour/recipe, templates, a performance pass, accessibility (font scaling, colour-blind-safe overlays, everything remappable), and the engine features still owed (audio engine, particles and hit-stop, autotiling, hot reload / separate game window, vector drawing, visual state machines, dialogue graph canvas, localization). Then the final summary in PROGRESS.md (what was built, what is weak, what next).
 
 ## Milestones
 
@@ -20,7 +20,7 @@ Spec: `ENGINE_BUILD_PROMPT.md`. Read `DECISIONS.md` and `KNOWN_ISSUES.md` before
 - [x] M10 Code window (see the M10 checklist)
 - [x] M11 Claude assistant (see the M11 checklist)
 - [x] M12 Export and packaging (see the M12 checklist; the NSIS installer itself is unverified)
-- [ ] M13 The acceptance game
+- [x] M13 The acceptance game (see the M13 checklist)
 - [ ] M14 Polish
 
 ## M0 sub-checklist (done)
@@ -128,6 +128,17 @@ Done and covered by tests (unit: `packages/runtime/src/story`, `packages/behavio
 Deferred:
 - [ ] Dialogue node-graph canvas and a visual cutscene timeline; localization string tables
 - [ ] Audio engine (volumes are stored only), video settings, minigames, cosmetic skins, hit-stop, drawn world map
+
+## M13 checklist
+
+Verified by `e2e/m13-acceptance.spec.ts` (a minute, built through the UI) with `e2e/slice-bot.ts`; described in `docs/acceptance.md`:
+- [x] Hub with an elder (choice that sets a flag, opening a seal through an event row), a lantern post and a portal
+- [x] Dungeon with height levels and stairs, an echo puzzle with two plates and a gate, a crate puzzle, a sentence stone that turns a text block into a bridge over a pit, a stealth guard, a lantern post, a two-phase boss in an arena guarding the exit
+- [x] Death respawn at the lantern, pause menu with Restart and Travel, save/load, settings with input remapping (played with the real menus in the editor)
+- [x] The validators report no bypass, no soft-lock and no problems, and do catch a hole cut into a wall
+- [x] The playbot finishes the slice from the first frame to the exit, hub to dungeon, with buttons only (47 s of game time)
+- [x] The slice exports to a Windows program that starts in the hub and plays with real keys and mouse (no editor installed on that path)
+- [x] Engine fixes the slice forced: bridges in the checks and the bot, gates in a row, crate puzzles in later rooms, flags set by conversations, bot travel/fight/corner recovery
 
 ## M12 checklist
 

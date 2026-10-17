@@ -94,12 +94,26 @@ export class Bot {
     return out;
   }
 
+  /** Cells a text block is bridging right now (it is underlined): walkable even over a pit. */
+  private bridges(): Set<string> {
+    const out = new Set<string>();
+    for (const o of this.game.sim.world.query('textBlock', C.Transform)) {
+      if (!(o.get<{ underline?: boolean }>('label')?.underline ?? false)) continue;
+      const t = o.require<TransformIso>(C.Transform);
+      const c = o.get<Collider>(C.Collider);
+      const w = c?.w ?? 2;
+      const d = c?.d ?? 1;
+      for (let x = Math.floor(t.x - w / 2 + 0.05); x <= Math.floor(t.x + w / 2 - 0.05); x++) for (let y = Math.floor(t.y - d / 2 + 0.05); y <= Math.floor(t.y + d / 2 - 0.05); y++) out.add(`${x},${y}`);
+    }
+    return out;
+  }
+
   private plan(goal: { x: number; y: number }): Cell2[] | null {
     const map = this.game.sim.map;
     if (!map) return null;
     const body = this.game.player.get<Body>(C.Body);
     const obstacles = this.obstacles();
-    const path = findPath(map, this.pos(), goal, { stepUp: body?.stepUp, maxDrop: 3, blocked: (x, y) => obstacles.has(`${x},${y}`), maxNodes: 8000 });
+    const path = findPath(map, this.pos(), goal, { stepUp: body?.stepUp, maxDrop: 3, blocked: (x, y) => obstacles.has(`${x},${y}`), bridges: this.bridges(), maxNodes: 8000 });
     if (!path) return null;
     path[path.length - 1] = { x: goal.x, y: goal.y };
     return path;
@@ -114,14 +128,18 @@ export class Bot {
     const arrive = opts.arrive ?? 0.25;
     const maxTicks = Math.round((opts.maxSeconds ?? 60) * 60);
     const start = this.game.sim.tick;
+    const scene0 = this.game.scenePath;
     let path = this.plan(goal);
     if (!path) return { ok: false, kind: 'blocked', seconds: 0, message: `There is no way to walk to ${label} from here.` };
     let replanAt = start + 30;
     let checkTick = start;
     let checkPos = this.pos();
     let stuckChecks = 0;
+    let recenter = false;
     const done = (kind: ReportKind, message: string, ok = false): PlayReport => ({ ok, kind, seconds: (this.game.sim.tick - start) / 60, message, at: { ...this.pos() } });
     while (this.game.sim.tick - start < maxTicks) {
+      // a portal or a fast-travel took the player to another scene on the way: that counts as arriving
+      if (this.game.scenePath !== scene0) return done('reached', `Went on to ${this.game.scenePath.replace(/^scenes\//, '').replace('.scene.json', '')} on the way to ${label}.`, true);
       const p = this.pos();
       if (Math.hypot(goal.x - p.x, goal.y - p.y) <= arrive) {
         this.step();
@@ -139,6 +157,10 @@ export class Bot {
         const again = this.plan(goal);
         if (!again) return done('blocked', `There is no way to walk to ${label} from here.`);
         path = again;
+        if (recenter) {
+          path.unshift({ x: Math.floor(p.x) + 0.5, y: Math.floor(p.y) + 0.5 });
+          recenter = false;
+        }
       }
       while (path.length > 1 && Math.hypot(path[0]!.x - p.x, path[0]!.y - p.y) < 0.14) path.shift();
       const wp = path[0]!;
@@ -160,12 +182,59 @@ export class Bot {
             return done('stuck', `Stuck at cell (${Math.floor(c.x)}, ${Math.floor(c.y)}) for ${((this.game.sim.tick - start) / 60).toFixed(0)} s while heading for ${label}.`);
           }
           replanAt = this.game.sim.tick;
+          recenter = true; // wedged against a corner: step back to the middle of the cell, then carry on
         } else stuckChecks = 0;
         checkTick = this.game.sim.tick;
         checkPos = this.pos();
       }
     }
     return done('timeout', `Did not reach ${label} within ${formatTime(opts.maxSeconds ?? 60)}.`);
+  }
+
+  /**
+   * Fight something with the quill and the movement buttons: walk up to it, swing when it is close, repeat until it is
+   * defeated or gone. Gives up when the player is defeated or time runs out.
+   */
+  fight(ref: string, opts: WalkOptions = {}): PlayReport {
+    const start = this.game.sim.tick;
+    const maxTicks = Math.round((opts.maxSeconds ?? 90) * 60);
+    const first = this.game.find(ref);
+    const label = opts.label ?? (first ? `"${first.name}"` : ref);
+    const done = (kind: ReportKind, message: string, ok = false): PlayReport => ({ ok, kind, seconds: (this.game.sim.tick - start) / 60, message, at: { ...this.pos() } });
+    if (!first) return done('blocked', `There is nothing matching "${ref}" to fight.`);
+    while (this.game.sim.tick - start < maxTicks) {
+      const target = this.game.find(ref);
+      if (!target || (healthOf(target)?.dead ?? false)) return done('reached', `Defeated ${label} in ${formatTime((this.game.sim.tick - start) / 60)}.`, true);
+      if (healthOf(this.game.player)?.dead) return done('died', `The player was defeated fighting ${label}.`);
+      if (this.game.sim.runtime.dialogue || this.game.sim.runtime.cutscene) {
+        this.press('interact');
+        continue;
+      }
+      const tt = target.require<TransformIso>(C.Transform);
+      const me = this.pos();
+      const dx = tt.x - me.x;
+      const dy = tt.y - me.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist > 4) {
+        // far away: walk round whatever is in the way first
+        const r = this.walkTo({ x: tt.x, y: tt.y }, { arrive: 3, maxSeconds: 4, label });
+        if (!r.ok && r.kind !== 'timeout') return done(r.kind, r.message);
+        continue;
+      }
+      const snap: ActionSnapshot = {};
+      if (dist > 1.3) {
+        // a direction on the map is a pair of screen keys
+        const sx = (dx - dy) / 2;
+        const sy = (dx + dy) / 2;
+        if (sx > 0.25) snap.move_right = 1;
+        if (sx < -0.25) snap.move_left = 1;
+        if (sy > 0.25) snap.move_down = 1;
+        if (sy < -0.25) snap.move_up = 1;
+      }
+      if (dist < 1.9 && (this.game.sim.tick - start) % 24 === 0) snap.attack = 1;
+      this.step(snap);
+    }
+    return done('timeout', `Did not defeat ${label} within ${formatTime(opts.maxSeconds ?? 90)}.`);
   }
 
   /** Walk to an object (by reference) and stop close to it. */

@@ -136,3 +136,13 @@ Occlusion fade: renderer-only (not simulation state). Tiles taller than the focu
 - **The zip** is made with the Windows `tar.exe` (bsdtar writes zip) or `zip` on Linux, named by full path so a GNU tar earlier in PATH (Git) cannot break it. A failed zip does not fail the export.
 - **The editor installer** uses electron-builder with an exact Electron version and `electronVersion` set (a range fails inside a workspace); renderer-only packages are devDependencies so they are not packed twice (the bundles already contain them).
 - **The tests clean up after themselves** (`e2e/clean-temp.ts` as global setup and teardown): an export test makes hundreds of megabytes per run, and 535 leftover temp folders had filled the disk.
+
+## D018 - Acceptance slice and what it changed in the checks and the bot (M13) (2026-10-16)
+- **The slice is built by `e2e/m13-acceptance.spec.ts` through the UI only**, then judged by the same validators a user has and played by the same `Bot` the Playbot panel uses; the bot's walkthrough script lives in `e2e/slice-bot.ts` and plays the files on disk headless (so it plays what an export would ship).
+- **Objects are placed with the mouse and then given exact positions in the Inspector**: tall walls hide cells from the mouse, so a click can land on the wrong cell. Terrain that overlaps (pits) is painted before walls are raised.
+- **`Game` can run several scenes** (`scenes` map, `enterScene`, travel requests handled in `step`), replicating what `PlaySession` does for a portal or fast travel; `walkTo` returns as reached when a scene change happens on the way.
+- **`Bot.fight`** walks up (round walls) and swings until the target is defeated or gone; `walkTo` recentres on the cell when it is wedged on a corner.
+- **Text bridges are modelled** (`textBridgeCells`): a text block's footprint counts as walkable over a pit or water when it starts underlined, the player can format it, or a wire underlines it. The walkers (`findPath`/`reachableCells`/`reachCells`) take a `bridges` set; the bot passes the cells of blocks that are underlined right now.
+- **A gate is judged useful if opening it changes where the player can go with the other gates shut or with them open**, which handles both a doorway filled by two gates and gates in a row.
+- **Crate puzzle analysis**: targets are only plates a crate could be pushed onto; the player's position can be given; if the puzzle looks unsolvable because the player starts behind closed gates, it is tried again with the gates open (the player is assumed to have got there).
+- **Event-sheet checks know which flags conversations and cutscenes set** (`storyVariables`).

@@ -24,6 +24,7 @@ import { store } from '../app/store';
 import { viewportRef } from '../app/commands';
 import { readCell } from '../model/cells';
 import type { EditorDoc } from '../model/doc';
+import { storyVariables } from '../model/story-vars';
 import { validateScene } from '../model/validate';
 import { api, joinPath } from '../project/api';
 import { storyNameProblem } from '../project/story';
@@ -106,7 +107,7 @@ function tileLegend(): { id: number; name: string }[] {
 }
 
 export function sceneProblems(doc: EditorDoc): { severity: string; message: string; object?: string }[] {
-  const scene = validateScene(doc, new Set(studio.assets.keys()), new Set(store.state.prefabNames)).map((p) => ({
+  const scene = validateScene(doc, new Set(studio.assets.keys()), new Set(store.state.prefabNames), storyVariables(store.story.dialogues, store.story.cutscenes)).map((p) => ({
     severity: p.severity,
     message: p.message,
     ...(p.target?.kind === 'entity' ? { object: label(doc.getEntity(p.target.id) ?? { name: '?', id: p.target.id }) } : {}),
@@ -138,6 +139,7 @@ function eventFacts(doc: EditorDoc) {
     tags: new Set(doc.entities.flatMap((e) => e.tags)),
     variables: new Set(doc.variables.map((v) => v.name)),
     prefabs: new Set(store.state.prefabNames),
+    storyVariables: storyVariables(store.story.dialogues, store.story.cutscenes),
   };
 }
 

@@ -3,6 +3,7 @@ import { checkCutscene, expandEntities, type CutsceneData, type DialogueData, ty
 import { analyseLevel, analysePushPuzzles } from '@tilewright/playbot';
 import { EditorDoc } from '../model/doc';
 import { validateScene } from '../model/validate';
+import { storyVariables } from '../model/story-vars';
 import { loadScene, type ProjectFs } from './io';
 
 export interface ProjectProblem {
@@ -61,7 +62,7 @@ export async function checkProject(
 
   for (const [path, scene] of scenes) {
     const doc = EditorDoc.fromScene(scene, prefabs);
-    for (const p of validateScene(doc, spriteNames, prefabNames)) {
+    for (const p of validateScene(doc, spriteNames, prefabNames, storyVariables(story.dialogues, story.cutscenes))) {
       out.push({ id: `${path}:${p.id}`, severity: p.severity, scene: path, message: p.message, entity: p.target?.kind === 'entity' ? p.target.id : undefined, x: p.target?.x, y: p.target?.y });
     }
     for (const i of [...analyseLevel(scene, prefabs), ...analysePushPuzzles(scene, prefabs)]) {

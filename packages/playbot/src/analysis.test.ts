@@ -173,3 +173,68 @@ describe('crate puzzles', () => {
     expect(solvePush(puzzle).solvable).toBe(true);
   });
 });
+
+describe('bridges made of text', () => {
+  /** A pit band two cells wide across the whole room, with the goal behind it. */
+  function pitBand(withBlock: boolean, format = 'plain', canFormat = true) {
+    const fs = room(20, 10);
+    for (let y = 0; y < 10; y++) for (const x of [9, 10]) fs.map.setFlag(x, y, FLAG.PIT);
+    const block = thing('t', 'Bridge', 10, 4.5, { textBlock: { format, playerCanFormat: canFormat } });
+    return sceneOf(fs, player('p', 2.5, 4.5), goalAt(16.5, 4.5), ...(withBlock ? [block] : []), gateAt('g', 14.5, 4.5));
+  }
+
+  it('a goal behind a wide pit is unreachable, unless a text block lies over the pit and could be formatted into a bridge', () => {
+    expect(analyseLevel(pitBand(false)).some((i) => i.id === 'goal-unreachable-goal')).toBe(true);
+    expect(analyseLevel(pitBand(true)).some((i) => i.id === 'goal-unreachable-goal')).toBe(false);
+  });
+
+  it('a block nobody can format, and that no wire underlines, is not a bridge', () => {
+    expect(analyseLevel(pitBand(true, 'plain', false)).some((i) => i.id === 'goal-unreachable-goal')).toBe(true);
+    expect(analyseLevel(pitBand(true, 'underline', false)).some((i) => i.id === 'goal-unreachable-goal')).toBe(false);
+    const wired = pitBand(true, 'plain', false);
+    wired.wires.push({ id: 'w', from: { entity: 's', output: 'word2' }, to: { entity: 't', input: 'underline' } });
+    expect(analyseLevel(wired).some((i) => i.id === 'goal-unreachable-goal')).toBe(false);
+  });
+});
+
+describe('gates in a row', () => {
+  it('each gate of a sequence blocks something: none is called useless just because an earlier one is closed', () => {
+    const fs = room(30, 10);
+    wallWithDoor(fs.map, 10, [4]);
+    wallWithDoor(fs.map, 20, [4]);
+    const issues = analyseLevel(sceneOf(fs, player('p', 2.5, 4.5), gateAt('g1', 10.5, 4.5), gateAt('g2', 20.5, 4.5), goalAt(26.5, 4.5)));
+    expect(issues.filter((i) => i.id.startsWith('gate-useless'))).toEqual([]);
+    expect(issues.some((i) => i.id.startsWith('goal-'))).toBe(false);
+  });
+
+  it('still says so about a gate that can simply be walked around', () => {
+    const fs = room(30, 10);
+    wallWithDoor(fs.map, 10, [4, 5]); // the doorway is two cells wide, the gate fills one
+    const issues = analyseLevel(sceneOf(fs, player('p', 2.5, 4.5), gateAt('g1', 10.5, 4.5), goalAt(20.5, 4.5)));
+    expect(issues.some((i) => i.id === 'gate-useless-g1')).toBe(true);
+  });
+});
+
+describe('a crate puzzle in a later room', () => {
+  it('is checked as if the gates before it were open, not called unsolvable because the player starts behind a closed gate', () => {
+    const fs = room(30, 10);
+    wallWithDoor(fs.map, 8, [5]);
+    for (let x = 12; x < 28; x++) {
+      fs.map.setFlag(x, 4, FLAG.BLOCK);
+      fs.map.setFlag(x, 6, FLAG.BLOCK);
+    }
+    fs.map.setFlag(26, 5, FLAG.BLOCK);
+    const crate = thing('c', 'Crate', 15.5, 5.5, { pushable: {} }, { collider: { w: 0.9, d: 0.9, height: 1, solid: true, trigger: false, layer: 16, mask: 65535, enabled: true, inside: [] } });
+    const scene = sceneOf(fs, player('p', 2.5, 5.5), gateAt('door', 8.5, 5.5), crate, thing('plate', 'Plate', 25.5, 5.5, { pressurePlate: { activatedBy: 'crates' } }));
+    expect(analysePushPuzzles(scene)).toEqual([]);
+  });
+});
+
+describe('a doorway filled by two gates', () => {
+  it('neither gate is called useless: opening one lets the player through', () => {
+    const fs = room(20, 10);
+    wallWithDoor(fs.map, 10, [4, 5]);
+    const issues = analyseLevel(sceneOf(fs, player('p', 2.5, 4.5), gateAt('g1', 10.5, 4.5), gateAt('g2', 10.5, 5.5), goalAt(16.5, 4.5)));
+    expect(issues.filter((i) => i.id.startsWith('gate-useless'))).toEqual([]);
+  });
+});

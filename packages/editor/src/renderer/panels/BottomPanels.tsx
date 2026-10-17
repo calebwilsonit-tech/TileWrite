@@ -3,6 +3,7 @@ import { formatCrashReport } from '@tilewright/runtime';
 import { useApp, store } from '../app/store';
 import { viewportRef } from '../app/commands';
 import { validateScene, type Problem } from '../model/validate';
+import { storyVariables } from '../model/story-vars';
 import type { ProjectProblem } from '../project/check';
 import { studio, useStudio } from '../studio/store';
 import { assistant } from '../assistant/store';
@@ -17,8 +18,9 @@ export function useProblems(): Problem[] {
   const assets = useStudio((s) => s.assetsVersion);
   const prefabs = useApp((s) => s.prefabNames);
   const analysis = useApp((s) => s.analysis);
+  const storyVersion = useApp((s) => s.storyVersion);
   const deferred = useDeferredValue(version);
-  const scene = useMemo(() => (store.doc ? validateScene(store.doc, new Set(studio.assets.keys()), new Set(prefabs)) : []), [deferred, assets, prefabs]);
+  const scene = useMemo(() => (store.doc ? validateScene(store.doc, new Set(studio.assets.keys()), new Set(prefabs), storyVariables(store.story.dialogues, store.story.cutscenes)) : []), [deferred, assets, prefabs, storyVersion]);
   // puzzle checks (bypasses, soft-locks) come from the last time they were run
   const puzzles = useMemo<Problem[]>(
     () =>

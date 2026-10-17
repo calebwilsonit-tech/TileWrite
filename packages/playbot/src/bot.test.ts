@@ -211,3 +211,79 @@ describe('solving a level', () => {
     expect(r.message).toContain('Switches tried: "Plate".');
   });
 });
+describe('a game of several scenes', () => {
+  function twoScenes(): { a: SceneData; b: SceneData } {
+    const a = sceneOf(flatScene(16, 10), player('p', 2.5, 5.5), thing('door', 'Door', 12.5, 5.5, { portal: { scene: 'scenes/b.scene.json', spawn: 'Arrival' } }));
+    const b = sceneOf(flatScene(16, 10), player('p', 1.5, 1.5), thing('arrival', 'Arrival', 3.5, 7.5, {}), goalAt(12.5, 7.5));
+    return { a, b };
+  }
+
+  it('walks through a portal into the next scene, which is entered at the named place, keeping what was carried', () => {
+    const { a, b } = twoScenes();
+    const game = new Game({ scene: a, scenePath: 'scenes/a.scene.json', scenes: new Map([['scenes/a.scene.json', a], ['scenes/b.scene.json', b]]) });
+    game.sim.runtime.vars['item:key'] = 1;
+    const bot = new Bot(game);
+    expect(bot.walkToEntity('name:Door').ok).toBe(true);
+    bot.wait(0.3);
+    expect(game.scenePath).toBe('scenes/b.scene.json');
+    expect(game.sim.world.all().some((e) => e.name === 'Door')).toBe(false);
+    expect(Math.hypot(game.position.x - 3.5, game.position.y - 7.5)).toBeLessThan(0.5);
+    expect(game.sim.runtime.vars['item:key']).toBe(1);
+    expect(bot.walkToEntity('tag:goal').ok).toBe(true);
+    expect(game.problems).toEqual([]);
+  });
+
+  it('says so when a portal leads to a scene that does not exist', () => {
+    const a = sceneOf(flatScene(16, 10), player('p', 2.5, 5.5), thing('door', 'Door', 6.5, 5.5, { portal: { scene: 'scenes/nowhere.scene.json', spawn: '' } }));
+    const game = new Game({ scene: a, scenes: new Map([['scenes/a.scene.json', a]]) });
+    const bot = new Bot(game);
+    bot.walkToEntity('name:Door');
+    bot.wait(0.3);
+    expect(game.problems).toContain('The scene "scenes/nowhere.scene.json" does not exist.');
+  });
+});
+
+describe('fighting', () => {
+  function arena(enemyHp: number): Game {
+    const hero = player('p', 3.5, 5.5);
+    attachBehavior(hero.components, 'health');
+    Object.assign(hero.components.health as object, { max: 20 });
+    attachBehavior(hero.components, 'meleeAttack');
+    Object.assign(hero.components.meleeAttack as object, { damage: 2, arc: 360 });
+    const enemy = thing('e', 'Slime', 14.5, 5.5, { health: { max: enemyHp, onDeath: 'remove' } }, { collider: solid });
+    enemy.tags = ['enemy'];
+    return new Game({ scene: sceneOf(flatScene(20, 10), hero, enemy) });
+  }
+
+  it('walks up to something and defeats it with the quill', () => {
+    const game = arena(4);
+    const r = new Bot(game).fight('name:Slime');
+    expect(r.ok).toBe(true);
+    expect(r.message).toMatch(/^Defeated "Slime" in [\d.]+s\.$/);
+    expect(game.find('name:Slime')).toBeUndefined();
+  });
+
+  it('says plainly when there is nothing to fight, or it takes too long', () => {
+    expect(new Bot(arena(4)).fight('name:Dragon')).toMatchObject({ ok: false, kind: 'blocked', message: 'There is nothing matching "name:Dragon" to fight.' });
+    const r = new Bot(arena(400)).fight('name:Slime', { maxSeconds: 3 });
+    expect(r).toMatchObject({ ok: false, kind: 'timeout' });
+  });
+});
+
+describe('bridges', () => {
+  it('walks over a pit on a text block once it is underlined, and not before', () => {
+    const fs = flatScene(20, 10);
+    for (let y = 0; y < 10; y++) for (const x of [9, 10]) fs.map.setFlag(x, y, FLAG.PIT);
+    const scene = sceneOf(fs, player('p', 2.5, 4.5), thing('t', 'Bridge', 10, 4.5, { textBlock: { format: 'plain' } }), goalAt(16.5, 4.5));
+    const game = new Game({ scene });
+    const bot = new Bot(game);
+    expect(bot.walkToEntity('tag:goal').ok).toBe(false); // plain text: no way across
+    scene.entities.find((e) => e.id === 't')!.components.textBlock = { ...(scene.entities.find((e) => e.id === 't')!.components.textBlock as object), format: 'underline' };
+    const game2 = new Game({ scene });
+    game2.step();
+    game2.step();
+    const r = new Bot(game2).walkToEntity('tag:goal');
+    expect(r.ok).toBe(true);
+    expect(game2.position.x).toBeGreaterThan(16);
+  });
+});

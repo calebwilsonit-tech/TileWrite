@@ -716,6 +716,8 @@ export interface SheetFacts {
   tags: ReadonlySet<string>;
   variables: ReadonlySet<string>;
   prefabs: ReadonlySet<string>;
+  /** Variables that conversations and cutscenes set (so a row may check them without setting them itself). */
+  storyVariables?: ReadonlySet<string>;
 }
 
 /** Mistakes in a sheet that would stop a row from doing what it says, in plain English. */
@@ -754,7 +756,7 @@ export function checkSheet(rows: readonly EventRow[], facts: SheetFacts, names?:
         }
         for (const p of def.params) {
           if (p.type === 'entity') refOk(str(c.params, p.key), `"${def.label}"`, r.id, loop);
-          if (p.type === 'variable' && c.type === 'variable' && str(c.params, p.key) && !facts.variables.has(str(c.params, p.key)) && !assigned.has(str(c.params, p.key))) {
+          if (p.type === 'variable' && c.type === 'variable' && str(c.params, p.key) && !facts.variables.has(str(c.params, p.key)) && !assigned.has(str(c.params, p.key)) && !(facts.storyVariables?.has(str(c.params, p.key)) ?? false)) {
             out.push({ rowId: r.id, text: `The variable "${str(c.params, p.key)}" is checked but never set anywhere, so it is always 0.` });
           }
         }

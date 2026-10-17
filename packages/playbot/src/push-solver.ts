@@ -38,7 +38,7 @@ export interface PushResult {
   trap?: { crate: string; at: [number, number]; dir: [number, number] };
 }
 
-export function extractPushPuzzle(scene: SceneData, prefabs: PrefabMap = new Map()): PushPuzzle | null {
+export function extractPushPuzzle(scene: SceneData, prefabs: PrefabMap = new Map(), opts: { player?: { x: number; y: number }; openGates?: boolean } = {}): PushPuzzle | null {
   const prep = prepare(scene, prefabs);
   if (!prep.player) return null;
   const crates = prep.entities.filter((e) => e.components.pushable !== undefined && e.components.transform !== undefined);
@@ -52,14 +52,31 @@ export function extractPushPuzzle(scene: SceneData, prefabs: PrefabMap = new Map
     return { x: Math.floor(t.x), y: Math.floor(t.y) };
   };
   const blocked = fixedCells(prep.entities);
-  for (const c of solidCells(prep.entities.filter((e) => e.components.gate !== undefined), () => true)) blocked.add(c);
-  const pt = prep.player.components.transform as { x: number; y: number };
+  // closed gates are walls, unless the player is assumed to have opened them already (a puzzle in a later room)
+  if (!opts.openGates) for (const c of solidCells(prep.entities.filter((e) => e.components.gate !== undefined), () => true)) blocked.add(c);
+  const pt = opts.player ?? (prep.player.components.transform as { x: number; y: number });
+  // a plate no crate can ever be moved onto (one up on a plateau, say) is not part of the crate puzzle
+  const crateCells = crates.map(at);
+  const reachable = new Set<string>(crateCells.map((c) => cellKey(c.x, c.y)));
+  const queue = [...crateCells];
+  while (queue.length > 0) {
+    const c = queue.pop()!;
+    for (const [dx, dy] of [[0, -1], [1, 0], [0, 1], [-1, 0]] as const) {
+      const nx = c.x + dx;
+      const ny = c.y + dy;
+      if (reachable.has(cellKey(nx, ny)) || !cellWalkable(prep.map, nx, ny) || blocked.has(cellKey(nx, ny)) || !stepAllowed(prep.map, c.x, c.y, nx, ny, 0.35, 0.4)) continue;
+      reachable.add(cellKey(nx, ny));
+      queue.push({ x: nx, y: ny });
+    }
+  }
+  const usable = targets.filter((e) => reachable.has(cellKey(at(e).x, at(e).y)));
+  if (usable.length === 0) return null;
   return {
     map: prep.map,
     width: prep.map.width,
     blocked,
     crates: crates.map((e) => ({ id: e.id, name: e.name, ...at(e) })),
-    targets: targets.map((e) => ({ id: e.id, name: e.name, ...at(e) })),
+    targets: usable.map((e) => ({ id: e.id, name: e.name, ...at(e) })),
     player: { x: Math.floor(pt.x), y: Math.floor(pt.y) },
   };
 }
@@ -198,9 +215,18 @@ export function solvePush(p: PushPuzzle, opts: { maxStates?: number } = {}): Pus
 
 /** Problems with crate puzzles in a scene, in plain English. */
 export function analysePushPuzzles(scene: SceneData, prefabs: PrefabMap = new Map()): LevelIssue[] {
-  const p = extractPushPuzzle(scene, prefabs);
+  let p = extractPushPuzzle(scene, prefabs);
   if (!p) return [];
-  const r = solvePush(p);
+  let r = solvePush(p);
+  if (!r.solvable && !r.capped) {
+    // the crates may lie in a room the player only reaches by opening gates (an earlier puzzle): try again with them open
+    const later = extractPushPuzzle(scene, prefabs, { openGates: true });
+    const again = later ? solvePush(later) : null;
+    if (later && again?.solvable) {
+      p = later;
+      r = again;
+    }
+  }
   const names = p.targets.map((t) => `"${t.name}"`).join(', ');
   if (!r.solvable && r.capped) return [{ id: 'push-too-big', severity: 'warning', message: `The crate puzzle is too big to check completely (it looked at ${r.states} arrangements without solving it).` }];
   if (!r.solvable) {

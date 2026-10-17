@@ -1,5 +1,5 @@
 import { behaviorList, checkSheet, getBehavior, parsePoints } from '@tilewright/behaviors';
-import { EMPTY_TILE, FLAG, SLOPE_RISE, findPath, groundHeightAt, reachableCells } from '@tilewright/runtime';
+import { EMPTY_TILE, FLAG, SLOPE_RISE, findPath, groundHeightAt, reachableCells, textBridgeCells } from '@tilewright/runtime';
 import { highSide, lowSide, meetsTop } from '../tools/algorithms';
 import type { EditorDoc } from './doc';
 
@@ -21,7 +21,7 @@ interface T {
  * Checks a scene for mistakes a designer can fix, in plain English.
  * (M3 covers the basics; M9 adds bypass and soft-lock detection.)
  */
-export function validateScene(doc: EditorDoc, sprites?: ReadonlySet<string>, prefabNames?: ReadonlySet<string>): Problem[] {
+export function validateScene(doc: EditorDoc, sprites?: ReadonlySet<string>, prefabNames?: ReadonlySet<string>, storyVars?: ReadonlySet<string>): Problem[] {
   const out: Problem[] = [];
   const map = doc.map;
 
@@ -181,7 +181,7 @@ export function validateScene(doc: EditorDoc, sprites?: ReadonlySet<string>, pre
 
   // the event sheet
   const names = { entity: (id: string): string | undefined => doc.getEntity(id)?.name };
-  for (const p of checkSheet(doc.events, { entityIds: new Set(doc.entities.map((e) => e.id)), tags: new Set(doc.entities.flatMap((e) => e.tags)), variables: new Set([...doc.variables.map((v) => v.name), ...doc.entities.map((e) => (e.components.pickup as { variable?: string } | undefined)?.variable ?? '').filter(Boolean)]), prefabs: prefabNames ?? new Set<string>() }, names)) {
+  for (const p of checkSheet(doc.events, { entityIds: new Set(doc.entities.map((e) => e.id)), tags: new Set(doc.entities.flatMap((e) => e.tags)), variables: new Set([...doc.variables.map((v) => v.name), ...doc.entities.map((e) => (e.components.pickup as { variable?: string } | undefined)?.variable ?? '').filter(Boolean)]), prefabs: prefabNames ?? new Set<string>(), ...(storyVars ? { storyVariables: storyVars } : {}) }, names)) {
     out.push({ id: `events-${p.rowId}-${out.length}`, severity: 'warning', message: `Event sheet: ${p.text}` });
   }
   for (let y = 0; y < map.height; y++) {
@@ -225,7 +225,7 @@ export function validateScene(doc: EditorDoc, sprites?: ReadonlySet<string>, pre
   if (players.length > 0) {
     const t = players[0]!.components.transform as T | undefined;
     if (t && map.inBounds(Math.floor(t.x), Math.floor(t.y))) {
-      const reach = reachableCells(map, { x: Math.floor(t.x), y: Math.floor(t.y) });
+      const reach = reachableCells(map, { x: Math.floor(t.x), y: Math.floor(t.y) }, { bridges: textBridgeCells(doc.entities, doc.wires) });
       let walkable = 0;
       let island: { x: number; y: number } | null = null;
       for (let y = 0; y < map.height; y++) {

@@ -3,6 +3,7 @@ import {
   cellWalkable,
   expandEntities,
   stepAllowed,
+  textBridgeCells,
   tileMapFromRows,
   type EntityData,
   type PrefabMap,
@@ -108,14 +109,14 @@ const DIRS: [number, number][] = [[0, -1], [1, 0], [0, 1], [-1, 0]];
  * Every cell the player can get to from a starting cell: walking (with the engine's step and ledge rules) and,
  * if the player can jump, hopping over short gaps. `blocked` cells are never entered.
  */
-export function reachCells(map: TileMap, start: { x: number; y: number }, walker: Walker, blocked: ReadonlySet<string> = new Set()): Set<string> {
+export function reachCells(map: TileMap, start: { x: number; y: number }, walker: Walker, blocked: ReadonlySet<string> = new Set(), bridges: ReadonlySet<string> = new Set()): Set<string> {
   const sx = Math.floor(start.x);
   const sy = Math.floor(start.y);
   const seen = new Set<string>([cellKey(sx, sy)]);
   const queue: [number, number][] = [[sx, sy]];
-  const open = (x: number, y: number): boolean => cellWalkable(map, x, y) && !blocked.has(cellKey(x, y));
+  const open = (x: number, y: number): boolean => (cellWalkable(map, x, y) || (bridges.has(cellKey(x, y)) && map.inBounds(x, y) && (map.getFlags(x, y) & FLAG.BLOCK) === 0)) && !blocked.has(cellKey(x, y));
   const isHole = (x: number, y: number): boolean => {
-    if (blocked.has(cellKey(x, y))) return false;
+    if (blocked.has(cellKey(x, y)) || bridges.has(cellKey(x, y))) return false;
     if (!map.inBounds(x, y)) return true;
     if (map.getFlags(x, y) & FLAG.BLOCK) return false;
     return map.getTile(x, y) === 0 || (map.getDeck(x, y) === 0 && (map.getFlags(x, y) & (FLAG.PIT | FLAG.WATER)) !== 0);
@@ -179,8 +180,9 @@ export function analyseLevel(scene: SceneData, prefabs: PrefabMap = new Map()): 
     }
     return cells;
   };
-  const allOpen = reachCells(prep.map, t, walker, fixed);
-  const allClosed = reachCells(prep.map, t, walker, closedCells());
+  const bridges = textBridgeCells(prep.entities, scene.wires);
+  const allOpen = reachCells(prep.map, t, walker, fixed, bridges);
+  const allClosed = reachCells(prep.map, t, walker, closedCells(), bridges);
   for (const goal of goalsOf(prep.entities)) {
     const c = cellOf(goal);
     const k = cellKey(c.x, c.y);
@@ -206,9 +208,16 @@ export function analyseLevel(scene: SceneData, prefabs: PrefabMap = new Map()): 
     }
   }
   for (const g of gates) {
-    const withG = reachCells(prep.map, t, walker, closedCells(new Set([g.id])));
-    for (const own of solidCells([g], () => true)) withG.delete(own); // the gate's own cell does not count as something behind it
-    if (withG.size === allClosed.size) {
+    // A gate matters if opening it changes where the player can go, either when the other gates are shut (the first gate
+    // of a doorway made of two) or when they are open (gates in a row: the later ones are only reached through the earlier ones).
+    const own = solidCells([g], () => true);
+    const others = new Set(gates.filter((x) => x.id !== g.id).map((x) => x.id));
+    const onlyThisClosed = reachCells(prep.map, t, walker, closedCells(others), bridges);
+    const reachable = new Set(allOpen);
+    for (const c of own) reachable.delete(c); // the gate's own cell does not count as something behind it
+    const withG = reachCells(prep.map, t, walker, closedCells(new Set([g.id])), bridges);
+    for (const c of own) withG.delete(c);
+    if (onlyThisClosed.size === reachable.size && withG.size === allClosed.size) {
       const gc = cellOf(g);
       issues.push({
         id: `gate-useless-${g.id}`,

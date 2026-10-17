@@ -1,5 +1,5 @@
 import { DEFAULT_STEP_DOWN, DEFAULT_STEP_UP, cellWalkable, stepAllowed } from '../physics/terrain';
-import type { TileMap } from '../tilemap/tilemap';
+import { FLAG, type TileMap } from '../tilemap/tilemap';
 
 export interface PathOptions {
   /** Highest step a walker can climb (levels). Defaults to the player's. */
@@ -12,8 +12,16 @@ export interface PathOptions {
   maxNodes?: number;
   /** Allow diagonal steps (never cutting a corner). */
   diagonal?: boolean;
+  /** Cells that can be walked on even though the ground there is a pit or water (an underlined text block lies over them). */
+  bridges?: ReadonlySet<string>;
   /** Radius of the walker: a straight line is only clear if lines this far to either side are clear too. */
   clearance?: number;
+}
+
+/** Floor, or a bridge laid over a hole. */
+function walkableCell(map: TileMap, x: number, y: number, opts: PathOptions): boolean {
+  if (cellWalkable(map, x, y)) return true;
+  return (opts.bridges?.has(`${x},${y}`) ?? false) && map.inBounds(x, y) && (map.getFlags(x, y) & FLAG.BLOCK) === 0;
 }
 
 export interface Cell2 {
@@ -80,7 +88,7 @@ export function findPath(map: TileMap, from: Cell2, to: Cell2, opts: PathOptions
   const sy = Math.floor(from.y);
   const gx = Math.floor(to.x);
   const gy = Math.floor(to.y);
-  if (!cellWalkable(map, gx, gy)) return null;
+  if (!walkableCell(map, gx, gy, opts)) return null;
   if (sx === gx && sy === gy) return [{ x: gx + 0.5, y: gy + 0.5 }];
   const stepUp = opts.stepUp ?? DEFAULT_STEP_UP;
   const maxDrop = opts.maxDrop ?? DEFAULT_STEP_DOWN;
@@ -88,7 +96,7 @@ export function findPath(map: TileMap, from: Cell2, to: Cell2, opts: PathOptions
   const w = map.width;
   const idx = (x: number, y: number): number => y * w + x;
   const blocked = opts.blocked;
-  const free = (x: number, y: number): boolean => cellWalkable(map, x, y) && (!blocked || (x === gx && y === gy) || !blocked(x, y));
+  const free = (x: number, y: number): boolean => walkableCell(map, x, y, opts) && (!blocked || (x === gx && y === gy) || !blocked(x, y));
 
   const cost = new Map<number, number>();
   const parent = new Map<number, number>();
@@ -171,10 +179,10 @@ function straightWalkableLine(map: TileMap, a: Cell2, b: Cell2, opts: PathOption
     const cx = Math.floor(a.x + (b.x - a.x) * t);
     const cy = Math.floor(a.y + (b.y - a.y) * t);
     if (cx === px && cy === py) continue;
-    if (!cellWalkable(map, cx, cy) || (opts.blocked?.(cx, cy) ?? false)) return false;
+    if (!walkableCell(map, cx, cy, opts) || (opts.blocked?.(cx, cy) ?? false)) return false;
     // moving diagonally in one sample: both orthogonal cells must also be fine
     if (cx !== px && cy !== py) {
-      if (!cellWalkable(map, cx, py) || !cellWalkable(map, px, cy)) return false;
+      if (!walkableCell(map, cx, py, opts) || !walkableCell(map, px, cy, opts)) return false;
       if (!stepAllowed(map, px, py, cx, py, stepUp, maxDrop) || !stepAllowed(map, cx, py, cx, cy, stepUp, maxDrop)) return false;
     } else if (!stepAllowed(map, px, py, cx, cy, stepUp, maxDrop)) return false;
     px = cx;

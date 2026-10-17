@@ -108,7 +108,7 @@ export function stepAllowed(map: TileMap, ax: number, ay: number, bx: number, by
 export function reachableCells(
   map: TileMap,
   start: { x: number; y: number },
-  opts: { stepUp?: number; maxDrop?: number; limit?: number } = {},
+  opts: { stepUp?: number; maxDrop?: number; limit?: number; bridges?: ReadonlySet<string> } = {},
 ): Set<string> {
   const stepUp = opts.stepUp ?? DEFAULT_STEP_UP;
   const maxDrop = opts.maxDrop ?? DEFAULT_STEP_DOWN;
@@ -122,7 +122,8 @@ export function reachableCells(
       const nx = c.x + dx;
       const ny = c.y + dy;
       if (out.has(key(nx, ny))) continue;
-      if (!cellWalkable(map, nx, ny) || !stepAllowed(map, c.x, c.y, nx, ny, stepUp, maxDrop)) continue;
+      const bridged = (opts.bridges?.has(key(nx, ny)) ?? false) && map.inBounds(nx, ny) && (map.getFlags(nx, ny) & FLAG.BLOCK) === 0;
+      if (!(cellWalkable(map, nx, ny) || bridged) || !stepAllowed(map, c.x, c.y, nx, ny, stepUp, maxDrop)) continue;
       out.add(key(nx, ny));
       queue.push({ x: nx, y: ny });
     }
@@ -134,4 +135,25 @@ function edgeHeight(map: TileMap, cx: number, cy: number, dx: number, dy: number
   const deck = map.getDeck(cx, cy);
   if (deck > 0 && map.getFlags(cx, cy) & (FLAG.PIT | FLAG.WATER)) return deck;
   return groundHeightAt(map, cx + 0.5 + dx * 0.5 - dx * 1e-6, cy + 0.5 + dy * 0.5 - dy * 1e-6);
+}
+
+/**
+ * Cells a text block can turn into a bridge over a pit or water: its footprint, if it starts underlined, or the player can
+ * format it, or a wire underlines it. (Which of these happens, and when, is the puzzle; checks only need to know the way
+ * can be opened.)
+ */
+export function textBridgeCells(entities: readonly { id: string; components: Record<string, unknown> }[], wires: readonly { to: { entity: string; input: string } }[]): Set<string> {
+  const wired = new Set(wires.filter((w) => w.to.input === 'underline').map((w) => w.to.entity));
+  const out = new Set<string>();
+  for (const e of entities) {
+    const tb = e.components.textBlock as { format?: string; playerCanFormat?: boolean } | undefined;
+    const t = e.components.transform as { x: number; y: number } | undefined;
+    if (!tb || !t) continue;
+    if (tb.format !== 'underline' && tb.playerCanFormat === false && !wired.has(e.id)) continue;
+    const c = (e.components.collider as { w?: number; d?: number } | undefined) ?? {};
+    const w = c.w ?? 2;
+    const d = c.d ?? 1;
+    for (let x = Math.floor(t.x - w / 2 + 0.05); x <= Math.floor(t.x + w / 2 - 0.05); x++) for (let y = Math.floor(t.y - d / 2 + 0.05); y <= Math.floor(t.y + d / 2 - 0.05); y++) out.add(`${x},${y}`);
+  }
+  return out;
 }

@@ -1,6 +1,6 @@
 # Reference game: The Last Storytender
 
-Tick an item when the engine can make it **without code**, verified by a test or a sample.
+Tick an item when the engine can make it **without code**, verified by a test or a sample. The acceptance slice (docs/acceptance.md) builds hub, dungeon, echo/crate/word puzzles, stealth, boss, lanterns, saves and remapping together.
 
 ## Isometric world
 - [x] 64x32 diamond tiles, multiple height levels per cell

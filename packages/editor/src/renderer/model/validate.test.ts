@@ -77,3 +77,18 @@ describe('validateScene', () => {
     expect(validateScene(d).some((p) => /sticks out/.test(p.message))).toBe(true);
   });
 });
+
+describe('floor behind a pit', () => {
+  function pitRoom(withBlock: boolean): EditorDoc {
+    const d = EditorDoc.fromScene(newScene('T', 20, 10));
+    d.addEntities([{ ...playerEntity('x', 2.5, 4.5), name: 'Player' }]);
+    for (let y = 0; y < 10; y++) d.paint('x', [9, 10].map((x) => ({ x, y, patch: { flags: FLAG.PIT } })));
+    if (withBlock) d.addEntities([{ name: 'Bridge', tags: [], components: { transform: { x: 10, y: 4.5, h: 0, facing: 2 }, textBlock: { format: 'plain', playerCanFormat: true } } }]);
+    return d;
+  }
+
+  it('is reported as unreachable, unless a text block lies over the pit and can be formatted into a bridge', () => {
+    expect(ids(pitRoom(false))).toContain('unreachable');
+    expect(ids(pitRoom(true))).not.toContain('unreachable');
+  });
+});
