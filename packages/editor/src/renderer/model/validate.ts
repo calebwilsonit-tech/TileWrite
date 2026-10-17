@@ -1,4 +1,4 @@
-import { behaviorList, checkSheet, getBehavior, parsePoints } from '@tilewright/behaviors';
+import { behaviorList, checkMachine, checkSheet, getBehavior, parsePoints, type StateMachine } from '@tilewright/behaviors';
 import { EMPTY_TILE, FLAG, SLOPE_RISE, findPath, groundHeightAt, reachableCells, textBridgeCells } from '@tilewright/runtime';
 import { highSide, lowSide, meetsTop } from '../tools/algorithms';
 import type { EditorDoc } from './doc';
@@ -68,6 +68,16 @@ export function validateScene(doc: EditorDoc, sprites?: ReadonlySet<string>, pre
         message: `"${e.name}" is at height ${t.h} but the ground here is at ${groundHeightAt(map, t.x, t.y).toFixed(1)}; it will drop or be stuck.`,
         target: pos('entity', e.id, t),
       });
+    }
+  }
+
+  // state machines: states and arrows that cannot work
+  for (const e of doc.entities) {
+    const m = e.components.stateMachine as StateMachine | undefined;
+    if (!m) continue;
+    const t = e.components.transform as T | undefined;
+    for (const text of checkMachine(m, (b) => e.components[b] !== undefined)) {
+      out.push({ id: `machine-${e.id}-${out.length}`, severity: 'warning', message: `The state machine of "${e.name}": ${text}`, target: t ? pos('entity', e.id, t) : undefined });
     }
   }
 

@@ -139,18 +139,14 @@ test('M12: export a game from the editor, run it with no editor, see its script 
   await g.page.screenshot({ path: shot('m12-exported-game.png') });
 
   // the pause menu's video settings: a game in its own window can go full screen (the editor's Play cannot offer that)
-  await g.page.keyboard.down('p');
-  await g.page.waitForTimeout(150);
-  await g.page.keyboard.up('p');
+  await g.page.evaluate(() => (window as unknown as { __game: { session: { ui: { openMenu(): void } } } }).__game.session.ui.openMenu()); // (the real pause key is exercised by the story test)
   await g.page.getByTestId('tw-row-settings').click();
   await expect(g.page.getByTestId('tw-row-set-zoom')).toBeVisible();
   await g.page.getByTestId('tw-row-set-fullscreen').click();
   await expect.poll(() => g.app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]!.isFullScreen())).toBe(true);
   await g.page.getByTestId('tw-row-set-fullscreen').click();
   await expect.poll(() => g.app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]!.isFullScreen())).toBe(false);
-  await g.page.keyboard.down('p');
-  await g.page.waitForTimeout(150);
-  await g.page.keyboard.up('p');
+  await g.page.evaluate(() => (window as unknown as { __game: { session: { ui: { closeMenu(): void } } } }).__game.session.ui.closeMenu());
 
   // it may only touch its own files
   const probe = await g.page.evaluate(async () => {

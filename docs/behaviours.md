@@ -4,9 +4,9 @@
 
 A behaviour is ready-made logic you add to an object in the Inspector (**Behaviours -> Add**). Its settings appear as fields; its signals can be joined to other objects with the Wire tool. Each behaviour has an id (the key under which it is saved) shown in `code`.
 
-There are 31 behaviours. Behaviours made by scripts (see [code-window.md](code-window.md)) appear in the same list under "Scripts".
+There are 32 behaviours. Behaviours made by scripts (see [code-window.md](code-window.md)) appear in the same list under "Scripts".
 
-- [AI](#ai) (Vision Cone, Chase, Patrol, Boss Phases)
+- [AI](#ai) (Vision Cone, Chase, Patrol, Boss Phases, State Machine)
 - [Combat](#combat) (Health, Damage on Touch, Melee Attack (quill), Dodge)
 - [Light](#light) (Light, Light Sensor, Growing Object)
 - [Logic](#logic) (Logic Gate)
@@ -67,6 +67,18 @@ Walks between waypoints, pausing at each. Draw the route with the Patrol path to
 | At the end of the route | `mode` | select | "loop" | `loop`, `pingpong` |
 | Speed (cells per second) | `speed` | number | 1.8 | 0.2 to 10 |
 | Pause at each point (seconds) | `waitSeconds` | number | 0.8 | 0 to 30 |
+
+### State Machine
+
+Id: `stateMachine`. Each update it brain.
+
+Gives an object moods: it is in one state at a time (Patrol, Chase, Search, Flee...). Each state says which behaviours run, how it moves by itself, which animation plays and what it says, and arrows between states say when it changes its mind (it sees you, you are close, its health is low, a few seconds have passed...). Draw it in the graph under the settings, or start from the Guard or Boss example.
+
+| Setting | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Looks at and moves toward things tagged | `target` | text | "player" |  |
+
+Receives: **Trigger** (`trigger`, A "a wire sends it a signal" transition fires while this is on.).
 
 ### Vision Cone
 

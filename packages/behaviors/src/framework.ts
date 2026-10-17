@@ -21,10 +21,10 @@ export interface SignalSpec {
   help?: string;
 }
 
-/** When in the tick a behaviour runs: controls move things, sources make signals, logic combines them, actuators react. */
-export type Phase = 'control' | 'source' | 'logic' | 'actuator';
+/** When in the tick a behaviour runs: brains decide first, controls move things, sources make signals, logic combines them, actuators react. */
+export type Phase = 'brain' | 'control' | 'source' | 'logic' | 'actuator';
 
-export const PHASE_ORDER: Phase[] = ['control', 'source', 'logic', 'actuator'];
+export const PHASE_ORDER: Phase[] = ['brain', 'control', 'source', 'logic', 'actuator'];
 
 export interface BehaviorDef<S extends object = Record<string, unknown>> {
   /** Component name the settings are stored under (also the id in saved files). */
@@ -40,6 +40,8 @@ export interface BehaviorDef<S extends object = Record<string, unknown>> {
   fields: FieldSpec[];
   inputs: SignalSpec[];
   outputs: SignalSpec[];
+  /** Settings that are not simple fields have their own editor in the Inspector (a graph, for state machines). */
+  editor?: 'stateMachine';
   /** Components that must exist for it to work, with the defaults to add when they are missing. */
   requires: Record<string, unknown>;
   /** Runs once per tick for every object that has this behaviour. */
@@ -110,6 +112,7 @@ export function behaviorPhase(phase: Phase): System {
       const prof = ctx.profiler;
       for (const e of ctx.world.query(def.id)) {
         if (!e.alive) continue;
+        if (def.phase !== 'brain' && e.get<{ off: string[] }>('state:machineGate')?.off.includes(def.id)) continue; // a state machine has switched this behaviour off for now
         try {
           if (prof?.enabled) prof.behaviour(def.name, () => def.update(ctx, e, settingsOf(e, def)));
           else def.update(ctx, e, settingsOf(e, def));

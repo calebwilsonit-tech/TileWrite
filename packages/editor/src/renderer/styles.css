@@ -1494,3 +1494,7 @@ button.small {
 .ct-canvas { display: block; user-select: none; touch-action: none; }
 .dg-overlay .ct-scroll { max-height: 45vh; overflow: auto; }
 .field.check.inline { display: inline-flex; align-items: center; gap: 4px; margin: 0 6px; flex-direction: row; }
+
+/* ---- state machine editor ---- */
+.sm-canvas { width: 100%; height: 340px; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; touch-action: none; cursor: grab; user-select: none; }
+.dg-overlay .sm-canvas { height: 46vh; }

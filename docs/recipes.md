@@ -32,6 +32,11 @@ Short, step-by-step ways to make common things. Names in **bold** are buttons, p
 3. Turn on **Layers -> AI** (view overlays) to see its route and its vision cone. It sees you in the cone, hears running, chases around walls, searches, and goes home.
 4. Give the player a *Melee Attack* so there is an answer; or leave the guard as something to sneak past.
 
+## A guard that gets angry and calms down
+1. Place a **Guard**, select it and add **State Machine** (Inspector).
+2. **Start from an example -> Guard**. Click the *Chase* card and change its **Speed**, or add a **Message** like "Hey! You there!".
+3. Drag from the dot on *Look around* to *Patrol* and set the arrow to "it has been here 8 s" so it settles down sooner. Play to see it change mood; the Problems panel warns if a state can never be reached. See [ai-and-combat.md](ai-and-combat.md).
+
 ## A boss in two phases
 1. Draw a **Region** over the arena and turn on *Bosses here only act while the player is inside*.
 2. Place a **Boss** inside it and set its *Health* (for example 8) and *Invulnerable seconds* (0.4).

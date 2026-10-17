@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { attachBehavior, behaviorList, getBehavior, type BehaviorDef, type FieldSpec } from '@tilewright/behaviors';
+import { attachBehavior, behaviorList, getBehavior, type BehaviorDef, type FieldSpec, type StateMachine } from '@tilewright/behaviors';
 import type { EntityData } from '@tilewright/runtime';
 import { useApp } from '../app/store';
 import { CheckField, NumberField, SelectField, TextField } from './fields';
+import { StateMachineEditor } from './StateMachineEditor';
 
 type Edit = (label: string, fn: (x: EntityData) => void) => void;
 
@@ -67,6 +68,17 @@ function BehaviorCard({ entity, def, edit, prefabs }: { entity: EntityData; def:
           }
         />
       ))}
+      {def.editor === 'stateMachine' && (
+        <StateMachineEditor
+          machine={complete as unknown as StateMachine}
+          has={behaviorList().filter((b) => b.id !== def.id && entity.components[b.id] !== undefined).map((b) => b.id)}
+          onChange={(next) =>
+            edit('Edit the state machine', (x) => {
+              x.components[def.id] = structuredClone(next);
+            })
+          }
+        />
+      )}
       {def.summary && <p className="hint summary">{def.summary(complete as never)}</p>}
       {(def.inputs.length > 0 || def.outputs.length > 0) && (
         <p className="hint">
