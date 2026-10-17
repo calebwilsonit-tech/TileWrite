@@ -19,7 +19,9 @@ import {
 import apiSource from '@tilewright/behaviors/src/scripting/api.ts?raw';
 import { Bot, extractPushPuzzle, solvePush, type PlayReport } from '@tilewright/playbot';
 import { DEFAULT_TILESET, FLAG, SLOPE, resolveInstance, type EntityData, type EventRow, type WireData } from '@tilewright/runtime';
-import { lineDiff, type DiffLine, type ToolOutput } from '@tilewright/assistant';
+import { lineDiff, type ToolOutput } from '@tilewright/assistant';
+import { ToolProblem, fail, json, requireDoc, requireEditing, undoTop, type Proposal } from './tool-core';
+import { prepareStoryAction, runStoryRead } from './story-tools';
 import { store } from '../app/store';
 import { viewportRef } from '../app/commands';
 import { readCell } from '../model/cells';
@@ -31,42 +33,10 @@ import { storyNameProblem } from '../project/story';
 import { studio } from '../studio/store';
 import { allPrefabs } from '../tools/prefabs';
 
-/** A change Claude proposes. Nothing happens until `apply` is called (when the person approves it). */
-export interface Proposal {
-  tool: string;
-  title: string;
-  /** What it will do, one plain-English line each. */
-  lines: string[];
-  /** For text (scripts, notes, the event sheet): what changes. */
-  diff?: { name: string; lines: DiffLine[] };
-  /** Does the change; returns what to tell Claude. */
-  apply(): Promise<string>;
-  /** Take it back (only offered right after applying). */
-  undo?(): Promise<boolean>;
-}
-
-/** A mistake in what Claude asked for, worded so Claude can correct itself. */
-export class ToolProblem extends Error {}
-const fail = (message: string): never => {
-  throw new ToolProblem(message);
-};
-
-const json = (v: unknown, indent = 1): string => JSON.stringify(v, null, indent);
+export { ToolProblem, type Proposal };
 const text = (t: string): ToolOutput => ({ content: t });
 
 export const NOTES_FILE = 'project-notes.md';
-
-function requireDoc(): EditorDoc {
-  const doc = store.doc;
-  if (!doc) return fail('No scene is open. Ask the user to open a project and a scene first.');
-  return doc;
-}
-
-function requireEditing(): EditorDoc {
-  const doc = requireDoc();
-  if (store.state.mode === 'play') fail('The game is running. Ask the user to stop it (Stop button) before changing the project.');
-  return doc;
-}
 
 const label = (e: { name: string; id: string }): string => `"${e.name}" (${e.id})`;
 
@@ -208,7 +178,7 @@ export async function runReadTool(name: string, input: Record<string, unknown>):
             objects: shown.map(summariseEntity),
             ...(doc.entities.length > shown.length ? { omitted: doc.entities.length - shown.length } : {}),
             wires: doc.wires.map((w) => ({ id: w.id, from: `${doc.getEntity(w.from.entity)?.name ?? w.from.entity}.${w.from.output}`, to: `${doc.getEntity(w.to.entity)?.name ?? w.to.entity}.${w.to.input}` })),
-            regions: doc.regions.map((r) => ({ id: r.id, name: r.name, x: r.x, y: r.y, w: r.w, h: r.h })),
+            regions: doc.regions.map((r) => ({ id: r.id, name: r.name, x: r.x, y: r.y, w: r.w, h: r.h, cameraBounds: r.cameraBounds, music: r.music, darkness: r.darkness, bossActive: r.bossActive })),
             variables: doc.variables,
             eventRows: doc.events.length,
           }),
@@ -335,8 +305,10 @@ export async function runReadTool(name: string, input: Record<string, unknown>):
         const notes = await readNotes();
         return text(notes.trim() ? notes : '(The project notes file is empty or does not exist yet.)');
       }
-      default:
-        return { isError: true, content: `"${name}" is not a reading tool.` };
+      default: {
+        const story = await runStoryRead(name, input);
+        return story ?? { isError: true, content: `"${name}" is not a reading tool.` };
+      }
     }
   } catch (e) {
     if (e instanceof ToolProblem) return { isError: true, content: e.message };
@@ -364,12 +336,6 @@ function applySettings(e: { name: string; components: Record<string, unknown> },
 }
 
 const fmt = (n: number): string => String(Math.round(n * 100) / 100);
-
-const undoTop = (doc: EditorDoc, undoLabel: string) => async (): Promise<boolean> => {
-  if (store.doc !== doc || doc.history.undoLabel !== undoLabel) return false;
-  doc.undo();
-  return true;
-};
 
 function placeObjects(input: Record<string, unknown>): Proposal {
   const doc = requireEditing();
@@ -734,8 +700,10 @@ export async function prepareAction(name: string, input: Record<string, unknown>
       };
       return p;
     }
-    default:
-      return fail(`"${name}" is not a tool that changes the project.`);
+    default: {
+      const story = await prepareStoryAction(name, input);
+      return story ?? fail(`"${name}" is not a tool that changes the project.`);
+    }
   }
 }
 

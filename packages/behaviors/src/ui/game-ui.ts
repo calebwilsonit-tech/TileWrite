@@ -1,5 +1,6 @@
 import {
   ACTION_LABELS,
+  availableSkins,
   bindingLabel,
   carried,
   languageChoices,
@@ -45,7 +46,7 @@ export const UI_STRINGS: readonly string[] = [
   '{n} lit', 'You are carrying nothing.', 'press E to use', 'slot {n}', 'E: use   A / D: choose its quick slot   Esc: back',
   'No lanterns lit yet. Light one by pressing E beside it.', 'this area', 'Autosave', 'Slot {n}', 'damaged', 'empty',
   'Master volume', 'Music volume', 'Effects volume', 'Difficulty', 'easy', 'normal', 'hard', 'Screen shake and hit freeze', 'on', 'off',
-  'Camera zoom', 'Full screen', 'Show frame rate', 'Language', 'Default', 'Controls', 'press a key or button...', 'not set', 'Reset all controls',
+  'Camera zoom', 'Full screen', 'Show frame rate', 'Appearance', 'Original', 'Language', 'Default', 'Controls', 'press a key or button...', 'not set', 'Reset all controls',
   'E: change the selected control, then press the new key or button', 'W / S to choose, E to select, Esc or P to go back',
   'E / click: continue', 'P / Start: skip', 'Received {item}', 'Used {item}', 'You were defeated.',
   'Echo made.', 'You cannot make echoes yet.', 'Recording... press Echo again to finish.',
@@ -487,6 +488,15 @@ export class GameUi {
           rows.push({ label: 'Full screen', detail: full.get() ? 'on' : 'off', run: toggle, adjust: toggle, testId: 'set-fullscreen' });
         }
         rows.push({ label: 'Show frame rate', detail: set.showFps ? 'on' : 'off', run: () => h.changeSettings({ showFps: !set.showFps }), adjust: () => h.changeSettings({ showFps: !set.showFps }), testId: 'set-fps' });
+        const skins = availableSkins(sim.assets.skins, sim.runtime.vars);
+        if (skins.length > 0) {
+          const looks = [{ id: '', name: 'Original' }, ...skins.map((s) => ({ id: s.id, name: s.name }))];
+          const pick = (d: number): void => {
+            const at = Math.max(0, looks.findIndex((l) => l.id === set.skin));
+            h.changeSettings({ skin: looks[(at + d + looks.length) % looks.length]!.id });
+          };
+          rows.push({ label: 'Appearance', detail: looks.find((l) => l.id === set.skin)?.name ?? 'Original', adjust: pick, run: () => pick(1), testId: 'set-skin' });
+        }
         const languages = languageChoices(sim.assets.strings);
         if (languages.length > 1) {
           const lang = (d: number): void => {

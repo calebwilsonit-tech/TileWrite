@@ -17,6 +17,8 @@ export const SettingsSchema = z.object({
   cameraZoom: z.number().min(0.5).max(2).default(1),
   /** Show the frames per second in a corner. */
   showFps: z.boolean().default(false),
+  /** The skin worn by the player character (id), or '' for the original look. */
+  skin: z.string().default(''),
   /** The language of conversations and menus: a code from the game's languages, or '' for the text as written. */
   language: z.string().default(''),
   bindings: z.record(z.string(), z.array(z.string())).default({}),

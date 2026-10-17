@@ -12,6 +12,8 @@ import {
   SaveManager,
   Simulation,
   applySave,
+  applySkin,
+  availableSkins,
   bindingChanges,
   effectiveBindings,
   gridToScreen,
@@ -27,6 +29,7 @@ import {
   type GameSettings,
   type InputRecording,
   type PrefabData,
+  type SkinData,
   type SaveData,
   type SceneData,
   type SpriteData,
@@ -80,7 +83,9 @@ export interface PlayOptions {
   /** Switch the window to or from full screen (only a game in its own window can). */
   setFullscreen?: (on: boolean) => void;
   /** The project's prefabs, sprites and story as they are now (for hot reload while playing in the editor). */
-  liveAssets?: () => { prefabs: ReadonlyMap<string, PrefabData>; sprites: ReadonlyMap<string, SpriteData>; story: PlayOptions['story'] };
+  liveAssets?: () => { prefabs: ReadonlyMap<string, PrefabData>; sprites: ReadonlyMap<string, SpriteData>; story: PlayOptions['story']; skins?: readonly SkinData[] };
+  /** The player's other looks. */
+  skins?: readonly SkinData[];
 }
 
 /**
@@ -98,6 +103,8 @@ export class PlaySession {
   readonly audio = new AudioEngine();
   /** The music asked for by the room the player stands in; '' when the room has none. */
   private roomMusic: string | null = null;
+  /** The skins on offer (replaced by hot reload). */
+  private skinsNow: readonly SkinData[] = [];
   private readonly unlockAudio = (): void => void this.audio.unlock();
   settings: GameSettings;
   private readonly saves: SaveManager;
@@ -137,6 +144,8 @@ export class PlaySession {
     for (const problem of byId.problems) o.notify('warn', problem);
     const player = sim.world.withTag('player')[0]!;
     if (o.from) this.placeAt(player, o.from.x, o.from.y);
+    this.skinsNow = o.skins ?? [];
+    this.applySkinToPlayer();
     addStandardSystems(sim, physicsSystem);
     const warned = new Set<string>();
     sim.events.on('problem', (e) => {
@@ -260,10 +269,22 @@ export class PlaySession {
       player.require<TransformIso>(C.Transform).facing = keep.facing;
       if (health) player.set('state:health', { ...health, trail: [], knock: null });
     }
+    if (live?.skins) this.skinsNow = live.skins;
+    this.applySkinToPlayer();
     return 'Reloaded the game with your changes.';
   }
 
   // ---------- sound and effects ----------
+
+  /** Put the skin the player chose on the player character (nothing changes while it is already worn). */
+  private applySkinToPlayer(): void {
+    const sim = this.sim;
+    sim.assets.skins = [...this.skinsNow];
+    const player = sim.world.withTag('player')[0];
+    if (!player) return;
+    const chosen = availableSkins(sim.assets.skins, sim.runtime.vars).find((s) => s.id === this.settings.skin);
+    applySkin(player, chosen);
+  }
 
   /** The player's language, if the game has it; otherwise the text as written. */
   private applyLanguage(): void {
@@ -380,6 +401,7 @@ export class PlaySession {
       player.set('state:health', { hp, iframes: 1, dead: false, spawn: null, trail: [], knock: null, blinking: false });
     }
     if (opts.save) applySave(sim, opts.save);
+    this.applySkinToPlayer();
     const t = player.require<TransformIso>(C.Transform);
     o.renderer.camera.snapTo(gridToScreen(t.x, t.y, t.h, o.renderer.iso));
     void this.saveTo('autosave');
@@ -483,6 +505,7 @@ export class PlaySession {
         this.applyVolumes();
         this.applyLanguage();
         this.applyVideo();
+        this.applySkinToPlayer();
       },
       rebind: (action, binding) => {
         const next = rebind(effectiveBindings(this.settings), action, binding);

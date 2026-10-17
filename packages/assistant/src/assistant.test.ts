@@ -90,7 +90,22 @@ describe('tool definitions', () => {
 
   it('keep reading and changing apart: every tool that changes the project is an act tool', () => {
     const act = TOOLS.filter((t) => t.kind === 'act').map((t) => t.name);
-    expect(act).toEqual(['place_objects', 'update_objects', 'delete_objects', 'paint_tiles', 'connect_wires', 'remove_wires', 'set_event_sheet', 'write_script', 'write_project_notes']);
+    expect(act).toEqual(['place_objects', 'update_objects', 'delete_objects', 'paint_tiles', 'connect_wires', 'remove_wires', 'set_event_sheet', 'write_dialogue', 'write_cutscene', 'write_items', 'set_regions', 'write_translation', 'write_script', 'write_project_notes']);
+  });
+
+  it('checks the story tools\' inputs with messages Claude can act on', () => {
+    const good = { name: 'Gate', start: 'a', nodes: [{ id: 'a', type: 'line', text: 'Hi', next: 'b' }, { id: 'b', type: 'choice', options: [{ text: 'Yes', next: 'c', if: { kind: 'item', item: 'key' } }] }, { id: 'c', type: 'end' }] };
+    expect(checkToolInput('write_dialogue', good).ok).toBe(true);
+    const noOptions = checkToolInput('write_dialogue', { ...good, nodes: [{ id: 'b', type: 'choice', options: [] }] });
+    expect(noOptions.ok).toBe(false);
+    expect(checkToolInput('write_dialogue', { ...good, name: 'bad/name' }).ok).toBe(false);
+    expect(checkToolInput('write_cutscene', { name: 'Intro', steps: [{ type: 'say', speaker: 'Elder', text: 'Hi' }, { type: 'wait', seconds: 2, async: true }] }).ok).toBe(true);
+    expect(checkToolInput('write_cutscene', { name: 'Intro', steps: [{ type: 'explode' }] }).ok).toBe(false);
+    expect(checkToolInput('write_translation', { language: 'fr', name: 'Francais', strings: { Hello: 'Bonjour' } }).ok).toBe(true);
+    expect(checkToolInput('write_translation', { language: 'French', strings: {} }).ok).toBe(false);
+    expect(checkToolInput('set_regions', { regions: [{ name: 'Yard', x: 1, y: 1, w: 4, h: 4, darkness: 2 }] }).ok).toBe(false);
+    expect(checkToolInput('set_regions', { regions: [{ name: 'Yard', x: 1, y: 1, w: 4, h: 4, darkness: 0.5, music: 'theme' }] }).ok).toBe(true);
+    expect(checkToolInput('write_items', { items: [{ id: 'key', name: 'Key', use: { heal: 1 } }] }).ok).toBe(true);
   });
 
   it('check inputs before anything runs, with messages Claude can act on', () => {

@@ -2,7 +2,9 @@ import {
   CutsceneSchema,
   DialogueSchema,
   ItemsFileSchema,
+  SkinsFileSchema,
   CURRENT_SCHEMA_VERSION,
+  type SkinData,
   type CutsceneData,
   type DialogueData,
   type ItemData,
@@ -13,6 +15,7 @@ import { joinPath } from './api';
 import { UserError } from './io';
 
 export const ITEMS_FILE = 'assets/items.json';
+export const SKINS_FILE = 'assets/skins.json';
 export const DIALOGUE_DIR = 'assets/dialogues';
 export const CUTSCENE_DIR = 'assets/cutscenes';
 const DIALOGUE_EXT = '.dialogue.json';
@@ -73,6 +76,41 @@ export async function saveItems(fs: AssetFs, dir: string, items: readonly ItemDa
     ids.add(i.id);
   }
   await fs.write(joinPath(dir, ITEMS_FILE), json({ schemaVersion: CURRENT_SCHEMA_VERSION, items }));
+}
+
+// ---------- skins ----------
+
+export async function loadSkins(fs: AssetFs, dir: string): Promise<{ skins: SkinData[]; problems: string[] }> {
+  const file = joinPath(dir, SKINS_FILE);
+  try {
+    if (!(await fs.exists(file))) return { skins: [], problems: [] };
+    const r = SkinsFileSchema.safeParse(JSON.parse(await fs.read(file)));
+    if (!r.success) return { skins: [], problems: [`The skins file is not valid: ${r.error.issues[0]?.message ?? 'unknown problem'}.`] };
+    return { skins: r.data.skins, problems: [] };
+  } catch (e) {
+    return { skins: [], problems: [`The skins file could not be read (${(e as Error).message}).`] };
+  }
+}
+
+export async function saveSkins(fs: AssetFs, dir: string, skins: readonly SkinData[]): Promise<void> {
+  const ids = new Set<string>();
+  for (const s of skins) {
+    if (ids.has(s.id)) throw new UserError(`Two skins share the id "${s.id}". Skin ids must be different.`);
+    ids.add(s.id);
+  }
+  await fs.write(joinPath(dir, SKINS_FILE), json({ schemaVersion: CURRENT_SCHEMA_VERSION, skins }));
+}
+
+/** Problems with the skins, in plain English. `sprites` and `variables` are the names that exist; `items` the item ids. */
+export function skinProblems(skins: readonly SkinData[], known: { sprites: ReadonlySet<string>; items: ReadonlySet<string> }): string[] {
+  const out: string[] = [];
+  for (const s of skins) {
+    if (s.color < 0 && s.sprite === '') out.push(`The skin "${s.name}" looks exactly like the original: give it a colour or a sprite.`);
+    if (s.sprite !== '' && !known.sprites.has(s.sprite)) out.push(`The skin "${s.name}" uses the sprite "${s.sprite}", which is not in this project.`);
+    if (s.unlock.kind === 'item' && !known.items.has(s.unlock.item)) out.push(`The skin "${s.name}" unlocks with the item "${s.unlock.item}", which is not in the item list.`);
+    if (s.unlock.kind === 'variable' && s.unlock.name === '') out.push(`The skin "${s.name}" unlocks with a variable but none is named.`);
+  }
+  return out;
 }
 
 // ---------- dialogues and cutscenes ----------

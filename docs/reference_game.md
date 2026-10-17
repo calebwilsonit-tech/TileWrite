@@ -63,7 +63,7 @@ Tick an item when the engine can make it **without code**, verified by a test or
 - [x] Full input remapping, gamepad support
 - [x] Pause menu, HUD
 - [ ] Minigames inside the game
-- [ ] Cosmetic skins, difficulty options - difficulty done (M8); skins not done
+- [x] Cosmetic skins (Story -> Skins, Settings -> Appearance), difficulty options
 
 ## Feel
 - [x] Screen shake, hit-stop (M14; the game window holds the simulation for a few frames, settings switch it off)

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { ItemSchema, newCutscene, newDialogue } from '@tilewright/runtime';
+import { ItemSchema, newCutscene, newDialogue, newSkin } from '@tilewright/runtime';
 import type { AssetFs } from '../studio/assets';
-import { deleteCutscene, deleteDialogue, loadCutscenes, loadDialogues, loadItems, saveCutscene, saveDialogue, saveItems, storyNameProblem } from './story';
+import { deleteCutscene, deleteDialogue, loadCutscenes, loadDialogues, loadItems, loadSkins, saveCutscene, saveDialogue, saveItems, saveSkins, skinProblems, storyNameProblem } from './story';
 
 function memoryFs(): AssetFs & { files: Map<string, string> } {
   const files = new Map<string, string>();
@@ -81,5 +81,22 @@ describe('story files', () => {
     expect(storyNameProblem('a/b', [], 'cutscene')).toMatch(/letters, numbers/);
     expect(storyNameProblem('Keeper', ['keeper'], 'dialogue')).toMatch(/already exists/);
     expect(storyNameProblem('Old Keeper')).toBeNull();
+  });
+
+  it('skins round-trip and are checked in plain English', async () => {
+    const fs = memoryFs();
+    expect(await loadSkins(fs, '/p')).toEqual({ skins: [], problems: [] });
+    const red = { ...newSkin('red', 'Red'), color: 0xff0000 };
+    await saveSkins(fs, '/p', [red]);
+    expect((await loadSkins(fs, '/p')).skins).toEqual([red]);
+    await expect(saveSkins(fs, '/p', [red, red])).rejects.toThrow(/share the id "red"/);
+    fs.files.set('/p/assets/skins.json', '{ nope');
+    expect((await loadSkins(fs, '/p')).problems[0]).toMatch(/could not be read/);
+    const known = { sprites: new Set(['hero']), items: new Set(['key']) };
+    expect(skinProblems([newSkin('a', 'Plain')], known)[0]).toMatch(/looks exactly like the original/);
+    expect(skinProblems([{ ...red, sprite: 'ghost' }], known)[0]).toMatch(/sprite "ghost"/);
+    expect(skinProblems([{ ...red, unlock: { kind: 'item', item: 'nope' } }], known)[0]).toMatch(/item "nope"/);
+    expect(skinProblems([{ ...red, unlock: { kind: 'variable', name: '', atLeast: 1 } }], known)[0]).toMatch(/none is named/);
+    expect(skinProblems([red], known)).toEqual([]);
   });
 });

@@ -1,5 +1,5 @@
 import { checkDialogue } from '@tilewright/runtime';
-import { checkCutscene, expandEntities, type CutsceneData, type DialogueData, type LanguageData, type EventRow, type ItemData, type PrefabData, type ProjectData, type SceneData } from '@tilewright/runtime';
+import { checkCutscene, expandEntities, type SkinData, type CutsceneData, type DialogueData, type LanguageData, type EventRow, type ItemData, type PrefabData, type ProjectData, type SceneData } from '@tilewright/runtime';
 import { analyseLevel, analysePushPuzzles } from '@tilewright/playbot';
 import { EditorDoc } from '../model/doc';
 import { validateScene } from '../model/validate';
@@ -7,6 +7,7 @@ import { storyVariables } from '../model/story-vars';
 import { loadScene, type ProjectFs } from './io';
 import { checkRules, missingTiles, ownTiles } from './tiles';
 import { collectStrings, coverage } from './localization';
+import { skinProblems } from './story';
 
 export interface ProjectProblem {
   id: string;
@@ -48,6 +49,7 @@ export async function checkProject(
   spriteNames: ReadonlySet<string> = new Set(),
   soundNames?: ReadonlySet<string>,
   languages: readonly LanguageData[] = [],
+  skins: readonly SkinData[] = [],
 ): Promise<ProjectProblem[]> {
   const out: ProjectProblem[] = [];
   const scenes = new Map<string, SceneData>();
@@ -135,5 +137,6 @@ export async function checkProject(
   for (const [name, d] of story.dialogues) for (const p of checkDialogue(d, known)) out.push({ id: `dialogue:${name}:${p.text}`, severity: 'warning', scene: '', message: `Dialogue "${name}": ${p.text}` });
   const cknown = { dialogues: new Set(story.dialogues.keys()), items: itemIds, ...(soundNames ? { sounds: soundNames } : {}) };
   for (const [name, c] of story.cutscenes) for (const p of checkCutscene(c, cknown)) out.push({ id: `cutscene:${name}:${p.text}`, severity: 'warning', scene: '', message: `Cutscene "${name}": ${p.text}` });
+  for (const text of skinProblems(skins, { sprites: spriteNames, items: itemIds })) out.push({ id: `skin:${text}`, severity: 'warning', scene: '', message: text });
   return out;
 }

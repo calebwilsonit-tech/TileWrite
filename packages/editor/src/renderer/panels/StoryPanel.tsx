@@ -7,6 +7,8 @@ import {
   checkDialogue,
   newCutscene,
   newDialogue,
+  newSkin,
+  type SkinData,
   type CutsceneData,
   type CutsceneStep,
   type DialogueCondition,
@@ -15,6 +17,7 @@ import {
   type ItemData,
 } from '@tilewright/runtime';
 import { store, useApp } from '../app/store';
+import { useStudio } from '../studio/store';
 import { storyNameProblem } from '../project/story';
 import { SoundField } from './SoundField';
 import { DialogueGraph } from './DialogueGraph';
@@ -22,7 +25,7 @@ import { CutsceneTimeline } from './CutsceneTimeline';
 import { connect, linkTarget, nodeHeight, portsOf, spotForNew } from '../model/dialogue-graph';
 import { CheckField, NumberField, SelectField, TextField, hexToNumber, numberToHex } from './fields';
 
-type Tab = 'items' | 'dialogues' | 'cutscenes';
+type Tab = 'items' | 'dialogues' | 'cutscenes' | 'skins';
 
 export function StoryPanel() {
   useApp((s) => s.storyVersion);
@@ -30,7 +33,7 @@ export function StoryPanel() {
   return (
     <div className="story-panel" data-testid="story-panel">
       <div className="seg" role="tablist">
-        {(['items', 'dialogues', 'cutscenes'] as Tab[]).map((t) => (
+        {(['items', 'dialogues', 'cutscenes', 'skins'] as Tab[]).map((t) => (
           <button key={t} role="tab" aria-selected={tab === t} className={tab === t ? 'on' : ''} data-testid={`story-tab-${t}`} onClick={() => setTab(t)}>
             {t[0]!.toUpperCase() + t.slice(1)}
           </button>
@@ -44,6 +47,7 @@ export function StoryPanel() {
       {tab === 'items' && <ItemsTab />}
       {tab === 'dialogues' && <DialoguesTab />}
       {tab === 'cutscenes' && <CutscenesTab />}
+      {tab === 'skins' && <SkinsTab />}
     </div>
   );
 }
@@ -635,6 +639,72 @@ function CutsceneEditor({ c, onDeleted }: { c: CutsceneData; onDeleted(): void }
           Delete cutscene
         </button>
       </div>
+    </div>
+  );
+}
+
+// ---------- skins ----------
+
+function SkinsTab() {
+  const skins = store.skins;
+  const sprites = useStudio((s) => s.names);
+  const [fresh, setFresh] = useState('');
+  const update = (i: number, patch: Partial<SkinData>): void => store.setSkins(skins.map((s, j) => (j === i ? { ...s, ...patch } : s)));
+  const create = (): void => {
+    const problem = storyNameProblem(fresh, skins.map((s) => s.name), 'skin');
+    if (problem) return store.notify('warn', problem);
+    let id = fresh.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'skin';
+    for (let n = 2; skins.some((s) => s.id === id); n++) id = `${id}-${n}`;
+    store.setSkins([...skins, { ...newSkin(id, fresh.trim()), color: 0x4aa3df }]);
+    setFresh('');
+  };
+  return (
+    <div className="story-body" data-testid="skins-tab">
+      <p className="hint">Other looks for the player character. Players choose one in the pause menu (Settings, Appearance) once it is unlocked. A skin is a colour for a plain shape, or a sprite from the Sprite studio.</p>
+      <div className="row">
+        <input data-testid="skin-new-name" placeholder="New skin name" value={fresh} onChange={(e) => setFresh(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && create()} />
+        <button data-testid="skin-new" onClick={create}>
+          Create
+        </button>
+      </div>
+      {skins.map((s, i) => (
+        <fieldset key={s.id} className="story-card" data-testid={`skin-${s.id}`}>
+          <legend>{s.name}</legend>
+          <TextField label="Name" testId={`skin-name-${s.id}`} value={s.name} onCommit={(v) => update(i, { name: v.trim() || s.name })} />
+          <CheckField label="Changes the colour of the character" testId={`skin-usecolor-${s.id}`} value={s.color >= 0} onChange={(on) => update(i, { color: on ? 0x4aa3df : -1 })} />
+          {s.color >= 0 && (
+            <label className="field">
+              <span>Colour</span>
+              <input data-testid={`skin-color-${s.id}`} type="color" value={numberToHex(s.color)} onChange={(e) => update(i, { color: hexToNumber(e.target.value) })} />
+            </label>
+          )}
+          <SelectField<string> label="Sprite" testId={`skin-sprite-${s.id}`} value={s.sprite} options={[{ value: '', label: '(keep the original)' }, ...sprites.map((n) => ({ value: n, label: n }))]} onChange={(v) => update(i, { sprite: v })} />
+          <SelectField<string>
+            label="Available"
+            testId={`skin-unlock-${s.id}`}
+            value={s.unlock.kind}
+            options={[
+              { value: 'always', label: 'from the start' },
+              { value: 'variable', label: 'when a flag or counter is set' },
+              { value: 'item', label: 'while the player carries an item' },
+            ]}
+            onChange={(k) => update(i, { unlock: k === 'item' ? { kind: 'item', item: store.story.items[0]?.id ?? '' } : k === 'variable' ? { kind: 'variable', name: '', atLeast: 1 } : { kind: 'always' } })}
+          />
+          {s.unlock.kind === 'variable' && (
+            <>
+              <TextField label="Variable" testId={`skin-var-${s.id}`} value={s.unlock.name} onCommit={(v) => update(i, { unlock: { kind: 'variable', name: v.trim(), atLeast: (s.unlock as { atLeast: number }).atLeast } })} />
+              <NumberField label="At least" value={s.unlock.atLeast} step={1} onCommit={(v) => update(i, { unlock: { kind: 'variable', name: (s.unlock as { name: string }).name, atLeast: v } })} />
+            </>
+          )}
+          {s.unlock.kind === 'item' && (
+            <SelectField<string> label="Item" value={s.unlock.item} options={[{ value: '', label: '(choose)' }, ...store.story.items.map((n) => ({ value: n.id, label: n.name }))]} onChange={(v) => update(i, { unlock: { kind: 'item', item: v } })} />
+          )}
+          <button className="small" onClick={() => store.setSkins(skins.filter((_, j) => j !== i))}>
+            Delete skin
+          </button>
+        </fieldset>
+      ))}
+      {skins.length === 0 && <p className="hint">No skins yet.</p>}
     </div>
   );
 }

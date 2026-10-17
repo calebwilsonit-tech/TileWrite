@@ -43,6 +43,36 @@ const rowFields = {
   actions: z.array(eventAction).describe('Do these.'),
 };
 const leafRow = z.object(rowFields);
+
+const condition = z
+  .union([
+    z.object({ kind: z.literal('variable'), name: z.string(), op: z.enum(['=', '!=', '>', '>=', '<', '<=']).optional(), value: z.union([z.number(), z.string(), z.boolean()]).optional() }),
+    z.object({ kind: z.literal('item'), item: z.string(), atLeast: z.number().optional() }),
+  ])
+  .describe('A condition: {"kind":"variable","name":"accepted","op":">=","value":1} or {"kind":"item","item":"key","atLeast":1}.');
+const nextId = z.string().optional().describe('The id of the step that follows (leave out to end the conversation here).');
+const dialogueNode = z.discriminatedUnion('type', [
+  z.object({ id: z.string().min(1), type: z.literal('line'), speaker: z.string().optional(), text: z.string(), next: nextId }),
+  z.object({
+    id: z.string().min(1),
+    type: z.literal('choice'),
+    speaker: z.string().optional(),
+    prompt: z.string().optional(),
+    options: z.array(z.object({ text: z.string(), next: nextId, if: condition.optional().describe('Only offer this option when it holds.') })).min(1).max(8),
+  }),
+  z.object({ id: z.string().min(1), type: z.literal('set'), variable: z.string().min(1), op: z.enum(['set', 'add', 'toggle']).optional(), value: z.union([z.number(), z.string(), z.boolean()]).optional(), next: nextId }),
+  z.object({ id: z.string().min(1), type: z.literal('give'), item: z.string().min(1), amount: z.number().optional().describe('Negative takes items away.'), next: nextId }),
+  z.object({ id: z.string().min(1), type: z.literal('branch'), if: condition, then: nextId, else: nextId }),
+  z.object({ id: z.string().min(1), type: z.literal('end') }),
+]);
+const cutsceneStep = z
+  .object({
+    type: z.enum(['wait', 'waitInput', 'say', 'dialogue', 'cameraTo', 'cameraReset', 'move', 'face', 'fade', 'animation', 'shake', 'sound', 'music', 'setVariable', 'give', 'message']),
+    id: z.string().optional(),
+    async: z.boolean().optional().describe('True lets the next step start at once (keep going).'),
+  })
+  .catchall(z.unknown())
+  .describe('A cutscene step. Other keys depend on the type: wait {seconds}, say {speaker,text}, dialogue {dialogue}, cameraTo {target,seconds,zoom}, cameraReset {seconds}, move {who,to,speed}, face {who,toward}, fade {to,seconds,color}, animation {who,clip}, shake {amount,seconds}, sound {name}, music {name}, setVariable {name,value}, give {item,amount}, message {text}. Objects are "player", "name:Keeper", "tag:guard", "id:e3" or a point "x,y".');
 const eventRow = z.object({ ...rowFields, children: z.array(leafRow).optional().describe('Sub-events that run only when this row holds (one level).') });
 
 export const TOOLS: ToolSpec[] = [
@@ -136,6 +166,30 @@ export const TOOLS: ToolSpec[] = [
     kind: 'read',
     description: 'A picture of the viewport as the user sees it right now.',
     schema: z.object({}),
+  },
+  {
+    name: 'story_overview',
+    kind: 'read',
+    description: 'The story data of the project: every item, every conversation (start, number of steps, problems the checker found), every cutscene (steps, problems) and every language with how many lines it has translated.',
+    schema: z.object({}),
+  },
+  {
+    name: 'get_dialogue',
+    kind: 'read',
+    description: 'The full steps of one conversation, and the problems the checker found in it.',
+    schema: z.object({ name: z.string().min(1) }),
+  },
+  {
+    name: 'get_cutscene',
+    kind: 'read',
+    description: 'The full steps of one cutscene, and the problems the checker found in it.',
+    schema: z.object({ name: z.string().min(1) }),
+  },
+  {
+    name: 'get_translations',
+    kind: 'read',
+    description: 'The text of the game that can be translated (conversation lines, cutscene lines, items, messages, the game menus) with where each comes from, and for one language (if you give its code) which lines already have a translation.',
+    schema: z.object({ language: z.string().optional().describe('A language code like "fr"; leave out to see only the text.') }),
   },
   {
     name: 'read_project_notes',
@@ -241,6 +295,66 @@ export const TOOLS: ToolSpec[] = [
       rows: z.array(eventRow).max(80),
       variables: z.array(z.object({ name: z.string().min(1), value: z.union([z.number(), z.string(), z.boolean()]) })).optional().describe('If given, replaces the scene variables.'),
     }),
+  },
+  {
+    name: 'write_dialogue',
+    kind: 'act',
+    description: 'Create a conversation or replace all of one. Steps join up through `next` (and option `next`, branch `then` and `else`); `start` is the id of the first step. Item ids must exist in the item list; variables are created by the conversation itself. Start from get_dialogue to change an existing one.',
+    schema: z.object({ name: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9 _-]{0,39}$/, 'Letters, digits, spaces, _ and - only.'), start: z.string().min(1), nodes: z.array(dialogueNode).min(1).max(120) }),
+  },
+  {
+    name: 'write_cutscene',
+    kind: 'act',
+    description: 'Create a cutscene or replace all of one: a list of steps that run one after another (a step marked async lets the next start at once). Start from get_cutscene to change an existing one.',
+    schema: z.object({ name: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9 _-]{0,39}$/, 'Letters, digits, spaces, _ and - only.'), skippable: z.boolean().optional(), steps: z.array(cutsceneStep).min(1).max(120) }),
+  },
+  {
+    name: 'write_items',
+    kind: 'act',
+    description: 'Replace the project\'s whole item list (start from story_overview and send everything back, changed). An item has an id (letters, digits, - and _), a name, a description, a colour as a number, a carry limit and what using it does.',
+    schema: z.object({
+      items: z
+        .array(
+          z.object({
+            id: z.string().min(1),
+            name: z.string().min(1),
+            description: z.string().optional(),
+            color: z.number().int().min(0).max(0xffffff).optional(),
+            max: z.number().int().min(0).optional().describe('Most the player can carry (0 = no limit).'),
+            use: z.object({ heal: z.number().optional(), setVariable: z.string().optional(), setValue: z.union([z.number(), z.string(), z.boolean()]).optional(), consume: z.boolean().optional(), message: z.string().optional() }).optional(),
+          }),
+        )
+        .max(100),
+    }),
+  },
+  {
+    name: 'set_regions',
+    kind: 'act',
+    description: 'Replace the open scene\'s regions (rooms): each has a name and a rectangle of cells, and can keep the camera inside it, play music (a sound name), darken it (0 to 1) and make bosses inside it only act while the player is there. Read scene_summary first and send every region back, changed. Regions without an id are new.',
+    schema: z.object({
+      regions: z
+        .array(
+          z.object({
+            id: z.string().optional(),
+            name: z.string(),
+            x: z.number().int().min(0),
+            y: z.number().int().min(0),
+            w: z.number().int().min(1),
+            h: z.number().int().min(1),
+            cameraBounds: z.boolean().optional(),
+            music: z.string().optional(),
+            darkness: z.number().min(0).max(1).optional(),
+            bossActive: z.boolean().optional(),
+          }),
+        )
+        .max(60),
+    }),
+  },
+  {
+    name: 'write_translation',
+    kind: 'act',
+    description: 'Add or change translations for a language: a map from the original text (exactly as get_translations shows it, keeping {placeholders}) to its translation. Give `name` (the language\'s own name, like "Français") when the language is new. Existing translations you do not mention stay.',
+    schema: z.object({ language: z.string().regex(/^[a-z]{2,3}(-[a-z0-9]{2,8})?$/, 'A code like fr, de or pt-br.'), name: z.string().optional(), strings: z.record(z.string(), z.string()) }),
   },
   {
     name: 'write_script',

@@ -15,6 +15,7 @@ async function play(page: Page, snapshot: Snapshot, ticks: number): Promise<void
       r.paused = true;
       r.inputSource = () => snapshot;
       for (let i = 0; i < ticks; i++) r.step();
+      r.inputSource = () => ({}); // if the editor ever steps the game on its own between calls, nothing is held down
     },
     { snapshot, ticks },
   );
@@ -58,6 +59,7 @@ async function fight(page: Page, targetName: string, maxTicks: number): Promise<
         if (dead) break;
         r.step();
       }
+      r.inputSource = () => ({});
       return tick;
     },
     { targetName, maxTicks },

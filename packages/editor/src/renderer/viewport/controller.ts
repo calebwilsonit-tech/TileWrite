@@ -737,7 +737,8 @@ export class ViewportController {
         autoPlay,
         flags: () => store.state.view,
         record,
-        liveAssets: () => ({ prefabs: store.prefabs, sprites: studio.assets, story: store.story }),
+        skins: store.skins,
+        liveAssets: () => ({ prefabs: store.prefabs, sprites: studio.assets, story: store.story, skins: store.skins }),
       });
     } catch (e) {
       store.notify('error', `The game could not start: ${e instanceof Error ? e.message : String(e)}`);

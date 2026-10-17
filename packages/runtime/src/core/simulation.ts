@@ -9,6 +9,7 @@ import { newView } from '../story/cutscene';
 import type { DialogueData, DialogueState } from '../story/dialogue';
 import type { ItemData } from '../story/items';
 import { StringTables } from '../story/strings';
+import type { SkinData } from '../story/skins';
 import type { TileMap } from '../tilemap/tilemap';
 import { EventBus } from './events';
 import { Profiler, SystemError } from './profiler';
@@ -25,6 +26,8 @@ export interface Assets {
   cutscenes: Map<string, CutsceneData>;
   /** Translations and the language in use (see story/strings.ts). */
   strings: StringTables;
+  /** Skins the player can pick from (see story/skins.ts). */
+  skins: SkinData[];
 }
 
 /** A lantern post the player lit or rested at: where death sends them. */
@@ -169,7 +172,7 @@ export class Simulation {
   readonly uiInput = new InputState();
   readonly events = new EventBus();
   readonly tweens = new Tweens();
-  readonly assets: Assets = { sprites: new Map(), prefabs: new Map(), dialogues: new Map(), items: new Map(), cutscenes: new Map(), strings: new StringTables() };
+  readonly assets: Assets = { sprites: new Map(), prefabs: new Map(), dialogues: new Map(), items: new Map(), cutscenes: new Map(), strings: new StringTables(), skins: [] };
   readonly runtime: SceneRuntime = newSceneRuntime();
   readonly rng: Rng;
   readonly profiler = new Profiler();
