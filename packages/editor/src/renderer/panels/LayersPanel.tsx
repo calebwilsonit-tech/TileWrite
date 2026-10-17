@@ -1,4 +1,6 @@
+import { useEffect, useState } from 'react';
 import { useApp, store } from '../app/store';
+import { collisionLegend } from '../viewport/palette';
 
 interface Row {
   key: 'ground' | 'objects' | 'regions';
@@ -19,6 +21,12 @@ const SOON = [
 ];
 
 export function LayersPanel() {
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const on = (): void => setTick((n) => n + 1);
+    document.addEventListener('tw:palette', on); // the colour-blind-safe setting changed
+    return () => document.removeEventListener('tw:palette', on);
+  }, []);
   const view = useApp((s) => s.view);
   const locks = useApp((s) => s.locks);
   return (
@@ -61,7 +69,7 @@ export function LayersPanel() {
             <input data-testid="view-collision" type="checkbox" checked={view.collision} onChange={(e) => store.setView({ collision: e.target.checked })} />
             <span>Collision colours</span>
           </label>
-          <small>green walk, red blocked, blue water, yellow stairs, orange bridge</small>
+          <small data-testid="collision-legend">{collisionLegend()}</small>
         </li>
         <li>
           <label>

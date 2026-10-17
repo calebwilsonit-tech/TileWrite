@@ -1,7 +1,8 @@
 import { useSyncExternalStore } from 'react';
-import { SLOPE, extractPrefab, type CrashReport, type InputRecording, resolveInstance, type CutsceneData, type DialogueData, type EntityData, type ItemData, type PrefabData, type SlopeDir } from '@tilewright/runtime';
+import { SLOPE, extractPrefab, type CrashReport, type InputRecording, resolveInstance, type CutsceneData, type DialogueData, type EntityData, type ItemData, type PrefabData, type SceneData, type SlopeDir } from '@tilewright/runtime';
 import { EditorDoc } from '../model/doc';
-import { api } from '../project/api';
+import { api, joinPath } from '../project/api';
+import { applyAccessibility, cleanAccessibility } from './accessibility';
 import { assetFs } from '../project/assetFs';
 import { deletePrefab, loadAllPrefabs, prefabNameProblem, savePrefab } from '../project/prefabs';
 import { analyseLevel, analysePushPuzzles, type LevelIssue } from '@tilewright/playbot';
@@ -21,6 +22,7 @@ import {
   loadScene,
   openProject,
   readAutosave,
+  safeFolderName,
   saveProject,
   saveScene,
   scenePathFor,
@@ -276,6 +278,7 @@ class AppStore {
     const recent = await api().recent.list();
     this.set({ testMode: info.testMode, recent, theme: settings.theme === 'light' ? 'light' : 'dark' });
     document.documentElement.dataset.theme = this.state.theme;
+    applyAccessibility(cleanAccessibility(settings.accessibility));
   }
 
   setTheme(theme: 'dark' | 'light'): void {
@@ -302,6 +305,20 @@ class AppStore {
       const created = await createProject(realFs, parent, name, templateId);
       await this.openLoaded(created);
     });
+  }
+
+  /** Create a project whose name is not taken yet ("Tutorial Room", "Tutorial Room 2"...). Returns whether one was made. */
+  async newProjectUnique(baseName: string, templateId: string): Promise<boolean> {
+    let ok = false;
+    await this.guard('Creating the project', async () => {
+      const parent = await this.chooseParentFolder();
+      if (!parent) return;
+      let name = baseName;
+      for (let i = 2; await realFs.exists(joinPath(parent, safeFolderName(name), 'project.json')); i++) name = `${baseName} ${i}`;
+      await this.openLoaded(await createProject(realFs, parent, name, templateId));
+      ok = true;
+    });
+    return ok;
   }
 
   async openProjectDialog(): Promise<void> {
@@ -666,12 +683,14 @@ class AppStore {
   }
 
   /** The game, headless, from the open scene as it is now (unsaved edits included). */
-  newHeadlessGame(): Game | null {
+  newHeadlessGame(over?: { scenes: Map<string, SceneData>; start: string }): Game | null {
     const doc = this.doc;
-    if (!doc) return null;
+    const scene = over ? over.scenes.get(over.start) : doc?.toScene();
+    if (!scene) return null;
     return new Game({
-      scene: doc.toScene(),
-      scenePath: this.state.scenePath ?? '',
+      scene,
+      scenePath: over ? over.start : (this.state.scenePath ?? ''),
+      ...(over ? { scenes: over.scenes } : {}),
       prefabs: this.prefabs,
       items: this.story.items,
       dialogues: this.story.dialogues,
@@ -679,12 +698,22 @@ class AppStore {
     });
   }
 
+  /** Every scene of the project (the open one with its unsaved edits), for games that travel between scenes. */
+  async loadAllScenes(): Promise<Map<string, SceneData>> {
+    const p = this.state.project;
+    const out = new Map<string, SceneData>();
+    if (!p) return out;
+    for (const path of p.project.scenes) out.set(path, path === this.state.scenePath && this.doc ? this.doc.toScene() : await loadScene(realFs, p.dir, path));
+    return out;
+  }
+
   async runPlaythrough(name: string): Promise<void> {
     const p = this.state.project;
     if (!p) return;
     try {
       const pt = await loadPlaythrough(assetFs, p.dir, name);
-      const game = this.newHeadlessGame();
+      const scenes = await this.loadAllScenes();
+      const game = this.newHeadlessGame({ scenes, start: scenes.has(pt.scene) ? pt.scene : (this.state.scenePath ?? p.project.startScene) });
       if (!game) return;
       const r = replayPlaythrough(game, pt);
       this.botSay(r.ok ? 'info' : 'warn', r.ok ? `Playthrough "${name}" still works: it ends as expected after ${r.seconds.toFixed(1)}s.` : `Playthrough "${name}" no longer works: ${r.problems.join(' ')}`);

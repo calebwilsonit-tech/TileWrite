@@ -3,18 +3,10 @@ import { drawCone, drawFootprint, drawLightRadius, drawPath, type ConeShape, typ
 import { DEFAULT_ISO, gridToScreen, type IsoConfig, type RegionData, type TileMap } from '@tilewright/runtime';
 import { collisionKind, type CollisionKind, type P } from '../tools/algorithms';
 import type { Preview } from '../tools/tools';
+import { PALETTE } from './palette';
 
-/** Colours are colour-blind-safe pairs (blue/orange/yellow/purple differ in lightness as well as hue). */
-export const COLLISION_COLORS: Record<CollisionKind, number> = {
-  void: 0x000000,
-  walkable: 0x2ec27e,
-  blocked: 0xe5484d,
-  pit: 0x1b1b1f,
-  water: 0x3b82f6,
-  stair: 0xf5d90a,
-  trigger: 0xb18cff,
-  deck: 0xff9f43,
-};
+/** The collision colours currently in use (see palette.ts: there is a colour-blind-safe set). */
+export const COLLISION_COLORS: Record<CollisionKind, number> = PALETTE;
 
 export interface OverlayInput {
   map: TileMap;
@@ -88,7 +80,7 @@ export class OverlayDrawer {
         const x = Number(xs);
         const y = Number(ys);
         this.diamond(g, x, y, cellTopHeight(map, x, y), iso);
-        g.fill({ color: 0x40e08a, alpha: 0.55 });
+        g.fill({ color: PALETTE.reach, alpha: 0.55 });
       }
     }
 

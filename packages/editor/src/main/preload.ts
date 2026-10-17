@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from 'electron';
+import { contextBridge, ipcRenderer, webFrame } from 'electron';
 
 const invoke = <T>(channel: string, ...args: unknown[]): Promise<T> => ipcRenderer.invoke(channel, ...args) as Promise<T>;
 
@@ -44,6 +44,10 @@ contextBridge.exposeInMainWorld('tilewright', {
       ipcRenderer.on('assistant:tool-call', l);
       return () => ipcRenderer.removeListener('assistant:tool-call', l);
     },
+  },
+  ui: {
+    /** Make everything in the window this many times bigger (the accessibility text size). */
+    setZoom: (factor: number) => webFrame.setZoomFactor(Math.min(3, Math.max(0.5, factor))),
   },
   exporter: {
     info: () => invoke('export:info'),

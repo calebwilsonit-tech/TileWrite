@@ -17,6 +17,7 @@ import { StoryPanel } from '../panels/StoryPanel';
 import { PlaybotPanel } from '../panels/PlaybotPanel';
 import { ConnectDialog } from './ConnectDialog';
 import { ExportDialog } from '../export/ExportDialog';
+import { TutorialCard } from '../tutorial/TutorialCard';
 import { AssistantPanel } from '../assistant/AssistantPanel';
 import { assistant } from '../assistant/store';
 
@@ -169,6 +170,9 @@ function Toolbar() {
         Commands…
       </button>
       <button onClick={() => document.dispatchEvent(new CustomEvent('tw:shortcuts'))}>Shortcuts</button>
+      <button data-testid="btn-access" onClick={() => document.dispatchEvent(new CustomEvent('tw:accessibility'))} title="Accessibility: text size, colour-blind-safe colours, less motion">
+        Aa
+      </button>
       <button data-testid="btn-theme" onClick={() => store.setTheme(theme === 'dark' ? 'light' : 'dark')} title="Switch light / dark theme">
         {theme === 'dark' ? 'Light' : 'Dark'}
       </button>
@@ -250,6 +254,7 @@ export function EditorShell() {
       <RecoveryDialog />
       <ConnectDialog />
       <ExportDialog />
+      <TutorialCard />
     </div>
   );
 }

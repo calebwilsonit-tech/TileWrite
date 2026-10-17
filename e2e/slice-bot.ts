@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import path from 'node:path';
 import { Bot, Game, extractPushPuzzle, solvePush, type PlayReport } from '@tilewright/playbot';
 import type { SceneData } from '@tilewright/runtime';
 import { loadScene, openProject } from '../packages/editor/src/renderer/project/io';
@@ -9,12 +10,17 @@ import type { AssetFs } from '../packages/editor/src/renderer/studio/assets';
 /** The project's files, read straight from disk (what an export would ship), for a bot that plays without the editor. */
 const nodeFs: AssetFs = {
   read: (f) => fs.promises.readFile(f, 'utf8'),
-  write: async (f, t) => fs.promises.writeFile(f, t, 'utf8'),
+  write: async (f, t) => {
+    await fs.promises.mkdir(path.dirname(f), { recursive: true }); // like the app's own file bridge
+    await fs.promises.writeFile(f, t, 'utf8');
+  },
   writeBinary: async (f, b) => fs.promises.writeFile(f, b),
   exists: async (f) => fs.existsSync(f),
   remove: async (f) => fs.promises.rm(f, { force: true }),
   list: async (d) => (await fs.promises.readdir(d, { withFileTypes: true })).map((e) => ({ name: e.name, dir: e.isDirectory() })),
 };
+
+export { nodeFs };
 
 export interface SliceRun {
   log: string[];
@@ -27,7 +33,7 @@ export interface SliceRun {
  * elder and agree, light the lantern, go through the portal; in the dungeon hold the plates with an echo, clear the
  * guard, push the crate onto its plate, swap the stone's word, light the lantern, beat the boss, walk out.
  */
-export async function playSlice(projectDir: string): Promise<SliceRun> {
+export async function loadSlice(projectDir: string): Promise<{ game: Game; scenes: Map<string, SceneData>; prefabs: Awaited<ReturnType<typeof loadAllPrefabs>>['prefabs'] }> {
   const { project } = await openProject(nodeFs, projectDir);
   const scenes = new Map<string, SceneData>();
   for (const p of project.scenes) scenes.set(p, await loadScene(nodeFs, projectDir, p));
@@ -36,6 +42,16 @@ export async function playSlice(projectDir: string): Promise<SliceRun> {
   const dialogues = await loadDialogues(nodeFs, projectDir);
   const cutscenes = await loadCutscenes(nodeFs, projectDir);
   const game = new Game({ scene: scenes.get(project.startScene)!, scenePath: project.startScene, scenes, prefabs, items: items.items, dialogues: dialogues.items, cutscenes: cutscenes.items });
+  return { game, scenes, prefabs };
+}
+
+/** A fresh game at the very start, as a player would begin it. */
+export async function newSliceGame(projectDir: string): Promise<Game> {
+  return (await loadSlice(projectDir)).game;
+}
+
+export async function playSlice(projectDir: string): Promise<SliceRun> {
+  const { game, scenes, prefabs } = await loadSlice(projectDir);
   const bot = new Bot(game);
   const log: string[] = [];
   /** What the puzzle parts are doing right now, for the report when something goes wrong. */

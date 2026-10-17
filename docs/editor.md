@@ -22,6 +22,13 @@ Panels dock, tab, split and float: drag a tab. The layout is remembered; **Comma
 | History | The undo list. |
 | Problems | Mistakes found in the scene, in plain English, with **Go to**. |
 | Console | Messages from the editor and from the game while it runs. |
+| Assets | The project's sprites, with search, tags and "find where it is used" (see [sprite-studio.md](sprite-studio.md)). |
+| Events | The scene's event sheet: rows that read like sentences, variables, and a "Convert to code" button (see [logic.md](logic.md)). |
+| Story | Items, conversations (a graph of lines, choices, flags and gifts) and cutscenes (see [story-systems.md](story-systems.md)). |
+| Playbot | Lets a bot play the open scene with only a player's buttons and reports how it went; keeps and replays playthroughs (see [checks-and-playbot.md](checks-and-playbot.md)). |
+| Claude | A chat that can look at your project and propose changes you approve (see [assistant.md](assistant.md)). |
+
+Two more workspaces sit beside **World** at the top: **Sprites** (draw and animate, see [sprite-studio.md](sprite-studio.md)) and **Code** (scripts, see [code-window.md](code-window.md)). **Export...** makes a program of your game ([export.md](export.md)). **Aa** opens the [accessibility](accessibility.md) settings. **Commands -> Start the tutorial** builds a small puzzle room step by step.
 
 ## Tools
 **Select** (V): click to select, Shift-click to add, drag an object to move it (snaps to half cells, hold Alt for free movement; it sits on the ground below it), drag empty space to box-select. R turns it, Delete removes it, Ctrl+C / Ctrl+V / Ctrl+D copy, paste, duplicate. Copying works across scenes.
@@ -54,4 +61,4 @@ Ctrl+Z / Ctrl+Y undo and redo every change, whichever panel made it. Ctrl+S save
 **Commands → Shortcuts** lists every command with its key; click Change and press a new key. Conflicts are highlighted. **Light / Dark** switches the theme.
 
 ## Not yet in the editor
-Decoration, Walls and Lights layers, autotiling rules, hot reload while playing and a separate game window (later milestones), asset import (M4), the Explain / Fix with Claude buttons (M11).
+Decoration, Walls and Lights layers, autotiling rules, hot reload while playing and a separate game window, a visual state-machine editor for enemies, a drawn dialogue graph and cutscene timeline, and vector drawing in the sprite studio. See KNOWN_ISSUES.md for the full list.

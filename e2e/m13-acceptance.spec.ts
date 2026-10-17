@@ -4,7 +4,10 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { cellInfo, cellXY, clickCell, createProjectViaUi, dragCells, launchEditor, pickTool, shot } from './helpers';
-import { playSlice } from './slice-bot';
+import { newSliceGame, nodeFs, playSlice } from './slice-bot';
+import { newPlaythrough, replayPlaythrough } from '@tilewright/playbot';
+import { serializeGame } from '@tilewright/runtime';
+import { savePlaythrough } from '../packages/editor/src/renderer/project/playthroughs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const GRID_PLUS_X: Snapshot = { move_right: 1, move_down: 1 };
@@ -328,6 +331,10 @@ test('M13: build the Last Storytender slice with the editor only, check it, let 
   await page.screenshot({ path: shot('m13-dungeon-built.png') });
   await page.keyboard.press('Control+s');
   await expect.poll(() => fs.existsSync(path.join(projectDir, 'scenes', 'dungeon.scene.json'))).toBe(true);
+  await page.evaluate(() => window.__store!.select([]));
+  await page.evaluate(() => window.__viewport!.frameMap());
+  await page.waitForTimeout(400);
+  await expect(page.getByTestId('viewport').locator('canvas')).toHaveScreenshot('dungeon-built.png', { maxDiffPixelRatio: 0.02 }); // a golden picture: drawing changes show up here
   if (process.env.TILEWRIGHT_KEEP_SLICE) fs.cpSync(projectDir, process.env.TILEWRIGHT_KEEP_SLICE, { recursive: true }); // for developing the bot without rebuilding the slice
 
 
@@ -375,6 +382,30 @@ test('M13: build the Last Storytender slice with the editor only, check it, let 
   fs.writeFileSync(path.join(root, 'screenshots', 'm13-bot-run.txt'), `${run.log.join('\n')}\n\nThe bot got from the first frame to the exit in ${seconds.toFixed(1)} s of game time (${run.game.sim.tick} steps), pressing only buttons.\n`);
   expect(seconds).toBeLessThan(120);
 
+  // the run is kept as a playthrough: replaying the same buttons gives the same game, every time, and quickly
+  const keep = newPlaythrough('Storytender slice', 'scenes/main.scene.json', run.bot.recording(), 1, { vars: { accepted: 1 }, near: 'tag:goal', within: 0.6 });
+  await savePlaythrough(nodeFs, projectDir, keep);
+  const ends: string[] = [];
+  let best = Infinity;
+  for (let i = 0; i < 3; i++) {
+    const g = await newSliceGame(projectDir);
+    const t0 = performance.now();
+    const r = replayPlaythrough(g, keep);
+    best = Math.min(best, (performance.now() - t0) / g.sim.tick);
+    expect(r, r.problems.join(' ')).toMatchObject({ ok: true });
+    ends.push(JSON.stringify(serializeGame(g.sim, { stamp: '' })));
+  }
+  expect(new Set(ends).size).toBe(1); // determinism: identical saved state after every replay
+  expect(ends[0]).toBe(JSON.stringify(serializeGame(run.game.sim, { stamp: '' }))); // and the same as the bot's own run
+  expect(best).toBeLessThan(5); // milliseconds of game logic per 60 Hz step, against a 16.7 ms frame (it is about 1 on this machine)
+
+  // the Playbot panel replays it too (from the hub, through the portal, to the exit), whichever scene is open
+  await page.evaluate(() => window.__store!.loadPlaythroughNames());
+  await tab(page, 'Playbot').click();
+  await page.getByTestId('playthrough-run-Storytender slice').click();
+  await expect(page.getByTestId('bot-log-item').first()).toContainText('Playthrough "Storytender slice" still works');
+  await page.screenshot({ path: shot('m13-playbot-replay.png') });
+
   // =========================================================================================
   // PLAY IT IN THE EDITOR: the real menus, the flag opening the seal, saving, loading, remapping, death and respawn
   // =========================================================================================
@@ -403,6 +434,26 @@ test('M13: build the Last Storytender slice with the editor only, check it, let 
       };
     });
   await hub();
+  await page.evaluate(() => window.__store!.select([]));
+  await page.evaluate(() => window.__viewport!.frameMap());
+  await page.waitForTimeout(400);
+  await expect(page.getByTestId('viewport').locator('canvas')).toHaveScreenshot('hub-built.png', { maxDiffPixelRatio: 0.02 });
+
+  // the speed meter while the real game runs: frames per second and milliseconds of game logic per step
+  await tab(page, 'Layers').click();
+  await page.getByTestId('view-profiler').check();
+  await page.getByTestId('btn-play').click();
+  await page.waitForFunction(() => window.__play !== undefined);
+  await page.waitForTimeout(3000);
+  const meter = (await page.getByTestId('tw-profiler').textContent()) ?? '';
+  const fps = Number(/(\d+) frames per second/.exec(meter)?.[1]);
+  const stepMs = Number(/game step ([\d.]+) ms/.exec(meter)?.[1]);
+  fs.writeFileSync(path.join(root, 'screenshots', 'm13-speed.txt'), meter);
+  expect(stepMs, meter).toBeLessThan(5);
+  expect(fps, meter).toBeGreaterThanOrEqual(30);
+  await page.getByTestId('btn-stop').click();
+  await page.getByTestId('view-profiler').uncheck();
+
   await page.getByTestId('btn-play').click();
   await page.waitForFunction(() => window.__play !== undefined);
   await play(page, {}, 5);

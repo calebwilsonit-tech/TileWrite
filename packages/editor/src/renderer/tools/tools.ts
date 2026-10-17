@@ -16,6 +16,7 @@ import {
   type Pattern,
 } from './algorithms';
 import { prefabById } from './prefabs';
+import { PALETTE } from '../viewport/palette';
 
 export const MAX_HEIGHT = 12;
 
@@ -868,7 +869,7 @@ export const TOOLS: Record<ToolId, ToolImpl> = {
     up() {},
     cancel() {},
     hover(p, env) {
-      env.setPreview(p.cell ? [{ kind: 'cells', cells: [p.cell], color: 0x40e08a, alpha: 0.5 }] : []);
+      env.setPreview(p.cell ? [{ kind: 'cells', cells: [p.cell], color: PALETTE.reach, alpha: 0.5 }] : []);
     },
     key(k, env) {
       if (k === 'Escape') {

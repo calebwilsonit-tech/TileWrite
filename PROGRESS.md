@@ -129,6 +129,16 @@ Deferred:
 - [ ] Dialogue node-graph canvas and a visual cutscene timeline; localization string tables
 - [ ] Audio engine (volumes are stored only), video settings, minigames, cosmetic skins, hit-stop, drawn world map
 
+## M14 checklist (in progress)
+
+- [x] Interactive first-run tutorial (`Take the tutorial` on the project screen, or Commands): ten self-ticking steps build a plate, a crate and a gate behind a wall, wire them and play it (`e2e/m14-tutorial.spec.ts`)
+- [x] Docs: an index (`docs/README.md`), a reference page for every behaviour and every event block generated from the engine and compared by a test, recipes for the common things, a panel manual (a test checks every panel is described and every link resolves)
+- [x] Accessibility: text size 100-200%, colour-blind-safe overlay palette (checked by a test simulating protanopia, deuteranopia and tritanopia), less motion, everything remappable (`e2e/m14-accessibility.spec.ts`, `docs/accessibility.md`)
+- [x] Golden-picture tests of the finished hub and dungeon (Playwright snapshots), determinism (three replays of the slice end in identical saved state, equal to the bot's own run), speed (about 1 ms of game logic per step in a headless replay, 60 fps and 0.3 ms per step in the real window, asserted)
+- [ ] Audio engine, particles, hit-stop, screen shake from combat
+- [ ] Sample project / template of the acceptance slice
+- [ ] Autotiling, hot reload and a separate game window, vector drawing, visual state machine, dialogue graph canvas, localization (owed since earlier milestones)
+
 ## M13 checklist
 
 Verified by `e2e/m13-acceptance.spec.ts` (a minute, built through the UI) with `e2e/slice-bot.ts`; described in `docs/acceptance.md`:

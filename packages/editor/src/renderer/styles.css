@@ -1383,3 +1383,73 @@ button.small {
   letter-spacing: 0.06em;
   color: var(--muted);
 }
+
+/* ---- tutorial ---- */
+.tutorial-card {
+  position: fixed;
+  right: 16px;
+  bottom: 44px;
+  width: 340px;
+  max-width: calc(100vw - 32px);
+  z-index: 60;
+  background: var(--panel);
+  color: var(--fg);
+  border: 2px solid var(--accent);
+  border-radius: 8px;
+  padding: 10px 14px 12px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.tutorial-card h3 {
+  margin: 4px 0 6px;
+  font-size: 15px;
+}
+.tutorial-card p {
+  margin: 4px 0;
+}
+.tutorial-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.tutorial-progress .bar {
+  flex: 1;
+  height: 4px;
+  background: var(--panel-2);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.tutorial-progress .bar span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+@keyframes tw-tutorial-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 var(--focus);
+  }
+  50% {
+    box-shadow: 0 0 0 4px var(--focus);
+  }
+}
+.tw-tutorial-pulse {
+  outline: 2px solid var(--focus);
+  animation: tw-tutorial-pulse 1.4s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tw-tutorial-pulse {
+    animation: none;
+  }
+}
+
+/* ---- accessibility ---- */
+.reduce-motion *,
+.reduce-motion *::before,
+.reduce-motion *::after {
+  animation: none !important;
+  transition: none !important;
+}

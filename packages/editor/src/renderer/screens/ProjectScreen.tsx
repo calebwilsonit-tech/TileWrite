@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useApp, store } from '../app/store';
 import { TEMPLATES } from '../project/templates';
 import { Toasts } from '../app/Chrome';
+import { tutorial } from '../tutorial/store';
 
 export function ProjectScreen() {
   const recent = useApp((s) => s.recent);
@@ -15,9 +16,20 @@ export function ProjectScreen() {
       <header>
         <h1>Tilewright</h1>
         <p>Make isometric games without writing code.</p>
+        <button data-testid="btn-access" onClick={() => document.dispatchEvent(new CustomEvent('tw:accessibility'))} title="Accessibility: text size, colour-blind-safe colours, less motion">
+          Aa Accessibility
+        </button>
       </header>
 
       <div className="projects-grid">
+        <section className="card">
+          <h2>New here?</h2>
+          <p className="hint">Build a small puzzle room (a crate, a plate and a gate) in about ten minutes. No code.</p>
+          <button className="primary" data-testid="btn-tutorial" disabled={busy} onClick={() => void store.newProjectUnique('Tutorial Room', 'empty-iso').then((ok) => ok && tutorial.start())}>
+            Take the tutorial
+          </button>
+        </section>
+
         <section className="card">
           <h2>New project</h2>
           {!showNew ? (

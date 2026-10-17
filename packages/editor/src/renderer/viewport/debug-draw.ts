@@ -1,6 +1,7 @@
 import type { Graphics } from 'pixi.js';
 import { facingVector } from '@tilewright/behaviors';
 import { gridToScreen, type IsoConfig } from '@tilewright/runtime';
+import { PALETTE } from './palette';
 
 /** Debug shapes drawn in grid space on a Graphics, shared by the editor's overlay and the running game's. */
 
@@ -80,7 +81,7 @@ export function drawPath(g: Graphics, p: PathShape, iso: IsoConfig): void {
 
 /** Where things take up room: trigger areas in purple, solid objects in red. */
 export function drawFootprint(g: Graphics, f: FootprintShape, iso: IsoConfig): void {
-  const color = f.trigger ? 0xb18cff : 0xe5484d;
+  const color = f.trigger ? PALETTE.trigger : PALETTE.solid;
   const hx = f.w / 2;
   const hy = f.d / 2;
   const pts = [gridToScreen(f.x - hx, f.y - hy, f.h, iso), gridToScreen(f.x + hx, f.y - hy, f.h, iso), gridToScreen(f.x + hx, f.y + hy, f.h, iso), gridToScreen(f.x - hx, f.y + hy, f.h, iso)];

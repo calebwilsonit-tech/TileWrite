@@ -4,6 +4,7 @@ import { startMultilevelRoom, type M2Handle } from '../../../../samples/m2-multi
 import { useApp, store } from './app/store';
 import { EditorShell } from './app/EditorShell';
 import { ProjectScreen } from './screens/ProjectScreen';
+import { AccessibilityDialog } from './app/AccessibilityDialog';
 import { studio } from './studio/store';
 
 declare global {
@@ -93,5 +94,10 @@ export function App() {
     );
   }
   if (!ready) return <main className="welcome" data-testid="welcome"><h1>Tilewright</h1></main>;
-  return screen === 'editor' ? <EditorShell /> : <ProjectScreen />;
+  return (
+    <>
+      {screen === 'editor' ? <EditorShell /> : <ProjectScreen />}
+      <AccessibilityDialog />
+    </>
+  );
 }
