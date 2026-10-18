@@ -86,3 +86,23 @@ describe('InputRecorder / InputPlayback', () => {
     expect(pb.next()).toEqual({ a: 1 });
   });
 });
+
+describe('a quick tap', () => {
+  it('is seen for one read even when the key goes down and up between two frames, and not seen again', async () => {
+    const { DomInputSource } = await import('./keyboard');
+    const target = new EventTarget() as unknown as Window;
+    const source = new DomInputSource(target, () => []);
+    const key = (type: string) => Object.assign(new Event(type), { code: 'KeyE', repeat: false });
+    target.dispatchEvent(key('keydown'));
+    target.dispatchEvent(key('keyup'));
+    expect(source.read()['key:KeyE']).toBe(1);
+    expect(source.read()['key:KeyE']).toBeUndefined();
+    // a key that is held stays down on every read
+    target.dispatchEvent(key('keydown'));
+    expect(source.read()['key:KeyE']).toBe(1);
+    expect(source.read()['key:KeyE']).toBe(1);
+    target.dispatchEvent(key('keyup'));
+    expect(source.read()['key:KeyE']).toBeUndefined();
+    source.dispose?.();
+  });
+});

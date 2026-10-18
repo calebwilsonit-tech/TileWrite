@@ -160,7 +160,8 @@ export function grantInvulnerability(e: Entity, seconds: number): void {
   st.iframes = Math.max(st.iframes, seconds);
 }
 
-const hearts = (hp: number, max: number): string => 'â™¥'.repeat(Math.max(0, Math.ceil(hp))) + 'â™¡'.repeat(Math.max(0, Math.ceil(max) - Math.ceil(hp)));
+/** Hearts for small amounts, a number once there would be too many to read. */
+const hearts = (hp: number, max: number): string => max > 10 ? `${Math.max(0, Math.ceil(hp))}/${Math.ceil(max)}` : '♥'.repeat(Math.max(0, Math.ceil(hp))) + '♡'.repeat(Math.max(0, Math.ceil(max) - Math.ceil(hp)));
 
 export const health = defineBehavior<Health>({
   id: 'health',

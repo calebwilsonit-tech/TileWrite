@@ -1,0 +1,620 @@
+{
+  "schemaVersion": 1,
+  "name": "Main",
+  "map": {
+    "width": 14,
+    "height": 14,
+    "tiles": [
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,2,2,2,2,1,1,1,1],
+      [1,1,1,1,1,1,2,2,2,2,1,1,1,1],
+      [1,1,1,1,1,1,2,2,2,2,1,1,1,1],
+      [1,1,1,1,1,1,2,2,2,2,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+    ],
+    "heights": [
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,1,1,1,1,0,0,0,0],
+      [0,0,0,0,0,0,1,1,1,1,0,0,0,0],
+      [0,0,0,0,0,0,1,1,1,1,0,0,0,0],
+      [0,0,0,0,0,0,1,1,1,1,1,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,1,1,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,1,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+    ],
+    "slopes": [
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+    ],
+    "flags": [
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+    ],
+    "decks": [
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+    ],
+    "deckTiles": [
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+    ],
+    "oneWay": [
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+    ]
+  },
+  "entities": [
+    {
+      "id": "e1",
+      "name": "Knight",
+      "tags": [
+        "unit",
+        "blue"
+      ],
+      "components": {
+        "transform": {
+          "x": 3.5,
+          "y": 10.5,
+          "h": 0,
+          "facing": 2
+        },
+        "sprite": {
+          "shape": "box",
+          "color": 5213439,
+          "w": 0.7,
+          "d": 0.7,
+          "height": 1.2,
+          "sortOffset": 0,
+          "visible": true
+        },
+        "collider": {
+          "w": 0.7,
+          "d": 0.7,
+          "height": 1.2,
+          "solid": true,
+          "trigger": false,
+          "layer": 16,
+          "mask": 65535,
+          "enabled": true,
+          "inside": []
+        },
+        "turnTaker": {
+          "team": "blue",
+          "initiative": 9,
+          "apMax": 4,
+          "attackRange": 1,
+          "attackDamage": 3,
+          "attackCost": 2,
+          "heightBonus": 1,
+          "autoEnd": true
+        },
+        "gridMover": {
+          "moveCost": 1,
+          "speed": 6,
+          "stepUp": 1,
+          "maxDrop": 2
+        },
+        "body": {
+          "vx": 0,
+          "vy": 0,
+          "vz": 0,
+          "radius": 0.3,
+          "height": 1.2,
+          "state": "ground",
+          "stepUp": 1,
+          "stepDown": 2,
+          "ledge": "fall",
+          "pits": "fall",
+          "wade": false,
+          "gravity": 1,
+          "peakZ": 0,
+          "layer": 2,
+          "mask": 65535,
+          "noclip": false,
+          "blockedBy": [],
+          "blockedTerrain": false
+        },
+        "health": {
+          "max": 16,
+          "invulnerableSeconds": 0,
+          "onDeath": "remove",
+          "fallDamage": 1,
+          "team": "auto",
+          "showBar": true
+        }
+      }
+    },
+    {
+      "id": "e2",
+      "name": "Archer",
+      "tags": [
+        "unit",
+        "blue"
+      ],
+      "components": {
+        "transform": {
+          "x": 2.5,
+          "y": 11.5,
+          "h": 0,
+          "facing": 2
+        },
+        "sprite": {
+          "shape": "box",
+          "color": 5213439,
+          "w": 0.7,
+          "d": 0.7,
+          "height": 1.2,
+          "sortOffset": 0,
+          "visible": true
+        },
+        "collider": {
+          "w": 0.7,
+          "d": 0.7,
+          "height": 1.2,
+          "solid": true,
+          "trigger": false,
+          "layer": 16,
+          "mask": 65535,
+          "enabled": true,
+          "inside": []
+        },
+        "turnTaker": {
+          "team": "blue",
+          "initiative": 9,
+          "apMax": 4,
+          "attackRange": 4,
+          "attackDamage": 2,
+          "attackCost": 2,
+          "heightBonus": 1,
+          "autoEnd": true
+        },
+        "gridMover": {
+          "moveCost": 1,
+          "speed": 6,
+          "stepUp": 1,
+          "maxDrop": 2
+        },
+        "body": {
+          "vx": 0,
+          "vy": 0,
+          "vz": 0,
+          "radius": 0.3,
+          "height": 1.2,
+          "state": "ground",
+          "stepUp": 1,
+          "stepDown": 2,
+          "ledge": "fall",
+          "pits": "fall",
+          "wade": false,
+          "gravity": 1,
+          "peakZ": 0,
+          "layer": 2,
+          "mask": 65535,
+          "noclip": false,
+          "blockedBy": [],
+          "blockedTerrain": false
+        },
+        "health": {
+          "max": 10,
+          "invulnerableSeconds": 0,
+          "onDeath": "remove",
+          "fallDamage": 1,
+          "team": "auto",
+          "showBar": true
+        }
+      }
+    },
+    {
+      "id": "e3",
+      "name": "Orc",
+      "tags": [
+        "unit",
+        "red"
+      ],
+      "components": {
+        "transform": {
+          "x": 10.5,
+          "y": 3.5,
+          "h": 0,
+          "facing": 2
+        },
+        "sprite": {
+          "shape": "box",
+          "color": 14702187,
+          "w": 0.7,
+          "d": 0.7,
+          "height": 1.2,
+          "sortOffset": 0,
+          "visible": true
+        },
+        "collider": {
+          "w": 0.7,
+          "d": 0.7,
+          "height": 1.2,
+          "solid": true,
+          "trigger": false,
+          "layer": 16,
+          "mask": 65535,
+          "enabled": true,
+          "inside": []
+        },
+        "turnTaker": {
+          "team": "red",
+          "initiative": 1,
+          "apMax": 4,
+          "attackRange": 1,
+          "attackDamage": 3,
+          "attackCost": 2,
+          "heightBonus": 1,
+          "autoEnd": true
+        },
+        "gridMover": {
+          "moveCost": 1,
+          "speed": 6,
+          "stepUp": 1,
+          "maxDrop": 2
+        },
+        "body": {
+          "vx": 0,
+          "vy": 0,
+          "vz": 0,
+          "radius": 0.3,
+          "height": 1.2,
+          "state": "ground",
+          "stepUp": 1,
+          "stepDown": 2,
+          "ledge": "fall",
+          "pits": "fall",
+          "wade": false,
+          "gravity": 1,
+          "peakZ": 0,
+          "layer": 2,
+          "mask": 65535,
+          "noclip": false,
+          "blockedBy": [],
+          "blockedTerrain": false
+        },
+        "health": {
+          "max": 8,
+          "invulnerableSeconds": 0,
+          "onDeath": "remove",
+          "fallDamage": 1,
+          "team": "auto",
+          "showBar": true
+        },
+        "unitAi": {
+          "style": "rush"
+        }
+      }
+    },
+    {
+      "id": "e4",
+      "name": "Orc",
+      "tags": [
+        "unit",
+        "red"
+      ],
+      "components": {
+        "transform": {
+          "x": 11.5,
+          "y": 2.5,
+          "h": 0,
+          "facing": 2
+        },
+        "sprite": {
+          "shape": "box",
+          "color": 14702187,
+          "w": 0.7,
+          "d": 0.7,
+          "height": 1.2,
+          "sortOffset": 0,
+          "visible": true
+        },
+        "collider": {
+          "w": 0.7,
+          "d": 0.7,
+          "height": 1.2,
+          "solid": true,
+          "trigger": false,
+          "layer": 16,
+          "mask": 65535,
+          "enabled": true,
+          "inside": []
+        },
+        "turnTaker": {
+          "team": "red",
+          "initiative": 1,
+          "apMax": 4,
+          "attackRange": 1,
+          "attackDamage": 3,
+          "attackCost": 2,
+          "heightBonus": 1,
+          "autoEnd": true
+        },
+        "gridMover": {
+          "moveCost": 1,
+          "speed": 6,
+          "stepUp": 1,
+          "maxDrop": 2
+        },
+        "body": {
+          "vx": 0,
+          "vy": 0,
+          "vz": 0,
+          "radius": 0.3,
+          "height": 1.2,
+          "state": "ground",
+          "stepUp": 1,
+          "stepDown": 2,
+          "ledge": "fall",
+          "pits": "fall",
+          "wade": false,
+          "gravity": 1,
+          "peakZ": 0,
+          "layer": 2,
+          "mask": 65535,
+          "noclip": false,
+          "blockedBy": [],
+          "blockedTerrain": false
+        },
+        "health": {
+          "max": 8,
+          "invulnerableSeconds": 0,
+          "onDeath": "remove",
+          "fallDamage": 1,
+          "team": "auto",
+          "showBar": true
+        },
+        "unitAi": {
+          "style": "rush"
+        }
+      }
+    },
+    {
+      "id": "e9",
+      "name": "Controls",
+      "tags": [],
+      "components": {
+        "transform": {
+          "x": 0.5,
+          "y": 0.5,
+          "h": 0,
+          "facing": 2
+        },
+        "sprite": {
+          "shape": "box",
+          "color": 0,
+          "w": 0.1,
+          "d": 0.1,
+          "height": 0.1,
+          "sortOffset": 0,
+          "visible": false
+        },
+        "gridCursor": {
+          "team": "blue",
+          "showRange": true
+        }
+      }
+    },
+    {
+      "name": "Slinger",
+      "tags": [
+        "unit",
+        "red"
+      ],
+      "components": {
+        "transform": {
+          "x": 11.5,
+          "y": 9.5,
+          "h": 1,
+          "facing": 2
+        },
+        "sprite": {
+          "shape": "box",
+          "color": 13211210,
+          "w": 0.9,
+          "d": 0.9,
+          "height": 1,
+          "sortOffset": 0,
+          "visible": true
+        },
+        "collider": {
+          "w": 0.9,
+          "d": 0.9,
+          "height": 1,
+          "solid": true,
+          "trigger": false,
+          "layer": 16,
+          "mask": 65535,
+          "enabled": true,
+          "inside": []
+        },
+        "pushable": {
+          "slideSpeed": 6
+        },
+        "turnTaker": {
+          "team": "red",
+          "initiative": 5,
+          "apMax": 4,
+          "attackRange": 4,
+          "attackDamage": 2,
+          "attackCost": 2,
+          "heightBonus": 1,
+          "autoEnd": true
+        },
+        "gridMover": {
+          "moveCost": 1,
+          "speed": 6,
+          "stepUp": 1,
+          "maxDrop": 2
+        },
+        "body": {
+          "vx": 0,
+          "vy": 0,
+          "vz": 0,
+          "radius": 0.3,
+          "height": 1.2,
+          "state": "ground",
+          "stepUp": 1,
+          "stepDown": 2,
+          "ledge": "fall",
+          "pits": "fall",
+          "wade": false,
+          "gravity": 1,
+          "peakZ": 0,
+          "layer": 2,
+          "mask": 65535,
+          "noclip": false,
+          "blockedBy": [],
+          "blockedTerrain": false
+        },
+        "health": {
+          "max": 5,
+          "invulnerableSeconds": 0,
+          "onDeath": "remove",
+          "fallDamage": 1,
+          "team": "auto",
+          "showBar": true
+        },
+        "unitAi": {
+          "style": "rush"
+        }
+      },
+      "id": "e10"
+    }
+  ],
+  "regions": [],
+  "wires": [],
+  "variables": [],
+  "events": [
+    {
+      "id": "start-battle",
+      "enabled": true,
+      "comment": "",
+      "mode": "all",
+      "once": true,
+      "forEach": "",
+      "breakpoint": false,
+      "repeat": 1,
+      "conditions": [
+        {
+          "type": "start",
+          "params": {},
+          "negate": false
+        }
+      ],
+      "actions": [
+        {
+          "type": "startBattle",
+          "params": {}
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "ev11",
+      "enabled": true,
+      "comment": "",
+      "mode": "all",
+      "once": false,
+      "forEach": "",
+      "breakpoint": false,
+      "repeat": 1,
+      "conditions": [
+        {
+          "type": "battleWon",
+          "params": {
+            "team": ""
+          },
+          "negate": false
+        }
+      ],
+      "actions": [
+        {
+          "type": "setVariable",
+          "params": {
+            "name": "victory",
+            "op": "set",
+            "value": "1"
+          }
+        }
+      ],
+      "children": []
+    }
+  ],
+  "graphs": []
+}

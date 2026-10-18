@@ -181,7 +181,7 @@ const startRow = (): EventRow => ({ ...newRow('start-battle'), conditions: [newC
 
 /** A soldier of a team: turns, walking cell by cell, health. Enemies play their own turns. */
 function soldier(id: string, name: string, x: number, y: number, team: 'blue' | 'red', opts: { range?: number; damage?: number } = {}): EntityData {
-  return thingOf(id, name, x, y, ['unit', team], { turnTaker: { team, apMax: 4, initiative: team === 'blue' ? 9 : 1, attackRange: opts.range ?? 1, attackDamage: opts.damage ?? 3, attackCost: 2 }, gridMover: {}, health: { max: 8 }, ...(team === 'red' ? { unitAi: {} } : {}) }, { sprite: box(team === 'blue' ? 0x4f8cff : 0xe0566b), collider: { ...solid } });
+  return thingOf(id, name, x, y, ['unit', team], { turnTaker: { team, apMax: 4, initiative: team === 'blue' ? 9 : 1, attackRange: opts.range ?? 1, attackDamage: opts.damage ?? 3, attackCost: 2 }, gridMover: {}, health: { max: 8, invulnerableSeconds: 0 }, ...(team === 'red' ? { unitAi: {} } : {}) }, { sprite: box(team === 'blue' ? 0x4f8cff : 0xe0566b), collider: { ...solid } });
 }
 
 const actionAdventure: Template = {

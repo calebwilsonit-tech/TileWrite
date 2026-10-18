@@ -33,9 +33,12 @@ export function readGamepads(pads: readonly (PadLike | null)[]): RawInput {
 /** Browser keyboard + mouse-button + gamepad source. Produces raw bindings "key:<KeyboardEvent.code>", "mouse:<button>" and "pad:...". */
 export class DomInputSource {
   private readonly raw: RawInput = {};
+  /** Buttons pressed since the last read, so a tap shorter than one frame (a quick click, a touchpad tap) is still seen once. */
+  private latched: RawInput = {};
   private readonly onKeyDown = (e: KeyboardEvent): void => {
     if (e.repeat) return;
     this.raw[`key:${e.code}`] = 1;
+    this.latched[`key:${e.code}`] = 1;
   };
   private readonly onKeyUp = (e: KeyboardEvent): void => {
     delete this.raw[`key:${e.code}`];
@@ -45,8 +48,13 @@ export class DomInputSource {
   };
   private readonly onMouseDown = (e: MouseEvent): void => {
     this.raw[`mouse:${e.button}`] = 1;
+    this.latched[`mouse:${e.button}`] = 1;
     // a click on the game's picture (not on a menu or button drawn over it) is a click on the world
-    if (this.overWorld(e)) this.raw[`ptr:${['left', 'middle', 'right'][e.button] ?? 'left'}`] = 1;
+    if (this.overWorld(e)) {
+      const k = `ptr:${['left', 'middle', 'right'][e.button] ?? 'left'}`;
+      this.raw[k] = 1;
+      this.latched[k] = 1;
+    }
   };
   private readonly onMouseUp = (e: MouseEvent): void => {
     delete this.raw[`mouse:${e.button}`];
@@ -98,7 +106,8 @@ export class DomInputSource {
   }
 
   read(): RawInput {
-    const out: RawInput = { ...this.raw, ...readGamepads(this.pads()) };
+    const out: RawInput = { ...this.raw, ...this.latched, ...readGamepads(this.pads()) };
+    this.latched = {};
     const el = this.pointerEl;
     if (el && this.probe) {
       const r = el.getBoundingClientRect();
