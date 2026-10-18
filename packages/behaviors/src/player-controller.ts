@@ -14,6 +14,7 @@ import { eventSheetSystem } from './events/sheet';
 import { cutsceneSystem, dialogueSystem, minigameSystem } from './story/director';
 import { quickSlotSystem } from './story/inventory';
 import { behaviorSystems } from './signals';
+import { packSystems } from './packs';
 
 export const PLAYER_CONTROLLER = 'playerController';
 
@@ -61,6 +62,7 @@ export function addStandardSystems(sim: Simulation, physics: (ctx: SimContext) =
   sim.addSystem('player-controller', playerControllerSystem, 'player');
   sim.addSystem('quick-slots', quickSlotSystem, 'player');
   for (const s of behaviorSystems()) sim.addSystem(s.name, s.fn, 'gameplay');
+  for (const s of packSystems()) sim.addSystem(s.name, s.fn, s.mode);
   sim.addSystem('event-sheet', eventSheetSystem, 'gameplay');
   sim.addSystem('physics', physics, 'gameplay');
   sim.addSystem('animation', animationSystem, 'gameplay');

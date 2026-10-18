@@ -11,9 +11,10 @@ import { analyseLevel, analysePushPuzzles, type LevelIssue } from '@tilewright/p
 import { checkProject, type ProjectProblem } from '../project/check';
 import { deletePlaythrough, listPlaythroughs, loadPlaythrough, nextPlaythroughName, savePlaythrough } from '../project/playthroughs';
 import { Game, newPlaythrough, replayPlaythrough, type GameSetup } from '@tilewright/playbot';
-import { eventsToScript } from '@tilewright/behaviors';
+import { eventsToScript, setActivePacks } from '@tilewright/behaviors';
 import { reloadScripts, type BreakHit, type ScriptProblemEntry } from '../code/script-manager';
 import { deleteScript as deleteScriptFile, loadScripts as loadScriptFiles, saveScript as saveScriptFile } from '../project/scripts';
+import { setPlayerRequired } from '../model/validate';
 import { loadProjectInput, loadUiLayout, saveProjectInput, saveUiLayout, storyNameProblem } from '../project/story';
 import { deleteCutscene, deleteDialogue, loadCutscenes, loadDialogues, loadItems, loadMinigames, loadSkins, loadWorldMap, saveCutscene, saveDialogue, saveItems, saveMinigames, saveSkins, saveWorldMap } from '../project/story';
 import {
@@ -390,6 +391,8 @@ class AppStore {
   }
 
   private async openLoaded(p: OpenProject): Promise<void> {
+    setActivePacks(p.project.packs);
+    setPlayerRequired(p.project.packs === undefined);
     await api().recent.add(p.dir, p.project.name);
     this.set({ project: p, workspace: 'world', recent: await api().recent.list() });
     await this.loadPrefabs();
@@ -719,13 +722,17 @@ class AppStore {
   }
 
   /** Change the project's name, first scene, tile size or title screen. Saved at once. */
-  async updateProjectSettings(patch: Partial<Pick<ProjectData, 'name' | 'startScene' | 'iso' | 'title'>>): Promise<boolean> {
+  async updateProjectSettings(patch: Partial<Pick<ProjectData, 'name' | 'startScene' | 'iso' | 'title' | 'packs'>>): Promise<boolean> {
     const p = this.state.project;
     if (!p) return false;
     const ok = await this.guard('Saving the project settings', async () => {
       const project = { ...p.project, ...patch };
       await saveProject(realFs, p.dir, project);
-      this.set({ project: { ...p, project }, docVersion: this.state.docVersion + 1 });
+      if (patch.packs) {
+        setActivePacks(patch.packs);
+        setPlayerRequired(false);
+      }
+      this.set({ project: { ...p, project }, docVersion: this.state.docVersion + 1, storyVersion: this.state.storyVersion + 1 });
       return true;
     });
     return ok === true;

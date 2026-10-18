@@ -52,7 +52,7 @@ export function crateEntity(id: string, x: number, y: number): EntityData {
   };
 }
 
-function baseProject(name: string): ProjectData {
+function baseProject(name: string, packs?: string[]): ProjectData {
   return {
     schemaVersion: CURRENT_SCHEMA_VERSION,
     name,
@@ -61,6 +61,7 @@ function baseProject(name: string): ProjectData {
     autotile: [],
     scenes: [MAIN_SCENE_PATH],
     startScene: MAIN_SCENE_PATH,
+    ...(packs ? { packs } : {}),
   };
 }
 
@@ -68,10 +69,22 @@ function sceneFrom(map: TileMap, entities: EntityData[]): SceneData {
   return { schemaVersion: CURRENT_SCHEMA_VERSION, name: 'Main', map: tileMapToRows(map), entities, regions: [], wires: [], variables: [], events: [] };
 }
 
+/** Nothing at all: a flat field and a camera. No player, no rules, no packs. Every genre starts from here. */
+const empty: Template = {
+  id: 'empty',
+  name: 'Empty (nothing in it)',
+  description: 'A flat grass field. No player, no rules, nothing switched on: build any kind of game from here.',
+  build(name) {
+    const map = new TileMap(32, 32);
+    map.fill(1, 0);
+    return { project: baseProject(name, []), scene: sceneFrom(map, []) };
+  },
+};
+
 const emptyIso: Template = {
   id: 'empty-iso',
-  name: 'Empty isometric world',
-  description: 'A flat grass field and a player. Start here and build whatever you like.',
+  name: 'Action starter (a field and a player)',
+  description: 'A flat grass field and a player who walks, runs and jumps, with every module switched on.',
   build(name) {
     const map = new TileMap(32, 32);
     map.fill(1, 0);
@@ -130,8 +143,8 @@ const puzzleDungeon: Template = {
   },
 };
 
-export const TEMPLATES: Template[] = [emptyIso, starterRoom, puzzleDungeon];
+export const TEMPLATES: Template[] = [empty, emptyIso, starterRoom, puzzleDungeon];
 
 export function templateById(id: string): Template {
-  return TEMPLATES.find((t) => t.id === id) ?? emptyIso;
+  return TEMPLATES.find((t) => t.id === id) ?? empty;
 }

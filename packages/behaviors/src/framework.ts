@@ -51,10 +51,30 @@ export interface BehaviorDef<S extends object = Record<string, unknown>> {
 }
 
 const registry = new Map<string, BehaviorDef<any>>(); // eslint-disable-line @typescript-eslint/no-explicit-any
+/** Every behaviour ever defined, whether its pack is on or not (turning a pack back on takes them from here). */
+const shelf = new Map<string, BehaviorDef<any>>(); // eslint-disable-line @typescript-eslint/no-explicit-any
+
+/** A behaviour definition that is not registered by itself: a pack installs it. */
+export function behaviorDef<S extends object>(def: BehaviorDef<S>): BehaviorDef<S> {
+  return def;
+}
+
+export function shelvedBehavior(id: string): BehaviorDef | undefined {
+  return shelf.get(id);
+}
+
+/** Put a behaviour from the shelf back in the registry. False when there is none by that name. */
+export function reshelveBehavior(id: string): boolean {
+  const def = shelf.get(id);
+  if (!def) return false;
+  registry.set(id, def);
+  return true;
+}
 
 /** Register a behaviour (done once at start-up for the built-ins; scripts may add their own later). */
 export function defineBehavior<S extends object>(def: BehaviorDef<S>): BehaviorDef<S> {
   registry.set(def.id, def);
+  shelf.set(def.id, def);
   return def;
 }
 

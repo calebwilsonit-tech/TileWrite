@@ -1,3 +1,4 @@
+import { isPlayerRequired } from '../model/validate';
 import { Graphics } from 'pixi.js';
 import {
   C,
@@ -698,7 +699,7 @@ export class ViewportController {
     if (!doc || this.play) return;
     const scene = doc.toScene();
     const playerData = scene.entities.find((e) => e.tags.includes('player'));
-    if (!playerData || !playerData.components.transform) {
+    if (isPlayerRequired() && (!playerData || !playerData.components.transform)) {
       store.notify('error', 'This scene has no player start, so there is nothing to play. Use the Place tool to add a Player start, then press Play again.');
       store.stop();
       return;

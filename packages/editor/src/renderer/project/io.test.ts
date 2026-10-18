@@ -53,7 +53,11 @@ describe('project folders', () => {
       const opened = await openProject(fs, created.dir);
       expect(opened.project.name).toBe('Test Game');
       const scene = await loadScene(fs, created.dir, opened.project.startScene);
-      expect(scene.entities.some((e) => e.tags.includes('player'))).toBe(true);
+      // the empty template has nothing in it at all: no player, no packs; the others start an action game
+      if (t.id === 'empty') {
+        expect(scene.entities).toEqual([]);
+        expect(opened.project.packs).toEqual([]);
+      } else expect(scene.entities.some((e) => e.tags.includes('player'))).toBe(true);
       expect(fs.files.get('C:\\Games\\Test Game\\.gitignore')).toContain('.tilewright');
     }
   });

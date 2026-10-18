@@ -1,4 +1,4 @@
-import { behaviorList, checkMachine, checkSheet, checkTree, getBehavior, parsePoints, type BehaviorTree, type StateMachine } from '@tilewright/behaviors';
+import { behaviorList, checkMachine, checkSheet, checkTree, getBehavior, knownPackOfBehavior, listPacks, parsePoints, type BehaviorTree, type StateMachine } from '@tilewright/behaviors';
 import { EMPTY_TILE, FLAG, SLOPE_RISE, findPath, groundHeightAt, reachableCells, textBridgeCells } from '@tilewright/runtime';
 import { highSide, lowSide, meetsTop } from '../tools/algorithms';
 import type { EditorDoc } from './doc';
@@ -17,6 +17,13 @@ interface T {
   h: number;
 }
 
+/** Whether a scene without a player start is a mistake. A project made before packs existed is an action game and needs one; a new project may be any kind of game. */
+let playerRequired = true;
+export const setPlayerRequired = (on: boolean): void => {
+  playerRequired = on;
+};
+export const isPlayerRequired = (): boolean => playerRequired;
+
 /**
  * Checks a scene for mistakes a designer can fix, in plain English.
  * (M3 covers the basics; M9 adds bypass and soft-lock detection.)
@@ -27,7 +34,7 @@ export function validateScene(doc: EditorDoc, sprites?: ReadonlySet<string>, pre
 
   const players = doc.entities.filter((e) => e.tags.includes('player'));
   if (players.length === 0) {
-    out.push({ id: 'no-player', severity: 'error', message: 'This scene has no player start, so the game has nowhere to begin. Use the Place tool to add one.' });
+    if (playerRequired) out.push({ id: 'no-player', severity: 'error', message: 'This scene has no player start, so the game has nowhere to begin. Use the Place tool to add one.' });
   } else if (players.length > 1) {
     out.push({
       id: 'many-players',
@@ -47,6 +54,13 @@ export function validateScene(doc: EditorDoc, sprites?: ReadonlySet<string>, pre
         message: `"${e.name}" uses the sprite "${asset}", which is not in this project (it was deleted or renamed). It is drawn as a plain shape until you pick a sprite again.`,
         target: t ? pos('entity', e.id, t) : undefined,
       });
+    }
+    for (const key of Object.keys(e.components)) {
+      const pack = knownPackOfBehavior(key);
+      if (pack && !getBehavior(key)) {
+        const name = listPacks().find((p) => p.id === pack)?.name ?? pack;
+        out.push({ id: `pack-off-${e.id}-${key}`, severity: 'warning', message: `"${e.name}" uses the ${key} behaviour, which belongs to the ${name} pack. That pack is switched off, so it does nothing. Switch it on in Project settings, Packs.`, target: t ? pos('entity', e.id, t) : undefined });
+      }
     }
     if (!t) continue;
     const cx = Math.floor(t.x);

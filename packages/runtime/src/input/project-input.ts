@@ -33,36 +33,36 @@ export const emptyProjectInput = (): ProjectInput => ProjectInputSchema.parse({}
 export const REQUIRED_ACTIONS = ['move_left', 'move_right', 'move_up', 'move_down', 'interact', 'pause'] as const;
 
 /** The bindings a new player starts with: the built-in ones, this game's changes, then its own actions. */
-export function projectDefaults(p: ProjectInput | null | undefined): InputMapDef {
-  const out: InputMapDef = { ...DEFAULT_INPUT_MAP };
+export function projectDefaults(p: ProjectInput | null | undefined, base: InputMapDef = DEFAULT_INPUT_MAP): InputMapDef {
+  const out: InputMapDef = { ...base };
   if (!p) return out;
-  for (const [a, list] of Object.entries(p.overrides)) if (a in DEFAULT_INPUT_MAP) out[a] = [...list];
+  for (const [a, list] of Object.entries(p.overrides)) if (a in base) out[a] = [...list];
   for (const c of p.actions) out[c.id] = [...c.bindings];
   return out;
 }
 
 /** Plain-English names for every action, the game's own included. */
-export function projectActionLabels(p: ProjectInput | null | undefined): Record<string, string> {
-  const out: Record<string, string> = { ...ACTION_LABELS };
+export function projectActionLabels(p: ProjectInput | null | undefined, labels: Record<string, string> = ACTION_LABELS): Record<string, string> {
+  const out: Record<string, string> = { ...labels };
   for (const c of p?.actions ?? []) out[c.id] = c.label;
   return out;
 }
 
 /** Mistakes in the controls, in plain English. */
-export function checkProjectInput(p: ProjectInput): string[] {
+export function checkProjectInput(p: ProjectInput, base: { map: InputMapDef; labels: Record<string, string> } = { map: DEFAULT_INPUT_MAP, labels: ACTION_LABELS }): string[] {
   const out: string[] = [];
   const seen = new Set<string>();
   for (const c of p.actions) {
-    if (c.id in ACTION_LABELS) out.push(`The action "${c.id}" is already one of the built-in actions. Pick another name.`);
+    if (c.id in base.labels) out.push(`The action "${c.id}" is already one of the built-in actions. Pick another name.`);
     if (seen.has(c.id)) out.push(`Two of your own actions are called "${c.id}".`);
     seen.add(c.id);
     if (c.bindings.length === 0) out.push(`The action "${c.label}" has no key or button yet, so the player can never do it.`);
   }
-  for (const a of Object.keys(p.overrides)) if (!(a in DEFAULT_INPUT_MAP)) out.push(`The setting for "${a}" does nothing: there is no built-in action with that name.`);
-  const map = projectDefaults(p);
-  for (const a of REQUIRED_ACTIONS) if ((map[a] ?? []).length === 0) out.push(`"${ACTION_LABELS[a]}" has no key or button, so the game could not be played.`);
+  for (const a of Object.keys(p.overrides)) if (!(a in base.map)) out.push(`The setting for "${a}" does nothing: there is no built-in action with that name.`);
+  const map = projectDefaults(p, base.map);
+  for (const a of REQUIRED_ACTIONS) if ((map[a] ?? []).length === 0) out.push(`"${base.labels[a] ?? a}" has no key or button, so the game could not be played.`);
   const owner = new Map<string, string>();
-  const labels = projectActionLabels(p);
+  const labels = projectActionLabels(p, base.labels);
   for (const [a, list] of Object.entries(map)) {
     for (const b of list) {
       const other = owner.get(b);

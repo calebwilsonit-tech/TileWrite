@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
+import { activeInput, listPacks, packContents } from '@tilewright/behaviors';
 import { ACTION_LABELS, DEFAULT_INPUT_MAP, DomInputSource, bindingChanges, bindingLabel, checkProjectInput, projectDefaults, rebind, type ProjectInput } from '@tilewright/runtime';
 import { CheckField, SelectField, TextField } from '../panels/fields';
 import { store, useApp } from './store';
 
-type Tab = 'game' | 'controls';
+type Tab = 'game' | 'packs' | 'controls';
 
 /**
  * The project's own settings: its name, the first scene, the title screen, and the game's controls (which keys and
@@ -40,7 +41,8 @@ export function ProjectSettingsDialog() {
   }, []);
 
   const input = store.input;
-  const problems = useMemo(() => checkProjectInput(input), [input]);
+  const base = activeInput();
+  const problems = useMemo(() => checkProjectInput(input, base), [input, base]);
   if (!open || !project) return null;
 
   const close = (): void => setOpen(false);
@@ -51,8 +53,8 @@ export function ProjectSettingsDialog() {
     setSaved(ok);
   };
 
-  const map = projectDefaults(input);
-  const builtin = Object.keys(DEFAULT_INPUT_MAP);
+  const map = projectDefaults(input, base.map);
+  const builtin = Object.keys(base.map);
 
   /** Store a changed set of starting bindings: built-in ones as differences from the standard, your own whole. */
   const commit = (next: Record<string, string[]>): void => {
@@ -86,9 +88,9 @@ export function ProjectSettingsDialog() {
       <div className="dialog wide" role="dialog" aria-label="Project settings" data-testid="project-settings" style={{ maxHeight: '86vh', overflow: 'auto' }} onMouseDown={(e) => e.stopPropagation()}>
         <h2>Project settings</h2>
         <div className="seg" role="tablist">
-          {(['game', 'controls'] as Tab[]).map((t) => (
+          {(['game', 'packs', 'controls'] as Tab[]).map((t) => (
             <button key={t} role="tab" aria-selected={tab === t} className={tab === t ? 'on' : ''} data-testid={`ps-tab-${t}`} onClick={() => setTab(t)}>
-              {t === 'game' ? 'Game' : 'Controls'}
+              {t === 'game' ? 'Game' : t === 'packs' ? 'Packs' : 'Controls'}
             </button>
           ))}
         </div>
@@ -110,6 +112,8 @@ export function ProjectSettingsDialog() {
             </div>
           </div>
         )}
+
+        {tab === 'packs' && <PacksTab />}
 
         {tab === 'controls' && (
           <div data-testid="ps-controls">
@@ -174,6 +178,48 @@ export function ProjectSettingsDialog() {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+/** Which packs (the engine's modules, the reference game's mechanics, anything a programmer added) the game uses. */
+function PacksTab() {
+  const project = useApp((s) => s.project)!;
+  useApp((s) => s.storyVersion);
+  const explicit = project.project.packs;
+  const packs = listPacks();
+  const on = new Set(explicit ?? packs.filter((p) => p.active).map((p) => p.id));
+  const set = (id: string, enabled: boolean): void => {
+    const next = new Set(on);
+    if (enabled) {
+      next.add(id);
+      for (const dep of packs.find((p) => p.id === id)?.requires ?? []) next.add(dep);
+    } else {
+      next.delete(id);
+      for (const p of packs) if (p.requires.includes(id)) next.delete(p.id);
+    }
+    void store.updateProjectSettings({ packs: [...next] });
+  };
+  return (
+    <div data-testid="ps-packs">
+      <p className="hint">
+        {explicit === undefined
+          ? 'This project was made before packs existed, so everything is switched on. Changing any box makes your choice permanent.'
+          : 'A pack adds behaviours and event blocks to the pickers. Turning one off hides them; objects that still use them do nothing and the Problems panel says so.'}
+      </p>
+      {packs.map((p) => {
+        const contents = packContents(p.id);
+        return (
+          <fieldset className="story-card" key={p.id} data-testid={`pack-${p.id}`}>
+            <legend>
+              {p.name} <small>v{p.version}</small>
+            </legend>
+            <CheckField label={p.description} testId={`pack-toggle-${p.id}`} value={on.has(p.id)} onChange={(v) => set(p.id, v)} />
+            {p.requires.length > 0 && <p className="hint">Needs: {p.requires.join(', ')}.</p>}
+            {contents && contents.behaviors.length > 0 && <p className="hint">Behaviours: {contents.behaviors.join(', ')}.</p>}
+          </fieldset>
+        );
+      })}
     </div>
   );
 }

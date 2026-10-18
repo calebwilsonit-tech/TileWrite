@@ -1,5 +1,5 @@
 import { C, makeLabel, type Collider, type Entity, type Label, type SimContext, type Sprite, type TransformIso } from '@tilewright/runtime';
-import { defineBehavior, stateOf } from '../framework';
+import { behaviorDef, stateOf } from '../framework';
 import { input, setOutput } from '../signals';
 import { pushStep, type PushState } from './puzzle';
 
@@ -62,7 +62,7 @@ export function sentenceText(s: SentenceStone): string {
   return [s.before.trim(), `[ ${w.toUpperCase()} ]`, s.after.trim()].filter(Boolean).join(' ');
 }
 
-export const sentenceStone = defineBehavior<SentenceStone>({
+export const sentenceStone = behaviorDef<SentenceStone>({
   id: 'sentenceStone',
   name: 'Sentence Stone',
   category: 'Story puzzles',
@@ -139,7 +139,7 @@ export function effectiveFormat(e: Entity, own: TextFormat): TextFormat {
   return own;
 }
 
-export const textBlock = defineBehavior<TextBlock>({
+export const textBlock = behaviorDef<TextBlock>({
   id: 'textBlock',
   name: 'Formattable Text Block',
   category: 'Story puzzles',

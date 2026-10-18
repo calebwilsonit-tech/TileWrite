@@ -206,6 +206,8 @@ export const ProjectSchema = z.object({
   startScene: z.string(),
   /** A title screen shown when the game starts (New game, Continue, Load game, Settings, Quit). */
   title: z.object({ enabled: z.boolean().default(false), subtitle: z.string().default('') }).optional(),
+  /** The packs this game uses (see packs in the behaviours package). Missing means all of them, as before packs existed. */
+  packs: z.array(z.string()).optional(),
 });
 export type ProjectData = z.infer<typeof ProjectSchema>;
 

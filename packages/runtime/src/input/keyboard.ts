@@ -126,6 +126,24 @@ export const DEFAULT_INPUT_MAP = {
   quick_4: ['key:Digit4'],
 };
 
+/** The buttons every game has; packs add the others (attack, dodge, echo, quick slots...). */
+export const CORE_ACTIONS = ['move_left', 'move_right', 'move_up', 'move_down', 'run', 'interact', 'jump', 'pause'] as const;
+
+/** The bindings and names of the actions a project has: the core ones plus what its packs added. */
+export function baseInput(extra: Record<string, { label: string; bindings: string[] }> = {}): { map: Record<string, string[]>; labels: Record<string, string> } {
+  const map: Record<string, string[]> = {};
+  const labels: Record<string, string> = {};
+  for (const a of CORE_ACTIONS) {
+    map[a] = [...DEFAULT_INPUT_MAP[a]];
+    labels[a] = ACTION_LABELS[a]!;
+  }
+  for (const [a, d] of Object.entries(extra)) {
+    map[a] = [...d.bindings];
+    labels[a] = d.label;
+  }
+  return { map, labels };
+}
+
 /** Plain-English names for the actions, for the controls screen. */
 export const ACTION_LABELS: Record<string, string> = {
   move_left: 'Move left',

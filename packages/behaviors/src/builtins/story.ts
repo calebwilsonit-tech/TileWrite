@@ -1,5 +1,5 @@
 import { C, emitFx, type Entity, type TransformIso, type SimContext, facingOfGridDir, minigameWon, type VariableValue } from '@tilewright/runtime';
-import { defineBehavior, stateOf } from '../framework';
+import { behaviorDef, defineBehavior, stateOf } from '../framework';
 import { input, setOutput } from '../signals';
 import { beginDialogue, beginMinigame, playCutscene } from '../story/director';
 import { heal } from './combat';
@@ -234,7 +234,7 @@ export function litPosts(vars: Record<string, VariableValue>): LitPost[] {
   return out.sort((a, b) => a.scene.localeCompare(b.scene) || a.name.localeCompare(b.name));
 }
 
-export const checkpoint = defineBehavior<Checkpoint>({
+export const checkpoint = behaviorDef<Checkpoint>({
   id: 'checkpoint',
   name: 'Lantern Post (checkpoint)',
   category: 'Story',

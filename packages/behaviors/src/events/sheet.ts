@@ -826,6 +826,51 @@ export const ACTIONS: ActionDef[] = [
 
 const conditionDefs = new Map(CONDITIONS.map((c) => [c.id, c]));
 const actionDefs = new Map(ACTIONS.map((a) => [a.id, a]));
+/** Every block ever defined, whether its pack is on or not. */
+const conditionShelf = new Map(conditionDefs);
+const actionShelf = new Map(actionDefs);
+
+export function registerCondition(def: ConditionDef): void {
+  conditionShelf.set(def.id, def);
+  if (!conditionDefs.has(def.id)) CONDITIONS.push(def);
+  else CONDITIONS[CONDITIONS.findIndex((c) => c.id === def.id)] = def;
+  conditionDefs.set(def.id, def);
+}
+
+export function registerAction(def: ActionDef): void {
+  actionShelf.set(def.id, def);
+  if (!actionDefs.has(def.id)) ACTIONS.push(def);
+  else ACTIONS[ACTIONS.findIndex((a) => a.id === def.id)] = def;
+  actionDefs.set(def.id, def);
+}
+
+export function unregisterCondition(id: string): void {
+  conditionDefs.delete(id);
+  const i = CONDITIONS.findIndex((c) => c.id === id);
+  if (i >= 0) CONDITIONS.splice(i, 1);
+}
+
+export function unregisterAction(id: string): void {
+  actionDefs.delete(id);
+  const i = ACTIONS.findIndex((a) => a.id === id);
+  if (i >= 0) ACTIONS.splice(i, 1);
+}
+
+export const shelvedCondition = (id: string): ConditionDef | undefined => conditionShelf.get(id);
+export const shelvedAction = (id: string): ActionDef | undefined => actionShelf.get(id);
+
+/** Take blocks out of the registry and hand them over (a pack installs them again when it is turned on). */
+export function takeConditions(ids: readonly string[]): ConditionDef[] {
+  const out = ids.map((id) => conditionDefs.get(id)).filter((d): d is ConditionDef => !!d);
+  for (const id of ids) unregisterCondition(id);
+  return out;
+}
+
+export function takeActions(ids: readonly string[]): ActionDef[] {
+  const out = ids.map((id) => actionDefs.get(id)).filter((d): d is ActionDef => !!d);
+  for (const id of ids) unregisterAction(id);
+  return out;
+}
 
 export const conditionDef = (id: string): ConditionDef | undefined => conditionDefs.get(id);
 export const actionDef = (id: string): ActionDef | undefined => actionDefs.get(id);

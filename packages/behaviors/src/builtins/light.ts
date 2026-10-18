@@ -12,7 +12,7 @@ import {
   type Sprite,
   type TransformIso,
 } from '@tilewright/runtime';
-import { defineBehavior, stateOf } from '../framework';
+import { behaviorDef, defineBehavior, stateOf } from '../framework';
 import { input, setOutput } from '../signals';
 import { damage } from './combat';
 
@@ -142,7 +142,7 @@ export interface LightResource {
  * fills up near other lights and when resting at a lantern post, and can hurt in the dark when it runs out. The amount
  * is the variable `light` (and `lightMax`), so event rows, items and conversations can read and change it.
  */
-export const lightResource = defineBehavior<LightResource>({
+export const lightResource = behaviorDef<LightResource>({
   id: 'lightResource',
   name: 'Light Resource (lantern fuel)',
   category: 'Light',
@@ -211,7 +211,7 @@ export interface LightSensor {
   threshold: number;
 }
 
-export const lightSensor = defineBehavior<LightSensor>({
+export const lightSensor = behaviorDef<LightSensor>({
   id: 'lightSensor',
   name: 'Light Sensor',
   category: 'Light',
@@ -252,7 +252,7 @@ export interface Growing {
   startFull: boolean;
 }
 
-export const growing = defineBehavior<Growing>({
+export const growing = behaviorDef<Growing>({
   id: 'growing',
   name: 'Growing Object',
   category: 'Light',

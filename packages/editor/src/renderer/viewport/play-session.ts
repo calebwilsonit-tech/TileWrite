@@ -56,6 +56,7 @@ import {
   placeAtSpawn,
   playCutscene,
   type GameUiHost,
+  activeInput,
 } from '@tilewright/behaviors';
 import { drawCone, drawFootprint, drawLightRadius, drawPath, shapesOf } from './debug-draw';
 import { assetFs } from '../project/assetFs';
@@ -172,8 +173,8 @@ export class PlaySession {
 
     const byId = loadScene(sim, o.scene, { prefabs: o.prefabs, scene: o.scenePath });
     for (const problem of byId.problems) o.notify('warn', problem);
-    const player = sim.world.withTag('player')[0]!;
-    if (o.from) this.placeAt(player, o.from.x, o.from.y);
+    const player = sim.world.withTag('player')[0];
+    if (o.from && player) this.placeAt(player, o.from.x, o.from.y);
     this.skinsNow = o.skins ?? [];
     this.applySkinToPlayer();
     addStandardSystems(sim, physicsSystem);
@@ -199,9 +200,11 @@ export class PlaySession {
     renderer.entityHidden = null;
     renderer.entitiesVisible = true;
     renderer.setTileMap(sim.map!, o.tileset());
-    renderer.focus = player.id;
-    const t0 = player.require<TransformIso>(C.Transform);
-    cam.snapTo(gridToScreen(t0.x, t0.y, t0.h, renderer.iso));
+    renderer.focus = player?.id;
+    const t0 = player?.require<TransformIso>(C.Transform);
+    // a scene with no controlled character starts with the camera over the middle of the map
+    if (t0) cam.snapTo(gridToScreen(t0.x, t0.y, t0.h, renderer.iso));
+    else cam.snapTo(gridToScreen(sim.map!.width / 2, sim.map!.height / 2, 0, renderer.iso));
     renderer.overlay.visible = false;
 
     this.runner = new GameRunner({
@@ -209,7 +212,7 @@ export class PlaySession {
       renderer,
       inputMap: this.inputMap,
       readInput: () => this.source.read(),
-      follow: player.id,
+      follow: player?.id,
       onTick: () => this.afterTick(),
       onFx: (fx) => this.onFx(fx),
       onError: (e) => o.onError(e),
@@ -297,7 +300,6 @@ export class PlaySession {
     }
     const scene = o.currentScene(this.scenePath);
     if (!scene) return 'Reloaded the story and prefabs. This scene has no editing copy, so it was left as it is.';
-    if (!scene.entities.some((e) => e.tags.includes('player'))) return 'The scene has no player start, so the game was left as it is.';
     const old = sim.world.withTag('player')[0];
     const at = old?.get<TransformIso>(C.Transform);
     const keep = at ? { x: at.x, y: at.y, h: at.h, facing: at.facing } : null;
@@ -308,10 +310,10 @@ export class PlaySession {
     for (const problem of byId.problems) o.notify('warn', problem);
     sim.runtime.rowState = rows;
     o.renderer.setTileMap(sim.map!, o.tileset());
-    const player = sim.world.withTag('player')[0]!;
-    this.runner.follow = player.id;
-    o.renderer.focus = player.id;
-    if (keep) {
+    const player = sim.world.withTag('player')[0];
+    this.runner.follow = player?.id;
+    o.renderer.focus = player?.id;
+    if (keep && player) {
       this.placeAt(player, keep.x, keep.y, keep.h);
       player.require<TransformIso>(C.Transform).facing = keep.facing;
       if (health) player.set('state:health', { ...health, trail: [], knock: null });
@@ -325,8 +327,9 @@ export class PlaySession {
 
   /** Start from this game's own controls: the bindings a new player gets and the names shown on the Controls screen. */
   private useInput(input: ProjectInput | undefined): void {
-    this.defaults = projectDefaults(input);
-    this.labels = projectActionLabels(input);
+    const base = activeInput();
+    this.defaults = projectDefaults(input, base.map);
+    this.labels = projectActionLabels(input, base.labels);
     this.inputMap.bindings = effectiveBindings(this.settings, this.defaults);
   }
 
@@ -476,28 +479,25 @@ export class PlaySession {
       o.notify('error', e instanceof Error ? e.message : `The scene "${path}" could not be opened.`);
       return;
     }
-    if (!scene.entities.some((e) => e.tags.includes('player'))) {
-      o.notify('error', `The scene "${path}" has no player start, so the game cannot continue there.`);
-      return;
-    }
     const hp = sim.world.withTag('player')[0]?.get<{ hp: number }>('state:health')?.hp ?? null;
     this.scenePath = path;
     const byId = loadScene(sim, scene, { prefabs: o.prefabs, scene: path, travel: true });
     for (const problem of byId.problems) o.notify('warn', problem);
     o.renderer.setTileMap(sim.map!, o.tileset());
-    const player = sim.world.withTag('player')[0]!;
-    this.runner.follow = player.id;
-    o.renderer.focus = player.id;
-    if (opts.at) this.placeAt(player, opts.at.x, opts.at.y, opts.at.h);
-    else if (opts.spawn) placeAtSpawn(contextOf(sim), player, opts.spawn);
-    if (hp !== null && !opts.save) {
+    const player = sim.world.withTag('player')[0];
+    this.runner.follow = player?.id;
+    o.renderer.focus = player?.id;
+    if (player && opts.at) this.placeAt(player, opts.at.x, opts.at.y, opts.at.h);
+    else if (player && opts.spawn) placeAtSpawn(contextOf(sim), player, opts.spawn);
+    if (player && hp !== null && !opts.save) {
       // health comes along between scenes (it is created fresh on the first tick)
       player.set('state:health', { hp, iframes: 1, dead: false, spawn: null, trail: [], knock: null, blinking: false });
     }
     if (opts.save) applySave(sim, opts.save);
     this.applySkinToPlayer();
-    const t = player.require<TransformIso>(C.Transform);
-    o.renderer.camera.snapTo(gridToScreen(t.x, t.y, t.h, o.renderer.iso));
+    const t = player?.require<TransformIso>(C.Transform);
+    if (t) o.renderer.camera.snapTo(gridToScreen(t.x, t.y, t.h, o.renderer.iso));
+    else o.renderer.camera.snapTo(gridToScreen(sim.map!.width / 2, sim.map!.height / 2, 0, o.renderer.iso));
     void this.saveTo('autosave');
   }
 

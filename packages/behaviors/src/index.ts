@@ -1,6 +1,9 @@
 export const PACKAGE_NAME = '@tilewright/behaviors';
 
 export * from './framework';
+export * from './packs';
+export * from './packs/modules';
+export * from './packs/storytender';
 export * from './signals';
 export * from './player-controller';
 export * from './builtins/puzzle';
@@ -23,3 +26,8 @@ export * from './scripting/script';
 export * from './scripting/loader';
 export * from './scripting/convert';
 export type * from './scripting/api';
+
+import { setActivePacks } from './packs';
+
+// until a project says which packs it uses, everything is on (a project made before packs existed plays as it always did)
+setActivePacks(undefined);

@@ -139,6 +139,17 @@ Id: `minigameWon`.
 | --- | --- | --- | --- | --- |
 | Minigame (name) | `minigame` | text | (empty) |  |
 
+### Input
+
+#### The player presses a button
+
+Id: `action`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Button | `name` | action | "interact" |  |
+| When it is | `mode` | select | "pressed" | `pressed`, `held`, `released` |
+
 ### Puzzles
 
 #### Echoes exist
@@ -176,17 +187,6 @@ Id: `textIs`.
 | --- | --- | --- | --- | --- |
 | Which text block | `block` | entity | (empty) |  |
 | Formatting | `format` | select | "underline" | `plain`, `underline`, `bold`, `italic` |
-
-### Input
-
-#### The player presses a button
-
-Id: `action`.
-
-| Parameter | Key | Kind | Starts as | Choices and notes |
-| --- | --- | --- | --- | --- |
-| Button | `name` | action | "interact" |  |
-| When it is | `mode` | select | "pressed" | `pressed`, `held`, `released` |
 
 ## Actions
 
@@ -399,32 +399,6 @@ Id: `emit`.
 | --- | --- | --- | --- | --- |
 | Event name | `name` | text | "my-event" |  |
 
-### Puzzles
-
-#### Change the word of a sentence stone
-
-Id: `setWord`.
-
-| Parameter | Key | Kind | Starts as | Choices and notes |
-| --- | --- | --- | --- | --- |
-| Which stone | `stone` | entity | (empty) |  |
-| The word to show (as written in the stone) | `word` | text | (empty) |  |
-
-#### Format a text block
-
-Id: `formatText`.
-
-| Parameter | Key | Kind | Starts as | Choices and notes |
-| --- | --- | --- | --- | --- |
-| Which text block | `block` | entity | (empty) |  |
-| Formatting | `format` | select | "underline" | `plain`, `underline`, `bold`, `italic` |
-
-#### Make every echo vanish
-
-Id: `clearEchoes`.
-
-No parameters.
-
 ### Effects
 
 #### Burst of sparks, dust or glow
@@ -452,3 +426,29 @@ Id: `hitStop`.
 | Parameter | Key | Kind | Starts as | Choices and notes |
 | --- | --- | --- | --- | --- |
 | Seconds (0.05 is a good hit) | `seconds` | number | 0.08 | 0 to 0.2 |
+
+### Puzzles
+
+#### Change the word of a sentence stone
+
+Id: `setWord`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Which stone | `stone` | entity | (empty) |  |
+| The word to show (as written in the stone) | `word` | text | (empty) |  |
+
+#### Format a text block
+
+Id: `formatText`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Which text block | `block` | entity | (empty) |  |
+| Formatting | `format` | select | "underline" | `plain`, `underline`, `bold`, `italic` |
+
+#### Make every echo vanish
+
+Id: `clearEchoes`.
+
+No parameters.

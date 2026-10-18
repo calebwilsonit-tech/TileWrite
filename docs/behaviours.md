@@ -12,7 +12,7 @@ There are 37 behaviours. Behaviours made by scripts (see [code-window.md](code-w
 - [Logic](#logic) (Logic Gate)
 - [Player](#player) (Echo Recorder)
 - [Puzzle](#puzzle) (Pressure Plate, Trigger Zone, Lever, Timer, Gate / Door, Pushable)
-- [Story](#story) (NPC Talk, Sound Source, Minigame, Lantern Post (checkpoint), Scene Portal, Cutscene Trigger)
+- [Story](#story) (NPC Talk, Sound Source, Minigame, Scene Portal, Cutscene Trigger, Lantern Post (checkpoint))
 - [Story puzzles](#story-puzzles) (Sentence Stone, Formattable Text Block)
 - [World](#world) (Spawner, Pickup, Moving Platform, Falling Floor, Projectile, Follow Camera)
 

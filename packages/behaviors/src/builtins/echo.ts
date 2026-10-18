@@ -13,7 +13,7 @@ import {
   type Sprite,
   type TransformIso,
 } from '@tilewright/runtime';
-import { defineBehavior, stateOf } from '../framework';
+import { behaviorDef, stateOf } from '../framework';
 import { driveBody, PLAYER_CONTROLLER, type PlayerController } from '../player-controller';
 
 const ECHO_TAG = 'echo';
@@ -51,7 +51,7 @@ export function echoCapacity(ctx: SimContext, s: EchoRecorder): number {
   return Math.max(0, Math.floor(s.capacity + bonus));
 }
 
-export const echoRecorder = defineBehavior<EchoRecorder>({
+export const echoRecorder = behaviorDef<EchoRecorder>({
   id: 'echoRecorder',
   name: 'Echo Recorder',
   category: 'Player',
@@ -178,7 +178,7 @@ function replayState(e: Entity, r: EchoReplay): ReplayState {
   return stateOf<ReplayState>(e, 'echoReplay', () => ({ pb: new InputPlayback(r.rec), input: new InputState() }));
 }
 
-export const echoReplay = defineBehavior<EchoReplay>({
+export const echoReplay = behaviorDef<EchoReplay>({
   id: 'echoReplay',
   name: 'Echo (replay)',
   category: 'Player',
