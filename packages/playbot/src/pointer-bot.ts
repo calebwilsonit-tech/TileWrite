@@ -15,6 +15,8 @@ export interface ClickOptions {
   shift?: boolean;
   /** Ticks to hold the button (a press that lasts one tick is a click). */
   hold?: number;
+  /** Other buttons held during the click (for example { rts_attack_move: 1 } for attack-move). */
+  keys?: Record<string, number>;
 }
 
 export interface BattleReport extends PlayReport {
@@ -31,8 +33,8 @@ export class PointerBot extends Bot {
     return pictureOf(this.camera, sim.runtime.view.rotation ?? 0, sim.map, cell.x + 0.5, cell.y + 0.5, h);
   }
 
-  private pointer(cell: Cell2 | null, buttons: { primary?: boolean; secondary?: boolean; shift?: boolean; screen?: { x: number; y: number } } = {}): void {
-    this.step({ ...cameraSnapshot(this.camera), ...pointerSnapshot(cell, { screen: cell ? this.screenOf(cell) : undefined, ...buttons }) });
+  private pointer(cell: Cell2 | null, buttons: { primary?: boolean; secondary?: boolean; shift?: boolean; screen?: { x: number; y: number } } = {}, keys: Record<string, number> = {}): void {
+    this.step({ ...cameraSnapshot(this.camera), ...pointerSnapshot(cell, { screen: cell ? this.screenOf(cell) : undefined, ...buttons }), ...keys });
   }
 
   /** Move the pointer over a cell for a moment (hover names, the build ghost and the cursor's highlight follow it). */
@@ -43,9 +45,9 @@ export class PointerBot extends Bot {
   /** Press and release a mouse button over a cell. */
   click(cell: Cell2, opts: ClickOptions = {}): void {
     const buttons = { [opts.button ?? 'primary']: true, shift: opts.shift };
-    this.pointer(cell);
-    for (let i = 0; i < (opts.hold ?? 1); i++) this.pointer(cell, buttons);
-    this.pointer(cell, { shift: opts.shift });
+    this.pointer(cell, {}, opts.keys);
+    for (let i = 0; i < (opts.hold ?? 1); i++) this.pointer(cell, buttons, opts.keys);
+    this.pointer(cell, { shift: opts.shift }, opts.keys);
   }
 
   rightClick(cell: Cell2, opts: Omit<ClickOptions, 'button'> = {}): void {
