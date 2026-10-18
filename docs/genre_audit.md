@@ -95,3 +95,7 @@ Fixed-step deterministic simulation, entities with named components, the behavio
 8. The community asset hub last, as a separate package that never blocks the engine.
 
 Every choice is recorded in `DECISIONS.md` as it is made; anything not finished goes in `KNOWN_ISSUES.md` with a reason.
+
+## 6. Outcome (written at the end of phase 2)
+
+Every row of sections 1 and 3 was done as the verdict said: the `player` tag no longer has to exist (an empty project plays); Combat, Inventory, Story, AI, Lighting, Turn-based play, Control schemes and Simulation helpers are packs, and the Storytender mechanics are a pack written with the same plugin API ([packs-and-plugins.md](packs-and-plugins.md)); the scene clock, turns, control schemes, footprints and four views, block stacks, chunked and procedural maps, the logic model with three levels, the UI designer, the tile studio, the library and the hub exist and are documented. Section 4's needs were each met by a sample ([samples.md](samples.md)) except the items listed under "Genre coverage" in KNOWN_ISSUES.md (item combining, worker gather and build orders, unit cards and a turn-order bar in the samples). The decisions are D027 to D039 in DECISIONS.md.

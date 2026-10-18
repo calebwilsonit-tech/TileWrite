@@ -198,10 +198,62 @@ Occlusion fade: renderer-only (not simulation state). Tiles taller than the focu
 - Controls: the project stores only differences from the built-in bindings plus its own actions; a player's own rebinding is stored separately and still wins. Custom actions are ordinary action names, so events, scripts and echo recordings use them without special cases.
 - `project.iso` stays in the file format but is not used by the renderer; it was left out of the settings dialog rather than offering a setting that does nothing.
 
-## D0xx - The personal library is a folder of packs (Phase 2)
+## D027 - Packs are the unit of "what a game has"; nothing is built in (Phase 2, 2026-10-18)
+- A pack is `{id, name, install(api)}`; `api` adds behaviours, event blocks, systems, input actions, editor panels, tools and importers, and everything it adds is recorded so turning the pack off removes it. The engine's optional parts (Combat, Inventory, Story, AI, Lighting, Turn-based play, Control schemes, Simulation helpers) and the reference game's mechanics (The Last Storytender) are all packs written the same way. A third-party pack uses exactly the same API.
+- A project lists its packs in `project.json`. A project file with no list is a project from before packs and plays with the action-adventure set (`LEGACY_PACKS`), so every old project and the sample game work unchanged; new templates always write the list. The `empty` template writes an empty list: no player, no health, no items, no buttons beyond movement and pause.
+- Rejected: feature flags per behaviour (no way to remove what a pack added as a unit); a separate plugin process (the plugin API is TypeScript in the same page, like scripts, with the same trust model as D015).
+
+## D028 - One value language, data in tables, blocks made without code (2026-10-18)
+- Every field that takes a value (event parameters, interface text, behaviour settings) understands the same `{braces}`: a variable, `{Table.row.column}`, an object's field, `{self.x}` inside a custom behaviour, plus simple arithmetic and comparisons. One resolver (`resolveValue/fillValues/evalValue`) serves them all, so a new place that takes values needs no new syntax.
+- Data tables are spreadsheets in `assets/tables`, with typed columns (number, text, yes/no, colour, one of a list, a row of another table, sprite, prefab, sound). Cells can be changed while the game runs (`runtime.tableEdits`, saved with the game), which is what lets an inventory grid, a build menu or a loot table be plain data.
+- Custom components, custom behaviours (event rows that run for every object that has them) and custom events are files in the project and can be exported as packs. Rejected: letting them contain graphs (kept to event rows for now, see KNOWN_ISSUES).
+
+## D029 - Time is a clock the scene owns; turns are an ordinary mode of it (2026-10-18)
+- Every scene has a clock with modes real time (1x-8x), paused and turn-based. A sped-up clock runs several simulation steps per frame (the simulation never sees wall-clock time, so replays stay identical); turn-based mode stops the real-time movement behaviours and the turn system (queue by initiative, action points, end turn) is the only thing that moves units. "Game time" (`clock.elapsed`) only counts while the world really moves, so days, seasons and growth timers pause and never advance in a battle.
+- Units walk cell by cell (Grid Mover) or by velocity (Body) or both; orders from the interface use whichever behaviour the unit has.
+- The `start` condition stays "the very first step of the game"; a new `sceneStart` condition ("the first step after a scene opens, also after travelling or a new run") was added because a roguelike's new run needs to start its battle again.
+
+## D030 - The pointer is game input; control schemes are behaviours; the world can turn (2026-10-18)
+- The mouse reaches the game as actions (`pointer_primary`, the cell under it, its place in the picture, the camera) through the same snapshot as buttons, so recordings, replays and the playbot treat a click like a key. Presses are latched: a click or key tap shorter than one frame is still seen once (found when the first tactics sample could not select a unit with a real click).
+- How a person plays is a behaviour on an object (Direct Control, Click to Move, Hotspot, Grid Cursor, RTS Control with Commandable Unit, Camera Rig, Builder), combined freely. A crowd shares one flow field per destination. A building has a footprint of any size, a ghost that says why it cannot be placed, and quarter turns.
+- Four isometric views are a rotation of the grid before projecting; picking, the camera, box selection and walking follow it.
+- Menus and heads-up screens react to every simulation step, not only to the last step of a frame (a tap between two frames was lost); a modal screen opened at the start sits above a heads-up display whatever order they were made in.
+
+## D031 - Worlds can be big, stacked and generated (2026-10-18)
+- A cell can hold an optional list of single blocks with gaps (arches, tunnels, overhangs, a different tile or face per block); the column model stays the cheap default and is converted on demand. Tiles are drawn in chunks of 8 x 8 near the camera so a map up to 1024 x 1024 opens at once.
+- Procedural maps (rooms and corridors, caves, islands, towns) come from a spec and a seed: the same seed is the same map. "Lock the seed" makes a level you designed; unlocked, each new run uses `run.seed`. A map can be made in the editor (ordinary data you can paint over) or each time the scene loads (and in an exported game). Objects the generator places keep the tags of their prefab.
+
+## D032 - Simulation helpers know nothing about farms or towers (2026-10-18)
+- Resources are ordinary variables. Producers, a calendar, a wave spawner, a path follower, a needs-driven villager and a cellular automaton read their rules from fields and tables. A resource a producer makes exists (at zero) from the start so a screen can show it, and the checker knows that producers, pay/receive actions and table "makes" columns set variables.
+- A villager walks to the doorstep of a solid building and works from there. (The first version walked to the middle of the building, which is blocked, so villagers never arrived: found by the 200-villager performance test.)
+
+## D033 - One logic model, three ways to edit it (2026-10-18)
+- Quick Actions, wires through event/action/logic nodes, and a Blueprint-style graph all store the same things (nodes as objects with a tag, wires, `scene.graphs`), and event sheets and code convert to and from them. Live glow, breakpoints and "Problems" fixes work at every level. Rejected: a separate runtime for graphs.
+
+## D034 - Screens are data, drawn by one DOM layer (2026-10-18)
+- The interface is a document of screens (`assets/screens.json`) of widgets with layout, styles, states, animations and bindings; the built-in pause menu, title and settings are screens with reserved names a project may replace. The game draws them with one DOM renderer and the bot reads and presses the same view tree. Keyboard focus, gamepad buttons and the mouse all reach widgets through the same actions.
+- Lists and grids repeat a UI prefab for every row of a table, and a grid can allow dragging a cell onto another (the two rows trade places).
+
+## D035 - Tiles are art plus properties; props and attachments are objects (2026-10-18)
+- The tile studio makes pictures with guides for a floor, block, wall or cliff face, tree, house, wall attachment or decal; a tile keeps its properties (blocks light, water, stair, tags, custom values), animated tops, per-face art, weighted variants and edge sets (47 pieces) on the tile itself. Editing an operation (clip, shade) applies to every frame of an animation.
+- A tall prop has a footprint, a collision rectangle of its own and a canopy that fades only when something stands behind it; attachments are objects fixed to a block face and follow the block. Structures are lists of blocks and objects relative to a corner, placed with turns as one undo step.
+
+## D036 - The personal library is a folder of packs (2026-10-18)
 - Every library item is stored as a pack (`packs/<id>/v<n>.pack.json`) plus one `index.json`; a pack is the same file that is shared as a `.twpack`, so saving, exporting, importing and the community hub all use one format and one reader. Nothing is stored in a database.
 - The library lives next to the settings (`userData/library`, or `TILEWRIGHT_LIBRARY`) and is an allowed root of the editor's file access; projects reach it only through the editor, never from the game.
-- Packs hold project-relative files plus tile definitions with pack-local ids. On import, tile ids are remapped to free numbers and the files that contain tile ids (structures) are rewritten, so two packs never fight over a number. Name clashes are shown first and resolved as keep both (numbered), replace (keeps the project's tile id so placed tiles follow), or skip.
-- Link versus copy is only a record (`assets/library-links.json`): both put real files in the project, so an exported game never needs the library. "Update linked" re-imports the current version with replace.
-- Saving to an existing item adds a version; older versions are kept and restoring only moves the "current" pointer.
-- A pack that contains code is flagged, and installing it needs an explicit tick; the same flag will gate the community hub.
+- Packs hold project-relative files plus tile definitions with pack-local ids. On import, tile ids are remapped to free numbers and the files that contain tile ids (structures) are rewritten. Name clashes are shown first and resolved as keep both (numbered), replace (keeps the project's tile id so placed tiles follow), or skip.
+- Link versus copy is only a record (`assets/library-links.json`): both put real files in the project, so an exported game never needs the library. Saving to an existing item adds a version; restoring only moves the "current" pointer. A pack that contains code is flagged and installing it needs an explicit tick.
+
+## D037 - The community hub is a separate, self-hostable package; the editor only talks to an address the user types (2026-10-18)
+- `packages/hub-server` is one file (esbuild bundle) with JSON storage, accounts (salted scrypt hashes, bearer tokens), publishing with limits (8 MB, 400 files, 256 KB of code, 10 an hour), search, ratings, reports (three different people hide an item) and moderation by a secret token. A pack with code is held back until a moderator approves it. The publisher's account name is the author, whatever the file says. There is no payment code and no email.
+- The editor makes hub requests from its main process only (the pages have a strict content policy and cannot reach the internet), allows plain http only for this computer, and limits size and time. Nothing is contacted until the user presses Connect.
+- Licences are a short list (CC0, CC-BY, CC-BY-NC, free for any game, custom). What a project takes keeps its author and licence in `assets/library-links.json`, and an export writes a CREDITS.txt and warns about NC and unlicensed items.
+- Nothing was deployed, no domain was bought and no account was made for the project: `docs/HUB_HOSTING.md` lists the steps for the owner.
+
+## D038 - The eight samples are built through the editor by tests, and played by the playbot (2026-10-18)
+- Each sample is a Playwright test that makes the project from a template and changes it only with the editor's own controls (tools, Inspector, Data, Events, UI designer, Library, Hub), plays it by hand where that is possible, saves it to `samples/<name>/`, then loads the saved folder with no editor and lets the playbot finish it with the mouse, the on-screen buttons and turns. Samples are never hand-edited, so each is exactly what the test makes.
+- `PointerBot` adds hover, click, right-click, drag a box, read and press widgets, drag a slider, and take a turn to the bot, all as ordinary recorded actions, still without teleporting or editing the world.
+- Building the samples was also the test of the engine: every bug found that way was fixed in the engine (see KNOWN_ISSUES "found by the samples") rather than worked around in the sample.
+
+## D039 - The assistant learns the genres through tools, not prompts alone (2026-10-18)
+- New tools: list and set packs, list templates, read and write data tables, set scene variables, generate a map from a seed, read and write interface screens. The system prompt describes games of any kind (typical pack sets, the control schemes, the clock, tables, procedural maps, screens, the three logic levels). Tests with the API mocked build a small room in four genres from one sentence each.
