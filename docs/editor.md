@@ -3,7 +3,7 @@
 Everything here works with the mouse and keyboard only. Press **Ctrl+K** any time to search every command.
 
 ## Projects
-- **New project**: pick a name and a template (Empty isometric world, Starter room, Puzzle dungeon), then choose where to create it. Tilewright makes `<folder>/<name>/` containing `project.json` and `scenes/main.scene.json`.
+- **New project**: pick a name and a template (Empty with nothing in it, the genre starters - Action adventure, Tactics, Builder, Roguelike, Point and click - or Starter room, Puzzle dungeon; each genre starter switches on the packs that genre needs and has a few things in it to play with), then choose where to create it. Tilewright makes `<folder>/<name>/` containing `project.json` and `scenes/main.scene.json`.
 - **Open an existing project**: choose a folder that has a `project.json`. If the file is damaged or from a newer Tilewright, you get a plain-English message and nothing is changed.
 - **Recent projects** remembers the last 12. The ✕ only removes the list entry, never files.
 - Files are plain JSON. A scene writes one map row per line, so version-control diffs of a small edit are small.

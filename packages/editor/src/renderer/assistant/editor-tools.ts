@@ -22,6 +22,7 @@ import { DEFAULT_TILESET, FLAG, SLOPE, resolveInstance, type EntityData, type Ev
 import { lineDiff, type ToolOutput } from '@tilewright/assistant';
 import { ToolProblem, fail, json, requireDoc, requireEditing, undoTop, type Proposal } from './tool-core';
 import { prepareStoryAction, runStoryRead } from './story-tools';
+import { prepareSystemsAction, runSystemsRead } from './systems-tools';
 import { store } from '../app/store';
 import { viewportRef } from '../app/commands';
 import { readCell } from '../model/cells';
@@ -307,7 +308,7 @@ export async function runReadTool(name: string, input: Record<string, unknown>):
         return text(notes.trim() ? notes : '(The project notes file is empty or does not exist yet.)');
       }
       default: {
-        const story = await runStoryRead(name, input);
+        const story = (await runStoryRead(name, input)) ?? (await runSystemsRead(name, input));
         return story ?? { isError: true, content: `"${name}" is not a reading tool.` };
       }
     }
@@ -790,7 +791,7 @@ export async function prepareAction(name: string, input: Record<string, unknown>
       return p;
     }
     default: {
-      const story = await prepareStoryAction(name, input);
+      const story = (await prepareStoryAction(name, input)) ?? prepareSystemsAction(name, input);
       return story ?? fail(`"${name}" is not a tool that changes the project.`);
     }
   }

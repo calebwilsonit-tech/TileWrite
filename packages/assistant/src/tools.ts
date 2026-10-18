@@ -198,6 +198,31 @@ export const TOOLS: ToolSpec[] = [
     schema: z.object({}),
   },
 
+  {
+    name: 'list_packs',
+    kind: 'read',
+    description: 'The packs (modules) the game can switch on, which are on now, what each adds (behaviours, event blocks, buttons) and what it needs. A new game has none on: turn-based play, control schemes (click to move, hotspots, grid cursor, box-select units, builder, camera), simulation helpers (producers, calendar, waves, villagers), combat, inventory, story, AI and lighting are all packs. Check this before using a behaviour that is not listed by list_behaviors.',
+    schema: z.object({}),
+  },
+  {
+    name: 'list_templates',
+    kind: 'read',
+    description: 'The starting points a new project can be made from (empty, action adventure, tactics, builder, roguelike, point and click, and others) with what each switches on. Templates only matter when making a project; they cannot be applied to an open one.',
+    schema: z.object({}),
+  },
+  {
+    name: 'get_tables',
+    kind: 'read',
+    description: 'The data tables of the project (columns and rows): wave lists, building menus, loot tables, item stats. Event rows, behaviours and interface widgets read from them.',
+    schema: z.object({ names: z.array(z.string()).max(20).optional().describe('Only these tables; leave out for all.') }),
+  },
+  {
+    name: 'get_ui_screens',
+    kind: 'read',
+    description: 'The interface screens made in the UI designer (title, pause, settings, HUD...). Without a name: each screen and its widget outline. With a name: that screen\'s complete data.',
+    schema: z.object({ screen: z.string().optional() }),
+  },
+
   // ---------- act (always previewed and approved by the user) ----------
   {
     name: 'place_objects',
@@ -497,6 +522,41 @@ export const TOOLS: ToolSpec[] = [
     kind: 'act',
     description: 'Add or change translations for a language: a map from the original text (exactly as get_translations shows it, keeping {placeholders}) to its translation. Give `name` (the language\'s own name, like "Français") when the language is new. Existing translations you do not mention stay.',
     schema: z.object({ language: z.string().regex(/^[a-z]{2,3}(-[a-z0-9]{2,8})?$/, 'A code like fr, de or pt-br.'), name: z.string().optional(), strings: z.record(z.string(), z.string()) }),
+  },
+  {
+    name: 'set_packs',
+    kind: 'act',
+    description: 'Switch packs on or off for the game (ids from list_packs). Packs a pack needs are switched on with it. Turn on what the game needs: for example "turns" and "controls" for a tactics game, "controls" and "sim" for a town builder.',
+    schema: z.object({ enable: z.array(z.string()).max(20).optional(), disable: z.array(z.string()).max(20).optional() }),
+  },
+  {
+    name: 'write_table',
+    kind: 'act',
+    description: 'Create a data table or replace one completely. Column types: text, number, boolean, color, select (with options), ref (a row of another table: give table), sprite, prefab, sound. Every row needs an id and a value for each column id. Example: {"name":"Waves","columns":[{"id":"enemy","type":"prefab"},{"id":"count","type":"number"}],"rows":[{"id":"w1","enemy":"Goblin","count":5}]}.',
+    schema: z.object({
+      name: z.string().regex(/^[A-Za-z][A-Za-z0-9_]{0,31}$/, 'Letters, digits and _, starting with a letter.'),
+      description: z.string().optional(),
+      columns: z.array(z.object({ id: z.string(), label: z.string().optional(), type: z.enum(['text', 'number', 'boolean', 'color', 'select', 'ref', 'sprite', 'prefab', 'sound']).optional(), options: z.array(z.string()).optional(), table: z.string().optional(), default: z.union([z.string(), z.number(), z.boolean()]).optional() })).min(1).max(40),
+      rows: z.array(z.record(z.string(), z.union([z.string(), z.number(), z.boolean()]))).max(500),
+    }),
+  },
+  {
+    name: 'set_variables',
+    kind: 'act',
+    description: 'Set the open scene\'s starting variables (numbers, text or yes/no): gold, lives, a verb. Variables you name are added or changed; others stay.',
+    schema: z.object({ variables: z.array(z.object({ name: z.string().min(1), value: z.union([z.number(), z.string(), z.boolean()]) })).min(1).max(40) }),
+  },
+  {
+    name: 'generate_map',
+    kind: 'act',
+    description: 'Make the open scene\'s map procedurally from a seed: "dungeon" (rooms and corridors), "cave", "island" or "town". The same seed always gives the same map. Replaces the tiles; objects stay. atStart makes a new map every time the game (or a new run) starts instead of keeping this one.',
+    schema: z.object({ kind: z.enum(['dungeon', 'cave', 'island', 'town']), width: z.number().int().min(8).max(512), height: z.number().int().min(8).max(512), seed: z.number().int().min(0).optional(), lockSeed: z.boolean().optional(), atStart: z.boolean().optional() }),
+  },
+  {
+    name: 'write_ui_screen',
+    kind: 'act',
+    description: 'Add an interface screen, or replace the one with the same id/name. `screen` is {id,name,root,modal?,dim?,opensOnStart?} where root is a widget {id,name,type,anchor,x,y,w,h,layout,gap,padding,text,value,children:[...]}. Widget types: panel, label, button, image, bar, slider, checkbox, choice, tabs, list, grid... (get_ui_screens shows real examples). Text can hold {variable} or {Table.row.column}. Read get_ui_screens first and copy its shapes.',
+    schema: z.object({ screen: z.record(z.string(), z.unknown()) }),
   },
   {
     name: 'write_script',
