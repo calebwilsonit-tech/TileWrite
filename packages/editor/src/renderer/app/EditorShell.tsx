@@ -15,6 +15,7 @@ import { AssetsPanel } from '../panels/AssetsPanel';
 import { EventsPanel } from '../panels/EventsPanel';
 import { StoryPanel } from '../panels/StoryPanel';
 import { DataPanel } from '../panels/DataPanel';
+import { GeneratePanel } from '../panels/GeneratePanel';
 import { PlaybotPanel } from '../panels/PlaybotPanel';
 import { MixerPanel } from '../panels/MixerPanel';
 import { ConnectDialog } from './ConnectDialog';
@@ -34,6 +35,7 @@ const components: Record<string, React.FunctionComponent<IDockviewPanelProps>> =
   events: () => <EventsPanel />,
   story: () => <StoryPanel />,
   data: () => <DataPanel />,
+  generate: () => <GeneratePanel />,
   playbot: () => <PlaybotPanel />,
   mixer: () => <MixerPanel />,
   assistant: () => <AssistantPanel />,
@@ -43,7 +45,7 @@ const components: Record<string, React.FunctionComponent<IDockviewPanelProps>> =
 
 const CodeView = lazy(() => import('../code/CodeView'));
 
-const LAYOUT_VERSION = 7;
+const LAYOUT_VERSION = 8;
 
 function buildDefault(api: DockviewApi): void {
   api.addPanel({ id: 'viewport', component: 'viewport', title: 'Viewport', renderer: 'always' });
@@ -59,6 +61,7 @@ function buildDefault(api: DockviewApi): void {
   api.addPanel({ id: 'events', component: 'events', title: 'Events', position: { referencePanel: 'problems', direction: 'within' } });
   api.addPanel({ id: 'story', component: 'story', title: 'Story', position: { referencePanel: 'problems', direction: 'within' } });
   api.addPanel({ id: 'data', component: 'data', title: 'Data', position: { referencePanel: 'problems', direction: 'within' } });
+  api.addPanel({ id: 'generate', component: 'generate', title: 'Generate', position: { referencePanel: 'problems', direction: 'within' } });
   api.addPanel({ id: 'playbot', component: 'playbot', title: 'Playbot', position: { referencePanel: 'problems', direction: 'within' } });
   api.addPanel({ id: 'mixer', component: 'mixer', title: 'Mixer', position: { referencePanel: 'problems', direction: 'within' } });
   api.getPanel('tiles')?.api.setActive();

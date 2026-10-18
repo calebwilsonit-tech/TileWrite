@@ -1,6 +1,10 @@
 import {
   CURRENT_SCHEMA_VERSION,
+  GeneratorSpecSchema,
   TileMap,
+  groundHeightAt,
+  type GeneratorSpec,
+  type Generated,
   around,
   resolveTile,
   type AutotileRule,
@@ -135,6 +139,8 @@ export class EditorDoc {
   private nextId = 1;
   /** The project's tiles and autotile rules; when there are rules, painting keeps every cell's look up to date. */
   autotile: { tileset: TileSet; rules: readonly AutotileRule[] } | null = null;
+  /** The rules that make this scene's map (Generate panel), or null. */
+  generator: GeneratorSpec | null = null;
   /** Returns false to refuse a change to a cell (a locked layer). */
   cellGuard: ((before: CellData, after: CellData) => boolean) | null = null;
 
@@ -156,6 +162,8 @@ export class EditorDoc {
     const entities = copy.entities.map((e) => (e.prefab && prefabs.has(e.prefab) ? (resolveInstance(e, prefabs) ?? e) : e));
     const doc = new EditorDoc(copy.name, tileMapFromRows(copy.map), entities, copy.regions, copy.wires, copy.variables, copy.events);
     doc.prefabs = prefabs;
+    const rules = copy.generator ? GeneratorSpecSchema.safeParse(copy.generator) : null;
+    doc.generator = rules?.success ? rules.data : null;
     return doc;
   }
 
@@ -173,6 +181,7 @@ export class EditorDoc {
       wires: this.wires,
       variables: this.variables,
       events: this.events,
+      ...(this.generator ? { generator: this.generator } : {}),
     });
   }
 
@@ -243,6 +252,71 @@ export class EditorDoc {
     });
     this.emit({ type: 'history' });
     this.dirty = true;
+  }
+
+  /** Change the generator rules (an undo step). */
+  setGenerator(label: string, spec: GeneratorSpec | null): void {
+    const before = structuredClone(this.generator);
+    const after = structuredClone(spec);
+    if (JSON.stringify(before) === JSON.stringify(after)) return;
+    this.run({
+      label,
+      redo: () => {
+        this.generator = structuredClone(after);
+        this.emit({ type: 'events' });
+      },
+      undo: () => {
+        this.generator = structuredClone(before);
+        this.emit({ type: 'events' });
+      },
+    });
+  }
+
+  /**
+   * Make the map from the rules and keep it in the scene: the old map and every object the generator placed before are
+   * replaced, the player (if there is one) is moved to the start. One undo step brings everything back.
+   */
+  applyGenerated(label: string, spec: GeneratorSpec, made: Generated): { problems: string[] } {
+    const problems: string[] = [...made.notes];
+    const oldMap = this.map;
+    const oldEntities = structuredClone(this.entities);
+    const oldGenerator = structuredClone(this.generator);
+    const kept = this.entities.filter((e) => !e.tags.includes('generated'));
+    const startH = groundHeightAt(made.map, made.start.x + 0.5, made.start.y + 0.5);
+    const placed: EntityData[] = [];
+    made.placements.forEach((p, i) => {
+      const h = groundHeightAt(made.map, p.x, p.y);
+      const inst: EntityData = { id: `gen${i + 1}`, name: p.prefab, tags: ['generated', ...(p.tag ? [p.tag] : [])], prefab: p.prefab, components: { transform: { x: p.x, y: p.y, h, facing: 2 } } };
+      const resolved = this.prefabs.has(p.prefab) ? resolveInstance(inst, this.prefabs) : null;
+      if (!resolved) {
+        problems.push(`The prefab "${p.prefab}" does not exist, so nothing was placed for it.`);
+        return;
+      }
+      placed.push({ ...resolved, id: `gen${i + 1}`, tags: inst.tags });
+    });
+    const moved = kept.map((e) => (e.tags.includes('player') && e.components.transform ? { ...e, components: { ...e.components, transform: { ...(e.components.transform as object), x: made.start.x + 0.5, y: made.start.y + 0.5, h: startH } } } : e));
+    const newEntities = [...moved, ...placed];
+    const after = structuredClone(spec);
+    this.run({
+      label,
+      redo: () => {
+        this.map = made.map;
+        this.entities = structuredClone(newEntities);
+        this.generator = structuredClone(after);
+        this.emit({ type: 'map' });
+        this.emit({ type: 'entities' });
+        this.emit({ type: 'events' });
+      },
+      undo: () => {
+        this.map = oldMap;
+        this.entities = structuredClone(oldEntities);
+        this.generator = structuredClone(oldGenerator);
+        this.emit({ type: 'map' });
+        this.emit({ type: 'entities' });
+        this.emit({ type: 'events' });
+      },
+    });
+    return { problems };
   }
 
   /** Change the map size, keeping the cells that still fit (anchored at the top-left corner). */

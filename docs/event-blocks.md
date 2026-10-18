@@ -4,7 +4,7 @@
 
 An event sheet is a list of rows, each reading like a sentence: **when** its conditions hold, **do** its actions. Rows can have sub-events that run only while the row holds. Objects are chosen as "the player", "anything tagged ...", or a particular object. See [logic.md](logic.md).
 
-There are 24 conditions and 40 actions.
+There are 24 conditions and 41 actions.
 
 ## Conditions
 
@@ -270,6 +270,43 @@ Id: `setClock`.
 | Clock | `mode` | select | "realtime" | `realtime`, `paused`, `turns` |
 | Speed | `speed` | select | "1" | `1`, `2`, `4`, `8` |
 
+### Basics
+
+#### Start a new run (roguelike): new seed, nothing carried over
+
+Id: `newRun`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Scene to start in (empty = this one) | `scene` | text | (empty) |  |
+
+#### Show a message
+
+Id: `message`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Text (use {variable} to show a value) | `text` | text | "Hello!" |  |
+
+#### Play a sound
+
+Id: `sound`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Sound (a file in Assets -> Sounds) | `name` | sound | (empty) |  |
+| Volume (0 to 1) | `volume` | number | 1 | 0 to 1 |
+| Heard from (optional: quieter and to one side when far from the player) | `at` | entity | (empty) |  |
+| Farthest it can be heard (cells) | `far` | number | 16 | 2 to 80 |
+
+#### Change the music
+
+Id: `music`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Music (a file in Assets -> Sounds; empty = silence) | `name` | sound | (empty) |  |
+
 ### Objects
 
 #### Turn an object's signal on or off
@@ -406,35 +443,6 @@ Id: `travel`.
 Id: `saveGame`.
 
 No parameters.
-
-### Basics
-
-#### Show a message
-
-Id: `message`.
-
-| Parameter | Key | Kind | Starts as | Choices and notes |
-| --- | --- | --- | --- | --- |
-| Text (use {variable} to show a value) | `text` | text | "Hello!" |  |
-
-#### Play a sound
-
-Id: `sound`.
-
-| Parameter | Key | Kind | Starts as | Choices and notes |
-| --- | --- | --- | --- | --- |
-| Sound (a file in Assets -> Sounds) | `name` | sound | (empty) |  |
-| Volume (0 to 1) | `volume` | number | 1 | 0 to 1 |
-| Heard from (optional: quieter and to one side when far from the player) | `at` | entity | (empty) |  |
-| Farthest it can be heard (cells) | `far` | number | 16 | 2 to 80 |
-
-#### Change the music
-
-Id: `music`.
-
-| Parameter | Key | Kind | Starts as | Choices and notes |
-| --- | --- | --- | --- | --- |
-| Music (a file in Assets -> Sounds; empty = silence) | `name` | sound | (empty) |  |
 
 ### Advanced
 

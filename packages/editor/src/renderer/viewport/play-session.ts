@@ -460,7 +460,9 @@ export class PlaySession {
       sim.runtime.travel = null;
       this.traveling = true;
       const done = (): void => void (this.traveling = false);
-      if (travel.scene === this.scenePath || travel.scene === '') {
+      if (travel.fresh) {
+        void this.enterScene(travel.scene || this.scenePath, { fresh: true }).finally(done);
+      } else if (travel.scene === this.scenePath || travel.scene === '') {
         const p = sim.world.withTag('player')[0];
         if (p) {
           if (travel.x !== undefined && travel.y !== undefined) this.placeAt(p, travel.x, travel.y);
@@ -485,7 +487,7 @@ export class PlaySession {
 
   // ---------- scenes ----------
 
-  private async enterScene(path: string, opts: { spawn?: string; at?: { x: number; y: number; h?: number }; save?: SaveData } = {}): Promise<void> {
+  private async enterScene(path: string, opts: { spawn?: string; at?: { x: number; y: number; h?: number }; save?: SaveData; fresh?: boolean } = {}): Promise<void> {
     const { sim, o } = this;
     let scene: SceneData | null = o.currentScene(path);
     try {
@@ -494,7 +496,7 @@ export class PlaySession {
       o.notify('error', e instanceof Error ? e.message : `The scene "${path}" could not be opened.`);
       return;
     }
-    const hp = sim.world.withTag('player')[0]?.get<{ hp: number }>('state:health')?.hp ?? null;
+    const hp = opts.fresh ? null : (sim.world.withTag('player')[0]?.get<{ hp: number }>('state:health')?.hp ?? null);
     this.scenePath = path;
     const byId = loadScene(sim, scene, { prefabs: o.prefabs, scene: path, travel: true });
     for (const problem of byId.problems) o.notify('warn', problem);

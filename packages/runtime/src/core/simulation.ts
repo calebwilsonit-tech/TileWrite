@@ -79,7 +79,7 @@ export interface SceneRuntime {
   /** Where to come back to after dying. Survives scene changes and saves. */
   checkpoint: Checkpoint | null;
   /** A request to change scene (a portal, fast travel, a "go to" action); the game host carries it out. */
-  travel: { scene: string; spawn: string; x?: number; y?: number } | null;
+  travel: { scene: string; spawn: string; x?: number; y?: number; /** A new run: nothing carries over (health, items, flags) except the run counter and seed. */ fresh?: boolean } | null;
   /** Camera, fade and shake driven by cutscenes. */
   view: ViewState;
   /** The pause menu (or another host screen) is open: the game is frozen. */

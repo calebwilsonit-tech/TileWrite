@@ -550,6 +550,26 @@ export const ACTIONS: ActionDef[] = [
     },
   },
   {
+    id: 'newRun',
+    label: 'Start a new run (roguelike): new seed, nothing carried over',
+    category: 'Basics',
+    params: [{ key: 'scene', label: 'Scene to start in (empty = this one)', type: 'text', default: '' }],
+    describe: (p) => `start a new run${str(p, 'scene') ? ` in ${str(p, 'scene')}` : ''}`,
+    run(ctx, p) {
+      const vars = ctx.runtime.vars;
+      const count = (Number(vars['run.count']) || 0) + 1;
+      // everything is forgotten except what describes the runs themselves
+      const keep: Record<string, VariableValue> = {};
+      for (const k of Object.keys(vars)) if (k.startsWith('run.') || k.startsWith('best.')) keep[k] = vars[k]!;
+      for (const k of Object.keys(vars)) delete vars[k];
+      Object.assign(vars, keep);
+      vars['run.count'] = count;
+      vars['run.seed'] = ctx.rng.int(1, 2 ** 30);
+      ctx.runtime.travel = { scene: str(p, 'scene'), spawn: '', fresh: true };
+      ctx.events.emit('new-run', { count });
+    },
+  },
+  {
     id: 'setSignal',
     label: "Turn an object's signal on or off",
     category: 'Objects',

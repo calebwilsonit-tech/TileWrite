@@ -26,6 +26,7 @@ Panels dock, tab, split and float: drag a tab. The layout is remembered; **Comma
 | Events | The scene's event sheet: rows that read like sentences, variables, and a "Convert to code" button (see [logic.md](logic.md)). |
 | Story | Items, conversations (a graph of lines, choices, flags and gifts), cutscenes, minigames and skins (see [story-systems.md](story-systems.md)), and the **Translations...** button (see [translations-and-settings.md](translations-and-settings.md)). |
 | Data | Your own game data and blocks with no code: **tables** (spreadsheets of units, items, recipes, waves...), **components** (named settings an object carries), **behaviours** (event rows with settings of their own) and **events** (see [data-and-blocks.md](data-and-blocks.md)). |
+| Generate | Procedural maps: rooms and corridors, caves, islands and towns from a seed and a few rules, with things placed by rule; make the map now, or when the game starts (see [procedural-maps.md](procedural-maps.md)). |
 | Mixer | The mix of the game's sound: bus levels (master, music, sound effects, voice), ducking, and every sound's loudness, bus, pitch drift, variants and music loop points (see [sound-and-effects.md](sound-and-effects.md)). |
 | Playbot | Lets a bot play the open scene with only a player's buttons and reports how it went; keeps and replays playthroughs (see [checks-and-playbot.md](checks-and-playbot.md)). |
 | Claude | A chat that can look at your project and propose changes you approve (see [assistant.md](assistant.md)). |

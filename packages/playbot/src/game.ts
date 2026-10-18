@@ -45,10 +45,13 @@ export class Game {
   scenePath: string;
   private readonly scenes: ReadonlyMap<string, SceneData> | undefined;
   private readonly prefabs: PrefabMap | undefined;
+  /** The scene the game began with (a new run starts it again). */
+  private readonly first: SceneData;
 
   constructor(setup: GameSetup) {
     this.sim = new Simulation(setup.seed ?? 1);
     this.scenes = setup.scenes;
+    this.first = setup.scene;
     this.prefabs = setup.prefabs;
     this.scenePath = setup.scenePath ?? '';
     for (const [k, v] of setup.prefabs ?? []) this.sim.assets.prefabs.set(k, v);
@@ -90,7 +93,11 @@ export class Game {
   step(actions: Record<string, number> = {}): void {
     this.sim.step(actions);
     const travel = this.sim.runtime.travel;
-    if (travel && this.scenes) {
+    if (travel?.fresh) {
+      // a new run: the same scene again, nothing carried over
+      this.sim.runtime.travel = null;
+      this.enterScene(travel.scene || this.scenePath, { fresh: true });
+    } else if (travel && this.scenes) {
       this.sim.runtime.travel = null;
       this.travelTo(travel);
     }
@@ -119,8 +126,8 @@ export class Game {
   }
 
   /** Change scene the way the game does: the world is replaced, what the player carries (items, flags, lit lanterns, health) stays. */
-  enterScene(path: string, opts: { spawn?: string; at?: { x: number; y: number; h?: number } } = {}): boolean {
-    const scene = this.scenes?.get(path);
+  enterScene(path: string, opts: { spawn?: string; at?: { x: number; y: number; h?: number }; fresh?: boolean } = {}): boolean {
+    const scene = this.scenes?.get(path) ?? (path === this.scenePath || !this.scenes ? this.first : undefined);
     if (!scene) {
       this.problems.push(`The scene "${path}" does not exist.`);
       return false;
@@ -129,7 +136,7 @@ export class Game {
       this.problems.push(`The scene "${path}" has no player start.`);
       return false;
     }
-    const hp = this.sim.world.withTag('player')[0]?.get<{ hp: number }>('state:health')?.hp ?? null;
+    const hp = opts.fresh ? null : (this.sim.world.withTag('player')[0]?.get<{ hp: number }>('state:health')?.hp ?? null);
     this.scenePath = path;
     this.problems.push(...loadScene(this.sim, scene, { prefabs: this.prefabs, scene: path, travel: true }).problems);
     const player = this.player;

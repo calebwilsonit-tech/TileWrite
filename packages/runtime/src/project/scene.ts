@@ -2,6 +2,8 @@ import { Simulation } from '../core/simulation';
 import { C } from '../scene/components';
 import type { Entity } from '../scene/world';
 import { TileMap } from '../tilemap/tilemap';
+import { groundHeightAt } from '../physics/terrain';
+import { GeneratorSpecSchema, generate } from '../procgen/generate';
 import { newView } from '../story/cutscene';
 import { expandEntities, type PrefabMap } from './prefab';
 import {
@@ -160,6 +162,39 @@ export function loadScene(sim: Simulation, scene: SceneData, opts: LoadOptions =
   sim.runtime.cutscene = null;
   sim.runtime.travel = null;
   sim.runtime.view = newView();
+  // a map made when the game starts: ground and walls from the rules, then the things the rules place
+  const rules = scene.generator ? GeneratorSpecSchema.safeParse(scene.generator) : null;
+  if (rules && !rules.success) problems.push('The scene\'s map generator settings are not valid, so the map was left as it is.');
+  if (rules?.success && rules.data.atStart) {
+    const spec = rules.data;
+    const raw = sim.runtime.vars['run.seed'];
+    const seed = !spec.lockSeed && typeof raw === 'number' ? Math.abs(Math.floor(raw)) % 2 ** 31 : spec.seed;
+    const made = generate(spec, seed);
+    for (const note of made.notes) problems.push(note);
+    sim.map = made.map;
+    for (const e of [...byId.values()]) if (e.tags.has('generated')) sim.world.destroy(e);
+    const prefabs = opts.prefabs ?? new Map();
+    made.placements.forEach((p, i) => {
+      const h = groundHeightAt(made.map, p.x, p.y);
+      const placed = expandEntities([{ id: `gen#${i}`, name: p.prefab, tags: ['generated', ...(p.tag ? [p.tag] : [])], prefab: p.prefab, components: { transform: { x: p.x, y: p.y, h, facing: 2 } } }], prefabs);
+      for (const m of placed.problems) problems.push(m);
+      for (const data of placed.entities) {
+        const entity = instantiateEntity(sim, data);
+        byId.set(data.id, entity);
+      }
+    });
+    // whoever is controlled starts where the map says
+    for (const e of sim.world.withTag('player')) {
+      const t = e.get<{ x: number; y: number; h: number }>(C.Transform);
+      if (t) {
+        t.x = made.start.x + 0.5;
+        t.y = made.start.y + 0.5;
+        t.h = groundHeightAt(made.map, t.x, t.y);
+      }
+    }
+    sim.runtime.vars['generated.seed'] = seed;
+    sim.runtime.vars['generated.rooms'] = made.rooms.length;
+  }
   return byId;
 }
 

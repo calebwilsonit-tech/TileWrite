@@ -172,6 +172,8 @@ export const SceneSchema = z.object({
   variables: z.array(VariableSchema).default([]),
   /** The scene's event sheet. */
   events: z.array(EventRowSchema).default([]),
+  /** The rules that make this scene's map (see procgen/generate.ts); kept as plain data here and checked where it is used. */
+  generator: z.record(z.string(), z.unknown()).optional(),
 });
 export type SceneData = z.infer<typeof SceneSchema>;
 

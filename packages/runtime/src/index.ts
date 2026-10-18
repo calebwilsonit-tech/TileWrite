@@ -42,6 +42,7 @@ export * from './data/tables';
 export * from './data/values';
 export * from './data/expr';
 export * from './data/custom';
+export * from './procgen/generate';
 export * from './ui/layout';
 export * from './core/profiler';
 export * from './core/crash';
