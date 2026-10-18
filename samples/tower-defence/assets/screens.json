@@ -1,0 +1,745 @@
+{
+  "schemaVersion": 1,
+  "screens": [
+    {
+      "id": "s1",
+      "name": "HUD",
+      "root": {
+        "id": "w1",
+        "name": "HUD root",
+        "type": "panel",
+        "anchor": "fill",
+        "x": 0,
+        "y": 0,
+        "w": 240,
+        "h": 160,
+        "wMode": "fixed",
+        "hMode": "fixed",
+        "layout": "free",
+        "gap": 8,
+        "padding": 0,
+        "align": "start",
+        "columns": 3,
+        "style": {},
+        "states": {},
+        "anim": [],
+        "text": "",
+        "sprite": "",
+        "value": "",
+        "max": "100",
+        "min": 0,
+        "step": 1,
+        "options": "",
+        "source": "",
+        "template": "",
+        "drag": false,
+        "visible": "",
+        "enabled": "",
+        "on": {
+          "click": [],
+          "hover": [],
+          "change": []
+        },
+        "focus": {
+          "up": "",
+          "down": "",
+          "left": "",
+          "right": ""
+        },
+        "tooltip": "",
+        "prefab": "",
+        "overrides": {},
+        "marks": "player:#6fe08a, enemy:#e05a5a",
+        "children": [
+          {
+            "id": "w3",
+            "name": "Bar",
+            "type": "panel",
+            "anchor": "tl",
+            "x": 0,
+            "y": 0,
+            "w": 240,
+            "h": 160,
+            "wMode": "fixed",
+            "hMode": "fixed",
+            "layout": "column",
+            "gap": 8,
+            "padding": 8,
+            "align": "start",
+            "columns": 3,
+            "style": {
+              "fill": "var(--tw-panel)",
+              "border": "var(--tw-border)",
+              "borderWidth": 2,
+              "radius": 10
+            },
+            "states": {},
+            "anim": [],
+            "text": "",
+            "sprite": "",
+            "value": "",
+            "max": "100",
+            "min": 0,
+            "step": 1,
+            "options": "",
+            "source": "",
+            "template": "",
+            "drag": false,
+            "visible": "",
+            "enabled": "",
+            "on": {
+              "click": [],
+              "hover": [],
+              "change": []
+            },
+            "focus": {
+              "up": "",
+              "down": "",
+              "left": "",
+              "right": ""
+            },
+            "tooltip": "",
+            "prefab": "",
+            "overrides": {},
+            "marks": "player:#6fe08a, enemy:#e05a5a",
+            "children": [
+              {
+                "id": "w4",
+                "name": "Numbers",
+                "type": "text",
+                "anchor": "tl",
+                "x": 0,
+                "y": 0,
+                "w": 160,
+                "h": 28,
+                "wMode": "auto",
+                "hMode": "auto",
+                "layout": "free",
+                "gap": 8,
+                "padding": 8,
+                "align": "start",
+                "columns": 3,
+                "style": {},
+                "states": {},
+                "anim": [],
+                "text": "Gold {gold}   Lives {lives}   Wave {wave.index} / {wave.total}",
+                "sprite": "",
+                "value": "",
+                "max": "100",
+                "min": 0,
+                "step": 1,
+                "options": "",
+                "source": "",
+                "template": "",
+                "drag": false,
+                "visible": "",
+                "enabled": "",
+                "on": {
+                  "click": [],
+                  "hover": [],
+                  "change": []
+                },
+                "focus": {
+                  "up": "",
+                  "down": "",
+                  "left": "",
+                  "right": ""
+                },
+                "tooltip": "",
+                "prefab": "",
+                "overrides": {},
+                "marks": "player:#6fe08a, enemy:#e05a5a",
+                "children": []
+              },
+              {
+                "id": "w5",
+                "name": "NextWave",
+                "type": "button",
+                "anchor": "tl",
+                "x": 0,
+                "y": 0,
+                "w": 160,
+                "h": 44,
+                "wMode": "fixed",
+                "hMode": "fixed",
+                "layout": "free",
+                "gap": 8,
+                "padding": 8,
+                "align": "start",
+                "columns": 3,
+                "style": {
+                  "fill": "var(--tw-panel)",
+                  "border": "var(--tw-border)",
+                  "borderWidth": 2,
+                  "radius": 8,
+                  "align": "center"
+                },
+                "states": {
+                  "hover": {
+                    "fill": "var(--tw-highlight)"
+                  },
+                  "pressed": {
+                    "opacity": 0.8
+                  },
+                  "disabled": {
+                    "opacity": 0.4
+                  },
+                  "focus": {
+                    "border": "var(--tw-accent)"
+                  }
+                },
+                "anim": [],
+                "text": "Send the next wave",
+                "sprite": "",
+                "value": "",
+                "max": "100",
+                "min": 0,
+                "step": 1,
+                "options": "",
+                "source": "",
+                "template": "",
+                "drag": false,
+                "visible": "",
+                "enabled": "",
+                "on": {
+                  "click": [
+                    {
+                      "type": "nextWave",
+                      "params": {}
+                    }
+                  ],
+                  "hover": [],
+                  "change": []
+                },
+                "focus": {
+                  "up": "",
+                  "down": "",
+                  "left": "",
+                  "right": ""
+                },
+                "tooltip": "",
+                "prefab": "",
+                "overrides": {},
+                "marks": "player:#6fe08a, enemy:#e05a5a",
+                "children": []
+              },
+              {
+                "id": "w6",
+                "name": "Upgrade",
+                "type": "button",
+                "anchor": "tl",
+                "x": 0,
+                "y": 0,
+                "w": 160,
+                "h": 44,
+                "wMode": "fixed",
+                "hMode": "fixed",
+                "layout": "free",
+                "gap": 8,
+                "padding": 8,
+                "align": "start",
+                "columns": 3,
+                "style": {
+                  "fill": "var(--tw-panel)",
+                  "border": "var(--tw-border)",
+                  "borderWidth": 2,
+                  "radius": 8,
+                  "align": "center"
+                },
+                "states": {
+                  "hover": {
+                    "fill": "var(--tw-highlight)"
+                  },
+                  "pressed": {
+                    "opacity": 0.8
+                  },
+                  "disabled": {
+                    "opacity": 0.4
+                  },
+                  "focus": {
+                    "border": "var(--tw-accent)"
+                  }
+                },
+                "anim": [],
+                "text": "Sharper arrows (60)",
+                "sprite": "",
+                "value": "",
+                "max": "100",
+                "min": 0,
+                "step": 1,
+                "options": "",
+                "source": "",
+                "template": "",
+                "drag": false,
+                "visible": "",
+                "enabled": "",
+                "on": {
+                  "click": [
+                    {
+                      "type": "setVariable",
+                      "params": {
+                        "name": "up",
+                        "op": "set",
+                        "value": "1"
+                      }
+                    }
+                  ],
+                  "hover": [],
+                  "change": []
+                },
+                "focus": {
+                  "up": "",
+                  "down": "",
+                  "left": "",
+                  "right": ""
+                },
+                "tooltip": "",
+                "prefab": "",
+                "overrides": {},
+                "marks": "player:#6fe08a, enemy:#e05a5a",
+                "children": []
+              },
+              {
+                "id": "w7",
+                "name": "Fast",
+                "type": "button",
+                "anchor": "tl",
+                "x": 0,
+                "y": 0,
+                "w": 160,
+                "h": 44,
+                "wMode": "fixed",
+                "hMode": "fixed",
+                "layout": "free",
+                "gap": 8,
+                "padding": 8,
+                "align": "start",
+                "columns": 3,
+                "style": {
+                  "fill": "var(--tw-panel)",
+                  "border": "var(--tw-border)",
+                  "borderWidth": 2,
+                  "radius": 8,
+                  "align": "center"
+                },
+                "states": {
+                  "hover": {
+                    "fill": "var(--tw-highlight)"
+                  },
+                  "pressed": {
+                    "opacity": 0.8
+                  },
+                  "disabled": {
+                    "opacity": 0.4
+                  },
+                  "focus": {
+                    "border": "var(--tw-accent)"
+                  }
+                },
+                "anim": [],
+                "text": "4x",
+                "sprite": "",
+                "value": "",
+                "max": "100",
+                "min": 0,
+                "step": 1,
+                "options": "",
+                "source": "",
+                "template": "",
+                "drag": false,
+                "visible": "",
+                "enabled": "",
+                "on": {
+                  "click": [
+                    {
+                      "type": "setClock",
+                      "params": {
+                        "mode": "realtime",
+                        "speed": "4"
+                      }
+                    }
+                  ],
+                  "hover": [],
+                  "change": []
+                },
+                "focus": {
+                  "up": "",
+                  "down": "",
+                  "left": "",
+                  "right": ""
+                },
+                "tooltip": "",
+                "prefab": "",
+                "overrides": {},
+                "marks": "player:#6fe08a, enemy:#e05a5a",
+                "children": []
+              },
+              {
+                "id": "w8",
+                "name": "Normal",
+                "type": "button",
+                "anchor": "tl",
+                "x": 0,
+                "y": 0,
+                "w": 160,
+                "h": 44,
+                "wMode": "fixed",
+                "hMode": "fixed",
+                "layout": "free",
+                "gap": 8,
+                "padding": 8,
+                "align": "start",
+                "columns": 3,
+                "style": {
+                  "fill": "var(--tw-panel)",
+                  "border": "var(--tw-border)",
+                  "borderWidth": 2,
+                  "radius": 8,
+                  "align": "center"
+                },
+                "states": {
+                  "hover": {
+                    "fill": "var(--tw-highlight)"
+                  },
+                  "pressed": {
+                    "opacity": 0.8
+                  },
+                  "disabled": {
+                    "opacity": 0.4
+                  },
+                  "focus": {
+                    "border": "var(--tw-accent)"
+                  }
+                },
+                "anim": [],
+                "text": "1x",
+                "sprite": "",
+                "value": "",
+                "max": "100",
+                "min": 0,
+                "step": 1,
+                "options": "",
+                "source": "",
+                "template": "",
+                "drag": false,
+                "visible": "",
+                "enabled": "",
+                "on": {
+                  "click": [
+                    {
+                      "type": "setClock",
+                      "params": {
+                        "mode": "realtime",
+                        "speed": "1"
+                      }
+                    }
+                  ],
+                  "hover": [],
+                  "change": []
+                },
+                "focus": {
+                  "up": "",
+                  "down": "",
+                  "left": "",
+                  "right": ""
+                },
+                "tooltip": "",
+                "prefab": "",
+                "overrides": {},
+                "marks": "player:#6fe08a, enemy:#e05a5a",
+                "children": []
+              },
+              {
+                "id": "w9",
+                "name": "Menu",
+                "type": "list",
+                "anchor": "tl",
+                "x": 0,
+                "y": 0,
+                "w": 260,
+                "h": 220,
+                "wMode": "fixed",
+                "hMode": "fixed",
+                "layout": "column",
+                "gap": 8,
+                "padding": 8,
+                "align": "start",
+                "columns": 3,
+                "style": {
+                  "fill": "var(--tw-panel)",
+                  "radius": 8
+                },
+                "states": {},
+                "anim": [],
+                "text": "",
+                "sprite": "",
+                "value": "",
+                "max": "100",
+                "min": 0,
+                "step": 1,
+                "options": "",
+                "source": "table:Buildings",
+                "template": "BuildRow",
+                "drag": false,
+                "visible": "",
+                "enabled": "",
+                "on": {
+                  "click": [],
+                  "hover": [],
+                  "change": []
+                },
+                "focus": {
+                  "up": "",
+                  "down": "",
+                  "left": "",
+                  "right": ""
+                },
+                "tooltip": "",
+                "prefab": "",
+                "overrides": {},
+                "marks": "player:#6fe08a, enemy:#e05a5a",
+                "children": []
+              },
+              {
+                "id": "w12",
+                "name": "Victory",
+                "type": "text",
+                "anchor": "tl",
+                "x": 0,
+                "y": 0,
+                "w": 160,
+                "h": 28,
+                "wMode": "auto",
+                "hMode": "auto",
+                "layout": "free",
+                "gap": 8,
+                "padding": 8,
+                "align": "start",
+                "columns": 3,
+                "style": {},
+                "states": {},
+                "anim": [],
+                "text": "VICTORY - the road is safe!",
+                "sprite": "",
+                "value": "",
+                "max": "100",
+                "min": 0,
+                "step": 1,
+                "options": "",
+                "source": "",
+                "template": "",
+                "drag": false,
+                "visible": "{won} >= 1",
+                "enabled": "",
+                "on": {
+                  "click": [],
+                  "hover": [],
+                  "change": []
+                },
+                "focus": {
+                  "up": "",
+                  "down": "",
+                  "left": "",
+                  "right": ""
+                },
+                "tooltip": "",
+                "prefab": "",
+                "overrides": {},
+                "marks": "player:#6fe08a, enemy:#e05a5a",
+                "children": []
+              },
+              {
+                "id": "w13",
+                "name": "Defeat",
+                "type": "text",
+                "anchor": "tl",
+                "x": 0,
+                "y": 0,
+                "w": 160,
+                "h": 28,
+                "wMode": "auto",
+                "hMode": "auto",
+                "layout": "free",
+                "gap": 8,
+                "padding": 8,
+                "align": "start",
+                "columns": 3,
+                "style": {},
+                "states": {},
+                "anim": [],
+                "text": "DEFEAT - the gate has fallen.",
+                "sprite": "",
+                "value": "",
+                "max": "100",
+                "min": 0,
+                "step": 1,
+                "options": "",
+                "source": "",
+                "template": "",
+                "drag": false,
+                "visible": "{lost} >= 1",
+                "enabled": "",
+                "on": {
+                  "click": [],
+                  "hover": [],
+                  "change": []
+                },
+                "focus": {
+                  "up": "",
+                  "down": "",
+                  "left": "",
+                  "right": ""
+                },
+                "tooltip": "",
+                "prefab": "",
+                "overrides": {},
+                "marks": "player:#6fe08a, enemy:#e05a5a",
+                "children": []
+              }
+            ]
+          }
+        ]
+      },
+      "modal": false,
+      "dim": 0,
+      "transition": "none",
+      "mapX": 40,
+      "mapY": 40,
+      "opensOnStart": true
+    }
+  ],
+  "prefabs": [
+    {
+      "name": "BuildRow",
+      "widget": {
+        "id": "w10",
+        "name": "Row",
+        "type": "panel",
+        "anchor": "tl",
+        "x": 0,
+        "y": 0,
+        "w": 240,
+        "h": 160,
+        "wMode": "fixed",
+        "hMode": "fixed",
+        "layout": "row",
+        "gap": 8,
+        "padding": 8,
+        "align": "start",
+        "columns": 3,
+        "style": {
+          "fill": "var(--tw-panel)",
+          "border": "var(--tw-border)",
+          "borderWidth": 2,
+          "radius": 10
+        },
+        "states": {},
+        "anim": [],
+        "text": "",
+        "sprite": "",
+        "value": "",
+        "max": "100",
+        "min": 0,
+        "step": 1,
+        "options": "",
+        "source": "",
+        "template": "",
+        "drag": false,
+        "visible": "",
+        "enabled": "",
+        "on": {
+          "click": [],
+          "hover": [],
+          "change": []
+        },
+        "focus": {
+          "up": "",
+          "down": "",
+          "left": "",
+          "right": ""
+        },
+        "tooltip": "",
+        "prefab": "",
+        "overrides": {},
+        "marks": "player:#6fe08a, enemy:#e05a5a",
+        "children": [
+          {
+            "id": "w11",
+            "name": "Pick",
+            "type": "button",
+            "anchor": "tl",
+            "x": 0,
+            "y": 0,
+            "w": 160,
+            "h": 44,
+            "wMode": "fixed",
+            "hMode": "fixed",
+            "layout": "free",
+            "gap": 8,
+            "padding": 8,
+            "align": "start",
+            "columns": 3,
+            "style": {
+              "fill": "var(--tw-panel)",
+              "border": "var(--tw-border)",
+              "borderWidth": 2,
+              "radius": 8,
+              "align": "center"
+            },
+            "states": {
+              "hover": {
+                "fill": "var(--tw-highlight)"
+              },
+              "pressed": {
+                "opacity": 0.8
+              },
+              "disabled": {
+                "opacity": 0.4
+              },
+              "focus": {
+                "border": "var(--tw-accent)"
+              }
+            },
+            "anim": [],
+            "text": "{row.name} ({row.cost})",
+            "sprite": "",
+            "value": "",
+            "max": "100",
+            "min": 0,
+            "step": 1,
+            "options": "",
+            "source": "",
+            "template": "",
+            "drag": false,
+            "visible": "",
+            "enabled": "{gold} >= {row.cost}",
+            "on": {
+              "click": [
+                {
+                  "type": "selectBuilding",
+                  "params": {
+                    "row": "{row.id}"
+                  }
+                }
+              ],
+              "hover": [],
+              "change": []
+            },
+            "focus": {
+              "up": "",
+              "down": "",
+              "left": "",
+              "right": ""
+            },
+            "tooltip": "",
+            "prefab": "",
+            "overrides": {},
+            "marks": "player:#6fe08a, enemy:#e05a5a",
+            "children": []
+          }
+        ]
+      }
+    }
+  ],
+  "safeArea": 0
+}

@@ -486,6 +486,16 @@ export const CONDITIONS: ConditionDef[] = [
           { value: 'orders-given', label: 'units are given an order' },
           { value: 'click-move', label: 'the player clicks to walk somewhere' },
           { value: 'hotspot-used', label: 'a hotspot is used' },
+          { value: 'path-end', label: 'something reaches the end of its path' },
+          { value: 'wave-started', label: 'a wave of enemies starts' },
+          { value: 'wave-cleared', label: 'a wave of enemies is beaten' },
+          { value: 'waves-done', label: 'every wave is done' },
+          { value: 'produced', label: 'a producer makes something' },
+          { value: 'new-day', label: 'a new day begins' },
+          { value: 'night-start', label: 'night falls' },
+          { value: 'day-start', label: 'the day breaks' },
+          { value: 'new-season', label: 'a new season begins' },
+          { value: 'activity-done', label: 'a villager finishes what it was doing' },
         ],
         extra: 'events',
       },
@@ -509,6 +519,16 @@ const ENTITY_EVENT_TEXT: Record<string, string> = {
 };
 
 const COND_EVENT_TEXT: Record<string, string> = {
+  'path-end': 'something reaches the end of its path',
+  'wave-started': 'a wave of enemies starts',
+  'wave-cleared': 'a wave of enemies is beaten',
+  'waves-done': 'every wave is done',
+  'produced': 'a producer makes something',
+  'new-day': 'a new day begins',
+  'night-start': 'night falls',
+  'day-start': 'the day breaks',
+  'new-season': 'a new season begins',
+  'activity-done': 'a villager finishes what it was doing',
   pickup: 'something is picked up',
   pushed: 'a crate is pushed',
   landed: 'something lands',
@@ -1293,7 +1313,8 @@ export function checkSheet(rows: readonly EventRow[], facts: SheetFacts, names?:
         }
         for (const p of def.params) {
           if (p.type === 'entity') refOk(str(c.params, p.key), `"${def.label}"`, r.id, loop);
-          if (p.type === 'variable' && c.type === 'variable' && str(c.params, p.key) && !facts.variables.has(str(c.params, p.key)) && !assigned.has(str(c.params, p.key)) && !(facts.storyVariables?.has(str(c.params, p.key)) ?? false)) {
+          // names with a dot (wave.state, turn.round, time.day, a table cell) belong to the engine or to a table, not to the scene
+          if (p.type === 'variable' && c.type === 'variable' && str(c.params, p.key) && !str(c.params, p.key).includes('.') && !facts.variables.has(str(c.params, p.key)) && !assigned.has(str(c.params, p.key)) && !(facts.storyVariables?.has(str(c.params, p.key)) ?? false)) {
             out.push({ rowId: r.id, text: `The variable "${str(c.params, p.key)}" is checked but never set anywhere, so it is always 0.` });
           }
         }

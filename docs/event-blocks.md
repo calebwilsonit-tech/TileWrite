@@ -52,7 +52,7 @@ Id: `onEvent`.
 
 | Parameter | Key | Kind | Starts as | Choices and notes |
 | --- | --- | --- | --- | --- |
-| What happens | `name` | select | "pickup" | `pickup`, `pushed`, `landed`, `fell`, `floor-fell`, `projectile-hit`, `spawned`, `anim-event`, `damaged`, `died`, `attack`, `dodge`, `noticed`, `lost`, `state-changed`, `boss-phase`, `boss-defeated`, `echo-made`, `sentence-changed`, `text-formatted`, `dialogue-started`, `dialogue-ended`, `minigame-started`, `minigame-ended`, `cutscene-started`, `cutscene-ended`, `lantern-lit`, `rested`, `item-given`, `portal`, `battle-started`, `turn-start`, `turn-end`, `round-start`, `battle-won`, `unit-moved`, `unit-attacked`, `building-placed`, `orders-given`, `click-move`, `hotspot-used` |
+| What happens | `name` | select | "pickup" | `pickup`, `pushed`, `landed`, `fell`, `floor-fell`, `projectile-hit`, `spawned`, `anim-event`, `damaged`, `died`, `attack`, `dodge`, `noticed`, `lost`, `state-changed`, `boss-phase`, `boss-defeated`, `echo-made`, `sentence-changed`, `text-formatted`, `dialogue-started`, `dialogue-ended`, `minigame-started`, `minigame-ended`, `cutscene-started`, `cutscene-ended`, `lantern-lit`, `rested`, `item-given`, `portal`, `battle-started`, `turn-start`, `turn-end`, `round-start`, `battle-won`, `unit-moved`, `unit-attacked`, `building-placed`, `orders-given`, `click-move`, `hotspot-used`, `path-end`, `wave-started`, `wave-cleared`, `waves-done`, `produced`, `new-day`, `night-start`, `day-start`, `new-season`, `activity-done` |
 
 ### Time
 

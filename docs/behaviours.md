@@ -200,6 +200,7 @@ Shoots at its target from a distance: when the target is in range (and nothing b
 | Damage of a shot | `damage` | number | 1 | 0 to 99 |
 | Seconds a shot flies | `lifetime` | number | 2.5 | 0.2 to 20 |
 | Only when no wall is in the way | `needSight` | boolean | true |  |
+| Its shots hurt | `hurts` | select | "player" | `player`, `enemy`, `anything` |
 | Shoot a prefab (empty = a plain ball) | `prefab` | prefab | (empty) |  |
 | Sound at each shot (a file in Assets -> Sounds) | `sound` | text | (empty) |  |
 

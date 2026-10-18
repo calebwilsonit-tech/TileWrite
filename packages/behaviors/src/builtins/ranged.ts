@@ -36,6 +36,8 @@ export interface RangedAttack {
   sound: string;
   /** Colour of the plain ball. */
   color: number;
+  /** Whose side its shots hurt: the player's side (what enemies do), the enemy side (what a tower does) or anything. */
+  hurts: 'player' | 'enemy' | 'anything';
 }
 
 interface RangedState {
@@ -75,7 +77,7 @@ function fire(ctx: SimContext, e: Entity, s: RangedAttack, dx: number, dy: numbe
     shot = spawnPrefabAt(ctx, e, s.prefab, x, y, h, 'shot');
     if (!shot) return null;
     const p = shot.get<Record<string, unknown>>('projectile');
-    if (p) Object.assign(p, { useFacing: false, dirX: ux, dirY: uy, speed: s.speed, lifetime: s.lifetime, dirZ: climb, ...(s.damage > 0 && !(typeof p.damage === 'number' && p.damage > 0) ? { damage: s.damage } : {}) });
+    if (p) Object.assign(p, { useFacing: false, dirX: ux, dirY: uy, speed: s.speed, lifetime: s.lifetime, dirZ: climb, ...(s.hurts !== 'player' ? { hurts: s.hurts } : {}), ...(s.damage > 0 && !(typeof p.damage === 'number' && p.damage > 0) ? { damage: s.damage } : {}) });
     else ctx.events.emit('problem', { entity: e.id, text: `"${e.name}" shoots the prefab "${s.prefab}", which does not have the Projectile behaviour, so it will not fly.` });
   } else {
     const components: Record<string, unknown> = {
@@ -83,7 +85,7 @@ function fire(ctx: SimContext, e: Entity, s: RangedAttack, dx: number, dy: numbe
       sprite: { shape: 'ellipse', color: s.color, w: 0.3, d: 0.3, height: 0.3, sortOffset: 0, visible: true },
     };
     attachBehavior(components, 'projectile');
-    Object.assign(components.projectile as object, { useFacing: false, dirX: ux, dirY: uy, dirZ: climb, speed: s.speed, lifetime: s.lifetime, damage: s.damage, hurts: 'player', knockback: 5 });
+    Object.assign(components.projectile as object, { useFacing: false, dirX: ux, dirY: uy, dirZ: climb, speed: s.speed, lifetime: s.lifetime, damage: s.damage, hurts: s.hurts, knockback: 5 });
     shot = ctx.world.spawn({ name: 'Shot', tags: ['projectile'], components });
     shot.set('meta', { sceneId: `${e.get<{ sceneId: string }>('meta')?.sceneId ?? e.id}#shot-${ctx.tick}` });
   }
@@ -103,7 +105,7 @@ export const rangedAttack = defineBehavior<RangedAttack>({
   description:
     'Shoots at its target from a distance: when the target is in range (and nothing blocks the way) it stands still for a moment taking aim, then fires one shot or a quick volley, then waits before the next. A shot is a plain glowing ball, or a copy of a prefab with the Projectile behaviour. Combine with Patrol, Chase or a State Machine; a State Machine state can switch it on and off.',
   phase: 'actuator',
-  defaults: { target: 'player', range: 8, minRange: 0, cooldown: 2, windup: 0.4, volley: 1, volleyGap: 0.15, speed: 7, damage: 1, lifetime: 2.5, needSight: true, prefab: '', sound: '', color: 0xff9a3c },
+  defaults: { target: 'player', range: 8, minRange: 0, cooldown: 2, windup: 0.4, volley: 1, volleyGap: 0.15, speed: 7, damage: 1, lifetime: 2.5, needSight: true, prefab: '', sound: '', color: 0xff9a3c, hurts: 'player' },
   fields: [
     { key: 'target', label: 'Shoots at things tagged', type: 'text' },
     { key: 'range', label: 'Shoots up to (cells)', type: 'number', min: 1, max: 30, step: 0.5 },
@@ -116,6 +118,16 @@ export const rangedAttack = defineBehavior<RangedAttack>({
     { key: 'damage', label: 'Damage of a shot', type: 'number', min: 0, max: 99, step: 1 },
     { key: 'lifetime', label: 'Seconds a shot flies', type: 'number', min: 0.2, max: 20, step: 0.1 },
     { key: 'needSight', label: 'Only when no wall is in the way', type: 'boolean' },
+    {
+      key: 'hurts',
+      label: 'Its shots hurt',
+      type: 'select',
+      options: [
+        { value: 'player', label: 'The player side (an enemy shooting)' },
+        { value: 'enemy', label: 'The enemy side (a tower shooting at enemies)' },
+        { value: 'anything', label: 'Anything' },
+      ],
+    },
     { key: 'prefab', label: 'Shoot a prefab (empty = a plain ball)', type: 'prefab' },
     { key: 'sound', label: 'Sound at each shot (a file in Assets -> Sounds)', type: 'text' },
   ],

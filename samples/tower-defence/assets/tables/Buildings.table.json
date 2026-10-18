@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "name": "Buildings",
+  "description": "",
+  "columns": [
+    {
+      "id": "name",
+      "label": "",
+      "type": "text",
+      "options": [],
+      "table": ""
+    },
+    {
+      "id": "prefab",
+      "label": "",
+      "type": "prefab",
+      "options": [],
+      "table": ""
+    },
+    {
+      "id": "w",
+      "label": "",
+      "type": "number",
+      "options": [],
+      "table": ""
+    },
+    {
+      "id": "d",
+      "label": "",
+      "type": "number",
+      "options": [],
+      "table": ""
+    },
+    {
+      "id": "cost",
+      "label": "",
+      "type": "number",
+      "options": [],
+      "table": ""
+    }
+  ],
+  "rows": [
+    {
+      "id": "archer",
+      "name": "Archer tower",
+      "prefab": "ArcherTower",
+      "w": 1,
+      "d": 1,
+      "cost": 30
+    },
+    {
+      "id": "cannon",
+      "name": "Cannon",
+      "prefab": "Cannon",
+      "w": 1,
+      "d": 1,
+      "cost": 70
+    }
+  ]
+}

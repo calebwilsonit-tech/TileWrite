@@ -59,7 +59,9 @@ export async function setFields(page: Page, behaviour: string, fields: Record<st
     const f = box.getByTestId(`bf-${key}`);
     const type = await f.evaluate((el) => (el.tagName === 'SELECT' ? 'select' : (el as HTMLInputElement).type));
     if (type === 'select') await f.selectOption(String(value));
-    else if (type === 'checkbox') await f.setChecked(value === true);
+    else if (type === 'checkbox') {
+      if ((await f.isChecked()) !== (value === true)) await f.click();
+    }
     else {
       await f.fill(String(value));
       await f.press('Enter');
@@ -110,3 +112,62 @@ export const where = (game: Game, name: string): { x: number; y: number; h: numb
   const t = e.require<TransformIso>(C.Transform);
   return { x: t.x, y: t.y, h: t.h };
 };
+
+// ---------- small steps every sample repeats ----------
+
+/** Type into a field and press Enter (the editor commits on Enter or blur). */
+export async function setText(page: Page, testId: string, value: string): Promise<void> {
+  await page.getByTestId(testId).fill(value);
+  await page.getByTestId(testId).press('Enter');
+}
+
+/** Colour and size of the selected object, from the Inspector's Look and Collision groups. */
+export async function look(page: Page, o: { color: string; w: number; d: number; height: number }): Promise<void> {
+  await page.getByTestId('insp-color').fill(o.color);
+  const lookBox = page.getByRole('group', { name: 'Look' });
+  for (const [label, v] of [['Width', o.w], ['Depth', o.d], ['Height', o.height]] as const) {
+    await lookBox.getByLabel(label).fill(String(v));
+    await lookBox.getByLabel(label).press('Enter');
+  }
+  const hit = page.getByRole('group', { name: 'Collision' });
+  if ((await hit.count()) > 0) {
+    for (const [label, v] of [['Width', o.w], ['Depth', o.d]] as const) {
+      await hit.getByLabel(label).fill(String(v));
+      await hit.getByLabel(label).press('Enter');
+    }
+  }
+}
+
+/** Make a prefab from the selected object. */
+export async function makePrefab(page: Page, name: string): Promise<void> {
+  await page.locator('.prefab-make summary').click();
+  await page.getByTestId('prefab-name').fill(name);
+  await page.getByTestId('prefab-make').click();
+  await expect(page.getByTestId('prefab-banner')).toBeVisible();
+}
+
+/** Add a row to the table that is open in the Data panel and fill its cells (`id` renames the row). */
+export async function addTableRow(page: Page, table: string, cells: Record<string, string>): Promise<void> {
+  await page.getByTestId('row-add').click();
+  const count = await page.evaluate((t) => window.__store!.tables.find((x) => x.name === t)!.rows.length, table);
+  const rowId = await page.evaluate(([t, n]) => window.__store!.tables.find((x) => x.name === t)!.rows[(n as number) - 1]!.id, [table, count] as const);
+  const id = cells.id ?? rowId;
+  if (cells.id) await setText(page, `cell-${rowId}-id`, cells.id);
+  for (const [col, v] of Object.entries(cells)) {
+    if (col === 'id') continue;
+    const cell = page.getByTestId(`cell-${id}-${col}`);
+    if ((await cell.evaluate((el) => el.tagName)) === 'SELECT') await cell.selectOption(v);
+    else await setText(page, `cell-${id}-${col}`, v);
+  }
+}
+
+/** Make a table with the given columns in the Data panel. */
+export async function makeTable(page: Page, name: string, columns: [string, string][]): Promise<void> {
+  await page.getByTestId('table-new-name').fill(name);
+  await page.getByTestId('table-new-create').click();
+  for (const [col, type] of columns) {
+    await page.getByTestId('col-add-id').fill(col);
+    await page.getByTestId('col-add-type').selectOption(type);
+    await page.getByTestId('col-add').click();
+  }
+}
