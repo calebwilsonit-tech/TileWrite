@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "name": "Loot",
+  "description": "",
+  "columns": [
+    {
+      "id": "name",
+      "label": "Name",
+      "type": "text",
+      "options": [],
+      "table": ""
+    },
+    {
+      "id": "weight",
+      "label": "weight",
+      "type": "number",
+      "options": [],
+      "table": ""
+    },
+    {
+      "id": "gold",
+      "label": "gold",
+      "type": "number",
+      "options": [],
+      "table": ""
+    },
+    {
+      "id": "potions",
+      "label": "potions",
+      "type": "number",
+      "options": [],
+      "table": ""
+    }
+  ],
+  "rows": [
+    {
+      "id": "coins",
+      "name": "a handful of coins",
+      "weight": 6,
+      "gold": 5,
+      "potions": 0
+    },
+    {
+      "id": "potion",
+      "name": "a healing potion",
+      "weight": 3,
+      "gold": 0,
+      "potions": 1
+    },
+    {
+      "id": "hoard",
+      "name": "a hoard of gold",
+      "weight": 1,
+      "gold": 25,
+      "potions": 0
+    },
+    {
+      "id": "dust",
+      "name": "nothing but dust",
+      "weight": 4,
+      "gold": 0,
+      "potions": 0
+    }
+  ]
+}

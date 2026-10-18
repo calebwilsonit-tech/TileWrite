@@ -177,7 +177,7 @@ const walled = (w: number, h: number, floor: number, wall: number): TileMap => {
   for (let i = 0; i < h; i++) for (const x of [0, w - 1]) map.set(x, i, wall, 2);
   return map;
 };
-const startRow = (): EventRow => ({ ...newRow('start-battle'), conditions: [newCondition('start')], actions: [newAction('startBattle')], once: true });
+const startRow = (): EventRow => ({ ...newRow('start-battle'), conditions: [newCondition('sceneStart')], actions: [newAction('startBattle')], once: true });
 
 /** A soldier of a team: turns, walking cell by cell, health. Enemies play their own turns. */
 function soldier(id: string, name: string, x: number, y: number, team: 'blue' | 'red', opts: { range?: number; damage?: number } = {}): EntityData {

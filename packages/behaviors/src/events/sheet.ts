@@ -192,6 +192,14 @@ export const CONDITIONS: ConditionDef[] = [
     test: (ctx) => ctx.tick === 0,
   },
   {
+    id: 'sceneStart',
+    label: 'The scene starts (also after travelling, and when a new run begins)',
+    category: 'Basics',
+    params: [],
+    describe: () => 'the scene starts',
+    test: (ctx) => ctx.tick === (ctx.runtime.scratch.get('sceneStartTick') ?? 0),
+  },
+  {
     id: 'every',
     label: 'Every few seconds',
     category: 'Basics',
@@ -588,6 +596,29 @@ export const ACTIONS: ActionDef[] = [
         default:
           ctx.runtime.vars[name] = v;
       }
+    },
+  },
+  {
+    id: 'rollTable',
+    label: 'Roll a random row of a table (loot, random events)',
+    category: 'Variables',
+    params: [
+      { key: 'table', label: 'Table', type: 'text', default: 'Loot' },
+      { key: 'weight', label: 'Column that says how likely a row is (empty: all equally likely)', type: 'text', default: 'weight' },
+      { key: 'into', label: 'Keep the row in variables starting with', type: 'text', default: 'roll' },
+    ],
+    describe: (p) => `roll a random row of the table "${str(p, 'table')}" (into ${str(p, 'into') || 'roll'}.id, ${str(p, 'into') || 'roll'}.<column>)`,
+    // uses the game's seeded random numbers, so a replay or a run with the same seed rolls the same things
+    run(ctx, p) {
+      const rows = ctx.assets.tables.get(str(p, 'table'))?.rows ?? [];
+      const into = str(p, 'into') || 'roll';
+      const col = str(p, 'weight');
+      const weightOf = (r: Record<string, unknown>): number => (col ? Math.max(0, Number(r[col] ?? 0)) : 1);
+      const total = rows.reduce((n, r) => n + weightOf(r), 0);
+      if (rows.length === 0 || total <= 0) return void (ctx.runtime.vars[`${into}.id`] = '');
+      let at = ctx.rng.next() * total;
+      const row = rows.find((r) => (at -= weightOf(r)) < 0) ?? rows[rows.length - 1]!;
+      for (const [k, v] of Object.entries(row)) ctx.runtime.vars[`${into}.${k}`] = v as VariableValue;
     },
   },
   {

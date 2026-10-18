@@ -1,4 +1,4 @@
-import { C, cameraSnapshot, pictureOf, pointerSnapshot, type CameraReading, type Cell2, type TransformIso } from '@tilewright/runtime';
+import { C, cameraSnapshot, findPath, pictureOf, pointerSnapshot, type CameraReading, type Cell2, type Entity, type TransformIso } from '@tilewright/runtime';
 import { activateWidget, attackTargets, currentUnit, findOnScreens, moveRange, openScreens, setChoice, setSlider, takerOf, unitsOf, walkView, type ViewNode } from '@tilewright/behaviors';
 import { Bot, formatTime, type PlayReport } from './bot';
 
@@ -148,17 +148,7 @@ export class PointerBot extends Bot {
       const reach = moveRange(g.ctx, me);
       const foes = unitsOf(g.ctx).filter((u) => takerOf(u).team !== takerOf(me).team);
       if (foes.length === 0 || reach.size <= 1) break;
-      const near = (c: Cell2): number => Math.min(...foes.map((f) => Math.hypot(this.cellOfUnit(f).x - c.x, this.cellOfUnit(f).y - c.y)));
-      let best: Cell2 | null = null;
-      let bestD = near(this.cellOfUnit(me));
-      for (const key of reach.keys()) {
-        const [x, y] = key.split(',').map(Number) as [number, number];
-        const d = near({ x, y });
-        if (d < bestD - 0.01) {
-          bestD = d;
-          best = { x, y };
-        }
-      }
+      const best = this.stepToward(me, foes, reach);
       if (!best) break;
       this.click(this.cellOfUnit(me));
       this.click(best);
@@ -172,6 +162,29 @@ export class PointerBot extends Bot {
       done.push('ended the turn');
     }
     return `${me.name}: ${done.join(', ') || 'waited'}`;
+  }
+
+  /**
+   * Where to walk this turn to get nearer the closest enemy: along the shortest way round walls (not through them), as far as
+   * the action points allow. Null when no cell it can reach is any nearer.
+   */
+  private stepToward(me: Entity, foes: Entity[], reach: ReturnType<typeof moveRange>): Cell2 | null {
+    const map = this.game.sim.map;
+    const here = this.cellOfUnit(me);
+    if (!map) return null;
+    const others = new Set(unitsOf(this.game.ctx).filter((u) => u !== me).map((u) => `${this.cellOfUnit(u).x},${this.cellOfUnit(u).y}`));
+    let route: Cell2[] | null = null;
+    for (const foe of foes) {
+      const goal = this.cellOfUnit(foe);
+      const path = findPath(map, here, goal, { stepUp: 1.01, maxDrop: 3, maxNodes: 40000, blocked: (x, y) => others.has(`${x},${y}`) && !(x === goal.x && y === goal.y) });
+      if (path && (!route || path.length < route.length)) route = path;
+    }
+    if (!route) return null;
+    for (let i = route.length - 2; i >= 0; i--) {
+      const c = { x: Math.floor(route[i]!.x), y: Math.floor(route[i]!.y) };
+      if (reach.has(`${c.x},${c.y}`) && (c.x !== here.x || c.y !== here.y)) return c;
+    }
+    return null;
   }
 
   /** Play my side of a battle until it is won, a side loses, or time runs out. Enemies play themselves. */

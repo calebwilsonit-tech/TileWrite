@@ -572,7 +572,7 @@
       "repeat": 1,
       "conditions": [
         {
-          "type": "start",
+          "type": "sceneStart",
           "params": {},
           "negate": false
         }

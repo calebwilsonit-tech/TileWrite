@@ -296,7 +296,7 @@ export class EditorDoc {
         problems.push(`The prefab "${p.prefab}" does not exist, so nothing was placed for it.`);
         return;
       }
-      placed.push({ ...resolved, id: `gen${i + 1}`, tags: inst.tags });
+      placed.push({ ...resolved, id: `gen${i + 1}`, tags: [...new Set([...inst.tags, ...resolved.tags])] }); // the prefab's own tags come along (a monster stays on its side)
     });
     const moved = kept.map((e) => (e.tags.includes('player') && e.components.transform ? { ...e, components: { ...e.components, transform: { ...(e.components.transform as object), x: made.start.x + 0.5, y: made.start.y + 0.5, h: startH } } } : e));
     const newEntities = [...moved, ...placed];

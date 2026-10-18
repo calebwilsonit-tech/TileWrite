@@ -182,12 +182,15 @@ export function loadScene(sim: Simulation, scene: SceneData, opts: LoadOptions =
   sim.runtime.announce = [];
   sim.runtime.cutscene = null;
   sim.runtime.travel = null;
+  // "the scene starts" is true on the first step after this (the game's first step, a scene change, a new run)
+  sim.runtime.scratch.set('sceneStartTick', sim.tick);
   sim.runtime.view = newView();
   // a map made when the game starts: ground and walls from the rules, then the things the rules place
   const rules = scene.generator ? GeneratorSpecSchema.safeParse(scene.generator) : null;
   if (rules && !rules.success) problems.push('The scene\'s map generator settings are not valid, so the map was left as it is.');
   if (rules?.success && rules.data.atStart) {
     const spec = rules.data;
+    if (typeof sim.runtime.vars['run.count'] !== 'number') sim.runtime.vars['run.count'] = 0; // the first run, so a screen can say "Run 0"
     const raw = sim.runtime.vars['run.seed'];
     const seed = !spec.lockSeed && typeof raw === 'number' ? Math.abs(Math.floor(raw)) % 2 ** 31 : spec.seed;
     const made = generate(spec, seed);

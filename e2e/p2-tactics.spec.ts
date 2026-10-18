@@ -43,7 +43,7 @@ test('Phase 2 sample: tactics - a third enemy on a second hill, a victory flag, 
   await page.getByTestId(`param-${rowId}-a0-name`).press('Enter');
   await page.getByTestId(`param-${rowId}-a0-value`).fill('1');
   await page.getByTestId(`param-${rowId}-a0-value`).press('Enter');
-  expect(await page.evaluate(() => window.__store!.doc!.events.map((e) => e.conditions.map((c) => c.type)))).toEqual([['start'], ['battleWon']]);
+  expect(await page.evaluate(() => window.__store!.doc!.events.map((e) => e.conditions.map((c) => c.type)))).toEqual([['sceneStart'], ['battleWon']]);
   await expect(page.getByTestId('problem-count')).toHaveText('No problems');
 
   // ---- play by hand: click the knight, click a cell to walk to ----

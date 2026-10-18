@@ -15,6 +15,7 @@ import {
 import { DEFAULT_INPUT_MAP, type EventRow } from '@tilewright/runtime';
 import { store, useApp } from '../app/store';
 import { knownVariables } from '../app/known-variables';
+import { madeVariables } from '../model/story-vars';
 import { assistant } from '../assistant/store';
 import { CheckField, NumberField, SelectField, TextField } from './fields';
 import { SoundField } from './SoundField';
@@ -43,8 +44,15 @@ export function useFacts(): {
   const doc = store.doc;
   return useMemo(() => {
     const entities = (doc?.entities ?? []).map((e) => ({ id: e.id, name: e.name }));
-    const tags = [...new Set((doc?.entities ?? []).flatMap((e) => e.tags))].sort();
-    const vars = new Set<string>((doc?.variables ?? []).map((v) => v.name));
+    // tags of objects in the scene and of everything the prefabs bring (generated or built objects appear later)
+    const prefabTags: string[] = [];
+    const walkNode = (n: { tags: string[]; children: unknown[] }): void => {
+      prefabTags.push(...n.tags);
+      for (const c of n.children) walkNode(c as { tags: string[]; children: unknown[] });
+    };
+    for (const p of store.prefabs.values()) walkNode(p.root);
+    const tags = [...new Set([...(doc?.entities ?? []).flatMap((e) => e.tags), ...prefabTags])].sort();
+    const vars = new Set<string>([...(doc?.variables ?? []).map((v) => v.name), ...madeVariables(doc?.entities ?? [], store.prefabs.values(), store.tables)]);
     const walk = (rows: EventRow[]): void => {
       for (const r of rows) {
         for (const a of r.actions) if (a.type === 'setVariable' && typeof a.params.name === 'string' && a.params.name) vars.add(a.params.name);

@@ -4,7 +4,7 @@
 
 An event sheet is a list of rows, each reading like a sentence: **when** its conditions hold, **do** its actions. Rows can have sub-events that run only while the row holds. Objects are chosen as "the player", "anything tagged ...", or a particular object. See [logic.md](logic.md).
 
-There are 28 conditions and 48 actions.
+There are 29 conditions and 49 actions.
 
 ## Conditions
 
@@ -21,6 +21,12 @@ No parameters.
 #### The game starts
 
 Id: `start`.
+
+No parameters.
+
+#### The scene starts (also after travelling, and when a new run begins)
+
+Id: `sceneStart`.
 
 No parameters.
 
@@ -285,6 +291,16 @@ Id: `setVariable`.
 | Variable | `name` | variable | (empty) |  |
 | Do | `op` | select | "set" | `set`, `add`, `subtract`, `multiply`, `toggle` |
 | Value | `value` | text | "1" |  |
+
+#### Roll a random row of a table (loot, random events)
+
+Id: `rollTable`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Table | `table` | text | "Loot" |  |
+| Column that says how likely a row is (empty: all equally likely) | `weight` | text | "weight" |  |
+| Keep the row in variables starting with | `into` | text | "roll" |  |
 
 #### Add to (or take from) the lantern's light
 

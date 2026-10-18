@@ -31,6 +31,11 @@ export const isPlayerRequired = (): boolean => playerRequired;
  * Checks a scene for mistakes a designer can fix, in plain English.
  * (M3 covers the basics; M9 adds bypass and soft-lock detection.)
  */
+/** Tags of a prefab and of the parts it brings (objects made from it later carry them). */
+function prefabTags(n: { tags: string[]; children: unknown[] }): string[] {
+  return [...n.tags, ...n.children.flatMap((c) => prefabTags(c as { tags: string[]; children: unknown[] }))];
+}
+
 export function validateScene(doc: EditorDoc, sprites?: ReadonlySet<string>, prefabNames?: ReadonlySet<string>, storyVars?: ReadonlySet<string>, sounds?: ReadonlySet<string>): Problem[] {
   const out: Problem[] = [];
   const map = doc.map;
@@ -72,7 +77,10 @@ export function validateScene(doc: EditorDoc, sprites?: ReadonlySet<string>, pre
       out.push({ id: `outside-${e.id}`, severity: 'error', message: `"${e.name}" is outside the map.`, target: pos('entity', e.id, t) });
       continue;
     }
-    if (map.getTile(cx, cy) === EMPTY_TILE) {
+    // a controller or marker that has no body, no collision and no picture does not stand anywhere
+    const sprite = e.components.sprite as { visible?: boolean } | undefined;
+    const occupies = e.components.body !== undefined || e.components.collider !== undefined || (sprite !== undefined && sprite.visible !== false);
+    if (occupies && map.getTile(cx, cy) === EMPTY_TILE) {
       out.push({ id: `void-${e.id}`, severity: 'warning', message: `"${e.name}" is standing on empty space.`, target: pos('entity', e.id, t) });
     } else if (map.getFlags(cx, cy) & FLAG.PIT && map.getDeck(cx, cy) === 0 && e.components.body) {
       out.push({ id: `pit-${e.id}`, severity: 'warning', message: `"${e.name}" starts over a pit and will fall.`, target: pos('entity', e.id, t) });
@@ -295,7 +303,7 @@ export function validateScene(doc: EditorDoc, sprites?: ReadonlySet<string>, pre
 
   // the event sheet
   const names = { entity: (id: string): string | undefined => doc.getEntity(id)?.name };
-  for (const p of checkSheet(doc.events, { entityIds: new Set(doc.entities.map((e) => e.id)), tags: new Set(doc.entities.flatMap((e) => e.tags)), variables: new Set([...doc.variables.map((v) => v.name), ...doc.entities.map((e) => (e.components.pickup as { variable?: string } | undefined)?.variable ?? '').filter(Boolean)]), prefabs: prefabNames ?? new Set<string>(), ...(storyVars ? { storyVariables: storyVars } : {}), ...(sounds ? { sounds } : {}) }, names)) {
+  for (const p of checkSheet(doc.events, { entityIds: new Set(doc.entities.map((e) => e.id)), tags: new Set([...doc.entities.flatMap((e) => e.tags), ...[...doc.prefabs.values()].flatMap((p) => prefabTags(p.root))]), variables: new Set([...doc.variables.map((v) => v.name), ...doc.entities.map((e) => (e.components.pickup as { variable?: string } | undefined)?.variable ?? '').filter(Boolean)]), prefabs: prefabNames ?? new Set<string>(), ...(storyVars ? { storyVariables: storyVars } : {}), ...(sounds ? { sounds } : {}) }, names)) {
     out.push({ id: `events-${p.rowId}-${out.length}`, severity: 'warning', message: `Event sheet: ${p.text}` });
   }
   for (let y = 0; y < map.height; y++) {
