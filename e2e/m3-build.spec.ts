@@ -162,8 +162,14 @@ test('M3: build a small game with the editor tools (mouse and keyboard only), sa
   await page.getByTestId('btn-stop').click();
 
   // ---- walking into the pit makes you fall (and the game reports it instead of crashing) ----
-  const pit = await cellXY(page, 14, 20);
-  await page.mouse.move(pit.x, pit.y);
+  // the camera eases back after Stop: keep pointing until the pointer really is over the pit cell
+  await expect
+    .poll(async () => {
+      const pit = await cellXY(page, 14, 20);
+      await page.mouse.move(pit.x, pit.y);
+      return page.evaluate(() => JSON.stringify(window.__viewport!.hoverCell));
+    })
+    .toBe(JSON.stringify({ x: 14, y: 20 }));
   await page.keyboard.press('Control+Enter');
   await page.waitForFunction(() => window.__play !== undefined);
   await play(page, GRID_PLUS_Y, 60);

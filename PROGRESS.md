@@ -3,7 +3,44 @@
 Boxes are ticked only when the milestone's tests pass and the sample has been played.
 Spec: `ENGINE_BUILD_PROMPT.md`. Read `DECISIONS.md` and `KNOWN_ISSUES.md` before continuing.
 
-**Next up:** all seven acceptance criteria hold (see the final summary below), and every feature the spec listed is now built (see "After M14" below). What is left is what could not be run on this machine: the live Claude API, the CI jobs, the NSIS installer and listening to the sound. See KNOWN_ISSUES.md.
+**Next up:** phase 2 (the general-purpose engine) is finished: see the phase 2 summary below. The first build's seven acceptance criteria hold (see the final summary below), and every feature the spec listed is now built (see "After M14" below). What is left is what could not be run on this machine: the live Claude API, the CI jobs, the NSIS installer and listening to the sound. See KNOWN_ISSUES.md.
+
+## Phase 2 summary (2026-10-18): from one game's engine to a general isometric engine
+
+Spec: the second prompt (kept in the conversation; the plan is `docs/genre_audit.md`). Every step was committed small and green: 110 unit-test files with 1152 tests, typecheck and lint clean, and the full end-to-end run (2 workers, about 7 minutes) with 68 passing and 2 skipped on purpose (the live assistant test needs a key; the packaged-editor export test needs a packaged editor).
+
+### The "done when" list
+| Condition | Status | Evidence |
+| --- | --- | --- |
+| Genre audit committed; every item resolved or in KNOWN_ISSUES with a reason | holds | `docs/genre_audit.md` (section 6 says where each landed), KNOWN_ISSUES "Phase 2" |
+| An empty project has no gameplay assumptions | holds | `e2e/p2-packs.spec.ts`: no player, no packs, no problems, it plays |
+| The Storytender slice works through the pack, including a playbot run | holds | `e2e/m13-acceptance.spec.ts` and `e2e/slice-bot.ts` pass with the mechanics loaded as the Storytender pack |
+| Eight samples built through the editor UI only, played correctly, finished by the playbot | holds | `samples/` and `e2e/p2-*.spec.ts` (see `docs/samples.md`): tactics, colony, roguelike, tower defence, point and click, RTS, UI showcase, tiles and props (with the library and the hub). The UI showcase's bot navigates and presses its screens; the keyboard, mouse and gamepad paths are driven by Playwright |
+| Every feature documented with a recipe | holds | `docs/` (new: packs-and-plugins, data-and-blocks, time-and-turns, control-schemes, procedural-maps, simulation-helpers, logic, ui-designer, tile-studio, asset-library, asset-hub, HUB_HOSTING, samples) |
+| The assistant builds a small room in 3 genres from one sentence | holds against a mocked API | `e2e/p2-assistant.spec.ts` (tactics, builder, roguelike, point and click); the optional live test is unchanged and was not run (no key) |
+| All tests pass | holds | see above |
+| An exported program of at least two genre samples runs with no editor | holds | `e2e/p2-export-samples.spec.ts` (tactics and colony) |
+| 60 fps budget for the builder sample with 200 moving units | holds on this machine | `e2e/p2-perf.spec.ts`: 200 walking villagers, 60.2 frames a second, 95th percentile 16.8 ms; the logic costs under 1 ms a step (`packages/behaviors/src/perf.test.ts`) |
+| A phase summary in PROGRESS.md | this section |  |
+
+### What was built
+Packs and the plugin API (an empty project has nothing; the old game's mechanics are a pack); data tables, custom components, behaviours and events; one value language; a scene clock (real time, pause, 2x to 8x, turns) and a turn system; the mouse as game input with control schemes (click to move, hotspots, grid cursor, RTS box select with flow-field crowds, camera rig, builder with ghost footprints) and four isometric views; block stacks, chunked maps and procedural maps with seeds and new runs; simulation helpers (producers, calendar, waves, path followers, needs-driven villagers, automata); one logic system at three levels (Quick Actions, wires through nodes, a graph) with breakpoints and one-click fixes; the UI designer (screens, widgets, layout, styles, states, bindings, lists and grids, drag and drop, focus order, in-world UI); the tile studio, tall props with fading canopies, wall and floor attachments, structures; the personal library with `.twpack` files, versions, link or copy; genre templates; assistant tools for the new systems; `PointerBot`; the community Asset Hub as a self-hostable server with licences, a credits file for exported games, code packs held back for a moderator, reports and moderation; the eight samples.
+
+### What is weak
+- The hub has only run on this computer. Nothing was deployed, no domain bought, no account made: `docs/HUB_HOSTING.md` lists the owner's steps, and several cost money.
+- The samples are small and tuned so that the bot wins; the bot takes turns greedily and is not a general player. Item combining, worker orders and unit cards were not built (KNOWN_ISSUES "Genre coverage").
+- The live assistant, CI, the NSIS installer and audio by ear are still unverified (see KNOWN_ISSUES "Never run").
+- Frame rates were measured on one computer with a graphics card.
+- Some interface layouts are easy to get wrong (a grid whose width is "fit the contents"); the designer's check does not flag it.
+
+### Real bugs the samples found, all fixed in the engine
+Clicks and key taps shorter than a frame were lost; menus reacted only to the last step of a frame; villagers could not reach a solid building (and every failed search cost 6 ms); a tower's shots could not hurt enemies; objects made by the generator lost their prefab's tags; a new run did not restart its battle; producers' resources were reported as never set; clipping an animated tile dropped its frames and crashed the studio; the full list is in KNOWN_ISSUES.
+
+### What next
+1. Host a hub (the owner's steps) and see what real people do with it; add the moderator page.
+2. Give the samples real art with the tile studio and library, and a second, longer game in a genre that is not an adventure.
+3. Build what the audit listed but the samples do not use: item combining, worker orders, unit cards, a turn-order bar sample.
+4. Run the live assistant test with a key and watch the new genre tools.
 
 ## Final summary (2026-10-16)
 
