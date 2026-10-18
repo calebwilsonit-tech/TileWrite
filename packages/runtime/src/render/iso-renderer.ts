@@ -436,6 +436,12 @@ export class IsoRenderer {
     this.rebuildTiles();
   }
 
+  /** How see-through the canopy of a tall prop is right now (1 = solid, lower = faded because something stands behind it); null when it has no canopy. */
+  canopyAlpha(entityId: number): number | null {
+    const v = this.entityViews.get(entityId);
+    return v?.spr2 ? v.spr2.alpha : null;
+  }
+
   get view(): ViewRotation {
     return this.iso.view ?? 0;
   }

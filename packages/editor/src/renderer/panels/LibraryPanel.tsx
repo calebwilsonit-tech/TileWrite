@@ -4,6 +4,7 @@ import { buildBehaviourPack, buildSoundPack, buildSpritePack, buildStructurePack
 import { updatesAvailable } from '../library/links';
 import { PACK_KIND_LABELS, describePack, type Pack, type PackKind, type Resolution } from '../library/pack';
 import { addFromLibrary, currentSource, exportItem, importPackFile, openLibrary, previewClashes, readLinks, saveToLibrary, updateLinked } from '../library/session';
+import { useLibraryTick } from '../library/changes';
 import { allTags, searchItems, type Library, type LibraryItem } from '../library/store';
 import { ownTiles } from '../project/tiles';
 import { studio, useStudio } from '../studio/store';
@@ -23,6 +24,9 @@ export function LibraryPanel() {
   const [adding, setAdding] = useState<string | null>(null);
   const [newFolder, setNewFolder] = useState('');
   const [updates, setUpdates] = useState(0);
+  const tick = useLibraryTick();
+  /** Counts reloads from disk: the library object stays the same, so the list is rebuilt when this changes. */
+  const [loaded, setLoaded] = useState(0);
   const refresh = (): void => setVersion((v) => v + 1);
 
   useEffect(() => {
@@ -30,7 +34,10 @@ export function LibraryPanel() {
     void (async () => {
       try {
         const l = await openLibrary();
-        if (alive) setLib(l);
+        if (alive) {
+          setLib(l);
+          setLoaded((n) => n + 1);
+        }
         if (project && alive) setUpdates(updatesAvailable(await readLinks(project.dir), l.index.items).length);
       } catch (e) {
         store.notify('error', (e as Error).message);
@@ -39,7 +46,7 @@ export function LibraryPanel() {
     return () => {
       alive = false;
     };
-  }, [version, project]);
+  }, [version, project, tick]);
 
   const guard = async (what: string, fn: () => Promise<void>): Promise<void> => {
     try {
@@ -50,7 +57,7 @@ export function LibraryPanel() {
     }
   };
 
-  const items = useMemo(() => (lib ? searchItems(lib.index.items, { text, kind, tag, folder }) : []), [lib, text, kind, tag, folder, version]);
+  const items = useMemo(() => (lib ? searchItems(lib.index.items, { text, kind, tag, folder }) : []), [lib, text, kind, tag, folder, version, loaded]);
   if (!lib) return <div className="panel" data-testid="library-panel" />;
 
   return (

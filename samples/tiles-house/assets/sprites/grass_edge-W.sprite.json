@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "name": "grass_edge-W",
+  "width": 64,
+  "height": 32,
+  "palette": [
+    "#00000000",
+    "#e5df9eff",
+    "#dedc9aff",
+    "#d7d996ff",
+    "#d0d693ff",
+    "#cad48fff",
+    "#c3d18bff",
+    "#bcce87ff",
+    "#b6cb83ff",
+    "#afc87fff",
+    "#6fae5bff"
+  ],
+  "layers": [
+    {
+      "id": "l1",
+      "name": "Layer 1",
+      "visible": true
+    }
+  ],
+  "frames": [
+    {"duration":100,"cels":{"l1":"31x0 1x1 1x2 60x0 1x1 1x2 1x3 1x4 1x5 1x6 56x0 1x1 1x2 1x3 1x4 1x5 1x6 1x7 1x8 1x9 1x10 52x0 1x1 1x2 1x3 1x4 1x5 1x6 1x7 1x8 1x9 5x10 48x0 1x1 1x2 1x3 1x4 1x5 1x6 1x7 1x8 1x9 9x10 44x0 1x1 1x2 1x3 1x4 1x5 1x6 1x7 1x8 1x9 13x10 40x0 1x1 1x2 1x3 1x4 1x5 1x6 1x7 1x8 1x9 17x10 36x0 1x1 1x2 1x3 1x4 1x5 1x6 1x7 1x8 1x9 21x10 32x0 1x1 1x2 1x3 1x4 1x5 1x6 1x7 1x8 1x9 25x10 28x0 1x1 1x2 1x3 1x4 1x5 1x6 1x7 1x8 1x9 29x10 24x0 1x1 1x2 1x3 1x4 1x5 1x6 1x7 1x8 1x9 33x10 20x0 1x1 1x2 1x3 1x4 1x5 1x6 1x7 1x8 1x9 37x10 16x0 1x1 1x2 1x3 1x4 1x5 1x6 1x7 1x8 1x9 41x10 12x0 1x1 1x2 1x3 1x4 1x5 1x6 1x7 1x8 1x9 45x10 8x0 1x1 1x2 1x3 1x4 1x5 1x6 1x7 1x8 1x9 49x10 4x0 1x1 1x2 1x3 1x4 1x5 1x6 1x7 1x8 1x9 53x10 2x0 1x3 1x4 1x5 1x6 1x7 1x8 1x9 55x10 4x0 1x7 1x8 1x9 55x10 8x0 54x10 12x0 50x10 16x0 46x10 20x0 42x10 24x0 38x10 28x0 34x10 32x0 30x10 36x0 26x10 40x0 22x10 44x0 18x10 48x0 14x10 52x0 10x10 56x0 6x10 60x0 2x10 31x0"},"boxes":[]}
+  ],
+  "origin": {
+    "x": 32,
+    "y": 16
+  },
+  "clips": [],
+  "procedural": null,
+  "meta": {
+    "kind": "tile",
+    "preset": "flat",
+    "footprint": {
+      "w": 1,
+      "d": 1
+    },
+    "heightCells": 0,
+    "collision": null,
+    "fade": null,
+    "sortOffset": 0,
+    "sway": false,
+    "variants": [],
+    "face": "wall",
+    "otherSide": "",
+    "light": 0,
+    "tags": [
+      "autotile:grass"
+    ]
+  }
+}

@@ -890,6 +890,7 @@ export class SpriteDoc {
     const fresh = SpriteDoc.fromSprite(sprite);
     this.mutate(label, () => {
       this.s = cloneState(fresh.s);
+      this.frame = Math.min(this.frame, this.s.frames.length - 1); // the new picture may have fewer frames
     });
   }
 }

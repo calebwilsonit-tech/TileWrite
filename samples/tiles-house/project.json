@@ -1,0 +1,812 @@
+{
+  "schemaVersion": 1,
+  "name": "The House",
+  "iso": {
+    "tileW": 64,
+    "tileH": 32,
+    "heightPx": 16
+  },
+  "tileset": [
+    {
+      "id": 1,
+      "name": "grass",
+      "top": 7319131,
+      "left": 5212739,
+      "right": 4158006
+    },
+    {
+      "id": 2,
+      "name": "stone",
+      "top": 10725299,
+      "left": 8422543,
+      "right": 6711925
+    },
+    {
+      "id": 3,
+      "name": "sand",
+      "top": 14930062,
+      "left": 12890996,
+      "right": 11049055
+    },
+    {
+      "id": 4,
+      "name": "water",
+      "top": 4886745,
+      "left": 3831476,
+      "right": 3104913
+    },
+    {
+      "id": 5,
+      "name": "brick",
+      "top": 11887946,
+      "left": 9654073,
+      "right": 7880750,
+      "wall": true
+    },
+    {
+      "id": 6,
+      "name": "wood",
+      "top": 10251071,
+      "left": 8213810,
+      "right": 6505255
+    },
+    {
+      "id": 7,
+      "name": "Meadow grass",
+      "top": 7319131,
+      "left": 5736519,
+      "right": 4417591,
+      "art": "grass"
+    },
+    {
+      "id": 8,
+      "name": "grass edge-NESW",
+      "top": 7319131,
+      "left": 5736519,
+      "right": 4417591,
+      "group": 7,
+      "art": "grass_edge-NESW"
+    },
+    {
+      "id": 9,
+      "name": "grass edge-ESW",
+      "top": 7319131,
+      "left": 5736519,
+      "right": 4417591,
+      "group": 7,
+      "art": "grass_edge-ESW"
+    },
+    {
+      "id": 10,
+      "name": "grass edge-NSW",
+      "top": 7319131,
+      "left": 5736519,
+      "right": 4417591,
+      "group": 7,
+      "art": "grass_edge-NSW"
+    },
+    {
+      "id": 11,
+      "name": "grass edge-SW+inner-NE",
+      "top": 7319131,
+      "left": 5736519,
+      "right": 4417591,
+      "group": 7,
+      "art": "grass_edge-SW_inner-NE"
+    },
+    {
+      "id": 12,
+      "name": "grass edge-SW",
+      "top": 7319131,
+      "left": 5736519,
+      "right": 4417591,
+      "group": 7,
+      "art": "grass_edge-SW"
+    },
+    {
+      "id": 13,
+      "name": "grass edge-NEW",
+      "top": 7319131,
+      "left": 5736519,
+      "right": 4417591,
+      "group": 7,
+      "art": "grass_edge-NEW"
+    },
+    {
+      "id": 14,
+      "name": "grass edge-EW",
+      "top": 7319131,
+      "left": 5736519,
+      "right": 4417591,
+      "group": 7,
+      "art": "grass_edge-EW"
+    },
+    {
+      "id": 15,
+      "name": "grass edge-NW+inner-SE",
+      "top": 7319131,
+      "left": 5736519,
+      "right": 4417591,
+      "group": 7,
+      "art": "grass_edge-NW_inner-SE"
+    },
+    {
+      "id": 16,
+      "name": "grass edge-W+inner-NE-SE",
+      "top": 7319131,
+      "left": 5736519,
+      "right": 4417591,
+      "group": 7,
+      "art": "grass_edge-W_inner-NE-SE"
+    },
+    {
+      "id": 17,
+      "name": "grass edge-W+inner-SE",
+      "top": 7319131,
+      "left": 5736519,
+      "right": 4417591,
+      "group": 7,
+      "art": "grass_edge-W_inner-SE"
+    },
+    {
+      "id": 18,
+      "name": "grass edge-NW",
+      "top": 7319131,
+      "left": 5736519,
+      "right": 4417591,
+      "group": 7,
+      "art": "grass_edge-NW"
+    },
+    {
+      "id": 19,
+      "name": "grass edge-W+inner-NE",
+      "top": 7319131,
+      "left": 5736519,
+      "right": 4417591,
+      "group": 7,
+      "art": "grass_edge-W_inner-NE"
+    },
+    {
+      "id": 20,
+      "name": "grass edge-W",
+      "top": 7319131,
+      "left": 5736519,
+      "right": 4417591,
+      "group": 7,
+      "art": "grass_edge-W"
+    },
+    {
+      "id": 21,
+      "name": "grass edge-NES",
+      "top": 7319131,
+      "left": 5736519,
+      "right": 4417591,
+      "group": 7,
+      "art": "grass_edge-NES"
+    },
+    {
+      "id": 22,
+      "name": "grass edge-ES+inner-NW",
+      "top": 7319131,
+      "left": 5736519,
+      "right": 4417591,
+      "group": 7,
+      "art": "grass_edge-ES_inner-NW"
+    },
+    {
+      "id": 23,
+      "name": "grass edge-NS",
+      "top": 7319131,
+      "left": 5736519,
+      "right": 4417591,
+      "group": 7,
+      "art": "grass_edge-NS"
+    },
+    {
+      "id": 24,
+      "name": "grass edge-S+inner-NE-NW",
+      "top": 7319131,
+      "left": 5736519,
+      "right": 4417591,
+      "group": 7,
+      "art": "grass_edge-S_inner-NE-NW"
+    },
+    {
+      "id": 25,
+      "name": "grass edge-S+inner-NW",
+      "top": 7319131,
+      "left": 5736519,
+      "right": 4417591,
+      "group": 7,
+      "art": "grass_edge-S_inner-NW"
+    },
+    {
+      "id": 26,
+      "name": "grass edge-NE+inner-SW",
+      "top": 7319131,
+      "left": 5736519,
+      "right": 4417591,
+      "group": 7,
+      "art": "grass_edge-NE_inner-SW"
+    },
+    {
+      "id": 27,
+      "name": "grass edge-E+inner-SW-NW",
+      "top": 7319131,
+      "left": 5736519,
+      "right": 4417591,
+      "group": 7,
+      "art": "grass_edge-E_inner-SW-NW"
+    },
+    {
+      "id": 28,
+      "name": "grass edge-N+inner-SE-SW",
+      "top": 7319131,
+      "left": 5736519,
+      "right": 4417591,
+      "group": 7,
+      "art": "grass_edge-N_inner-SE-SW"
+    },
+    {
+      "id": 29,
+      "name": "grass inner-NE-SE-SW-NW",
+      "top": 7319131,
+      "left": 5736519,
+      "right": 4417591,
+      "group": 7,
+      "art": "grass_inner-NE-SE-SW-NW"
+    },
+    {
+      "id": 30,
+      "name": "grass inner-SE-SW-NW",
+      "top": 7319131,
+      "left": 5736519,
+      "right": 4417591,
+      "group": 7,
+      "art": "grass_inner-SE-SW-NW"
+    },
+    {
+      "id": 31,
+      "name": "grass edge-N+inner-SW",
+      "top": 7319131,
+      "left": 5736519,
+      "right": 4417591,
+      "group": 7,
+      "art": "grass_edge-N_inner-SW"
+    },
+    {
+      "id": 32,
+      "name": "grass inner-NE-SW-NW",
+      "top": 7319131,
+      "left": 5736519,
+      "right": 4417591,
+      "group": 7,
+      "art": "grass_inner-NE-SW-NW"
+    },
+    {
+      "id": 33,
+      "name": "grass inner-SW-NW",
+      "top": 7319131,
+      "left": 5736519,
+      "right": 4417591,
+      "group": 7,
+      "art": "grass_inner-SW-NW"
+    },
+    {
+      "id": 34,
+      "name": "grass edge-NE",
+      "top": 7319131,
+      "left": 5736519,
+      "right": 4417591,
+      "group": 7,
+      "art": "grass_edge-NE"
+    },
+    {
+      "id": 35,
+      "name": "grass edge-E+inner-NW",
+      "top": 7319131,
+      "left": 5736519,
+      "right": 4417591,
+      "group": 7,
+      "art": "grass_edge-E_inner-NW"
+    },
+    {
+      "id": 36,
+      "name": "grass edge-N+inner-SE",
+      "top": 7319131,
+      "left": 5736519,
+      "right": 4417591,
+      "group": 7,
+      "art": "grass_edge-N_inner-SE"
+    },
+    {
+      "id": 37,
+      "name": "grass inner-NE-SE-NW",
+      "top": 7319131,
+      "left": 5736519,
+      "right": 4417591,
+      "group": 7,
+      "art": "grass_inner-NE-SE-NW"
+    },
+    {
+      "id": 38,
+      "name": "grass inner-SE-NW",
+      "top": 7319131,
+      "left": 5736519,
+      "right": 4417591,
+      "group": 7,
+      "art": "grass_inner-SE-NW"
+    },
+    {
+      "id": 39,
+      "name": "grass edge-N",
+      "top": 7319131,
+      "left": 5736519,
+      "right": 4417591,
+      "group": 7,
+      "art": "grass_edge-N"
+    },
+    {
+      "id": 40,
+      "name": "grass inner-NE-NW",
+      "top": 7319131,
+      "left": 5736519,
+      "right": 4417591,
+      "group": 7,
+      "art": "grass_inner-NE-NW"
+    },
+    {
+      "id": 41,
+      "name": "grass inner-NW",
+      "top": 7319131,
+      "left": 5736519,
+      "right": 4417591,
+      "group": 7,
+      "art": "grass_inner-NW"
+    },
+    {
+      "id": 42,
+      "name": "grass edge-ES",
+      "top": 7319131,
+      "left": 5736519,
+      "right": 4417591,
+      "group": 7,
+      "art": "grass_edge-ES"
+    },
+    {
+      "id": 43,
+      "name": "grass edge-S+inner-NE",
+      "top": 7319131,
+      "left": 5736519,
+      "right": 4417591,
+      "group": 7,
+      "art": "grass_edge-S_inner-NE"
+    },
+    {
+      "id": 44,
+      "name": "grass edge-S",
+      "top": 7319131,
+      "left": 5736519,
+      "right": 4417591,
+      "group": 7,
+      "art": "grass_edge-S"
+    },
+    {
+      "id": 45,
+      "name": "grass edge-E+inner-SW",
+      "top": 7319131,
+      "left": 5736519,
+      "right": 4417591,
+      "group": 7,
+      "art": "grass_edge-E_inner-SW"
+    },
+    {
+      "id": 46,
+      "name": "grass inner-NE-SE-SW",
+      "top": 7319131,
+      "left": 5736519,
+      "right": 4417591,
+      "group": 7,
+      "art": "grass_inner-NE-SE-SW"
+    },
+    {
+      "id": 47,
+      "name": "grass inner-SE-SW",
+      "top": 7319131,
+      "left": 5736519,
+      "right": 4417591,
+      "group": 7,
+      "art": "grass_inner-SE-SW"
+    },
+    {
+      "id": 48,
+      "name": "grass inner-NE-SW",
+      "top": 7319131,
+      "left": 5736519,
+      "right": 4417591,
+      "group": 7,
+      "art": "grass_inner-NE-SW"
+    },
+    {
+      "id": 49,
+      "name": "grass inner-SW",
+      "top": 7319131,
+      "left": 5736519,
+      "right": 4417591,
+      "group": 7,
+      "art": "grass_inner-SW"
+    },
+    {
+      "id": 50,
+      "name": "grass edge-E",
+      "top": 7319131,
+      "left": 5736519,
+      "right": 4417591,
+      "group": 7,
+      "art": "grass_edge-E"
+    },
+    {
+      "id": 51,
+      "name": "grass inner-NE-SE",
+      "top": 7319131,
+      "left": 5736519,
+      "right": 4417591,
+      "group": 7,
+      "art": "grass_inner-NE-SE"
+    },
+    {
+      "id": 52,
+      "name": "grass inner-SE",
+      "top": 7319131,
+      "left": 5736519,
+      "right": 4417591,
+      "group": 7,
+      "art": "grass_inner-SE"
+    },
+    {
+      "id": 53,
+      "name": "grass inner-NE",
+      "top": 7319131,
+      "left": 5736519,
+      "right": 4417591,
+      "group": 7,
+      "art": "grass_inner-NE"
+    }
+  ],
+  "autotile": [
+    {
+      "id": "grass-edge-NESW-8",
+      "name": "grass: Edge NESW",
+      "base": 7,
+      "pattern": "0*0*0*0*",
+      "result": 8
+    },
+    {
+      "id": "grass-edge-ESW-9",
+      "name": "grass: Edge ESW",
+      "base": 7,
+      "pattern": "1*0*0*0*",
+      "result": 9
+    },
+    {
+      "id": "grass-edge-NSW-10",
+      "name": "grass: Edge NSW",
+      "base": 7,
+      "pattern": "0*1*0*0*",
+      "result": 10
+    },
+    {
+      "id": "grass-edge-SW+inner-NE-11",
+      "name": "grass: Edge SW with inner corner NE",
+      "base": 7,
+      "pattern": "101*0*0*",
+      "result": 11
+    },
+    {
+      "id": "grass-edge-SW-12",
+      "name": "grass: Edge SW",
+      "base": 7,
+      "pattern": "111*0*0*",
+      "result": 12
+    },
+    {
+      "id": "grass-edge-NEW-13",
+      "name": "grass: Edge NEW",
+      "base": 7,
+      "pattern": "0*0*1*0*",
+      "result": 13
+    },
+    {
+      "id": "grass-edge-EW-14",
+      "name": "grass: Edge EW",
+      "base": 7,
+      "pattern": "1*0*1*0*",
+      "result": 14
+    },
+    {
+      "id": "grass-edge-NW+inner-SE-15",
+      "name": "grass: Edge NW with inner corner SE",
+      "base": 7,
+      "pattern": "0*101*0*",
+      "result": 15
+    },
+    {
+      "id": "grass-edge-W+inner-NE-SE-16",
+      "name": "grass: Edge W with inner corner NE, SE",
+      "base": 7,
+      "pattern": "10101*0*",
+      "result": 16
+    },
+    {
+      "id": "grass-edge-W+inner-SE-17",
+      "name": "grass: Edge W with inner corner SE",
+      "base": 7,
+      "pattern": "11101*0*",
+      "result": 17
+    },
+    {
+      "id": "grass-edge-NW-18",
+      "name": "grass: Edge NW",
+      "base": 7,
+      "pattern": "0*111*0*",
+      "result": 18
+    },
+    {
+      "id": "grass-edge-W+inner-NE-19",
+      "name": "grass: Edge W with inner corner NE",
+      "base": 7,
+      "pattern": "10111*0*",
+      "result": 19
+    },
+    {
+      "id": "grass-edge-W-20",
+      "name": "grass: Edge W",
+      "base": 7,
+      "pattern": "11111*0*",
+      "result": 20
+    },
+    {
+      "id": "grass-edge-NES-21",
+      "name": "grass: Edge NES",
+      "base": 7,
+      "pattern": "0*0*0*1*",
+      "result": 21
+    },
+    {
+      "id": "grass-edge-ES+inner-NW-22",
+      "name": "grass: Edge ES with inner corner NW",
+      "base": 7,
+      "pattern": "1*0*0*10",
+      "result": 22
+    },
+    {
+      "id": "grass-edge-NS-23",
+      "name": "grass: Edge NS",
+      "base": 7,
+      "pattern": "0*1*0*1*",
+      "result": 23
+    },
+    {
+      "id": "grass-edge-S+inner-NE-NW-24",
+      "name": "grass: Edge S with inner corner NE, NW",
+      "base": 7,
+      "pattern": "101*0*10",
+      "result": 24
+    },
+    {
+      "id": "grass-edge-S+inner-NW-25",
+      "name": "grass: Edge S with inner corner NW",
+      "base": 7,
+      "pattern": "111*0*10",
+      "result": 25
+    },
+    {
+      "id": "grass-edge-NE+inner-SW-26",
+      "name": "grass: Edge NE with inner corner SW",
+      "base": 7,
+      "pattern": "0*0*101*",
+      "result": 26
+    },
+    {
+      "id": "grass-edge-E+inner-SW-NW-27",
+      "name": "grass: Edge E with inner corner SW, NW",
+      "base": 7,
+      "pattern": "1*0*1010",
+      "result": 27
+    },
+    {
+      "id": "grass-edge-N+inner-SE-SW-28",
+      "name": "grass: Edge N with inner corner SE, SW",
+      "base": 7,
+      "pattern": "0*10101*",
+      "result": 28
+    },
+    {
+      "id": "grass-inner-NE-SE-SW-NW-29",
+      "name": "grass: inner corner NE, SE, SW, NW",
+      "base": 7,
+      "pattern": "10101010",
+      "result": 29
+    },
+    {
+      "id": "grass-inner-SE-SW-NW-30",
+      "name": "grass: inner corner SE, SW, NW",
+      "base": 7,
+      "pattern": "11101010",
+      "result": 30
+    },
+    {
+      "id": "grass-edge-N+inner-SW-31",
+      "name": "grass: Edge N with inner corner SW",
+      "base": 7,
+      "pattern": "0*11101*",
+      "result": 31
+    },
+    {
+      "id": "grass-inner-NE-SW-NW-32",
+      "name": "grass: inner corner NE, SW, NW",
+      "base": 7,
+      "pattern": "10111010",
+      "result": 32
+    },
+    {
+      "id": "grass-inner-SW-NW-33",
+      "name": "grass: inner corner SW, NW",
+      "base": 7,
+      "pattern": "11111010",
+      "result": 33
+    },
+    {
+      "id": "grass-edge-NE-34",
+      "name": "grass: Edge NE",
+      "base": 7,
+      "pattern": "0*0*111*",
+      "result": 34
+    },
+    {
+      "id": "grass-edge-E+inner-NW-35",
+      "name": "grass: Edge E with inner corner NW",
+      "base": 7,
+      "pattern": "1*0*1110",
+      "result": 35
+    },
+    {
+      "id": "grass-edge-N+inner-SE-36",
+      "name": "grass: Edge N with inner corner SE",
+      "base": 7,
+      "pattern": "0*10111*",
+      "result": 36
+    },
+    {
+      "id": "grass-inner-NE-SE-NW-37",
+      "name": "grass: inner corner NE, SE, NW",
+      "base": 7,
+      "pattern": "10101110",
+      "result": 37
+    },
+    {
+      "id": "grass-inner-SE-NW-38",
+      "name": "grass: inner corner SE, NW",
+      "base": 7,
+      "pattern": "11101110",
+      "result": 38
+    },
+    {
+      "id": "grass-edge-N-39",
+      "name": "grass: Edge N",
+      "base": 7,
+      "pattern": "0*11111*",
+      "result": 39
+    },
+    {
+      "id": "grass-inner-NE-NW-40",
+      "name": "grass: inner corner NE, NW",
+      "base": 7,
+      "pattern": "10111110",
+      "result": 40
+    },
+    {
+      "id": "grass-inner-NW-41",
+      "name": "grass: inner corner NW",
+      "base": 7,
+      "pattern": "11111110",
+      "result": 41
+    },
+    {
+      "id": "grass-edge-ES-42",
+      "name": "grass: Edge ES",
+      "base": 7,
+      "pattern": "1*0*0*11",
+      "result": 42
+    },
+    {
+      "id": "grass-edge-S+inner-NE-43",
+      "name": "grass: Edge S with inner corner NE",
+      "base": 7,
+      "pattern": "101*0*11",
+      "result": 43
+    },
+    {
+      "id": "grass-edge-S-44",
+      "name": "grass: Edge S",
+      "base": 7,
+      "pattern": "111*0*11",
+      "result": 44
+    },
+    {
+      "id": "grass-edge-E+inner-SW-45",
+      "name": "grass: Edge E with inner corner SW",
+      "base": 7,
+      "pattern": "1*0*1011",
+      "result": 45
+    },
+    {
+      "id": "grass-inner-NE-SE-SW-46",
+      "name": "grass: inner corner NE, SE, SW",
+      "base": 7,
+      "pattern": "10101011",
+      "result": 46
+    },
+    {
+      "id": "grass-inner-SE-SW-47",
+      "name": "grass: inner corner SE, SW",
+      "base": 7,
+      "pattern": "11101011",
+      "result": 47
+    },
+    {
+      "id": "grass-inner-NE-SW-48",
+      "name": "grass: inner corner NE, SW",
+      "base": 7,
+      "pattern": "10111011",
+      "result": 48
+    },
+    {
+      "id": "grass-inner-SW-49",
+      "name": "grass: inner corner SW",
+      "base": 7,
+      "pattern": "11111011",
+      "result": 49
+    },
+    {
+      "id": "grass-edge-E-50",
+      "name": "grass: Edge E",
+      "base": 7,
+      "pattern": "1*0*1111",
+      "result": 50
+    },
+    {
+      "id": "grass-inner-NE-SE-51",
+      "name": "grass: inner corner NE, SE",
+      "base": 7,
+      "pattern": "10101111",
+      "result": 51
+    },
+    {
+      "id": "grass-inner-SE-52",
+      "name": "grass: inner corner SE",
+      "base": 7,
+      "pattern": "11101111",
+      "result": 52
+    },
+    {
+      "id": "grass-inner-NE-53",
+      "name": "grass: inner corner NE",
+      "base": 7,
+      "pattern": "10111111",
+      "result": 53
+    }
+  ],
+  "scenes": [
+    "scenes/main.scene.json"
+  ],
+  "startScene": "scenes/main.scene.json",
+  "packs": [
+    "combat",
+    "inventory",
+    "story",
+    "ai",
+    "lighting",
+    "storytender"
+  ]
+}

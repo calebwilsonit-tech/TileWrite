@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "name": "window_right",
+  "width": 32,
+  "height": 32,
+  "palette": [
+    "#00000000",
+    "#4a90d9ff"
+  ],
+  "layers": [
+    {
+      "id": "l1",
+      "name": "Layer 1",
+      "visible": true
+    }
+  ],
+  "frames": [
+    {"duration":100,"cels":{"l1":"1024x1"},"boxes":[]}
+  ],
+  "origin": {
+    "x": 16,
+    "y": 16
+  },
+  "clips": [],
+  "procedural": null,
+  "meta": {
+    "kind": "attachment",
+    "preset": "attach-right",
+    "footprint": {
+      "w": 0.5,
+      "d": 0.5
+    },
+    "heightCells": 1,
+    "collision": null,
+    "fade": null,
+    "sortOffset": 0,
+    "sway": false,
+    "variants": [],
+    "face": "wall",
+    "otherSide": "window",
+    "light": 0,
+    "tags": []
+  }
+}

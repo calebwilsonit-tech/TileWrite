@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "name": "grass_edge-EW",
+  "width": 64,
+  "height": 32,
+  "palette": [
+    "#00000000",
+    "#e5df9eff",
+    "#dedc9aff",
+    "#d7d996ff",
+    "#d0d693ff",
+    "#cad48fff",
+    "#c3d18bff",
+    "#bcce87ff",
+    "#b6cb83ff",
+    "#afc87fff",
+    "#6fae5bff"
+  ],
+  "layers": [
+    {
+      "id": "l1",
+      "name": "Layer 1",
+      "visible": true
+    }
+  ],
+  "frames": [
+    {"duration":100,"cels":{"l1":"31x0 1x1 1x2 60x0 1x1 1x2 1x3 1x4 1x5 1x6 56x0 1x1 1x2 1x3 1x4 1x5 1x6 1x7 1x8 1x9 1x10 52x0 1x1 1x2 1x3 1x4 1x5 1x6 1x7 1x8 1x9 5x10 48x0 1x1 1x2 1x3 1x4 1x5 1x6 1x7 1x8 1x9 9x10 44x0 1x1 1x2 1x3 1x4 1x5 1x6 1x7 1x8 1x9 13x10 40x0 1x1 1x2 1x3 1x4 1x5 1x6 1x7 1x8 1x9 17x10 36x0 1x1 1x2 1x3 1x4 1x5 1x6 1x7 1x8 1x9 21x10 32x0 1x1 1x2 1x3 1x4 1x5 1x6 1x7 1x8 1x9 25x10 28x0 1x1 1x2 1x3 1x4 1x5 1x6 1x7 1x8 1x9 29x10 24x0 1x1 1x2 1x3 1x4 1x5 1x6 1x7 1x8 1x9 33x10 20x0 1x1 1x2 1x3 1x4 1x5 1x6 1x7 1x8 1x9 37x10 16x0 1x1 1x2 1x3 1x4 1x5 1x6 1x7 1x8 1x9 41x10 12x0 1x1 1x2 1x3 1x4 1x5 1x6 1x7 1x8 1x9 45x10 8x0 1x1 1x2 1x3 1x4 1x5 1x6 1x7 1x8 1x9 46x10 1x9 1x8 1x7 4x0 1x1 1x2 1x3 1x4 1x5 1x6 1x7 1x8 1x9 46x10 1x9 1x8 1x7 1x6 1x5 1x4 1x3 2x0 1x3 1x4 1x5 1x6 1x7 1x8 1x9 46x10 1x9 1x8 1x7 1x6 1x5 1x4 1x3 1x2 1x1 4x0 1x7 1x8 1x9 46x10 1x9 1x8 1x7 1x6 1x5 1x4 1x3 1x2 1x1 8x0 45x10 1x9 1x8 1x7 1x6 1x5 1x4 1x3 1x2 1x1 12x0 41x10 1x9 1x8 1x7 1x6 1x5 1x4 1x3 1x2 1x1 16x0 37x10 1x9 1x8 1x7 1x6 1x5 1x4 1x3 1x2 1x1 20x0 33x10 1x9 1x8 1x7 1x6 1x5 1x4 1x3 1x2 1x1 24x0 29x10 1x9 1x8 1x7 1x6 1x5 1x4 1x3 1x2 1x1 28x0 25x10 1x9 1x8 1x7 1x6 1x5 1x4 1x3 1x2 1x1 32x0 21x10 1x9 1x8 1x7 1x6 1x5 1x4 1x3 1x2 1x1 36x0 17x10 1x9 1x8 1x7 1x6 1x5 1x4 1x3 1x2 1x1 40x0 13x10 1x9 1x8 1x7 1x6 1x5 1x4 1x3 1x2 1x1 44x0 9x10 1x9 1x8 1x7 1x6 1x5 1x4 1x3 1x2 1x1 48x0 5x10 1x9 1x8 1x7 1x6 1x5 1x4 1x3 1x2 1x1 52x0 1x10 1x9 1x8 1x7 1x6 1x5 1x4 1x3 1x2 1x1 56x0 1x6 1x5 1x4 1x3 1x2 1x1 60x0 1x2 1x1 31x0"},"boxes":[]}
+  ],
+  "origin": {
+    "x": 32,
+    "y": 16
+  },
+  "clips": [],
+  "procedural": null,
+  "meta": {
+    "kind": "tile",
+    "preset": "flat",
+    "footprint": {
+      "w": 1,
+      "d": 1
+    },
+    "heightCells": 0,
+    "collision": null,
+    "fade": null,
+    "sortOffset": 0,
+    "sway": false,
+    "variants": [],
+    "face": "wall",
+    "otherSide": "",
+    "light": 0,
+    "tags": [
+      "autotile:grass"
+    ]
+  }
+}

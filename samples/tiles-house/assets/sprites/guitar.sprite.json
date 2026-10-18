@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "name": "guitar",
+  "width": 32,
+  "height": 32,
+  "palette": [
+    "#00000000",
+    "#000000ff",
+    "#ffffffff",
+    "#e8553dff",
+    "#f4a259ff",
+    "#f6d55cff",
+    "#6fae5bff",
+    "#2f6f4eff",
+    "#4a90d9ff",
+    "#2b4c7eff",
+    "#8e7cc3ff",
+    "#c9964aff",
+    "#7b5a3aff",
+    "#a3a7b3ff",
+    "#5c6070ff",
+    "#2a2d38ff"
+  ],
+  "layers": [
+    {
+      "id": "l1",
+      "name": "Layer 1",
+      "visible": true
+    }
+  ],
+  "frames": [
+    {"duration":200,"cels":{"l1":"1024x7"},"boxes":[]}
+  ],
+  "origin": {
+    "x": 16,
+    "y": 16
+  },
+  "clips": [],
+  "procedural": null,
+  "meta": {
+    "kind": "attachment",
+    "preset": "attach-left",
+    "footprint": {
+      "w": 0.5,
+      "d": 0.5
+    },
+    "heightCells": 1,
+    "collision": null,
+    "fade": null,
+    "sortOffset": 0,
+    "sway": false,
+    "variants": [],
+    "face": "wall",
+    "otherSide": "",
+    "light": 0,
+    "tags": []
+  }
+}

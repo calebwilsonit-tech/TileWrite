@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "name": "grass_inner-NE-SE",
+  "width": 64,
+  "height": 32,
+  "palette": [
+    "#00000000",
+    "#6fae5bff",
+    "#adc87fff",
+    "#b2ca81ff",
+    "#b7cc84ff",
+    "#bcce87ff",
+    "#adc87eff",
+    "#b8cc85ff",
+    "#bdce88ff",
+    "#c3d18bff",
+    "#c8d38eff",
+    "#cdd590ff",
+    "#afc980ff",
+    "#b5cb83ff",
+    "#bbcd86ff",
+    "#c1d08aff",
+    "#c7d28dff",
+    "#d2d794ff",
+    "#d8d997ff",
+    "#dddc9aff",
+    "#acc77eff",
+    "#afc87fff",
+    "#b1c980ff",
+    "#b3ca82ff",
+    "#b9cd85ff",
+    "#becf88ff",
+    "#c0cf89ff",
+    "#c4d18bff",
+    "#c9d38eff",
+    "#cad48fff",
+    "#d1d693ff",
+    "#d4d895ff",
+    "#d6d996ff",
+    "#e1dd9cff"
+  ],
+  "layers": [
+    {
+      "id": "l1",
+      "name": "Layer 1",
+      "visible": true
+    }
+  ],
+  "frames": [
+    {"duration":100,"cels":{"l1":"31x0 2x1 60x0 6x1 56x0 10x1 52x0 14x1 48x0 18x1 44x0 22x1 40x0 26x1 36x0 30x1 32x0 34x1 28x0 38x1 24x0 42x1 20x0 46x1 16x0 50x1 12x0 50x1 1x2 1x3 1x4 1x5 8x0 51x1 1x6 1x3 1x7 1x8 1x9 1x10 1x11 4x0 53x1 1x12 1x13 1x14 1x15 1x16 1x11 1x17 1x18 1x19 2x0 53x1 1x12 1x13 1x14 1x15 1x16 1x11 1x17 1x18 1x19 4x0 51x1 1x6 1x3 1x7 1x8 1x9 1x10 1x11 8x0 50x1 1x2 1x3 1x4 1x5 12x0 50x1 16x0 46x1 20x0 42x1 24x0 38x1 28x0 34x1 32x0 30x1 36x0 26x1 40x0 22x1 44x0 4x1 1x20 1x21 1x22 4x3 1x22 1x21 1x20 4x1 48x0 1x12 1x23 1x4 1x24 1x5 1x8 2x25 1x8 1x5 1x24 1x4 1x23 1x12 52x0 1x26 1x27 1x16 1x28 2x29 1x28 1x16 1x27 1x26 56x0 1x30 1x31 2x32 1x31 1x30 60x0 2x33 31x0"},"boxes":[]}
+  ],
+  "origin": {
+    "x": 32,
+    "y": 16
+  },
+  "clips": [],
+  "procedural": null,
+  "meta": {
+    "kind": "tile",
+    "preset": "flat",
+    "footprint": {
+      "w": 1,
+      "d": 1
+    },
+    "heightCells": 0,
+    "collision": null,
+    "fade": null,
+    "sortOffset": 0,
+    "sway": false,
+    "variants": [],
+    "face": "wall",
+    "otherSide": "",
+    "light": 0,
+    "tags": [
+      "autotile:grass"
+    ]
+  }
+}

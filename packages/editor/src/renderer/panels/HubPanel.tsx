@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { api } from '../project/api';
 import { DEFAULT_HUB, HubClient, hubAddressProblem, type HubItem } from '../library/hub';
 import { PACK_KIND_LABELS, type PackKind } from '../library/pack';
+import { libraryChanged } from '../library/changes';
 import { openLibrary, thumbnailOf } from '../library/session';
 import type { Library } from '../library/store';
 
@@ -113,6 +114,7 @@ export function HubPanel() {
       const got = await make().download(item.id);
       const saved = await l.save(got.pack, { thumb: item.thumb || thumbnailOf(got.pack), note: `From the hub (version ${got.item.version})`, origin: { hub: address, id: item.id, version: got.item.version } });
       setLib(l);
+      libraryChanged();
       setStatus(`Added "${saved.name}" to your library. Open the Library panel and press Add to project to use it.`);
     });
 

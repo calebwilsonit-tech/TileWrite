@@ -6,6 +6,7 @@ import { ownTiles } from '../project/tiles';
 import { thumbnailSprite, type Built, type PackSource } from './build';
 import { emptyLinks, LINKS_FILE, parseLinks, recordInstall, type Link, type LinksFile } from './links';
 import { applyImport, checkPack, decodeFile, findClashes, parsePack, type Clash, type Pack, type Resolution } from './pack';
+import { libraryChanged } from './changes';
 import { Library, type LibraryFs, type LibraryItem, type SaveOptions } from './store';
 
 /** The glue between the library, the open project and the files on disk. */
@@ -80,7 +81,9 @@ export function thumbnailOf(pack: Pack): string {
 
 export async function saveToLibrary(built: Built, opts: SaveOptions = {}): Promise<LibraryItem> {
   const lib = await openLibrary();
-  return lib.save(built.pack, { thumb: thumbnailOf(built.pack), ...opts });
+  const saved = await lib.save(built.pack, { thumb: thumbnailOf(built.pack), ...opts });
+  libraryChanged();
+  return saved;
 }
 
 // ---------- installing ----------
@@ -209,5 +212,7 @@ export async function importPackFile(): Promise<{ item?: LibraryItem; error?: st
   const bad = checkPack(r.pack).filter((x) => !x.includes('will not line up'));
   if (bad.length > 0) return { error: bad[0] };
   const lib = await openLibrary();
-  return { item: await lib.save(r.pack, { thumb: thumbnailOf(r.pack), note: 'Imported from a file' }) };
+  const item = await lib.save(r.pack, { thumb: thumbnailOf(r.pack), note: 'Imported from a file' });
+  libraryChanged();
+  return { item };
 }

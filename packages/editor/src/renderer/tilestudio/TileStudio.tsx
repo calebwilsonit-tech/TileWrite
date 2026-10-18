@@ -16,6 +16,7 @@ import {
   recolourSprite,
   shadeFaces,
   splitBlock,
+  spriteFromFrames,
   spriteFromRgba,
   type Recolour,
   type Rgba,
@@ -136,9 +137,12 @@ function KindSection() {
   const set = (fn: (m: SpriteMeta) => void): void => doc.setMeta('Change what it is', fn);
 
   const flatten = (): Rgba => ({ width: doc.width, height: doc.height, data: doc.composite(doc.frame) });
-  const rebuild = (img: Rgba, label: string): void => {
-    const sprite = { ...spriteFromRgba(doc.name, img, [doc.origin.x, doc.origin.y]), ...(doc.meta ? { meta: doc.meta } : {}) } as SpriteData;
-    doc.replaceWith(sprite, label);
+  /** Every frame of the picture, flattened; an operation is applied to each one so an animation keeps all its frames. */
+  const rebuild = (fn: (img: Rgba) => Rgba, label: string): void => {
+    const imgs = doc.frames.map((_, i) => fn({ width: doc.width, height: doc.height, data: doc.composite(i) }));
+    const made = imgs.length === 1 ? spriteFromRgba(doc.name, imgs[0]!, [doc.origin.x, doc.origin.y]) : spriteFromFrames(doc.name, imgs, [doc.origin.x, doc.origin.y]);
+    made.frames.forEach((f, i) => void (f.duration = doc.frames[i]?.duration ?? f.duration));
+    doc.replaceWith({ ...made, ...(doc.meta ? { meta: doc.meta } : {}) } as SpriteData, label);
   };
   const levels = preset ? preset.meta.heightCells ?? 1 : 1;
   const isBlock = preset && (preset.id === 'block' || preset.id === 'half');
@@ -152,7 +156,7 @@ function KindSection() {
           <button
             data-testid="ts-clip"
             title="Cut away everything outside the guides (so the picture is exactly the diamond or the wall face)"
-            onClick={() => rebuild(clipTo(flatten(), preset.guides.filter((g) => g.clip).map((g) => g.points)), 'Clip to the guides')}
+            onClick={() => rebuild((img) => clipTo(img, preset.guides.filter((g) => g.clip).map((g) => g.points)), 'Clip to the guides')}
           >
             Clip art to the guides
           </button>
@@ -161,7 +165,7 @@ function KindSection() {
               <button
                 data-testid="ts-shade"
                 title="Make the left face a little darker than the top and the right face darker still"
-                onClick={() => rebuild(shadeFaces(flatten(), iso, levels), 'Shade the faces')}
+                onClick={() => rebuild((img) => shadeFaces(img, iso, levels), 'Shade the faces')}
               >
                 Shade the three faces
               </button>
@@ -642,7 +646,9 @@ function AutotileSetSection() {
     store.notify('info', `Made ${slots.length} empty pictures named “${set}_…” for the pieces of the set. Fill them in any order.`);
   };
   const starter = async (): Promise<void> => {
-    const baseSprite = base?.art ? studio.assets.get(base.art) : undefined;
+    // an animated tile has no single picture: its first frame is the one to draw edges on
+    const artName = base?.art ?? base?.anim?.frames[0];
+    const baseSprite = artName ? studio.assets.get(artName.split('#')[0]!) : undefined;
     if (!baseSprite) {
       store.notify('warn', 'Pick a base tile that has a picture (send a sprite to the palette first).');
       return;

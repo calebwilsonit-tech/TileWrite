@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "name": "grass_edge-W_inner-NE-SE",
+  "width": 64,
+  "height": 32,
+  "palette": [
+    "#00000000",
+    "#e5df9eff",
+    "#dedc9aff",
+    "#d7d996ff",
+    "#d0d693ff",
+    "#cad48fff",
+    "#c3d18bff",
+    "#bcce87ff",
+    "#b6cb83ff",
+    "#afc87fff",
+    "#6fae5bff",
+    "#adc87fff",
+    "#b2ca81ff",
+    "#b7cc84ff",
+    "#adc87eff",
+    "#b8cc85ff",
+    "#bdce88ff",
+    "#c8d38eff",
+    "#cdd590ff",
+    "#afc980ff",
+    "#b5cb83ff",
+    "#bbcd86ff",
+    "#c1d08aff",
+    "#c7d28dff",
+    "#d2d794ff",
+    "#d8d997ff",
+    "#dddc9aff",
+    "#acc77eff",
+    "#b1c980ff",
+    "#b3ca82ff",
+    "#b9cd85ff",
+    "#becf88ff",
+    "#c0cf89ff",
+    "#c4d18bff",
+    "#c9d38eff",
+    "#d1d693ff",
+    "#d4d895ff",
+    "#d6d996ff",
+    "#e1dd9cff"
+  ],
+  "layers": [
+    {
+      "id": "l1",
+      "name": "Layer 1",
+      "visible": true
+    }
+  ],
+  "frames": [
+    {"duration":100,"cels":{"l1":"31x0 1x1 1x2 60x0 1x1 1x2 1x3 1x4 1x5 1x6 56x0 1x1 1x2 1x3 1x4 1x5 1x6 1x7 1x8 1x9 1x10 52x0 1x1 1x2 1x3 1x4 1x5 1x6 1x7 1x8 1x9 5x10 48x0 1x1 1x2 1x3 1x4 1x5 1x6 1x7 1x8 1x9 9x10 44x0 1x1 1x2 1x3 1x4 1x5 1x6 1x7 1x8 1x9 13x10 40x0 1x1 1x2 1x3 1x4 1x5 1x6 1x7 1x8 1x9 17x10 36x0 1x1 1x2 1x3 1x4 1x5 1x6 1x7 1x8 1x9 21x10 32x0 1x1 1x2 1x3 1x4 1x5 1x6 1x7 1x8 1x9 25x10 28x0 1x1 1x2 1x3 1x4 1x5 1x6 1x7 1x8 1x9 29x10 24x0 1x1 1x2 1x3 1x4 1x5 1x6 1x7 1x8 1x9 33x10 20x0 1x1 1x2 1x3 1x4 1x5 1x6 1x7 1x8 1x9 37x10 16x0 1x1 1x2 1x3 1x4 1x5 1x6 1x7 1x8 1x9 41x10 12x0 1x1 1x2 1x3 1x4 1x5 1x6 1x7 1x8 1x9 41x10 1x11 1x12 1x13 1x7 8x0 1x1 1x2 1x3 1x4 1x5 1x6 1x7 1x8 1x9 42x10 1x14 1x12 1x15 1x16 1x6 1x17 1x18 4x0 1x1 1x2 1x3 1x4 1x5 1x6 1x7 1x8 1x9 44x10 1x19 1x20 1x21 1x22 1x23 1x18 1x24 1x25 1x26 2x0 1x3 1x4 1x5 1x6 1x7 1x8 1x9 46x10 1x19 1x20 1x21 1x22 1x23 1x18 1x24 1x25 1x26 4x0 1x7 1x8 1x9 48x10 1x14 1x12 1x15 1x16 1x6 1x17 1x18 8x0 50x10 1x11 1x12 1x13 1x7 12x0 50x10 16x0 46x10 20x0 42x10 24x0 38x10 28x0 34x10 32x0 30x10 36x0 26x10 40x0 22x10 44x0 4x10 1x27 1x9 1x28 4x12 1x28 1x9 1x27 4x10 48x0 1x19 1x29 1x13 1x30 1x7 1x16 2x31 1x16 1x7 1x30 1x13 1x29 1x19 52x0 1x32 1x33 1x23 1x34 2x5 1x34 1x23 1x33 1x32 56x0 1x35 1x36 2x37 1x36 1x35 60x0 2x38 31x0"},"boxes":[]}
+  ],
+  "origin": {
+    "x": 32,
+    "y": 16
+  },
+  "clips": [],
+  "procedural": null,
+  "meta": {
+    "kind": "tile",
+    "preset": "flat",
+    "footprint": {
+      "w": 1,
+      "d": 1
+    },
+    "heightCells": 0,
+    "collision": null,
+    "fade": null,
+    "sortOffset": 0,
+    "sway": false,
+    "variants": [],
+    "face": "wall",
+    "otherSide": "",
+    "light": 0,
+    "tags": [
+      "autotile:grass"
+    ]
+  }
+}

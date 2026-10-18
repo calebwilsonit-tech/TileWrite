@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "name": "oak",
+  "width": 128,
+  "height": 128,
+  "palette": [
+    "#00000000",
+    "#000000ff",
+    "#ffffffff",
+    "#e8553dff",
+    "#f4a259ff",
+    "#f6d55cff",
+    "#6fae5bff",
+    "#2f6f4eff",
+    "#4a90d9ff",
+    "#2b4c7eff",
+    "#8e7cc3ff",
+    "#c9964aff",
+    "#7b5a3aff",
+    "#a3a7b3ff",
+    "#5c6070ff",
+    "#2a2d38ff"
+  ],
+  "layers": [
+    {
+      "id": "l1",
+      "name": "Layer 1",
+      "visible": true
+    }
+  ],
+  "frames": [
+    {"duration":200,"cels":{"l1":"16384x6"},"boxes":[]}
+  ],
+  "origin": {
+    "x": 64,
+    "y": 96
+  },
+  "clips": [],
+  "procedural": null,
+  "meta": {
+    "kind": "prop",
+    "preset": "tree",
+    "footprint": {
+      "w": 2,
+      "d": 2
+    },
+    "heightCells": 4,
+    "collision": {
+      "x": 0.7,
+      "y": 0.7,
+      "w": 0.6,
+      "d": 0.6
+    },
+    "fade": {
+      "fromY": 0,
+      "toY": 77
+    },
+    "sortOffset": 0,
+    "sway": false,
+    "variants": [],
+    "face": "wall",
+    "otherSide": "",
+    "light": 0,
+    "tags": []
+  }
+}
