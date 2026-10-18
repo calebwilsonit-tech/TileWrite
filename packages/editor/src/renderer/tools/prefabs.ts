@@ -1,12 +1,12 @@
 import { archerTree, attachBehavior, wandererTree } from '@tilewright/behaviors';
-import { resolveInstance, type EntityData, type PrefabData } from '@tilewright/runtime';
+import { resolveInstance, type EntityData, type PrefabData, type SpriteData } from '@tilewright/runtime';
 import { playerEntity } from '../project/templates';
 
 export interface Prefab {
   id: string;
   label: string;
   hint: string;
-  group: 'Basics' | 'Puzzle' | 'Story puzzles' | 'Story' | 'Light' | 'Enemies' | 'Logic' | 'World' | 'Decoration' | 'Your prefabs';
+  group: 'Basics' | 'Puzzle' | 'Story puzzles' | 'Story' | 'Light' | 'Enemies' | 'Logic' | 'World' | 'Decoration' | 'Your props' | 'Your prefabs';
   /** Build entity data (without an id) standing at (x, y) on a floor at height h. */
   make(x: number, y: number, h: number): Omit<EntityData, 'id'>;
 }
@@ -343,6 +343,107 @@ export const PREFABS: Prefab[] = [
   },
 ];
 
+/** The project's drawn sprites, for the props and decals made in the tile studio (the studio keeps this up to date). */
+let propSprites: ReadonlyMap<string, SpriteData> = new Map();
+export function setPropSprites(sprites: ReadonlyMap<string, SpriteData>): void {
+  propSprites = sprites;
+}
+
+const hash = (x: number, y: number): number => {
+  const n = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453;
+  return n - Math.floor(n);
+};
+
+/** A prop sprite as an object: it stands on its footprint, blocks only what it says it blocks, and is drawn in the right order. */
+export function propEntity(sprite: SpriteData, x: number, y: number, h: number, pickLook = true): Omit<EntityData, 'id'> {
+  const m = sprite.meta!;
+  let look = sprite.name;
+  if (pickLook && m.variants.length > 0) {
+    const total = 1 + m.variants.reduce((n, v) => n + v.weight, 0);
+    let at = hash(x, y) * total;
+    if (at >= 1) {
+      at -= 1;
+      for (const v of m.variants) {
+        if (at < v.weight) {
+          look = v.sprite;
+          break;
+        }
+        at -= v.weight;
+      }
+    }
+  }
+  const decal = m.kind === 'decal';
+  // a footprint wider than one cell is aligned to the grid: the clicked cell is its corner
+  const cx = x - 0.5 + m.footprint.w / 2;
+  const cy = y - 0.5 + m.footprint.d / 2;
+  const components: Record<string, unknown> = {
+    transform: { x: cx, y: cy, h, facing: 2 },
+    sprite: { shape: 'box', color: 0x8a8f9c, w: m.footprint.w, d: m.footprint.d, height: decal ? 0.02 : Math.max(0.1, m.heightCells), sortOffset: decal ? -0.5 : m.sortOffset, visible: true, asset: look, ...(decal ? { noShadow: true } : {}) },
+  };
+  if (!decal && m.collision) {
+    components.collider = { w: m.collision.w, d: m.collision.d, height: Math.max(0.5, m.heightCells), solid: true, trigger: false, layer: 16, mask: 65535, enabled: true, inside: [] };
+  }
+  if (m.light > 0) components.light = { radius: m.light, color: 0xffd98a, intensity: 1, flicker: 0.1 };
+  return { name: sprite.name, tags: [decal ? 'decoration' : 'prop', ...m.tags], components };
+}
+
+/** The attachment sprites of the project (windows, torches, rugs), by name. */
+export function attachmentSprites(): SpriteData[] {
+  return [...propSprites.values()].filter((s) => s.meta?.kind === 'attachment').sort((a, b) => a.name.localeCompare(b.name));
+}
+
+export type AttachFace = '+x' | '-x' | '+y' | '-y' | 'top';
+export const FACE_OF_BLOCK: Record<string, AttachFace> = { e: '+x', w: '-x', s: '+y', n: '-y', top: 'top' };
+
+/** Where the middle of a spot on a block face is in the world: the cell, the face, how far along it, and the level of the block. */
+export function attachmentSpot(cell: { x: number; y: number }, face: AttachFace, along: number, z: number, topHeight = z + 1): { x: number; y: number; h: number } {
+  const e = 0.03;
+  const a = Math.max(0.05, Math.min(0.95, along));
+  switch (face) {
+    case '+x':
+      return { x: cell.x + 1 - e, y: cell.y + a, h: z + 0.5 };
+    case '-x':
+      return { x: cell.x + e, y: cell.y + a, h: z + 0.5 };
+    case '+y':
+      return { x: cell.x + a, y: cell.y + 1 - e, h: z + 0.5 };
+    case '-y':
+      return { x: cell.x + a, y: cell.y + e, h: z + 0.5 };
+    default:
+      return { x: cell.x + 0.5, y: cell.y + 0.5, h: topHeight };
+  }
+}
+
+/** A window, torch or rug fixed to a face of a block. */
+export function attachmentEntity(sprite: SpriteData, cell: { x: number; y: number }, face: AttachFace, z: number, along: number, topHeight?: number): Omit<EntityData, 'id'> {
+  const m = sprite.meta!;
+  const spot = attachmentSpot(cell, face, along, z, topHeight);
+  const isRight = m.preset.includes('right');
+  const other = m.otherSide;
+  const left = isRight ? other : sprite.name;
+  const right = isRight ? sprite.name : other;
+  const components: Record<string, unknown> = {
+    transform: { x: spot.x, y: spot.y, h: spot.h, facing: 2 },
+    sprite: { shape: 'box', color: 0x8a8f9c, w: face === 'top' ? 1 : 0.3, d: face === 'top' ? 1 : 0.3, height: face === 'top' ? 0.02 : 0.9, sortOffset: face === 'top' ? -0.3 : 0.4, visible: true, asset: sprite.name, noShadow: true },
+    attach: { face, left, right, cell: { ...cell }, z, along },
+  };
+  if (m.light > 0) components.light = { radius: m.light, color: 0xffd98a, intensity: 1, flicker: 0.12 };
+  return { name: sprite.name, tags: ['attachment', ...m.tags], components };
+}
+
+/** Props and decals made in the tile studio, as things the Place and Scatter tools can put down. */
+export function spritePropChoices(): Prefab[] {
+  return [...propSprites.values()]
+    .filter((s) => s.meta && (s.meta.kind === 'prop' || s.meta.kind === 'decal'))
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map((s) => ({
+      id: `sprite:${s.name}`,
+      label: s.name,
+      group: 'Your props' as const,
+      hint: `${s.meta!.kind === 'decal' ? 'A decal' : 'A tall prop'} drawn in the tile studio (${s.meta!.footprint.w} x ${s.meta!.footprint.d} cells${s.meta!.collision ? ', blocks' : ', does not block'}${s.meta!.fade ? ', its top fades when you stand behind it' : ''}).`,
+      make: (x: number, y: number, h: number) => propEntity(s, x, y, h),
+    }));
+}
+
 /** Prefabs made in this project, as things the Place tool can put down. */
 export function projectPrefabChoices(prefabs: ReadonlyMap<string, PrefabData>): Prefab[] {
   return [...prefabs.values()]
@@ -362,7 +463,7 @@ export function projectPrefabChoices(prefabs: ReadonlyMap<string, PrefabData>): 
 }
 
 export function allPrefabs(prefabs: ReadonlyMap<string, PrefabData>): Prefab[] {
-  return [...PREFABS, ...projectPrefabChoices(prefabs)];
+  return [...PREFABS, ...spritePropChoices(), ...projectPrefabChoices(prefabs)];
 }
 
 export function prefabById(id: string, prefabs: ReadonlyMap<string, PrefabData> = new Map()): Prefab {

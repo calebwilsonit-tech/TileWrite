@@ -25,6 +25,7 @@ Panels dock, tab, split and float: drag a tab. The layout is remembered; **Comma
 | Problems | Mistakes found in the scene, in plain English, with **Go to**. |
 | Console | Messages from the editor and from the game while it runs. |
 | Assets | The project's sprites, with search, tags and "find where it is used" (see [sprite-studio.md](sprite-studio.md)); its prefabs; and its sounds and music (see [sound-and-effects.md](sound-and-effects.md)). |
+| Structures | Block-level editing by the box: the marked box of the Box select tool, copy / cut / fill / hollow / replace / remove, saving a region as a structure (a house, a ruin) with the objects in it, and placing structures with the Place structure tool (see [tile-studio.md](tile-studio.md)). |
 | Graph | Logic graphs: boxes joined by lines (events, actions, ifs, repeats, waits, functions), a search box that adds boxes, breakpoints, live glow while playing, and buttons to move logic to and from the event sheet (see [logic.md](logic.md)). |
 | Events | The scene's event sheet: rows that read like sentences, variables, and a "Convert to code" button (see [logic.md](logic.md)). |
 | Story | Items, conversations (a graph of lines, choices, flags and gifts), cutscenes, minigames and skins (see [story-systems.md](story-systems.md)), and the **Translations...** button (see [translations-and-settings.md](translations-and-settings.md)). |

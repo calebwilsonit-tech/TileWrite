@@ -17,6 +17,8 @@ import {
   type SimContext,
   type SpriteData,
   type TransformIso,
+  type TileSet,
+  type UiDoc,
 } from '@tilewright/runtime';
 import { addStandardSystems, contextOf, placeAtSpawn, resolveRef } from '@tilewright/behaviors';
 
@@ -34,6 +36,10 @@ export interface GameSetup {
   worldMap?: WorldMapData | null;
   tables?: readonly TableData[];
   sprites?: ReadonlyMap<string, SpriteData>;
+  /** The project's tiles (their properties apply on the map). */
+  tileset?: TileSet;
+  /** The project's interface screens. */
+  ui?: UiDoc;
   seed?: number;
 }
 
@@ -47,6 +53,7 @@ export class Game {
   private readonly prefabs: PrefabMap | undefined;
   /** The scene the game began with (a new run starts it again). */
   private readonly first: SceneData;
+  private readonly tileset: TileSet | undefined;
 
   constructor(setup: GameSetup) {
     this.sim = new Simulation(setup.seed ?? 1);
@@ -61,8 +68,10 @@ export class Game {
     for (const m of setup.minigames ?? []) this.sim.assets.minigames.set(m.name, m);
     for (const t of setup.tables ?? []) this.sim.assets.tables.set(t.name, t);
     this.sim.assets.worldMap = setup.worldMap ?? null;
+    if (setup.ui) this.sim.assets.ui = setup.ui;
+    this.tileset = setup.tileset;
     for (const [k, v] of setup.sprites ?? []) this.sim.assets.sprites.set(k, v);
-    this.problems = loadScene(this.sim, setup.scene, { prefabs: setup.prefabs, scene: setup.scenePath ?? '' }).problems;
+    this.problems = loadScene(this.sim, setup.scene, { prefabs: setup.prefabs, tileset: setup.tileset, scene: setup.scenePath ?? '' }).problems;
     addStandardSystems(this.sim, physicsSystem);
   }
 
@@ -138,7 +147,7 @@ export class Game {
     }
     const hp = opts.fresh ? null : (this.sim.world.withTag('player')[0]?.get<{ hp: number }>('state:health')?.hp ?? null);
     this.scenePath = path;
-    this.problems.push(...loadScene(this.sim, scene, { prefabs: this.prefabs, scene: path, travel: true }).problems);
+    this.problems.push(...loadScene(this.sim, scene, { prefabs: this.prefabs, tileset: this.tileset, scene: path, travel: true }).problems);
     const player = this.player;
     if (opts.at) this.placeAt(player, opts.at.x, opts.at.y, opts.at.h);
     else if (opts.spawn) placeAtSpawn(this.ctx, player, opts.spawn);

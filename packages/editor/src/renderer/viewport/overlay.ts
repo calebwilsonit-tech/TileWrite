@@ -196,6 +196,30 @@ export class OverlayDrawer {
     g.stroke({ width: 2, color, alpha: 0.95 });
   }
 
+  /** Outline a box of blocks: the region of cells and levels (both ends included). */
+  box(g: Graphics, r: { x0: number; y0: number; x1: number; y1: number; z0: number; z1: number }, color: number, iso: IsoConfig = DEFAULT_ISO): void {
+    const P = (x: number, y: number, z: number): [number, number] => {
+      const p = gridToScreen(x, y, z, iso);
+      return [p.x, p.y];
+    };
+    const xs = [r.x0, r.x1 + 1];
+    const ys = [r.y0, r.y1 + 1];
+    const zs = [r.z0, r.z1 + 1];
+    const edge = (a: [number, number, number], b: [number, number, number]): void => {
+      const pa = P(...a);
+      const pb = P(...b);
+      g.moveTo(pa[0], pa[1]).lineTo(pb[0], pb[1]);
+    };
+    for (const z of zs) {
+      edge([xs[0]!, ys[0]!, z], [xs[1]!, ys[0]!, z]);
+      edge([xs[1]!, ys[0]!, z], [xs[1]!, ys[1]!, z]);
+      edge([xs[1]!, ys[1]!, z], [xs[0]!, ys[1]!, z]);
+      edge([xs[0]!, ys[1]!, z], [xs[0]!, ys[0]!, z]);
+    }
+    for (const x of xs) for (const y of ys) edge([x, y, zs[0]!], [x, y, zs[1]!]);
+    g.stroke({ width: 2, color, alpha: 0.95 });
+  }
+
   /** Draw a translucent box for an object about to be placed. */
   ghost(g: Graphics, x: number, y: number, h: number, w: number, d: number, height: number, color: number, iso: IsoConfig = DEFAULT_ISO): void {
     const pt = (dx: number, dy: number, dh: number): number[] => {

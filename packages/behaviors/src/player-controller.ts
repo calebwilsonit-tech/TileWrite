@@ -14,6 +14,7 @@ import { defineBehavior } from './framework';
 import { eventSheetSystem } from './events/sheet';
 import { graphSystem } from './events/graph';
 import { eventNodeSystem } from './builtins/nodes';
+import { footstepSystem } from './builtins/world';
 import { cutsceneSystem, dialogueSystem, minigameSystem } from './story/director';
 import { quickSlotSystem } from './story/inventory';
 import { behaviorSystems } from './signals';
@@ -108,6 +109,7 @@ export function addStandardSystems(sim: Simulation, physics: (ctx: SimContext) =
   sim.addSystem('event-sheet', eventSheetSystem, 'gameplay');
   sim.addSystem('logic-graphs', graphSystem, 'gameplay');
   sim.addSystem('event-nodes', eventNodeSystem, 'gameplay');
+  sim.addSystem('footsteps', footstepSystem, 'gameplay');
   sim.addSystem('physics', physics, 'gameplay');
   sim.addSystem('animation', animationSystem, 'gameplay');
 }

@@ -31,11 +31,12 @@ export interface LightingModel {
 }
 
 /** Cells that stop light: BLOCK-flagged cells, walls that rise well above the light, and tall solid objects. */
-export function makeOccluder(map: TileMap | null, tall: readonly { x: number; y: number; w: number; d: number; top: number }[]): LightingModel['blocked'] {
+export function makeOccluder(map: TileMap | null, tall: readonly { x: number; y: number; w: number; d: number; top: number }[], tileBlocks?: (tile: number) => boolean): LightingModel['blocked'] {
   const objects = tall.filter((o) => o.top >= 1.2);
   return (cx, cy, h) => {
     if (map) {
       if (!map.inBounds(cx, cy)) return true;
+      if (tileBlocks && tileBlocks(map.getTile(cx, cy))) return true;
       if (map.hasFlag(cx, cy, FLAG.BLOCK) && !map.getBlockBand(cx, cy)) return true;
       if (map.getTile(cx, cy) !== 0 && map.topHeight(cx, cy) > h + 1.2) return true;
     }

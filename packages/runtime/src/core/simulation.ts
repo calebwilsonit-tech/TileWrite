@@ -11,6 +11,7 @@ import type { ItemData } from '../story/items';
 import { StringTables } from '../story/strings';
 import type { SkinData } from '../story/skins';
 import { emptyUiDoc, type UiDoc } from '../ui/model';
+import type { TileSet } from '../tilemap/tilemap';
 import type { MinigameData, MinigameState } from '../story/minigames';
 import type { WorldMapData } from '../story/worldmap';
 import type { TableData, TableRow } from '../data/tables';
@@ -41,6 +42,8 @@ export interface Assets {
   tables: Map<string, TableData>;
   /** The interface screens (see ui/model.ts). */
   ui: UiDoc;
+  /** The project's tiles (their properties apply wherever they are placed). */
+  tileset?: TileSet;
 }
 
 /** A lantern post the player lit or rested at: where death sends them. */

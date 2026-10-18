@@ -22,6 +22,7 @@ import {
   type ShapeData,
   type SpriteBox,
   type SpriteData,
+  type SpriteMeta,
   type VectorShape,
 } from '@tilewright/runtime';
 import { History } from '../model/history';
@@ -51,6 +52,8 @@ interface State {
   origin: { x: number; y: number };
   clips: ClipData[];
   procedural: { shapes: ShapeData[] } | null;
+  /** What the sprite is for in the world (a tile, a tall prop, an attachment...). */
+  meta: SpriteMeta | null;
 }
 
 export type StudioEvent = { type: 'pixels' } | { type: 'structure' } | { type: 'palette' } | { type: 'meta' } | { type: 'history' } | { type: 'selection' };
@@ -65,6 +68,7 @@ function cloneState(s: State): State {
     origin: { ...s.origin },
     clips: structuredClone(s.clips),
     procedural: s.procedural ? structuredClone(s.procedural) : null,
+    meta: s.meta ? structuredClone(s.meta) : null,
   };
 }
 
@@ -228,6 +232,7 @@ export class SpriteDoc {
       origin: { ...data.origin },
       clips: structuredClone(data.clips),
       procedural: data.procedural ? structuredClone(data.procedural) : null,
+      meta: data.meta ? structuredClone(data.meta) : null,
     });
   }
 
@@ -251,10 +256,25 @@ export class SpriteDoc {
       origin: { ...this.s.origin },
       clips: structuredClone(this.s.clips),
       procedural: this.s.procedural ? structuredClone(this.s.procedural) : null,
+      ...(this.s.meta ? { meta: structuredClone(this.s.meta) } : {}),
     };
   }
 
   // ---- read access ----
+
+  /** What the sprite is for in the world, or null for a plain sprite. */
+  get meta(): SpriteMeta | null {
+    return this.s.meta;
+  }
+
+  /** Change what the sprite is for (one undo step). */
+  setMeta(label: string, fn: (m: SpriteMeta) => void): void {
+    this.mutate(label, () => {
+      const m: SpriteMeta = this.s.meta ?? { kind: 'sprite', preset: '', footprint: { w: 1, d: 1 }, heightCells: 1, collision: null, fade: null, sortOffset: 0, sway: false, variants: [], face: 'wall', otherSide: '', light: 0, tags: [] };
+      fn(m);
+      this.s.meta = m;
+    });
+  }
 
   get width(): number {
     return this.s.width;

@@ -111,7 +111,7 @@ export function lightingSystem(ctx: SimContext): void {
     regions: ctx.runtime.regions,
     sceneDarkness: Number.isFinite(d) ? Math.min(1, Math.max(0, d)) : 0,
     lights: activeLights(ctx),
-    blocked: makeOccluder(ctx.map, tall),
+    blocked: makeOccluder(ctx.map, tall, ctx.assets.tileset ? (t) => ctx.assets.tileset![t]?.props?.blocksLight === true : undefined),
   };
   ctx.runtime.lighting = model;
 }

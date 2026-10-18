@@ -217,6 +217,21 @@ export function validateScene(doc: EditorDoc, sprites?: ReadonlySet<string>, pre
     }
   }
 
+  // pictures fixed to blocks: the block must still be there
+  for (const e of doc.entities) {
+    const at = e.components.attach as { face?: string; cell?: { x: number; y: number }; z?: number; left?: string; right?: string } | undefined;
+    if (!at?.cell) continue;
+    const t = e.components.transform as T | undefined;
+    const target = t ? pos('entity', e.id, t) : undefined;
+    const top = map.inBounds(at.cell.x, at.cell.y) && map.getTile(at.cell.x, at.cell.y) !== 0 ? map.topHeight(at.cell.x, at.cell.y) : -1;
+    const z = at.z ?? 0;
+    if (top < 0 || (at.face !== 'top' && top <= z)) {
+      out.push({ id: `attach-floating-${e.id}`, severity: 'warning', message: `"${e.name}" is fixed to a block at ${at.cell.x}, ${at.cell.y} (level ${z}) that is not there any more, so it hangs in the air. Remove it, or move it to a wall that is there.`, target, fix: { kind: 'remove-entity', id: e.id, label: 'Remove it' } });
+    }
+    for (const name of [at.left, at.right]) {
+      if (name && sprites && !sprites.has(name)) out.push({ id: `attach-sprite-${e.id}-${name}`, severity: 'warning', message: `"${e.name}" uses the picture "${name}", which is not in this project.`, target });
+    }
+  }
   // event and action nodes (quick actions and wires that make something happen)
   const entityIds = new Set(doc.entities.map((e) => e.id));
   for (const e of doc.entities) {

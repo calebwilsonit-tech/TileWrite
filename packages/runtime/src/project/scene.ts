@@ -1,7 +1,7 @@
 import { Simulation } from '../core/simulation';
 import { C } from '../scene/components';
 import type { Entity } from '../scene/world';
-import { TileMap } from '../tilemap/tilemap';
+import { FLAG, TileMap, type TileSet } from '../tilemap/tilemap';
 import { groundHeightAt } from '../physics/terrain';
 import { GeneratorSpecSchema, generate } from '../procgen/generate';
 import { newView } from '../story/cutscene';
@@ -109,6 +109,19 @@ export function stringifyScene(scene: SceneData): string {
   return JSON.stringify({ ...scene, map: token }, null, 2).replace(`"${token}"`, () => mapText) + '\n';
 }
 
+/** The properties of tiles become cell flags: pit, water, and `not walkable` (solid at every height). */
+export function applyTileProps(map: TileMap, tileset: TileSet): void {
+  for (let y = 0; y < map.height; y++) {
+    for (let x = 0; x < map.width; x++) {
+      const props = tileset[map.getTile(x, y)]?.props;
+      if (!props) continue;
+      if (props.pit) map.setFlag(x, y, FLAG.PIT);
+      if (props.water) map.setFlag(x, y, FLAG.WATER);
+      if (props.walkable === false && !props.water) map.setFlag(x, y, FLAG.BLOCK);
+    }
+  }
+}
+
 /** Default components for things the editor places, so a fresh entity just works. */
 export function instantiateEntity(sim: Simulation, data: EntityData): Entity {
   const e = sim.world.spawn({ name: data.name, tags: data.tags, components: structuredClone(data.components) });
@@ -124,6 +137,8 @@ export interface LoadOptions {
   scene?: string;
   /** Changing scene in a running game: empty the world first and keep the flags and inventory the player has. */
   travel?: boolean;
+  /** The project's tiles: their properties (not walkable, water, pit...) are put on every cell that uses them. */
+  tileset?: TileSet;
 }
 
 /**
@@ -135,6 +150,10 @@ export interface LoadOptions {
 export function loadScene(sim: Simulation, scene: SceneData, opts: LoadOptions = {}): Map<string, Entity> & { problems: string[] } {
   if (opts.travel) sim.world.clear();
   sim.map = tileMapFromRows(scene.map);
+  if (opts.tileset) {
+    sim.assets.tileset = opts.tileset;
+    applyTileProps(sim.map, opts.tileset);
+  }
   const { entities, problems } = expandEntities(scene.entities, opts.prefabs ?? new Map());
   const byId = new Map<string, Entity>() as Map<string, Entity> & { problems: string[] };
   byId.problems = problems;

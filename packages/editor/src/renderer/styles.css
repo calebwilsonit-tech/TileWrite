@@ -1587,3 +1587,12 @@ button.small {
 .bind-dialog { width: 520px; max-height: 80vh; display: flex; flex-direction: column; }
 .bind-tree { overflow: auto; flex: 1; margin: 8px 0; border: 1px solid var(--line, #3a3d4a); border-radius: 6px; padding: 4px; }
 .bind-item { display: block; width: 100%; text-align: left; background: none; border: 0; padding: 2px 8px; font-size: 12px; } .bind-item:hover { background: rgba(255,255,255,0.08); } .bind-item small { opacity: 0.5; margin-left: 6px; }
+
+/* ---- tile studio ---- */
+.studio-modes button.on { background: var(--accent, #4a6cf0); color: #fff; }
+.studio-tiling-scroll { max-height: 240px; overflow: auto; background: #181a22; border-radius: 6px; padding: 4px; }
+.ts-slots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; max-height: 260px; overflow: auto; margin: 6px 0; }
+.ts-slot { display: flex; flex-direction: column; align-items: center; padding: 2px; font-size: 9px; background: #232634; border: 1px solid #3a3d4a; border-radius: 4px; }
+.ts-slot.missing { border-color: #a55; background: #2c2024; }
+.ts-slot small { opacity: 0.7; overflow: hidden; text-overflow: ellipsis; max-width: 100%; white-space: nowrap; }
+.ts-slot-none { width: 48px; height: 24px; }

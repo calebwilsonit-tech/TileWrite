@@ -2,6 +2,7 @@ import {
   C,
   addItem,
   autoSlot,
+  emitFx,
   expandEntities,
   instantiateEntity,
   surfaceAt,
@@ -421,3 +422,22 @@ export const followCamera = defineBehavior<FollowCamera>({
     /* The game's camera reads these settings; nothing to do per tick. */
   },
 });
+
+/** Plays the footstep sound of the tile the player walks on (set in the tile studio) once every stride. */
+export function footstepSystem(ctx: SimContext): void {
+  const tileset = ctx.assets.tileset;
+  if (!tileset || !ctx.map) return;
+  for (const e of ctx.world.withTag('player')) {
+    const b = e.get<{ vx: number; vy: number; state: string }>(C.Body);
+    const t = e.get<TransformIso>(C.Transform);
+    if (!b || !t) continue;
+    const st = stateOf(e, 'footsteps', () => ({ dist: 0 }));
+    const speed = Math.hypot(b.vx, b.vy);
+    if (b.state !== 'ground' || speed < 0.5) continue;
+    st.dist += speed * ctx.dt;
+    if (st.dist < 0.9) continue;
+    st.dist = 0;
+    const name = tileset[ctx.map.getTile(Math.floor(t.x), Math.floor(t.y))]?.props?.footstep;
+    if (name) emitFx(ctx.runtime, { kind: 'sound', name });
+  }
+}

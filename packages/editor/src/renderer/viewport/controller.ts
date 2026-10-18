@@ -29,6 +29,8 @@ import type { P } from '../tools/algorithms';
 import { OverlayDrawer, cellTopHeight } from './overlay';
 import { PlaySession } from './play-session';
 import { shapesOf, wireShapes, type WireShape } from './debug-draw';
+import { pickTileVariant } from '../tilestudio/tiles';
+import { CLIPBOARD } from '../structures/structure';
 
 interface SpriteLike {
   shape: 'box' | 'diamond';
@@ -423,6 +425,7 @@ export class ViewportController {
     this.renderer.setSlice(s.view.slice > 0 ? s.view.slice : null);
     this.renderer.setXray(s.view.xray);
     for (const pv of this.previews) {
+      if (pv.kind === 'box') this.overlay.box(this.ghostG, pv.box, pv.color, this.renderer.iso);
       if (pv.kind === 'cube') this.overlay.cube(this.ghostG, pv.x, pv.y, pv.z, pv.color, this.renderer.iso);
       if (pv.kind === 'ghost') {
         const prefab = prefabById(pv.prefab, store.prefabs);
@@ -431,6 +434,7 @@ export class ViewportController {
         if (sp) this.overlay.ghost(this.ghostG, pv.x, pv.y, pv.h, sp.w, sp.d, sp.height, sp.color, this.renderer.iso);
       }
     }
+    if (s.blockBox && (s.tool === 'blockbox' || s.tool === 'structure')) this.overlay.box(this.ghostG, s.blockBox, 0xffd34a, this.renderer.iso);
     this.renderer.focus = undefined;
     this.renderer.render(this.editWorld);
   }
@@ -562,6 +566,16 @@ export class ViewportController {
       },
       setMarquee: (r) => this.showMarquee(r),
       pickEntity: (sc) => this.pickEntity(sc),
+      blockBox: () => store.state.blockBox,
+      setBlockBox: (box) => store.set({ blockBox: box }),
+      placing: () => {
+        const p = store.state.placing;
+        const s = p ? (p.name === CLIPBOARD ? store.blockClipboard : store.structures.get(p.name)) : null;
+        return p && s ? { structure: s, turns: p.turns } : null;
+      },
+      rotatePlacing: () => store.state.placing && store.set({ placing: { ...store.state.placing, turns: (store.state.placing.turns + 1) % 4 } }),
+      tileset: () => Object.fromEntries((store.state.project?.project.tileset ?? []).map((t) => [t.id, t])),
+      pickTile: (tile, x, y) => pickTileVariant(store.state.project?.project.tileset ?? [], tile, x, y),
       pickRegion: (c) => this.pickRegion(c),
       prefabs: store.prefabs,
       connect: (from, to) => store.set({ connect: { from, to } }),

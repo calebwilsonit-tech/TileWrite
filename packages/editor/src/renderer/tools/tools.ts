@@ -15,7 +15,8 @@ import {
   type P,
   type Pattern,
 } from './algorithms';
-import { prefabById } from './prefabs';
+import { FACE_OF_BLOCK, attachmentEntity, attachmentSprites, prefabById } from './prefabs';
+import { normalise, pasteEdits, placedEntities, rotateStructure, type Region, type Structure } from '../structures/structure';
 import { PALETTE } from '../viewport/palette';
 
 export const MAX_HEIGHT = 12;
@@ -30,6 +31,7 @@ export interface Pointer {
 
 export type Preview =
   | { kind: 'cube'; x: number; y: number; z: number; color: number }
+  | { kind: 'box'; box: Region; color: number }
   | { kind: 'wire'; from: { x: number; y: number; h: number }; to: { x: number; y: number } }
   | { kind: 'cells'; cells: P[]; color: number; alpha?: number }
   | { kind: 'ghost'; x: number; y: number; h: number; prefab: string };
@@ -51,6 +53,16 @@ export interface ToolEnv {
   entityAnchor(id: string): { x: number; y: number; h: number } | null;
   /** The project's prefabs, for the Place tool. */
   prefabs: ReadonlyMap<string, PrefabData>;
+  /** The marked box of blocks (Box select), and a way to mark one. */
+  blockBox(): Region | null;
+  setBlockBox(box: Region | null): void;
+  /** The structure the Place structure tool is holding, turned as asked, and a way to turn it. */
+  placing(): { structure: Structure; turns: number } | null;
+  rotatePlacing(): void;
+  /** The project's tiles, by id (for tools that read tile properties such as paths). */
+  tileset(): Readonly<Record<number, { name: string; props?: { tags?: string[] } }>>;
+  /** The tile to put in a cell when painting `tile`: now and then one of its variants, by weight (set in the tile studio). */
+  pickTile(tile: number, x: number, y: number): number;
   /** Entities whose on-screen position lies inside a screen rectangle. */
   entitiesInRect(r: { x0: number; y0: number; x1: number; y1: number }): string[];
   /** Grid position under a screen point, on the plane at height h. */
@@ -112,7 +124,10 @@ export const TOOL_META: ToolMeta[] = [
   { id: 'corridor', label: 'Corridor', group: 'Helpers', hint: 'Drag from one point to another to carve a two-cell-wide corridor of the chosen tile between them.', edits: 'ground', options: ['tile'] },
   { id: 'wire', label: 'Wire', group: 'Logic', hotkey: 'Y', hint: 'Drag from one object to another to connect them: a pressure plate to a gate, a lever to a spawner, anything to a logic gate.', edits: 'objects', options: [] },
   { id: 'patrol', label: 'Patrol path', group: 'Logic', hotkey: 'F', hint: 'Select a guard (anything with the Patrol behaviour), then click cells to add the places it walks between. Shift-click removes the last point. Clicking a guard selects it.', edits: 'objects', options: [] },
-  { id: 'props', label: 'Scatter props', group: 'Helpers', hint: 'Drag a rectangle to sprinkle the chosen object around it, keeping clear of walls, water and stairs. Density sets how many.', edits: 'objects', options: ['prefab', 'density'] },
+  { id: 'props', label: 'Scatter props', group: 'Helpers', hint: 'Drag a rectangle to sprinkle the chosen object around it, keeping clear of walls, water, stairs and paths. Density sets how many; spacing keeps them apart, and things already there are never overlapped. Props with other looks (tree variants) mix them by weight.', edits: 'objects', options: ['prefab', 'density', 'spacing', 'avoidPaths'] },
+  { id: 'blockbox', label: 'Box select', group: 'Blocks', hotkey: 'Q', hint: 'Drag across the ground to mark a box of blocks (the levels are set below). Then copy, cut, fill, hollow out, replace or save it as a structure in the Structures panel.', edits: 'objects', options: ['zFrom', 'zTo'] },
+  { id: 'structure', label: 'Place structure', group: 'Blocks', hint: 'Click to put down the structure chosen in the Structures panel (or the copy on the clipboard). R turns it a quarter turn.', edits: 'ground', options: [] },
+  { id: 'attach', label: 'Attach', group: 'Objects', hotkey: 'J', hint: 'Fix the chosen window, door, torch, poster or rug to a block: click a wall face at any height and it snaps on. Shift-click removes one. Select it to slide it along the wall in the Inspector.', edits: 'objects', options: ['attachment'] },
 ];
 
 export function toolMeta(id: ToolId): ToolMeta {
@@ -616,11 +631,29 @@ const propsTool = (): ToolImpl =>
         return t ? `${Math.floor(t.x)},${Math.floor(t.y)}` : '';
       }));
       const items: ReturnType<typeof prefab.make>[] = [];
+      const spots: { x: number; y: number; r: number }[] = [];
+      for (const e of env.doc.entities) {
+        const t = e.components.transform as { x: number; y: number } | undefined;
+        const s = e.components.sprite as { w?: number; d?: number } | undefined;
+        if (t) spots.push({ x: t.x, y: t.y, r: Math.max(s?.w ?? 0.5, s?.d ?? 0.5) / 2 });
+      }
+      const tileset = env.tileset();
+      const isPath = (tile: number): boolean => {
+        const def = tileset[tile];
+        return !!def && (def.props?.tags?.includes('path') === true || /path|road|trail/i.test(def.name));
+      };
       for (const c of rectCells(a, b)) {
         if (!map.inBounds(c.x, c.y) || map.getTile(c.x, c.y) === EMPTY_TILE) continue;
         if (map.getFlags(c.x, c.y) & (FLAG.PIT | FLAG.WATER) || map.cellBlocked(c.x, c.y) || map.getSlope(c.x, c.y) || map.getDeck(c.x, c.y) > 0) continue;
+        if (env.opts.avoidPaths && isPath(map.getTile(c.x, c.y))) continue;
         if (taken.has(`${c.x},${c.y}`) || hash01(c.x, c.y, 91) >= env.opts.density * 0.5) continue;
         const data = prefab.make(c.x + 0.5, c.y + 0.5, map.getHeight(c.x, c.y));
+        const t = data.components.transform as { x: number; y: number };
+        const s = data.components.sprite as { w?: number; d?: number } | undefined;
+        const r = Math.max(s?.w ?? 0.5, s?.d ?? 0.5) / 2;
+        // keep apart from everything placed so far, and never overlap another footprint
+        if (spots.some((o) => Math.hypot(o.x - t.x, o.y - t.y) < Math.max(env.opts.spacing, o.r + r))) continue;
+        spots.push({ x: t.x, y: t.y, r });
         items.push({ ...data, name: `${data.name}` });
       }
       if (items.length === 0) {
@@ -632,6 +665,119 @@ const propsTool = (): ToolImpl =>
     },
     0x8e7cc3,
   );
+
+/** Mark a box of blocks: drag across the ground; the levels come from the options. */
+const blockBoxTool = (): ToolImpl => {
+  let start: P | null = null;
+  const box = (a: P, b: P, env: ToolEnv): Region => normalise({ x0: a.x, y0: a.y, x1: b.x, y1: b.y, z0: env.opts.zFrom, z1: env.opts.zTo });
+  return {
+    down(p) {
+      start = p.cell;
+    },
+    move(p, env) {
+      if (start && p.cell) env.setPreview([{ kind: 'box', box: box(start, p.cell, env), color: 0xffd34a }]);
+    },
+    up(p, env) {
+      if (start && p.cell) {
+        env.setBlockBox(box(start, p.cell, env));
+        const r = box(start, p.cell, env);
+        env.notify('info', `Marked ${r.x1 - r.x0 + 1} x ${r.y1 - r.y0 + 1} cells, levels ${r.z0} to ${r.z1}. Use the Structures panel to copy, fill, hollow or save it.`);
+      }
+      start = null;
+      env.setPreview([]);
+    },
+    cancel(env) {
+      start = null;
+      env.setPreview([]);
+    },
+    hover() {},
+  };
+};
+
+/** Put a structure (or the clipboard) into the world. */
+const structureTool = (): ToolImpl => ({
+  down(p, env) {
+    const held = env.placing();
+    if (!held) {
+      env.notify('info', 'Choose a structure in the Structures panel first, or copy a box of blocks.');
+      return;
+    }
+    if (!p.cell || !env.doc.map.inBounds(p.cell.x, p.cell.y)) return;
+    const s = rotateStructure(held.structure, held.turns);
+    const z = Math.max(0, Math.round(env.doc.map.topHeight(p.cell.x, p.cell.y)));
+    const at = { x: p.cell.x, y: p.cell.y, z };
+    env.doc.history.batch(`Place ${s.name}`, () => {
+      env.doc.paint(`Place ${s.name}`, pasteEdits(s, at, (x, y) => env.doc.map.inBounds(x, y)));
+      const entities = placedEntities(s, at);
+      if (entities.length > 0) env.doc.addEntities(entities, `${s.name}: its objects`);
+    });
+    env.notify('info', `Placed "${s.name}".`);
+  },
+  move(p, env) {
+    this.hover(p, env);
+  },
+  up() {},
+  cancel(env) {
+    env.setPreview([]);
+  },
+  hover(p, env) {
+    const held = env.placing();
+    if (!held || !p.cell) return env.setPreview([]);
+    const s = rotateStructure(held.structure, held.turns);
+    const z = Math.max(0, Math.round(env.doc.map.inBounds(p.cell.x, p.cell.y) ? env.doc.map.topHeight(p.cell.x, p.cell.y) : 0));
+    env.setPreview([{ kind: 'box', box: { x0: p.cell.x, y0: p.cell.y, x1: p.cell.x + s.w - 1, y1: p.cell.y + s.d - 1, z0: z, z1: z + s.h - 1 }, color: 0x6fe08a }]);
+  },
+  key(k, env) {
+    if (k.toLowerCase() === 'r') {
+      env.rotatePlacing();
+      return true;
+    }
+    return false;
+  },
+});
+
+/** Fix a window, torch or rug to a face of a block. */
+const attachTool = (): ToolImpl => ({
+  down(p, env) {
+    if (p.shift) {
+      const hit = env.pickEntity(p.screen);
+      if (hit && env.doc.getEntity(hit)?.components.attach) env.doc.removeEntities([hit], 'Remove attachment');
+      return;
+    }
+    const sprite = attachmentSprites().find((s) => s.name === env.opts.attachment);
+    if (!sprite) {
+      env.notify('info', 'Choose an attachment first: draw a window, torch or rug in the Tile studio (Wall or floor attachment) and pick it here.');
+      return;
+    }
+    const hit = env.pickBlock(p.screen);
+    if (!hit || !p.cell) return;
+    const face = FACE_OF_BLOCK[hit.face];
+    const isFloor = sprite.meta!.face === 'floor';
+    if (!face || (isFloor && face !== 'top') || (!isFloor && face === 'top')) {
+      env.notify('info', isFloor ? 'A rug or puddle lies on a top: click the top of a block or the floor.' : 'A window or torch is fixed to a wall: click the side of a block.');
+      return;
+    }
+    const cell = { x: hit.x, y: hit.y };
+    const z = Math.max(0, hit.z);
+    const h = z + 0.5;
+    const g = env.worldAt(p.screen, h);
+    const along = face === '+x' || face === '-x' ? g.y - cell.y : g.x - cell.x;
+    const topH = env.doc.map.inBounds(cell.x, cell.y) ? env.doc.map.topHeight(cell.x, cell.y) : z + 1;
+    const [added] = env.doc.addEntities([{ ...attachmentEntity(sprite, cell, face, z, along, topH), name: uniqueName(env.doc, sprite.name) }], `Attach ${sprite.name}`);
+    if (added) env.select([added.id]);
+  },
+  move(p, env) {
+    this.hover(p, env);
+  },
+  up() {},
+  cancel(env) {
+    env.setPreview([]);
+  },
+  hover(p, env) {
+    const hit = env.pickBlock(p.screen);
+    env.setPreview(hit ? [{ kind: 'cells', cells: [{ x: hit.x, y: hit.y }], color: 0xffd34a, alpha: 0.4 }] : []);
+  },
+});
 
 const wireTool = (): ToolImpl => {
   let from: string | null = null;
@@ -773,16 +919,19 @@ export const TOOLS: Record<ToolId, ToolImpl> = {
   blocks: blocksTool(),
   patrol: patrolTool(),
   wire: wireTool(),
+  attach: attachTool(),
+  blockbox: blockBoxTool(),
+  structure: structureTool(),
   room: roomTool(),
   corridor: corridorTool(),
   props: propsTool(),
   select: selectTool(),
-  paint: brushTool('Paint tiles', (s, c, _p, env) => void s.apply(c.x, c.y, { tile: env.opts.tile }), { color: 0x6fae5b }),
+  paint: brushTool('Paint tiles', (s, c, _p, env) => void s.apply(c.x, c.y, { tile: env.pickTile(env.opts.tile, c.x, c.y) }), { color: 0x6fae5b }),
   rect: dragTool(
     (a, b, _p, env) => rectOrOutline(a, b, env.opts.outline),
     (a, b, _p, env) => {
       const s = (env as ToolEnv).doc.beginStroke('Fill rectangle');
-      for (const c of rectOrOutline(a, b, env.opts.outline)) s.apply(c.x, c.y, { tile: env.opts.tile });
+      for (const c of rectOrOutline(a, b, env.opts.outline)) s.apply(c.x, c.y, { tile: env.pickTile(env.opts.tile, c.x, c.y) });
       s.commit();
     },
     0x6fae5b,
@@ -791,7 +940,7 @@ export const TOOLS: Record<ToolId, ToolImpl> = {
     (a, b, _p, env) => lineBetween(a, b).flatMap((c) => cellsAround(c, env.opts.size)),
     (a, b, _p, env) => {
       const s = env.doc.beginStroke('Draw line');
-      for (const c of lineBetween(a, b)) for (const cell of cellsAround(c, env.opts.size)) s.apply(cell.x, cell.y, { tile: env.opts.tile });
+      for (const c of lineBetween(a, b)) for (const cell of cellsAround(c, env.opts.size)) s.apply(cell.x, cell.y, { tile: env.pickTile(env.opts.tile, cell.x, cell.y) });
       s.commit();
     },
     0x6fae5b,
@@ -805,7 +954,7 @@ export const TOOLS: Record<ToolId, ToolImpl> = {
       if (t0 === env.opts.tile) return;
       const cells = floodFill(start, p.cell, (c) => c.tile === t0 && c.height === h0);
       const s = env.doc.beginStroke('Fill area');
-      for (const c of cells) s.apply(c.x, c.y, { tile: env.opts.tile });
+      for (const c of cells) s.apply(c.x, c.y, { tile: env.pickTile(env.opts.tile, c.x, c.y) });
       s.commit();
       env.notify('info', `Filled ${cells.length} cells.`);
     },
@@ -822,7 +971,7 @@ export const TOOLS: Record<ToolId, ToolImpl> = {
   scatter: brushTool(
     'Scatter tiles',
     (s, c, _p, env) => {
-      if (hash01(c.x, c.y, 17) < env.opts.density) s.apply(c.x, c.y, { tile: env.opts.tile });
+      if (hash01(c.x, c.y, 17) < env.opts.density) s.apply(c.x, c.y, { tile: env.pickTile(env.opts.tile, c.x, c.y) });
     },
     { once: true, color: 0x6fae5b },
   ),

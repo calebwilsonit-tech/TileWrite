@@ -16,6 +16,10 @@ export interface Overlay {
   rect?: { x: number; y: number; w: number; h: number; color: string };
   /** The selected vector shape: its box, and the handles to drag (sprite pixel coordinates). */
   gizmo?: { box: { x: number; y: number; w: number; h: number }; handles: { x: number; y: number }[] };
+  /** Outlines of the canvas preset (floor diamond, wall face, footprint, what blocks and what fades). */
+  guides?: { points: [number, number][]; color: string; label: string }[];
+  /** A horizontal line at this row (where the fading part of a tall prop ends). */
+  fadeRow?: number;
   /** The selection being moved: a lifted copy drawn at an offset. */
   floating?: { rect: { x: number; y: number; w: number; h: number }; dx: number; dy: number };
 }
@@ -104,6 +108,34 @@ export function renderStudio(ctx: CanvasRenderingContext2D, width: number, heigh
     ctx.moveTo(view.x, view.y + oy * z);
     ctx.lineTo(view.x + w, view.y + oy * z);
     ctx.stroke();
+  }
+
+  // guides of the canvas preset
+  if (overlay.guides) {
+    ctx.lineWidth = 2;
+    ctx.font = '11px sans-serif';
+    for (const g of overlay.guides) {
+      if (g.points.length < 2) continue;
+      ctx.strokeStyle = g.color;
+      ctx.beginPath();
+      g.points.forEach(([px, py], i) => (i === 0 ? ctx.moveTo(view.x + px * z, view.y + py * z) : ctx.lineTo(view.x + px * z, view.y + py * z)));
+      ctx.closePath();
+      ctx.stroke();
+      ctx.fillStyle = g.color;
+      ctx.fillText(g.label, view.x + g.points[0]![0] * z + 4, view.y + g.points[0]![1] * z + 12);
+    }
+    ctx.lineWidth = 1;
+  }
+  if (overlay.fadeRow !== undefined) {
+    ctx.strokeStyle = '#7be0ff';
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.moveTo(view.x, view.y + overlay.fadeRow * z);
+    ctx.lineTo(view.x + w, view.y + overlay.fadeRow * z);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#7be0ff';
+    ctx.fillText('fades above this line', view.x + 4, view.y + overlay.fadeRow * z - 4);
   }
 
   // symmetry axes

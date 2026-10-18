@@ -6,6 +6,7 @@ import { VECTOR_TOOLS, studio, useStudio } from './store';
 import type { CelStroke, VectorEdit } from './doc';
 import { boxOfDrag, dragBox, handleAt, handlesOf, movePoint, snap, type HandleId } from './vector-tools';
 import { store } from '../app/store';
+import { spriteGuides } from '../tilestudio/presets';
 
 declare global {
   interface Window {
@@ -101,7 +102,10 @@ export function StudioCanvas() {
     c.height = size.h;
     const selected = VECTOR_TOOLS.includes(state.tool) && doc.currentIsVector && doc.shape !== null ? doc.shapes()[doc.shape] : undefined;
     const gizmo = selected && vgesture.current?.kind !== 'draw' ? { box: shapeBounds({ ...selected, stroke: 0 }), handles: handlesOf(selected) } : undefined;
-    renderStudio(c.getContext('2d')!, size.w, size.h, doc, state, view.current, gizmo ? { ...overlay.current, gizmo } : overlay.current);
+    const iso = store.state.project?.project.iso ?? { tileW: 64, tileH: 32, heightPx: 16 };
+    const g = state.showGuides ? spriteGuides(iso, doc.meta) : { guides: [] };
+    const extra = { ...(gizmo ? { gizmo } : {}), ...(g.guides.length > 0 ? { guides: g.guides } : {}), ...(g.fadeRow !== undefined ? { fadeRow: g.fadeRow } : {}) };
+    renderStudio(c.getContext('2d')!, size.w, size.h, doc, state, view.current, { ...overlay.current, ...extra });
   });
 
   // keys for the vector tools: Enter finishes a path, Escape cancels it, Delete removes the selected shape, arrows nudge it

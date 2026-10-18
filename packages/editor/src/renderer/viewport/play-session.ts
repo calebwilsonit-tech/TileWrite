@@ -183,7 +183,7 @@ export class PlaySession {
       (d, n) => joinPath(d, n),
     );
 
-    const byId = loadScene(sim, o.scene, { prefabs: o.prefabs, scene: o.scenePath });
+    const byId = loadScene(sim, o.scene, { prefabs: o.prefabs, tileset: o.tileset(), scene: o.scenePath });
     for (const problem of byId.problems) o.notify('warn', problem);
     const player = sim.world.withTag('player')[0];
     if (o.from && player) this.placeAt(player, o.from.x, o.from.y);
@@ -332,7 +332,7 @@ export class PlaySession {
     const health = old?.get<Record<string, unknown>>('state:health');
     const rows = sim.runtime.rowState;
     const prefabs = live?.prefabs ?? o.prefabs;
-    const byId = loadScene(sim, scene, { prefabs, scene: this.scenePath, travel: true });
+    const byId = loadScene(sim, scene, { prefabs, tileset: o.tileset(), scene: this.scenePath, travel: true });
     for (const problem of byId.problems) o.notify('warn', problem);
     sim.runtime.rowState = rows;
     o.renderer.setTileMap(sim.map!, o.tileset());
@@ -524,7 +524,7 @@ export class PlaySession {
     }
     const hp = opts.fresh ? null : (sim.world.withTag('player')[0]?.get<{ hp: number }>('state:health')?.hp ?? null);
     this.scenePath = path;
-    const byId = loadScene(sim, scene, { prefabs: o.prefabs, scene: path, travel: true });
+    const byId = loadScene(sim, scene, { prefabs: o.prefabs, tileset: o.tileset(), scene: path, travel: true });
     for (const problem of byId.problems) o.notify('warn', problem);
     o.renderer.setTileMap(sim.map!, o.tileset());
     const player = sim.world.withTag('player')[0];

@@ -3,6 +3,7 @@ import { behaviorList } from '@tilewright/behaviors';
 import { applySprite, setLocomotionClips, setPlainClip } from '../studio/apply';
 import { BehaviorsSection } from './BehaviorsSection';
 import { QuickActionsSection } from './LogicEditors';
+import { AttachSection } from './AttachSection';
 import { SoundField } from './SoundField';
 import { PrefabBanner, WiresSection } from './LogicSections';
 import { studio, useStudio } from '../studio/store';
@@ -157,6 +158,7 @@ function EntityInspector({ ids }: { ids: string[] }) {
         </fieldset>
       )}
       <BehaviorsSection entity={e} edit={edit} />
+      <AttachSection entity={e} />
       <QuickActionsSection entity={e} />
       <WiresSection entityId={e.id} />
       {Object.keys(e.components).some((k) => !isHidden(k)) && (

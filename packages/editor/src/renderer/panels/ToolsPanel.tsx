@@ -1,7 +1,8 @@
 import { SLOPE, type SlopeDir } from '@tilewright/runtime';
 import { useApp, store, type ToolId, type ToolOptions } from '../app/store';
 import { describeKeys } from '../app/commands';
-import { allPrefabs, prefabById } from '../tools/prefabs';
+import { allPrefabs, attachmentSprites, prefabById } from '../tools/prefabs';
+import { useStudio } from '../studio/store';
 import { TOOL_META, toolMeta, type ToolMeta } from '../tools/tools';
 
 const GROUPS: ToolMeta['group'][] = ['Select', 'Paint', 'Height', 'Blocks', 'Terrain', 'Collision', 'Objects', 'Logic', 'Helpers'];
@@ -33,7 +34,9 @@ function Slider({ label, value, min, max, step = 1, onChange, testId }: { label:
 export function ToolOptionsView({ tool, options }: { tool: ToolId; options: ToolOptions }) {
   const meta = toolMeta(tool);
   useApp((s) => s.prefabNames);
+  useStudio((s) => s.assetsVersion);
   const choices = allPrefabs(store.prefabs);
+  const attachments = attachmentSprites();
   const groups = [...new Set(choices.map((c) => c.group))];
   const set = (p: Partial<ToolOptions>): void => store.setOptions(p);
   return (
@@ -42,6 +45,28 @@ export function ToolOptionsView({ tool, options }: { tool: ToolId; options: Tool
       {meta.options.includes('size') && <Slider testId="opt-size" label="Brush size" value={options.size} min={1} max={9} onChange={(v) => set({ size: v })} />}
       {meta.options.includes('height') && <Slider testId="opt-height" label="Height level" value={options.height} min={0} max={12} onChange={(v) => set({ height: v })} />}
       {meta.options.includes('density') && <Slider testId="opt-density" label="Density" value={options.density} min={0.05} max={1} step={0.05} onChange={(v) => set({ density: v })} />}
+      {meta.options.includes('zFrom') && <Slider testId="opt-zfrom" label="Box from level" value={options.zFrom} min={0} max={20} onChange={(v) => set({ zFrom: v, zTo: Math.max(v, options.zTo) })} />}
+      {meta.options.includes('zTo') && <Slider testId="opt-zto" label="Box up to level" value={options.zTo} min={0} max={20} onChange={(v) => set({ zTo: v, zFrom: Math.min(v, options.zFrom) })} />}
+      {meta.options.includes('spacing') && <Slider testId="opt-spacing" label="Spacing (cells)" value={options.spacing} min={0} max={8} step={0.5} onChange={(v) => set({ spacing: v })} />}
+      {meta.options.includes('avoidPaths') && (
+        <label className="opt check">
+          <input data-testid="opt-avoid-paths" type="checkbox" checked={options.avoidPaths} onChange={(e) => set({ avoidPaths: e.target.checked })} />
+          <span>Keep off paths and roads</span>
+        </label>
+      )}
+      {meta.options.includes('attachment') && (
+        <div className="opt">
+          <span>Attachment</span>
+          <select data-testid="opt-attachment" value={options.attachment} onChange={(e) => set({ attachment: e.target.value })}>
+            <option value="">{attachments.length ? '(choose one)' : '(none yet: draw one in the Tile studio)'}</option>
+            {attachments.map((s) => (
+              <option key={s.name} value={s.name}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
       {meta.options.includes('bridgeLevel') && <Slider testId="opt-bridge" label="Bridge level" value={options.bridgeLevel} min={1} max={12} onChange={(v) => set({ bridgeLevel: v })} />}
       {meta.options.includes('blockTo') && (
         <>

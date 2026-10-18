@@ -37,6 +37,23 @@ export interface Sprite {
   asset?: string;
   /** 0..1, for ghosts and fades (default 1). */
   alpha?: number;
+  /** No contact shadow under it (decals, attachments). */
+  noShadow?: boolean;
+}
+
+/** A picture fixed to the face of a block (a window, a torch, a poster) or lying on a top (a rug). */
+export const ATTACH = 'attach';
+
+export interface Attach {
+  /** The outward direction of the face it sits on, or the top of the block. */
+  face: '+x' | '-x' | '+y' | '-y' | 'top';
+  /** The sprite drawn when the face is seen as the left one in the picture, and as the right one ('' = the first one mirrored). */
+  left: string;
+  right: string;
+  /** The block it is fixed to: its cell, the level of the block, and how far along the face it is (0 to 1). Kept so it can be moved along the wall and found again if the wall is edited. */
+  cell?: { x: number; y: number };
+  z?: number;
+  along?: number;
 }
 
 /** A line of text drawn above an object (signs, sentence stones, text blocks). */

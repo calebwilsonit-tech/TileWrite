@@ -222,6 +222,24 @@ export const TileDefSchema = z.object({
   rim: z.object({ sides: z.number().int().min(0).max(15), corners: z.number().int().min(0).max(15), color: z.number().int().min(0).max(0xffffff) }).optional(),
   /** Name of a sprite that covers the top face. */
   art: z.string().optional(),
+  leftArt: z.string().optional(),
+  rightArt: z.string().optional(),
+  faceLevels: z.number().min(0.5).max(8).optional(),
+  anim: z.object({ frames: z.array(z.string()).min(1), fps: z.number().min(0.1).max(30) }).optional(),
+  variants: z.array(z.object({ tile: z.number().int().min(1), weight: z.number().min(0).max(100) })).optional(),
+  props: z
+    .object({
+      walkable: z.boolean().optional(),
+      stair: z.boolean().optional(),
+      pit: z.boolean().optional(),
+      water: z.boolean().optional(),
+      footstep: z.string().optional(),
+      blocksLight: z.boolean().optional(),
+      sortOffset: z.number().optional(),
+      tags: z.array(z.string()).optional(),
+      custom: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),
+    })
+    .optional(),
 });
 export type TileDefData = z.infer<typeof TileDefSchema>;
 

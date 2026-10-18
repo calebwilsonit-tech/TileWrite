@@ -4,7 +4,7 @@ import type { CellMark } from '../story/cutscene';
 import type { BlockFace, CellStack } from '../tilemap/tilemap';
 import { DEFAULT_ISO, gridToScreen, relToScreen, rotateGrid, screenToCell, screenToGrid, unrotateVec, type Cell, type IsoConfig, type ViewRotation } from '../iso/math';
 import type { LightingModel } from '../lighting/lighting';
-import { C, LABEL, type Label, type Sprite, type TransformIso } from '../scene/components';
+import { ATTACH, C, LABEL, type Attach, type Label, type Sprite, type TransformIso } from '../scene/components';
 import { LightingLayer } from './lighting-layer';
 import { ParticleLayer } from './particles';
 import type { SpriteData } from '../sprites/format';
@@ -51,6 +51,8 @@ interface SpriteSheetTextures {
   atlas: Atlas;
   textures: Texture[];
   version: number;
+  /** A tall prop whose upper part fades when something stands behind it: that part and the rest, as separate pictures per frame. */
+  fade?: { top: (Texture | null)[]; bottom: (Texture | null)[]; splitY: number };
 }
 
 interface EntityView {
@@ -58,7 +60,11 @@ interface EntityView {
   gfx: Container;
   signature: string;
   spr?: PixiSprite;
+  /** The faded part of a tall prop (its canopy). */
+  spr2?: PixiSprite;
   sheet?: SpriteSheetTextures;
+  /** Whether this is a wall or floor attachment seen from the left, the right, or the top (it is rebuilt when that changes). */
+  side?: string;
 }
 
 interface LabelView {
@@ -519,6 +525,7 @@ export class IsoRenderer {
       this.drawCell(g, slopeCorners(slope.dir), bottom, def);
     } else {
       this.drawCell(g, { n: 0, e: 0, s: 0, w: 0 }, bottom, def);
+      if (def.anim) this.addAnimation(g, def);
     }
     add(g, height, box, !(flags & FLAG.PIT));
 
@@ -596,16 +603,29 @@ export class IsoRenderer {
     const [sx, sy] = P(1, 1, c.s);
     const [wx, wy] = P(0, 1, c.w);
     const sides = this.visibleSides();
-    const side = (corners: [Corner, Corner], fill: number): void => {
+    const side = (corners: [Corner, Corner], fill: number | { texture: Texture; textureSpace: 'local' }): void => {
       const [a, b] = corners;
       const A = P(CORNER_AT[a][0], CORNER_AT[a][1], c[a]);
       const B = P(CORNER_AT[b][0], CORNER_AT[b][1], c[b]);
       const Ab = P(CORNER_AT[a][0], CORNER_AT[a][1], bottom);
       const Bb = P(CORNER_AT[b][0], CORNER_AT[b][1], bottom);
-      g.poly([A[0], A[1], B[0], B[1], Bb[0], Bb[1], Ab[0], Ab[1]]).fill(fill);
+      if (typeof fill === 'number') {
+        g.poly([A[0], A[1], B[0], B[1], Bb[0], Bb[1], Ab[0], Ab[1]]).fill(fill);
+        return;
+      }
+      // a picture on a face is repeated for every level the face is tall (a cliff of three levels shows it three times)
+      const per = Math.max(0.5, def.faceLevels ?? 1);
+      const total = Math.max(per, c[a] - bottom);
+      for (let top = 0; top < total - 1e-6; top += per) {
+        const hiA = P(CORNER_AT[a][0], CORNER_AT[a][1], c[a] - top);
+        const hiB = P(CORNER_AT[b][0], CORNER_AT[b][1], c[b] - top);
+        const loA = P(CORNER_AT[a][0], CORNER_AT[a][1], c[a] - Math.min(total, top + per));
+        const loB = P(CORNER_AT[b][0], CORNER_AT[b][1], c[b] - Math.min(total, top + per));
+        g.poly([hiA[0], hiA[1], hiB[0], hiB[1], loB[0], loB[1], loA[0], loA[1]]).fill(fill);
+      }
     };
-    if (!skip?.left) side(sides.left, (faces?.left ?? def).left);
-    if (!skip?.right) side(sides.right, (faces?.right ?? def).right);
+    if (!skip?.left) side(sides.left, this.sideFill(faces?.left ?? def, 'left'));
+    if (!skip?.right) side(sides.right, this.sideFill(faces?.right ?? def, 'right'));
     const top = faces?.top ?? def;
     g.poly([nx, ny, ex, ey, sx, sy, wx, wy]).fill(this.topFill(top));
     g.poly([nx, ny, ex, ey, sx, sy, wx, wy]).stroke({ width: 1, color: shade(top.top, 0.85), alpha: this.hasTileArt(top) ? 0.15 : 0.6 });
@@ -614,26 +634,67 @@ export class IsoRenderer {
 
   /** What fills a tile's top face: its art stretched over the face (the art's own picture of a diamond), or its flat colour. */
   private topFill(def: TileDef): number | { texture: Texture; textureSpace: 'local' } {
-    const t = def.art ? this.artTexture(def.art) : null;
+    const name = def.anim?.frames[0] ?? def.art;
+    const t = name ? this.artTexture(name) : null;
     return t ? { texture: t, textureSpace: 'local' } : def.top;
+  }
+
+  /** What fills a side face: its art (drawn on the wall-face template), or the flat colour. */
+  private sideFill(def: TileDef, which: 'left' | 'right'): number | { texture: Texture; textureSpace: 'local' } {
+    const name = which === 'left' ? def.leftArt : def.rightArt;
+    const t = name ? this.artTexture(name) : null;
+    return t ? { texture: t, textureSpace: 'local' } : which === 'left' ? def.left : def.right;
+  }
+
+  /** Moving tops: a picture on the cell that changes with the clock, the same on every cell so the map moves together. */
+  private addAnimation(g: Graphics, def: TileDef): void {
+    const frames = (def.anim?.frames ?? []).map((n) => this.artTexture(n)).filter((t): t is Texture => t !== null);
+    if (!def.anim || frames.length < 2) return;
+    const spr = new PixiSprite(frames[0]);
+    spr.position.set(-this.iso.tileW / 2, -this.iso.tileH / 2);
+    spr.width = this.iso.tileW;
+    spr.height = this.iso.tileH;
+    g.addChild(spr);
+    this.animated.push({ spr, frames, fps: def.anim.fps });
+  }
+
+  /** Switch the moving tops to the frame the clock says. */
+  private tickAnimations(nowMs: number): void {
+    if (this.animated.length === 0) return;
+    for (let i = this.animated.length - 1; i >= 0; i--) {
+      const a = this.animated[i]!;
+      if (a.spr.destroyed) {
+        this.animated.splice(i, 1);
+        continue;
+      }
+      const tex = a.frames[Math.floor((nowMs / 1000) * a.fps) % a.frames.length]!;
+      if (a.spr.texture !== tex) a.spr.texture = tex;
+    }
   }
 
   /** Whether this tile's art is available now. */
   hasTileArt(def: TileDef): boolean {
-    return !!def.art && this.artSources.has(def.art);
+    const name = def.anim?.frames[0] ?? def.art;
+    return !!name && this.artSources.has(name.split('#')[0]!);
   }
+
+  /** Sprites of moving tops currently on the map. */
+  private readonly animated: { spr: PixiSprite; frames: Texture[]; fps: number }[] = [];
 
   private artTexture(name: string): Texture | null {
     const cached = this.artTextures.get(name);
     if (cached) return cached;
-    const data = this.artSources.get(name);
-    if (!data) return null;
+    // "water#2" is the third frame of the sprite "water"
+    const [spriteName, frameText] = name.split('#');
+    const frame = Math.max(0, Number(frameText ?? 0) || 0);
+    const data = this.artSources.get(spriteName!);
+    if (!data || frame >= data.frames.length) return null;
     const canvas = document.createElement('canvas');
     canvas.width = data.width;
     canvas.height = data.height;
     const ctx = canvas.getContext('2d');
     if (!ctx) return null;
-    ctx.putImageData(new ImageData(new Uint8ClampedArray(compositeFrame(data, 0)), data.width, data.height), 0, 0);
+    ctx.putImageData(new ImageData(new Uint8ClampedArray(compositeFrame(data, frame)), data.width, data.height), 0, 0);
     const tex = Texture.from(canvas);
     tex.source.scaleMode = 'nearest';
     this.artTextures.set(name, tex);
@@ -744,12 +805,26 @@ export class IsoRenderer {
     const seen = new Set<number>();
     let focusBox: DepthBox | undefined;
 
+    const canopies: { v: EntityView; box: DepthBox; id: number }[] = [];
     for (const e of world.query(C.Transform, C.Sprite)) {
       const t = e.require<TransformIso>(C.Transform);
-      const s = e.require<Sprite>(C.Sprite);
+      let s = e.require<Sprite>(C.Sprite);
       seen.add(e.id);
-      const view = this.viewFor(e, s);
-      view.gfx.visible = s.visible && this.entitiesVisible && !(this.entityHidden?.(e) ?? false);
+      // a picture fixed to a wall or floor: which of its two sprites shows depends on how the wall is seen
+      const att = e.get<Attach>(ATTACH);
+      let side = '';
+      let flip: boolean | undefined;
+      let hiddenFace = false;
+      if (att) {
+        const r = this.attachmentLook(att, t);
+        if (r) {
+          s = { ...s, asset: r.name, noShadow: true };
+          side = r.key;
+          flip = r.flip;
+        } else hiddenFace = true;
+      }
+      const view = this.viewFor(e, s, side, flip);
+      view.gfx.visible = !hiddenFace && s.visible && this.entitiesVisible && !(this.entityHidden?.(e) ?? false);
       view.gfx.alpha = s.alpha ?? 1;
       const p = gridToScreen(t.x, t.y, t.h, this.iso);
       view.gfx.position.set(p.x, p.y);
@@ -757,6 +832,7 @@ export class IsoRenderer {
       const box = rotateBox(boxAt(base + e.id, t.x, t.y, t.h, s.w, s.d, s.height, s.sortOffset), this.iso);
       boxes.push(box);
       if (e.id === this.focus) focusBox = box;
+      if (view.spr2) canopies.push({ v: view, box, id: e.id });
     }
     for (const [id, v] of this.entityViews) {
       if (!seen.has(id)) {
@@ -797,7 +873,9 @@ export class IsoRenderer {
     this.syncDepthLabels();
 
     this.updateFade(focusBox);
+    this.fadeCanopies(focusBox, canopies);
     const nowMs = performance.now();
+    this.tickAnimations(nowMs);
     this.particles.frame(this.lastFrameAt ? Math.min(0.1, (nowMs - this.lastFrameAt) / 1000) : 0);
     this.lastFrameAt = nowMs;
 
@@ -907,6 +985,31 @@ export class IsoRenderer {
     v.underline.position.set(p.x, p.y);
   }
 
+  /** Which picture a wall or floor attachment shows from here, and whether it is mirrored; null when its wall faces away. */
+  private attachmentLook(att: Attach, t: TransformIso): { name: string; flip: boolean; key: string } | null {
+    if (att.face === 'top') return att.left ? { name: att.left, flip: false, key: 'top' } : null;
+    const nx = att.face === '+x' ? 1 : att.face === '-x' ? -1 : 0;
+    const ny = att.face === '+y' ? 1 : att.face === '-y' ? -1 : 0;
+    const p1 = gridToScreen(t.x, t.y, t.h, this.iso);
+    const p2 = gridToScreen(t.x + nx * 0.2, t.y + ny * 0.2, t.h, this.iso);
+    if (p2.y - p1.y <= 0) return null;
+    const left = p2.x - p1.x < 0;
+    if (left) return att.left ? { name: att.left, flip: false, key: 'left' } : att.right ? { name: att.right, flip: true, key: 'left' } : null;
+    return att.right ? { name: att.right, flip: false, key: 'right' } : att.left ? { name: att.left, flip: true, key: 'right' } : null;
+  }
+
+  /** The canopy of a tall prop fades when the focus entity is behind it. */
+  private fadeCanopies(focusBox: DepthBox | undefined, list: { v: EntityView; box: DepthBox; id: number }[]): void {
+    const focusRect = focusBox ? screenRect(focusBox, this.iso) : undefined;
+    for (const c of list) {
+      let target = 1;
+      if (this.occlusionFade && focusBox && focusRect && c.id !== this.focus && rectsOverlap(focusRect, screenRect(c.box, this.iso)) && isInFront(focusBox, c.box)) target = Math.min(0.35, this.fadeAlpha);
+      if (this.xray) target = Math.min(target, 0.4);
+      const spr = c.v.spr2!;
+      spr.alpha = Math.abs(spr.alpha - target) < 0.02 ? target : spr.alpha + (target - spr.alpha) * 0.25;
+    }
+  }
+
   /** Walls in front of the focus entity (that rise above its feet) fade out so it stays visible. */
   private updateFade(focusBox: DepthBox | undefined): void {
     const focusRect = focusBox ? screenRect(focusBox, this.iso) : undefined;
@@ -940,7 +1043,7 @@ export class IsoRenderer {
   registerSprite(data: SpriteData): void {
     this.unregisterSprite(data.name);
     this.artSources.set(data.name, data);
-    if (Object.values(this.tileset).some((d) => d.art === data.name)) this.rebuildTiles();
+    if (Object.values(this.tileset).some((d) => d.art === data.name || d.leftArt === data.name || d.rightArt === data.name || d.anim?.frames.some((f) => f.split('#')[0] === data.name))) this.rebuildTiles();
     const sheet = exportSheet(data, { powerOfTwo: false, padding: 1, png: false });
     const canvas = document.createElement('canvas');
     canvas.width = sheet.width;
@@ -951,16 +1054,38 @@ export class IsoRenderer {
     const base = Texture.from(canvas);
     base.source.scaleMode = 'nearest';
     const textures = sheet.atlas.frames.map((f) => new Texture({ source: base.source, frame: new Rectangle(f.x, f.y, f.w, f.h) }));
-    this.sprites.set(data.name, { atlas: sheet.atlas, textures, version: ++this.spriteVersion });
+    const entry: SpriteSheetTextures = { atlas: sheet.atlas, textures, version: ++this.spriteVersion };
+    const fade = data.meta?.fade;
+    if (fade) {
+      // cut every frame in two at the row where the fading part ends
+      const split = fade.toY;
+      entry.fade = {
+        splitY: split,
+        top: sheet.atlas.frames.map((f) => {
+          const h = Math.max(0, Math.min(f.h, split - f.trimY));
+          return h > 0 ? new Texture({ source: base.source, frame: new Rectangle(f.x, f.y, f.w, h) }) : null;
+        }),
+        bottom: sheet.atlas.frames.map((f) => {
+          const h = Math.max(0, Math.min(f.h, split - f.trimY));
+          return f.h - h > 0 ? new Texture({ source: base.source, frame: new Rectangle(f.x, f.y + h, f.w, f.h - h) }) : null;
+        }),
+      };
+    }
+    this.sprites.set(data.name, entry);
   }
 
   unregisterSprite(name: string): void {
     this.artSources.delete(name);
-    this.artTextures.get(name)?.destroy(true);
-    this.artTextures.delete(name);
+    for (const key of [...this.artTextures.keys()]) {
+      if (key === name || key.startsWith(`${name}#`)) {
+        this.artTextures.get(key)?.destroy(true);
+        this.artTextures.delete(key);
+      }
+    }
     const old = this.sprites.get(name);
     if (!old) return;
     for (const t of old.textures) t.destroy(false);
+    for (const t of [...(old.fade?.top ?? []), ...(old.fade?.bottom ?? [])]) t?.destroy(false);
     this.sprites.delete(name);
   }
 
@@ -968,19 +1093,26 @@ export class IsoRenderer {
     return this.sprites.has(name);
   }
 
-  private viewFor(e: Entity, s: Sprite): EntityView {
+  private viewFor(e: Entity, s: Sprite, side = '', flip?: boolean): EntityView {
     const sheet = s.asset ? this.sprites.get(s.asset) : undefined;
-    const signature = sheet ? `asset|${s.asset}|${sheet.version}|${s.w}|${s.d}` : `${s.shape}|${s.color}|${s.w}|${s.d}|${s.height}|${this.view}`;
+    const signature = sheet ? `asset|${s.asset}|${sheet.version}|${s.w}|${s.d}|${s.noShadow ? 1 : 0}|${side}` : `${s.shape}|${s.color}|${s.w}|${s.d}|${s.height}|${this.view}`;
     let v = this.entityViews.get(e.id);
     if (!v || v.signature !== signature) {
       v?.gfx.destroy({ children: true });
       if (sheet) {
         const node = new Container();
-        const shadow = new Graphics();
-        shadow.ellipse(0, 0, Math.max(6, s.w * this.iso.tileW * 0.3), Math.max(3, s.d * this.iso.tileH * 0.3)).fill({ color: 0x000000, alpha: 0.28 });
         const spr = new PixiSprite();
-        node.addChild(shadow, spr);
-        v = { gfx: node, signature, spr, sheet };
+        if (!s.noShadow) {
+          const shadow = new Graphics();
+          shadow.ellipse(0, 0, Math.max(6, s.w * this.iso.tileW * 0.3), Math.max(3, s.d * this.iso.tileH * 0.3)).fill({ color: 0x000000, alpha: 0.28 });
+          node.addChild(shadow);
+        }
+        node.addChild(spr);
+        v = { gfx: node, signature, spr, sheet, side };
+        if (sheet.fade) {
+          v.spr2 = new PixiSprite();
+          node.addChild(v.spr2);
+        }
       } else {
         const gfx = new Graphics();
         this.drawSprite(gfx, s);
@@ -991,7 +1123,7 @@ export class IsoRenderer {
     }
     if (v.spr && v.sheet) {
       const anim = e.get<Animator>(ANIMATOR);
-      this.showFrame(v, anim?.frame ?? 0, anim?.flip ?? false);
+      this.showFrame(v, anim?.frame ?? 0, flip ?? anim?.flip ?? false);
     }
     return v;
   }
@@ -1002,10 +1134,19 @@ export class IsoRenderer {
     const idx = frame >= 0 && frame < sheet.textures.length ? frame : 0;
     const f = sheet.atlas.frames[idx]!;
     const spr = v.spr!;
-    spr.texture = sheet.textures[idx]!;
     const ox = f.trimX - sheet.atlas.origin.x;
-    spr.scale.x = flip ? -1 : 1;
-    spr.position.set(flip ? -ox : ox, f.trimY - sheet.atlas.origin.y);
+    const place = (p: PixiSprite, tex: Texture | null, oy: number): void => {
+      p.visible = tex !== null;
+      if (!tex) return;
+      p.texture = tex;
+      p.scale.x = flip ? -1 : 1;
+      p.position.set(flip ? -ox : ox, oy);
+    };
+    if (sheet.fade && v.spr2) {
+      const topH = sheet.fade.top[idx]?.frame.height ?? 0;
+      place(v.spr2, sheet.fade.top[idx] ?? null, f.trimY - sheet.atlas.origin.y);
+      place(spr, sheet.fade.bottom[idx] ?? null, f.trimY - sheet.atlas.origin.y + topH);
+    } else place(spr, sheet.textures[idx]!, f.trimY - sheet.atlas.origin.y);
   }
 
   /** Geometry is relative to the feet point (the entity's grid position at its height). */

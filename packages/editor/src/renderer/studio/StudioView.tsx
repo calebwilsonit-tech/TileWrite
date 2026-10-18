@@ -5,6 +5,7 @@ import { StudioCanvas } from './StudioCanvas';
 import { ClipsSection, ExportSection, LayersSection, PalettePanel, PreviewSection, PropertiesSection, ShapesSection, Timeline, ToolBox } from './StudioPanels';
 import { spriteNameProblem } from './assets';
 import { studio, useStudio } from './store';
+import { TileStudioLeft, TileStudioRight } from '../tilestudio/TileStudio';
 
 /** A small picture of a saved sprite's first frame. */
 export function SpriteThumb({ data, size = 40 }: { data: SpriteData; size?: number }) {
@@ -133,6 +134,7 @@ function UnsavedDialog({ name, onSave, onDiscard, onCancel }: { name: string; on
 export function StudioView() {
   useStudio((s) => s.docVersion);
   const open = useStudio((s) => s.openName);
+  const mode = useStudio((s) => s.mode);
   const doc = studio.doc;
   const [pending, setPending] = useState<{ then: () => void } | null>(null);
 
@@ -165,6 +167,15 @@ export function StudioView() {
   return (
     <div className="studio" data-testid="studio">
       <aside className="studio-left">
+        <div className="row studio-modes" role="tablist">
+          <button role="tab" aria-selected={mode === 'sprite'} className={mode === 'sprite' ? 'on' : ''} data-testid="studio-mode-sprite" onClick={() => studio.set({ mode: 'sprite' })}>
+            Sprite
+          </button>
+          <button role="tab" aria-selected={mode === 'tile'} className={mode === 'tile' ? 'on' : ''} data-testid="studio-mode-tile" onClick={() => studio.set({ mode: 'tile' })} title="Floor tiles, walls and cliffs, tall props, wall attachments">
+            Tile studio
+          </button>
+        </div>
+        {mode === 'tile' && <TileStudioLeft />}
         <SpriteList onOpen={switchTo} guard={guard} />
         <ToolBox />
       </aside>
@@ -190,6 +201,7 @@ export function StudioView() {
         <Timeline />
       </main>
       <aside className="studio-right">
+        {mode === 'tile' && <TileStudioRight />}
         <Section title="Preview" open>
           <PreviewSection />
         </Section>

@@ -17,7 +17,7 @@ const baseOpts: ToolOptions = {
   prefab: 'crate',
   outline: false,
   edge: 1,
-  blockMode: 'add',
+  blockMode: 'add', spacing: 1, avoidPaths: true, attachment: '', zFrom: 0, zTo: 3,
 };
 
 function setup(w = 12, h = 12, opts: Partial<ToolOptions> = {}) {
@@ -27,6 +27,12 @@ function setup(w = 12, h = 12, opts: Partial<ToolOptions> = {}) {
   const state = { selection: [] as string[], region: null as string | null, preview: [] as Preview[], walk: null as Set<string> | null, picks: new Map<string, string>() };
   const env: ToolEnv = {
     doc,
+    pickTile: (tile) => tile,
+    tileset: () => ({}),
+    blockBox: () => null,
+    setBlockBox: () => undefined,
+    placing: () => null,
+    rotatePlacing: () => undefined,
     opts: { ...baseOpts, ...opts },
     get selection() {
       return state.selection;

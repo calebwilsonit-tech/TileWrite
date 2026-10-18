@@ -7,6 +7,8 @@ import { api, joinPath } from '../project/api';
 import { applyAccessibility, cleanAccessibility } from './accessibility';
 import { assetFs } from '../project/assetFs';
 import { deletePrefab, loadAllPrefabs, prefabNameProblem, savePrefab } from '../project/prefabs';
+import { deleteStructure, loadStructures, saveStructure } from '../project/structures';
+import { structureNameProblem, type Region, type Structure } from '../structures/structure';
 import { analyseLevel, analysePushPuzzles, type LevelIssue } from '@tilewright/playbot';
 import { checkProject, type ProjectProblem } from '../project/check';
 import { deletePlaythrough, listPlaythroughs, loadPlaythrough, nextPlaythroughName, savePlaythrough } from '../project/playthroughs';
@@ -81,6 +83,9 @@ export type ToolId =
   | 'corridor'
   | 'props'
   | 'wire'
+  | 'attach'
+  | 'blockbox'
+  | 'structure'
   | 'patrol';
 
 export interface ToolOptions {
@@ -94,8 +99,16 @@ export interface ToolOptions {
   blockFrom: number;
   blockTo: number;
   prefab: string;
+  /** Scatter props: the least distance between two of them (cells), and whether to keep off paths. */
+  spacing: number;
+  avoidPaths: boolean;
+  /** The Attach tool: the sprite (a window, a torch...) to fix to a block face. */
+  attachment: string;
   outline: boolean;
   edge: number;
+  /** The Box select tool: the levels the box covers. */
+  zFrom: number;
+  zTo: number;
   /** The Blocks tool: what a click does. */
   blockMode: 'add' | 'replace' | 'face' | 'delete';
 }
@@ -163,6 +176,12 @@ export interface AppState {
   busy: boolean;
   /** Names of the project's prefabs. */
   prefabNames: string[];
+  /** The box of blocks the Box select tool has marked (cells and levels), for copying, filling, hollowing and saving. */
+  blockBox: Region | null;
+  /** What the Place structure tool puts down: a saved structure or the copy on the clipboard, and its turns. */
+  placing: { name: string; turns: number } | null;
+  /** Saved structures (names), so panels re-render. */
+  structureNames: string[];
   /** Bumped when items, dialogues or cutscenes change, so the Story panel re-renders. */
   storyVersion: number;
   /** Puzzle problems from the last check of the open scene. */
@@ -216,9 +235,14 @@ const initial: AppState = {
     blockFrom: 0,
     blockTo: 0,
     prefab: 'crate',
+    spacing: 1,
+    avoidPaths: true,
+    attachment: '',
     outline: false,
     edge: 1,
     blockMode: 'add',
+    zFrom: 0,
+    zTo: 3,
   },
   view: { grid: true, collision: false, collisionLevel: null, heightLabels: false, triggers: false, ai: true, lights: false, depth: false, slice: 0, xray: false, profiler: false, wires: true, ground: true, walls: true, objects: true, decoration: true, lightsLayer: true, regions: true },
   locks: { ground: false, walls: false, objects: false, decoration: false, lightsLayer: false, regions: false },
@@ -232,6 +256,9 @@ const initial: AppState = {
   recent: [],
   busy: false,
   prefabNames: [],
+  blockBox: null,
+  placing: null,
+  structureNames: [],
   storyVersion: 0,
   hotReload: false,
   analysis: null,
@@ -414,6 +441,7 @@ class AppStore {
     this.set({ project: p, workspace: 'world', recent: await api().recent.list() });
     await this.loadPrefabs();
     await this.loadStory();
+    await this.loadStructureFiles();
     await this.loadPlaythroughNames();
     await this.loadScripts();
     await this.openScene(p.project.startScene);
@@ -592,6 +620,54 @@ class AppStore {
   eventDefs: EventDef[] = [];
   /** The game's own controls (Project settings -> Controls), saved in assets/input.json. */
   input: ProjectInput = emptyProjectInput();
+  /** Structures saved from regions of the world (assets/structures). */
+  structures = new Map<string, Structure>();
+  /** The copy made by Copy or Cut: it lives only until the project closes. */
+  blockClipboard: Structure | null = null;
+
+  async loadStructureFiles(): Promise<void> {
+    const p = this.state.project;
+    if (!p) {
+      this.structures = new Map();
+      this.set({ structureNames: [] });
+      return;
+    }
+    const { structures, problems } = await loadStructures(assetFs, p.dir);
+    this.structures = new Map(structures.map((s) => [s.name, s]));
+    for (const problem of problems) this.notify('warn', problem);
+    this.set({ structureNames: [...this.structures.keys()] });
+  }
+
+  async addStructure(s: Structure): Promise<boolean> {
+    const p = this.state.project;
+    if (!p) return false;
+    const problem = structureNameProblem(s.name, [...this.structures.keys()]);
+    if (problem) {
+      this.notify('warn', problem);
+      return false;
+    }
+    const ok = await this.guard('Saving the structure', async () => {
+      await saveStructure(assetFs, p.dir, s);
+      this.structures = new Map(this.structures).set(s.name, s);
+      this.set({ structureNames: [...this.structures.keys()].sort((a, b) => a.localeCompare(b)) });
+      return true;
+    });
+    return ok === true;
+  }
+
+  async removeStructure(name: string): Promise<void> {
+    const p = this.state.project;
+    if (!p) return;
+    await this.guard('Deleting the structure', async () => {
+      await deleteStructure(assetFs, p.dir, name);
+      const next = new Map(this.structures);
+      next.delete(name);
+      this.structures = next;
+      if (this.state.placing?.name === name) this.set({ placing: null });
+      this.set({ structureNames: [...next.keys()] });
+    });
+  }
+
   /** The theme and arrangement of the game's own screen (Story -> Interface), saved in assets/ui.json. */
   uiLayout: UiLayout = defaultUiLayout();
   /** The interface screens made in the UI designer, saved in assets/screens.json. */

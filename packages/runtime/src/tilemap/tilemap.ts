@@ -17,6 +17,36 @@ export interface TileDef {
   rim?: { sides: number; corners: number; color: number };
   /** A sprite (drawn or imported in the sprite studio) that covers the top face instead of the flat colour. */
   art?: string;
+  /** Sprites that cover the left and right faces (cliffs and walls), drawn on the wall-face templates of the tile studio. */
+  leftArt?: string;
+  rightArt?: string;
+  /** How many levels tall the picture on a side face is: a taller face repeats it upwards (1 = a one-level wall picture, 2 = a two-level cliff picture). */
+  faceLevels?: number;
+  /** Frames of a moving top (water, lava, torches): sprites shown one after the other, the same on every cell so the map moves together. */
+  anim?: { frames: string[]; fps: number };
+  /** Other tiles the painter may use instead of this one, chosen at random by weight ("grass with flowers"). */
+  variants?: { tile: number; weight: number }[];
+  /** What the tile is: set once here, true for every placed copy. */
+  props?: TileProps;
+}
+
+/** The properties of a tile, set in the tile studio. They apply wherever the tile is placed, and editing them updates every placed copy. */
+export interface TileProps {
+  /** Nobody can walk on it (water you cannot wade, lava, a wall top). Default: walkable. */
+  walkable?: boolean;
+  stair?: boolean;
+  /** No floor: bodies fall through. */
+  pit?: boolean;
+  water?: boolean;
+  /** Sound name played under the feet. */
+  footstep?: string;
+  /** Casts shadows and blocks light. */
+  blocksLight?: boolean;
+  /** Added to the tile's draw order (to sit in front of or behind its neighbours). */
+  sortOffset?: number;
+  tags?: string[];
+  /** Any other setting the game's own logic reads (a fixed list of name -> value). */
+  custom?: Record<string, string | number | boolean>;
 }
 
 export type TileSet = Record<number, TileDef>;

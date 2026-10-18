@@ -64,6 +64,38 @@ export const ShapeSchema = z.object({
 });
 export type ShapeData = z.infer<typeof ShapeSchema>;
 
+/**
+ * What a sprite is for. Plain sprites have none. Tiles, tall props, wall and floor attachments and decals say how they sit in the
+ * world: where they stand, what blocks, what is drawn behind and what fades when the player walks behind.
+ */
+export const SpriteMetaSchema = z.object({
+  kind: z.enum(['sprite', 'tile', 'wall', 'cliff', 'stairs', 'prop', 'attachment', 'decal']).default('sprite'),
+  /** The studio canvas this started from (`flat`, `block`, `wall-left`, `prop-2x3`...), for guides. */
+  preset: z.string().default(''),
+  /** The cells the base stands on: w along x, d along y. */
+  footprint: z.object({ w: z.number().min(0.25).max(12).default(1), d: z.number().min(0.25).max(12).default(1) }).default({ w: 1, d: 1 }),
+  /** How tall it is in cells (draw order, and what walls it can hide behind). */
+  heightCells: z.number().min(0).max(40).default(1),
+  /** What blocks, as a rectangle inside the footprint in cells ({x, y} from the footprint's top-left corner); null = nothing blocks. */
+  collision: z.object({ x: z.number(), y: z.number(), w: z.number().min(0.05), d: z.number().min(0.05) }).nullable().default(null),
+  /** The rows of the picture (from its top) that fade when something stands behind it: the canopy of a tree. null = nothing fades. */
+  fade: z.object({ fromY: z.number().int().min(0), toY: z.number().int().min(1) }).nullable().default(null),
+  /** Draw-order point as an offset in cells from the feet (0 = the feet). */
+  sortOffset: z.number().default(0),
+  /** Sways gently (trees, grass). */
+  sway: z.boolean().default(false),
+  /** Other sprites that can be used instead of this one, chosen at random by weight. */
+  variants: z.array(z.object({ sprite: z.string(), weight: z.number().min(0).max(100) })).default([]),
+  /** Wall and floor attachments: the face they sit on, and the sprite for the face on the other side (empty = this one mirrored). */
+  face: z.enum(['wall', 'floor']).default('wall'),
+  otherSide: z.string().default(''),
+  /** Attachments can bring behaviours with them: a light, something to interact with, a portal. */
+  light: z.number().min(0).max(12).default(0),
+  /** The tile properties of a tile sprite are stored with the tile; a prop may also carry these. */
+  tags: z.array(z.string()).default([]),
+});
+export type SpriteMeta = z.infer<typeof SpriteMetaSchema>;
+
 export const SpriteSchema = z
   .object({
     schemaVersion: z.number().int().min(1),
@@ -79,6 +111,8 @@ export const SpriteSchema = z
     clips: z.array(ClipSchema).default([]),
     /** Present for sprites built from shapes with sliders; `bake` turns them into pixels. */
     procedural: z.object({ shapes: z.array(ShapeSchema) }).nullable().default(null),
+    /** What the sprite is for in the world (a tile, a tall prop, a wall attachment...). */
+    meta: SpriteMetaSchema.optional(),
   })
   .superRefine((s, ctx) => {
     const ids = new Set<string>();
