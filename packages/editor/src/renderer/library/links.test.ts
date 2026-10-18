@@ -7,9 +7,9 @@ const item = (id: string, current: number): LibraryItem => ({ id, name: id, kind
 describe('library links', () => {
   it('remembers installs, and a second install of the same item replaces the first', () => {
     let f = emptyLinks();
-    f = recordInstall(f, { itemId: 'a', name: 'A', mode: 'link', version: 1, files: [], tiles: [], prefabs: [], installedAt: '' });
-    f = recordInstall(f, { itemId: 'b', name: 'B', mode: 'copy', version: 1, files: [], tiles: [], prefabs: [], installedAt: '' });
-    f = recordInstall(f, { itemId: 'a', name: 'A', mode: 'link', version: 2, files: [], tiles: [], prefabs: [], installedAt: '' });
+    f = recordInstall(f, { itemId: 'a', name: 'A', mode: 'link', version: 1, files: [], tiles: [], prefabs: [], installedAt: '', author: '', licence: '', source: '' });
+    f = recordInstall(f, { itemId: 'b', name: 'B', mode: 'copy', version: 1, files: [], tiles: [], prefabs: [], installedAt: '', author: '', licence: '', source: '' });
+    f = recordInstall(f, { itemId: 'a', name: 'A', mode: 'link', version: 2, files: [], tiles: [], prefabs: [], installedAt: '', author: '', licence: '', source: '' });
     expect(f.links.map((l) => [l.itemId, l.version])).toEqual([['b', 1], ['a', 2]]);
   });
 
@@ -21,7 +21,7 @@ describe('library links', () => {
   });
 
   it('breaking a link makes the project the owner; a damaged file reads as empty', () => {
-    const f = recordInstall(emptyLinks(), { itemId: 'a', name: 'A', mode: 'link', version: 1, files: [], tiles: [], prefabs: [], installedAt: '' });
+    const f = recordInstall(emptyLinks(), { itemId: 'a', name: 'A', mode: 'link', version: 1, files: [], tiles: [], prefabs: [], installedAt: '', author: '', licence: '', source: '' });
     expect(updatesAvailable(unlink(f, 'a'), [item('a', 9)])).toEqual([]);
     expect(parseLinks('{nope')).toEqual(emptyLinks());
   });

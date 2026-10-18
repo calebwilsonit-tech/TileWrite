@@ -107,6 +107,29 @@ function registerIpc(): void {
   });
 
   /**
+   * Talk to an asset hub. The pages of the editor cannot reach the internet themselves (that is on purpose), so every hub request
+   * goes through here: only http(s), plain http only for this computer, a size limit and a time limit, and nothing but text comes back.
+   */
+  ipcMain.handle('hub:request', async (_e, req: { method: string; url: string; token?: string; body?: string }) => {
+    const url = new URL(req.url);
+    const local = ['localhost', '127.0.0.1', '[::1]', '::1'].includes(url.hostname);
+    if (url.protocol !== 'https:' && !(url.protocol === 'http:' && local)) throw new Error('A hub address must start with https:// (http:// is only allowed for a hub on this computer).');
+    if (!['GET', 'POST', 'DELETE'].includes(req.method)) throw new Error('Unsupported request.');
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), 20_000);
+    try {
+      const res = await fetch(url, { method: req.method, headers: { 'Content-Type': 'application/json', ...(req.token ? { Authorization: `Bearer ${req.token}` } : {}) }, body: req.body, signal: ctl.signal, redirect: 'error' });
+      const buf = new Uint8Array(await res.arrayBuffer());
+      if (buf.length > 24 * 1024 * 1024) throw new Error('The hub sent more than 24 MB, which is too much.');
+      return { status: res.status, text: new TextDecoder().decode(buf), version: res.headers.get('x-item-version') ?? '' };
+    } catch (e) {
+      throw new Error(ctl.signal.aborted ? 'The hub did not answer in time.' : `Could not reach the hub: ${(e as Error).message}`, { cause: e });
+    } finally {
+      clearTimeout(timer);
+    }
+  });
+
+  /**
    * "Save a file": the user picks where in a native dialog and the text is written there (an asset pack to share).
    * (Tests set TILEWRIGHT_TEST_SAVE to a folder to skip the dialog.)
    */

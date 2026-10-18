@@ -31,6 +31,8 @@ export interface TilewrightApi {
   importFile(title: string, extensions: string[]): Promise<{ name: string; bytes: Uint8Array } | null>;
   /** Pick where to save a text file (an asset pack); returns where it went, or null when cancelled. */
   saveFile(title: string, suggested: string, text: string): Promise<string | null>;
+  /** A request to an asset hub, made by the main process. */
+  hubRequest(req: { method: string; url: string; token?: string; body?: string }): Promise<{ status: number; text: string; version: string }>;
   fs: {
     read(file: string): Promise<string>;
     readBinary(file: string): Promise<Uint8Array>;

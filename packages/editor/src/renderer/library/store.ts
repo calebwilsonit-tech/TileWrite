@@ -36,6 +36,8 @@ export interface LibraryItem {
   versions: LibraryVersion[];
   /** True when the pack holds code. */
   code: boolean;
+  /** Where it came from when it was downloaded from a hub: the hub's address, the item there and its version. */
+  origin?: { hub: string; id: string; version: number };
 }
 
 export interface LibraryIndex {
@@ -97,6 +99,7 @@ export interface SaveOptions {
   tags?: string[];
   thumb?: string;
   note?: string;
+  origin?: { hub: string; id: string; version: number };
 }
 
 export class Library {
@@ -159,6 +162,7 @@ export class Library {
     item.licence = pack.licence || item.licence;
     item.description = pack.description || item.description;
     if (opts.thumb) item.thumb = opts.thumb;
+    if (opts.origin) item.origin = opts.origin;
     if (opts.tags && existing) item.tags = opts.tags;
     if (opts.folder !== undefined && existing) item.folder = opts.folder;
     if (!existing) this.index.items.push(item);

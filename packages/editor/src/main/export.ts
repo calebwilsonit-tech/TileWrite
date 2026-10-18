@@ -92,6 +92,7 @@ export function registerExport(deps: Deps): void {
     await fs.copyFile(process.execPath, path.join(target, job.exeName));
     if (process.platform === 'linux') await fs.chmod(path.join(target, job.exeName), 0o755);
     await fs.writeFile(path.join(target, MARKER), `${job.gameName} ${job.version}\n`, 'utf8');
+    if (job.credits) await fs.writeFile(path.join(target, 'CREDITS.txt'), job.credits, 'utf8');
 
     // ---- the game shell and player page ----
     say('Adding the game shell...');

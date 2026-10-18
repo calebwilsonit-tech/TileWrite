@@ -91,7 +91,7 @@ export interface InstallOptions {
   /** The pack holds code: it is only installed when the user says so. */
   approveCode?: boolean;
   /** The library item this came from (links are remembered against it). */
-  item?: { id: string; name: string; version: number };
+  item?: { id: string; name: string; version: number; source?: string };
 }
 
 export interface InstallReport {
@@ -145,7 +145,7 @@ export async function installPack(pack: Pack, opts: InstallOptions): Promise<Ins
   await studio.loadAssets();
   if (opts.item) {
     const links = await readLinks(p.dir);
-    const link: Link = { itemId: opts.item.id, name: opts.item.name, mode: opts.mode, version: opts.item.version, files: r.files.map((f) => f.path), tiles: pack.tiles.map((t) => r.tiles.find((x) => x.id === r.tileMap.get(t.id))?.name ?? t.name), prefabs: pack.uiPrefabs.map((x) => x.name), installedAt: new Date().toISOString() };
+    const link: Link = { itemId: opts.item.id, name: opts.item.name, mode: opts.mode, version: opts.item.version, files: r.files.map((f) => f.path), tiles: pack.tiles.map((t) => r.tiles.find((x) => x.id === r.tileMap.get(t.id))?.name ?? t.name), prefabs: pack.uiPrefabs.map((x) => x.name), installedAt: new Date().toISOString(), author: pack.author, licence: pack.licence, source: opts.item.source ?? '' };
     await assetFs.write(joinPath(p.dir, LINKS_FILE), JSON.stringify(recordInstall(links, link), null, 2) + '\n');
   }
   return { written: r.files.length, tiles: pack.tiles.length, uiPrefabs: pack.uiPrefabs.length, renamed: r.renamed, skipped: r.skipped, warnings: problems.filter((x) => x.includes('will not line up')) };
@@ -158,7 +158,7 @@ export async function addFromLibrary(id: string, opts: { mode: 'link' | 'copy'; 
   if (!item) throw new Error('That library item no longer exists.');
   const version = opts.version ?? item.current;
   const pack = await lib.readPack(id, version);
-  return installPack(pack, { mode: opts.mode, how: opts.how, approveCode: opts.approveCode, item: { id, name: item.name, version } });
+  return installPack(pack, { mode: opts.mode, how: opts.how, approveCode: opts.approveCode, item: { id, name: item.name, version, ...(item.origin ? { source: `${item.origin.hub} (${item.origin.id})` } : {}) } });
 }
 
 /** Bring every linked item up to the library's current version (what the library has wins over local edits to those pieces). */

@@ -18,6 +18,10 @@ export const LinkSchema = z.object({
   tiles: z.array(z.string()).default([]),
   prefabs: z.array(z.string()).default([]),
   installedAt: z.string().default(''),
+  /** Who made it, under which licence, and where it came from (for credits when a game is exported). */
+  author: z.string().default(''),
+  licence: z.string().default(''),
+  source: z.string().default(''),
 });
 export type Link = z.infer<typeof LinkSchema>;
 

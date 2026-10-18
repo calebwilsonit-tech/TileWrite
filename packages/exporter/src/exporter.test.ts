@@ -87,3 +87,33 @@ describe('manifest', () => {
     expect(ScriptsBundleSchema.safeParse({ format: 2, scripts: {} }).success).toBe(false);
   });
 });
+
+import { buildCredits, creditProblems, creditsOf } from './credits';
+
+describe('credits for a game', () => {
+  const links = JSON.stringify({
+    links: [
+      { itemId: 'oak', name: 'Oak tree', mode: 'link', version: 2, author: 'Ada', licence: 'CC-BY-4.0', source: 'http://hub.example/oak-1' },
+      { itemId: 'rock', name: 'Rock', mode: 'copy', version: 1, author: 'Bob', licence: 'CC-BY-NC-4.0' },
+      { itemId: 'mine', name: 'My own tile', mode: 'copy', version: 1 },
+    ],
+  });
+
+  it('lists the items that have an author, with their licences and where they came from', () => {
+    const credits = creditsOf(links);
+    expect(credits.map((c) => c.name)).toEqual(['Oak tree', 'Rock']);
+    const text = buildCredits('Little Game', credits)!;
+    expect(text).toContain('"Oak tree" by Ada - CC BY 4.0 (from http://hub.example/oak-1)');
+    expect(text).toContain('"Rock" by Bob - CC BY-NC 4.0');
+    expect(text).toContain('https://creativecommons.org/licenses/by-nc/4.0/');
+    expect(text).not.toContain('My own tile');
+  });
+
+  it('writes nothing when there is nothing to credit, and says when a licence stops a game from being sold', () => {
+    expect(buildCredits('G', creditsOf(null))).toBeNull();
+    expect(buildCredits('G', creditsOf('{broken'))).toBeNull();
+    expect(creditProblems(creditsOf(links))[0]!.text).toContain('may not be used in a game that is sold');
+    expect(creditProblems([{ name: 'X', author: 'Y', licence: '', source: '' }])[0]!.text).toContain('no licence');
+    expect(creditProblems(creditsOf(JSON.stringify({ links: [{ name: 'A', author: 'B', licence: 'CC0-1.0' }] })))).toEqual([]);
+  });
+});

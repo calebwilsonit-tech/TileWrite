@@ -1,5 +1,5 @@
 import { defaultImporter, loadScript } from '@tilewright/behaviors';
-import { SETTINGS_FILE, buildManifest, exeFileName, exportFolderName, listGameFiles, parseSettings, settingsProblems, type ExportJob, type ExportResult, type ExportSettings, type Platform, type ScriptsBundle } from '@tilewright/exporter';
+import { SETTINGS_FILE, buildCredits, buildManifest, creditProblems, creditsOf, exeFileName, exportFolderName, listGameFiles, parseSettings, settingsProblems, type ExportJob, type ExportResult, type ExportSettings, type Platform, type ScriptsBundle } from '@tilewright/exporter';
 import { store } from '../app/store';
 import { getTranspiler } from '../code/script-manager';
 import { api, joinPath } from '../project/api';
@@ -14,6 +14,12 @@ export interface ExportCheck {
   problems: ExportProblem[];
   /** Compiled scripts, ready to ship. */
   scripts: ScriptsBundle;
+}
+
+/** The text of what the project took from the library or the hub (who made it, under which licence), or null. */
+async function readLinksText(dir: string): Promise<string | null> {
+  const file = joinPath(dir, 'assets/library-links.json');
+  return (await assetFs.exists(file)) ? assetFs.read(file) : null;
 }
 
 export async function loadExportSettings(): Promise<{ settings: ExportSettings; problem?: string }> {
@@ -54,6 +60,7 @@ export async function checkForExport(settings: ExportSettings): Promise<ExportCh
 
   const compiled = await compileScripts();
   problems.push(...compiled.problems);
+  for (const c of creditProblems(creditsOf(await readLinksText(p.dir)))) problems.push({ severity: 'warn', text: c.text });
   return { problems, scripts: compiled.scripts };
 }
 
@@ -136,6 +143,7 @@ export async function exportGame(settings: ExportSettings, scripts: ScriptsBundl
     icon: settings.icon,
     gameName: settings.gameName,
     version: settings.version,
+    credits: buildCredits(settings.gameName, creditsOf(await readLinksText(p.dir))) ?? '',
   };
   return api().exporter.build(job);
 }

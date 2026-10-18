@@ -99,6 +99,8 @@ export interface ExportJob {
   icon: string;
   gameName: string;
   version: string;
+  /** Text of a CREDITS.txt to put beside the game (art and parts by other people), or empty. */
+  credits?: string;
 }
 
 export interface ExportResult {
