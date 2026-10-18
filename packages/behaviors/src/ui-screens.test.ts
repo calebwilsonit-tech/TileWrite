@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Simulation, TableSchema, UiDocSchema, applySave, evalUiCondition, newWidget, openScreen, serializeGame, type UiNode, type UiScreen, type VariableValue } from '@tilewright/runtime';
+import { Simulation, TableSchema, UiDocSchema, UiNodeSchema, openStartScreens, applySave, evalUiCondition, newWidget, openScreen, serializeGame, type UiNode, type UiScreen, type VariableValue } from '@tilewright/runtime';
 import { activateWidget, autoFocus, findOnScreens, focusables, openScreens, rowsOf, setChoice, setSlider, setUiBridge, swapRows, uiBridge, writeTarget, readTarget, resolveScreen, type UiBridge } from './ui/screens-logic';
 import { newAction, setActivePacks } from './index';
 
@@ -259,5 +259,16 @@ describe('the turn order bar', () => {
     expect(kids.map((k) => k.children[0]!.text)).toEqual(['Knight', 'Goblin']);
     expect(kids.map((k) => k.scope['unit.active'])).toEqual([0, 1]);
     expect(kids.map((k) => k.scope['unit.team'])).toEqual(['player', 'enemy']);
+  });
+});
+
+describe('screens that open when the game starts', () => {
+  it('a modal screen (the title) is on top of a heads-up display even when the display was made later', () => {
+    const sim = new Simulation(1);
+    const node = (id: string) => UiNodeSchema.parse({ id, name: id });
+    sim.assets.ui = UiDocSchema.parse({ screens: [{ id: 'a', name: 'Title', modal: true, opensOnStart: true, root: node('r1') }, { id: 'b', name: 'HUD', opensOnStart: true, root: node('r2') }] });
+    openStartScreens(sim);
+    expect(sim.runtime.ui.stack).toEqual(['HUD', 'Title']);
+    expect(sim.runtime.ui.modal).toBe(true);
   });
 });

@@ -468,6 +468,7 @@ export class PlaySession {
   private afterTick(): void {
     const { sim, o } = this;
     this.trackWires();
+    this.ui.tick();
     const player = sim.world.withTag('player')[0];
     const t = player?.get<TransformIso>(C.Transform);
     this.syncAmbient();

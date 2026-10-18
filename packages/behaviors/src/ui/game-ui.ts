@@ -457,6 +457,16 @@ export class GameUi {
     this.lastDraw = '';
   }
 
+  /** Call after every simulation step: buttons and menus react to each step, not only to the last one of a frame. */
+  tick(): void {
+    const sim = this.host.sim;
+    if (sim.tick !== this.lastTick) {
+      this.lastTick = sim.tick;
+      this.handleInput();
+    }
+    this.screens.tick();
+  }
+
   /** Call once per animation frame. */
   update(): void {
     const sim = this.host.sim;

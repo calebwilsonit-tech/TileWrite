@@ -48,7 +48,9 @@ export function toggleScreen(h: Host, name: string): void {
 /** Close everything and open the screens that open when the game starts. */
 export function openStartScreens(h: Host): void {
   h.runtime.ui.stack = [];
-  for (const s of h.assets.ui.screens) if (s.opensOnStart) h.runtime.ui.stack.push(s.name);
+  // a heads-up display goes underneath, and a modal screen (the title) on top, whatever order they were made in
+  const start = h.assets.ui.screens.filter((s) => s.opensOnStart);
+  for (const s of [...start.filter((x) => !x.modal), ...start.filter((x) => x.modal)]) h.runtime.ui.stack.push(s.name);
   sync(h);
 }
 

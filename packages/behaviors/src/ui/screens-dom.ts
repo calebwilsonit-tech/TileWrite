@@ -247,6 +247,20 @@ export class UiScreens {
     this.drawMinimaps();
   }
 
+  /**
+   * Keys and gamepad buttons, once for every simulation step (the host calls it after each one), so a tap that starts and ends
+   * between two frames still moves the focus or presses the button.
+   */
+  tick(): void {
+    const sim = this.sim;
+    if (this.design || sim.tick === this.lastTick) return;
+    const screens = openScreens(sim);
+    const top = screens[screens.length - 1];
+    if (!top) return;
+    this.lastTick = sim.tick;
+    this.navigate(top.view);
+  }
+
   /** Interface hanging over objects, kept above them as the camera moves. */
   private drawWorld(): void {
     const sim = this.sim;

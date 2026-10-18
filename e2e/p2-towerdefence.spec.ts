@@ -94,8 +94,8 @@ test('Phase 2 sample: tower defence - waves from a table, placeable and upgradab
   await setText(page, 'var-name-0', 'gold'); // the starter already has gold; add the rest
   for (const [i, name, value] of [[1, 'lives', '10'], [2, 'up', '0'], [3, 'tlevel', '0'], [4, 'won', '0'], [5, 'lost', '0']] as const) {
     await page.getByTestId('add-variable').click();
+    await setText(page, `var-value-${i}`, value); // the value first: renaming a variable rebuilds its row
     await setText(page, `var-name-${i}`, name);
-    await setText(page, `var-value-${i}`, value);
   }
   expect(await page.evaluate(() => window.__store!.doc!.variables)).toEqual([{ name: 'gold', value: 100 }, { name: 'lives', value: 10 }, { name: 'up', value: 0 }, { name: 'tlevel', value: 0 }, { name: 'won', value: 0 }, { name: 'lost', value: 0 }]);
   const newRow = async (): Promise<string> => {

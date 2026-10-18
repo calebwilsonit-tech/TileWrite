@@ -1,0 +1,2004 @@
+{
+  "schemaVersion": 1,
+  "screens": [
+    {
+      "id": "s1",
+      "name": "Title",
+      "root": {
+        "id": "w1",
+        "name": "Title root",
+        "type": "panel",
+        "anchor": "fill",
+        "x": 0,
+        "y": 0,
+        "w": 240,
+        "h": 160,
+        "wMode": "fixed",
+        "hMode": "fixed",
+        "layout": "free",
+        "gap": 8,
+        "padding": 0,
+        "align": "start",
+        "columns": 3,
+        "style": {},
+        "states": {},
+        "anim": [],
+        "text": "",
+        "sprite": "",
+        "value": "",
+        "max": "100",
+        "min": 0,
+        "step": 1,
+        "options": "",
+        "source": "",
+        "template": "",
+        "drag": false,
+        "visible": "",
+        "enabled": "",
+        "on": {
+          "click": [],
+          "hover": [],
+          "change": []
+        },
+        "focus": {
+          "up": "",
+          "down": "",
+          "left": "",
+          "right": ""
+        },
+        "tooltip": "",
+        "prefab": "",
+        "overrides": {},
+        "marks": "player:#6fe08a, enemy:#e05a5a",
+        "children": [
+          {
+            "id": "w3",
+            "name": "TitleMenu",
+            "type": "panel",
+            "anchor": "c",
+            "x": 0,
+            "y": 0,
+            "w": 240,
+            "h": 160,
+            "wMode": "fixed",
+            "hMode": "fixed",
+            "layout": "column",
+            "gap": 8,
+            "padding": 8,
+            "align": "stretch",
+            "columns": 3,
+            "style": {
+              "fill": "var(--tw-panel)",
+              "border": "var(--tw-border)",
+              "borderWidth": 2,
+              "radius": 10
+            },
+            "states": {},
+            "anim": [],
+            "text": "",
+            "sprite": "",
+            "value": "",
+            "max": "100",
+            "min": 0,
+            "step": 1,
+            "options": "",
+            "source": "",
+            "template": "",
+            "drag": false,
+            "visible": "",
+            "enabled": "",
+            "on": {
+              "click": [],
+              "hover": [],
+              "change": []
+            },
+            "focus": {
+              "up": "",
+              "down": "",
+              "left": "",
+              "right": ""
+            },
+            "tooltip": "",
+            "prefab": "",
+            "overrides": {},
+            "marks": "player:#6fe08a, enemy:#e05a5a",
+            "children": [
+              {
+                "id": "w4",
+                "name": "Name",
+                "type": "text",
+                "anchor": "tl",
+                "x": 0,
+                "y": 0,
+                "w": 160,
+                "h": 28,
+                "wMode": "auto",
+                "hMode": "auto",
+                "layout": "free",
+                "gap": 8,
+                "padding": 8,
+                "align": "start",
+                "columns": 3,
+                "style": {},
+                "states": {},
+                "anim": [],
+                "text": "The Last Storytender",
+                "sprite": "",
+                "value": "",
+                "max": "100",
+                "min": 0,
+                "step": 1,
+                "options": "",
+                "source": "",
+                "template": "",
+                "drag": false,
+                "visible": "",
+                "enabled": "",
+                "on": {
+                  "click": [],
+                  "hover": [],
+                  "change": []
+                },
+                "focus": {
+                  "up": "",
+                  "down": "",
+                  "left": "",
+                  "right": ""
+                },
+                "tooltip": "",
+                "prefab": "",
+                "overrides": {},
+                "marks": "player:#6fe08a, enemy:#e05a5a",
+                "children": []
+              },
+              {
+                "id": "w5",
+                "name": "NewGame",
+                "type": "button",
+                "anchor": "tl",
+                "x": 0,
+                "y": 0,
+                "w": 160,
+                "h": 44,
+                "wMode": "fixed",
+                "hMode": "fixed",
+                "layout": "free",
+                "gap": 8,
+                "padding": 8,
+                "align": "start",
+                "columns": 3,
+                "style": {
+                  "fill": "var(--tw-panel)",
+                  "border": "var(--tw-border)",
+                  "borderWidth": 2,
+                  "radius": 8,
+                  "align": "center"
+                },
+                "states": {
+                  "hover": {
+                    "fill": "var(--tw-highlight)"
+                  },
+                  "pressed": {
+                    "opacity": 0.8
+                  },
+                  "disabled": {
+                    "opacity": 0.4
+                  },
+                  "focus": {
+                    "border": "var(--tw-accent)"
+                  }
+                },
+                "anim": [],
+                "text": "New game",
+                "sprite": "",
+                "value": "",
+                "max": "100",
+                "min": 0,
+                "step": 1,
+                "options": "",
+                "source": "",
+                "template": "",
+                "drag": false,
+                "visible": "",
+                "enabled": "",
+                "on": {
+                  "click": [
+                    {
+                      "type": "uiScreen",
+                      "params": {
+                        "op": "close",
+                        "screen": "Title"
+                      }
+                    }
+                  ],
+                  "hover": [],
+                  "change": []
+                },
+                "focus": {
+                  "up": "",
+                  "down": "",
+                  "left": "",
+                  "right": ""
+                },
+                "tooltip": "",
+                "prefab": "",
+                "overrides": {},
+                "marks": "player:#6fe08a, enemy:#e05a5a",
+                "children": []
+              },
+              {
+                "id": "w6",
+                "name": "LoadGame",
+                "type": "button",
+                "anchor": "tl",
+                "x": 0,
+                "y": 0,
+                "w": 160,
+                "h": 44,
+                "wMode": "fixed",
+                "hMode": "fixed",
+                "layout": "free",
+                "gap": 8,
+                "padding": 8,
+                "align": "start",
+                "columns": 3,
+                "style": {
+                  "fill": "var(--tw-panel)",
+                  "border": "var(--tw-border)",
+                  "borderWidth": 2,
+                  "radius": 8,
+                  "align": "center"
+                },
+                "states": {
+                  "hover": {
+                    "fill": "var(--tw-highlight)"
+                  },
+                  "pressed": {
+                    "opacity": 0.8
+                  },
+                  "disabled": {
+                    "opacity": 0.4
+                  },
+                  "focus": {
+                    "border": "var(--tw-accent)"
+                  }
+                },
+                "anim": [],
+                "text": "Load game",
+                "sprite": "",
+                "value": "",
+                "max": "100",
+                "min": 0,
+                "step": 1,
+                "options": "",
+                "source": "",
+                "template": "",
+                "drag": false,
+                "visible": "",
+                "enabled": "",
+                "on": {
+                  "click": [
+                    {
+                      "type": "loadGame",
+                      "params": {
+                        "slot": "autosave"
+                      }
+                    }
+                  ],
+                  "hover": [],
+                  "change": []
+                },
+                "focus": {
+                  "up": "",
+                  "down": "",
+                  "left": "",
+                  "right": ""
+                },
+                "tooltip": "",
+                "prefab": "",
+                "overrides": {},
+                "marks": "player:#6fe08a, enemy:#e05a5a",
+                "children": []
+              },
+              {
+                "id": "w7",
+                "name": "Options",
+                "type": "button",
+                "anchor": "tl",
+                "x": 0,
+                "y": 0,
+                "w": 160,
+                "h": 44,
+                "wMode": "fixed",
+                "hMode": "fixed",
+                "layout": "free",
+                "gap": 8,
+                "padding": 8,
+                "align": "start",
+                "columns": 3,
+                "style": {
+                  "fill": "var(--tw-panel)",
+                  "border": "var(--tw-border)",
+                  "borderWidth": 2,
+                  "radius": 8,
+                  "align": "center"
+                },
+                "states": {
+                  "hover": {
+                    "fill": "var(--tw-highlight)"
+                  },
+                  "pressed": {
+                    "opacity": 0.8
+                  },
+                  "disabled": {
+                    "opacity": 0.4
+                  },
+                  "focus": {
+                    "border": "var(--tw-accent)"
+                  }
+                },
+                "anim": [],
+                "text": "Settings",
+                "sprite": "",
+                "value": "",
+                "max": "100",
+                "min": 0,
+                "step": 1,
+                "options": "",
+                "source": "",
+                "template": "",
+                "drag": false,
+                "visible": "",
+                "enabled": "",
+                "on": {
+                  "click": [
+                    {
+                      "type": "uiScreen",
+                      "params": {
+                        "op": "open",
+                        "screen": "Settings"
+                      }
+                    }
+                  ],
+                  "hover": [],
+                  "change": []
+                },
+                "focus": {
+                  "up": "",
+                  "down": "",
+                  "left": "",
+                  "right": ""
+                },
+                "tooltip": "",
+                "prefab": "",
+                "overrides": {},
+                "marks": "player:#6fe08a, enemy:#e05a5a",
+                "children": []
+              },
+              {
+                "id": "w8",
+                "name": "QuitGame",
+                "type": "button",
+                "anchor": "tl",
+                "x": 0,
+                "y": 0,
+                "w": 160,
+                "h": 44,
+                "wMode": "fixed",
+                "hMode": "fixed",
+                "layout": "free",
+                "gap": 8,
+                "padding": 8,
+                "align": "start",
+                "columns": 3,
+                "style": {
+                  "fill": "var(--tw-panel)",
+                  "border": "var(--tw-border)",
+                  "borderWidth": 2,
+                  "radius": 8,
+                  "align": "center"
+                },
+                "states": {
+                  "hover": {
+                    "fill": "var(--tw-highlight)"
+                  },
+                  "pressed": {
+                    "opacity": 0.8
+                  },
+                  "disabled": {
+                    "opacity": 0.4
+                  },
+                  "focus": {
+                    "border": "var(--tw-accent)"
+                  }
+                },
+                "anim": [],
+                "text": "Quit",
+                "sprite": "",
+                "value": "",
+                "max": "100",
+                "min": 0,
+                "step": 1,
+                "options": "",
+                "source": "",
+                "template": "",
+                "drag": false,
+                "visible": "",
+                "enabled": "",
+                "on": {
+                  "click": [
+                    {
+                      "type": "quitGame",
+                      "params": {}
+                    }
+                  ],
+                  "hover": [],
+                  "change": []
+                },
+                "focus": {
+                  "up": "",
+                  "down": "",
+                  "left": "",
+                  "right": ""
+                },
+                "tooltip": "",
+                "prefab": "",
+                "overrides": {},
+                "marks": "player:#6fe08a, enemy:#e05a5a",
+                "children": []
+              }
+            ]
+          }
+        ]
+      },
+      "modal": true,
+      "dim": 0,
+      "transition": "none",
+      "mapX": 40,
+      "mapY": 40,
+      "opensOnStart": true
+    },
+    {
+      "id": "s9",
+      "name": "Settings",
+      "root": {
+        "id": "w9",
+        "name": "Settings root",
+        "type": "panel",
+        "anchor": "fill",
+        "x": 0,
+        "y": 0,
+        "w": 240,
+        "h": 160,
+        "wMode": "fixed",
+        "hMode": "fixed",
+        "layout": "free",
+        "gap": 8,
+        "padding": 0,
+        "align": "start",
+        "columns": 3,
+        "style": {},
+        "states": {},
+        "anim": [],
+        "text": "",
+        "sprite": "",
+        "value": "",
+        "max": "100",
+        "min": 0,
+        "step": 1,
+        "options": "",
+        "source": "",
+        "template": "",
+        "drag": false,
+        "visible": "",
+        "enabled": "",
+        "on": {
+          "click": [],
+          "hover": [],
+          "change": []
+        },
+        "focus": {
+          "up": "",
+          "down": "",
+          "left": "",
+          "right": ""
+        },
+        "tooltip": "",
+        "prefab": "",
+        "overrides": {},
+        "marks": "player:#6fe08a, enemy:#e05a5a",
+        "children": [
+          {
+            "id": "w11",
+            "name": "SettingsBox",
+            "type": "panel",
+            "anchor": "c",
+            "x": 0,
+            "y": 0,
+            "w": 240,
+            "h": 160,
+            "wMode": "fixed",
+            "hMode": "fixed",
+            "layout": "column",
+            "gap": 8,
+            "padding": 8,
+            "align": "stretch",
+            "columns": 3,
+            "style": {
+              "fill": "var(--tw-panel)",
+              "border": "var(--tw-border)",
+              "borderWidth": 2,
+              "radius": 10
+            },
+            "states": {},
+            "anim": [],
+            "text": "",
+            "sprite": "",
+            "value": "",
+            "max": "100",
+            "min": 0,
+            "step": 1,
+            "options": "",
+            "source": "",
+            "template": "",
+            "drag": false,
+            "visible": "",
+            "enabled": "",
+            "on": {
+              "click": [],
+              "hover": [],
+              "change": []
+            },
+            "focus": {
+              "up": "",
+              "down": "",
+              "left": "",
+              "right": ""
+            },
+            "tooltip": "",
+            "prefab": "",
+            "overrides": {},
+            "marks": "player:#6fe08a, enemy:#e05a5a",
+            "children": [
+              {
+                "id": "w12",
+                "name": "SettingsTitle",
+                "type": "text",
+                "anchor": "tl",
+                "x": 0,
+                "y": 0,
+                "w": 160,
+                "h": 28,
+                "wMode": "auto",
+                "hMode": "auto",
+                "layout": "free",
+                "gap": 8,
+                "padding": 8,
+                "align": "start",
+                "columns": 3,
+                "style": {},
+                "states": {},
+                "anim": [],
+                "text": "Settings",
+                "sprite": "",
+                "value": "",
+                "max": "100",
+                "min": 0,
+                "step": 1,
+                "options": "",
+                "source": "",
+                "template": "",
+                "drag": false,
+                "visible": "",
+                "enabled": "",
+                "on": {
+                  "click": [],
+                  "hover": [],
+                  "change": []
+                },
+                "focus": {
+                  "up": "",
+                  "down": "",
+                  "left": "",
+                  "right": ""
+                },
+                "tooltip": "",
+                "prefab": "",
+                "overrides": {},
+                "marks": "player:#6fe08a, enemy:#e05a5a",
+                "children": []
+              },
+              {
+                "id": "w13",
+                "name": "Music",
+                "type": "slider",
+                "anchor": "tl",
+                "x": 0,
+                "y": 0,
+                "w": 220,
+                "h": 28,
+                "wMode": "fixed",
+                "hMode": "fixed",
+                "layout": "free",
+                "gap": 8,
+                "padding": 8,
+                "align": "start",
+                "columns": 3,
+                "style": {},
+                "states": {},
+                "anim": [],
+                "text": "",
+                "sprite": "",
+                "value": "settings.music",
+                "max": "1",
+                "min": 0,
+                "step": 0.1,
+                "options": "",
+                "source": "",
+                "template": "",
+                "drag": false,
+                "visible": "",
+                "enabled": "",
+                "on": {
+                  "click": [],
+                  "hover": [],
+                  "change": []
+                },
+                "focus": {
+                  "up": "",
+                  "down": "",
+                  "left": "",
+                  "right": ""
+                },
+                "tooltip": "",
+                "prefab": "",
+                "overrides": {},
+                "marks": "player:#6fe08a, enemy:#e05a5a",
+                "children": []
+              },
+              {
+                "id": "w14",
+                "name": "Effects",
+                "type": "slider",
+                "anchor": "tl",
+                "x": 0,
+                "y": 0,
+                "w": 220,
+                "h": 28,
+                "wMode": "fixed",
+                "hMode": "fixed",
+                "layout": "free",
+                "gap": 8,
+                "padding": 8,
+                "align": "start",
+                "columns": 3,
+                "style": {},
+                "states": {},
+                "anim": [],
+                "text": "",
+                "sprite": "",
+                "value": "settings.sfx",
+                "max": "1",
+                "min": 0,
+                "step": 0.1,
+                "options": "",
+                "source": "",
+                "template": "",
+                "drag": false,
+                "visible": "",
+                "enabled": "",
+                "on": {
+                  "click": [],
+                  "hover": [],
+                  "change": []
+                },
+                "focus": {
+                  "up": "",
+                  "down": "",
+                  "left": "",
+                  "right": ""
+                },
+                "tooltip": "",
+                "prefab": "",
+                "overrides": {},
+                "marks": "player:#6fe08a, enemy:#e05a5a",
+                "children": []
+              },
+              {
+                "id": "w15",
+                "name": "Fps",
+                "type": "toggle",
+                "anchor": "tl",
+                "x": 0,
+                "y": 0,
+                "w": 200,
+                "h": 28,
+                "wMode": "auto",
+                "hMode": "fixed",
+                "layout": "free",
+                "gap": 8,
+                "padding": 8,
+                "align": "start",
+                "columns": 3,
+                "style": {},
+                "states": {},
+                "anim": [],
+                "text": "Show frame rate",
+                "sprite": "",
+                "value": "settings.showFps",
+                "max": "100",
+                "min": 0,
+                "step": 1,
+                "options": "",
+                "source": "",
+                "template": "",
+                "drag": false,
+                "visible": "",
+                "enabled": "",
+                "on": {
+                  "click": [],
+                  "hover": [],
+                  "change": []
+                },
+                "focus": {
+                  "up": "",
+                  "down": "",
+                  "left": "",
+                  "right": ""
+                },
+                "tooltip": "",
+                "prefab": "",
+                "overrides": {},
+                "marks": "player:#6fe08a, enemy:#e05a5a",
+                "children": []
+              },
+              {
+                "id": "w16",
+                "name": "JumpKey",
+                "type": "keybind",
+                "anchor": "tl",
+                "x": 0,
+                "y": 0,
+                "w": 260,
+                "h": 36,
+                "wMode": "fixed",
+                "hMode": "fixed",
+                "layout": "free",
+                "gap": 8,
+                "padding": 8,
+                "align": "start",
+                "columns": 3,
+                "style": {},
+                "states": {},
+                "anim": [],
+                "text": "jump",
+                "sprite": "",
+                "value": "",
+                "max": "100",
+                "min": 0,
+                "step": 1,
+                "options": "",
+                "source": "",
+                "template": "",
+                "drag": false,
+                "visible": "",
+                "enabled": "",
+                "on": {
+                  "click": [],
+                  "hover": [],
+                  "change": []
+                },
+                "focus": {
+                  "up": "",
+                  "down": "",
+                  "left": "",
+                  "right": ""
+                },
+                "tooltip": "",
+                "prefab": "",
+                "overrides": {},
+                "marks": "player:#6fe08a, enemy:#e05a5a",
+                "children": []
+              },
+              {
+                "id": "w17",
+                "name": "SettingsBack",
+                "type": "button",
+                "anchor": "tl",
+                "x": 0,
+                "y": 0,
+                "w": 160,
+                "h": 44,
+                "wMode": "fixed",
+                "hMode": "fixed",
+                "layout": "free",
+                "gap": 8,
+                "padding": 8,
+                "align": "start",
+                "columns": 3,
+                "style": {
+                  "fill": "var(--tw-panel)",
+                  "border": "var(--tw-border)",
+                  "borderWidth": 2,
+                  "radius": 8,
+                  "align": "center"
+                },
+                "states": {
+                  "hover": {
+                    "fill": "var(--tw-highlight)"
+                  },
+                  "pressed": {
+                    "opacity": 0.8
+                  },
+                  "disabled": {
+                    "opacity": 0.4
+                  },
+                  "focus": {
+                    "border": "var(--tw-accent)"
+                  }
+                },
+                "anim": [],
+                "text": "Back",
+                "sprite": "",
+                "value": "",
+                "max": "100",
+                "min": 0,
+                "step": 1,
+                "options": "",
+                "source": "",
+                "template": "",
+                "drag": false,
+                "visible": "",
+                "enabled": "",
+                "on": {
+                  "click": [
+                    {
+                      "type": "uiScreen",
+                      "params": {
+                        "op": "back",
+                        "screen": ""
+                      }
+                    }
+                  ],
+                  "hover": [],
+                  "change": []
+                },
+                "focus": {
+                  "up": "",
+                  "down": "",
+                  "left": "",
+                  "right": ""
+                },
+                "tooltip": "",
+                "prefab": "",
+                "overrides": {},
+                "marks": "player:#6fe08a, enemy:#e05a5a",
+                "children": []
+              }
+            ]
+          }
+        ]
+      },
+      "modal": true,
+      "dim": 0,
+      "transition": "none",
+      "mapX": 260,
+      "mapY": 40,
+      "opensOnStart": false
+    },
+    {
+      "id": "s18",
+      "name": "Pause",
+      "root": {
+        "id": "w18",
+        "name": "Pause root",
+        "type": "panel",
+        "anchor": "fill",
+        "x": 0,
+        "y": 0,
+        "w": 240,
+        "h": 160,
+        "wMode": "fixed",
+        "hMode": "fixed",
+        "layout": "free",
+        "gap": 8,
+        "padding": 0,
+        "align": "start",
+        "columns": 3,
+        "style": {},
+        "states": {},
+        "anim": [],
+        "text": "",
+        "sprite": "",
+        "value": "",
+        "max": "100",
+        "min": 0,
+        "step": 1,
+        "options": "",
+        "source": "",
+        "template": "",
+        "drag": false,
+        "visible": "",
+        "enabled": "",
+        "on": {
+          "click": [],
+          "hover": [],
+          "change": []
+        },
+        "focus": {
+          "up": "",
+          "down": "",
+          "left": "",
+          "right": ""
+        },
+        "tooltip": "",
+        "prefab": "",
+        "overrides": {},
+        "marks": "player:#6fe08a, enemy:#e05a5a",
+        "children": [
+          {
+            "id": "w20",
+            "name": "PauseBox",
+            "type": "panel",
+            "anchor": "c",
+            "x": 0,
+            "y": 0,
+            "w": 240,
+            "h": 160,
+            "wMode": "fixed",
+            "hMode": "fixed",
+            "layout": "column",
+            "gap": 8,
+            "padding": 8,
+            "align": "stretch",
+            "columns": 3,
+            "style": {
+              "fill": "var(--tw-panel)",
+              "border": "var(--tw-border)",
+              "borderWidth": 2,
+              "radius": 10
+            },
+            "states": {},
+            "anim": [],
+            "text": "",
+            "sprite": "",
+            "value": "",
+            "max": "100",
+            "min": 0,
+            "step": 1,
+            "options": "",
+            "source": "",
+            "template": "",
+            "drag": false,
+            "visible": "",
+            "enabled": "",
+            "on": {
+              "click": [],
+              "hover": [],
+              "change": []
+            },
+            "focus": {
+              "up": "",
+              "down": "",
+              "left": "",
+              "right": ""
+            },
+            "tooltip": "",
+            "prefab": "",
+            "overrides": {},
+            "marks": "player:#6fe08a, enemy:#e05a5a",
+            "children": [
+              {
+                "id": "w21",
+                "name": "PauseTitle",
+                "type": "text",
+                "anchor": "tl",
+                "x": 0,
+                "y": 0,
+                "w": 160,
+                "h": 28,
+                "wMode": "auto",
+                "hMode": "auto",
+                "layout": "free",
+                "gap": 8,
+                "padding": 8,
+                "align": "start",
+                "columns": 3,
+                "style": {},
+                "states": {},
+                "anim": [],
+                "text": "Paused",
+                "sprite": "",
+                "value": "",
+                "max": "100",
+                "min": 0,
+                "step": 1,
+                "options": "",
+                "source": "",
+                "template": "",
+                "drag": false,
+                "visible": "",
+                "enabled": "",
+                "on": {
+                  "click": [],
+                  "hover": [],
+                  "change": []
+                },
+                "focus": {
+                  "up": "",
+                  "down": "",
+                  "left": "",
+                  "right": ""
+                },
+                "tooltip": "",
+                "prefab": "",
+                "overrides": {},
+                "marks": "player:#6fe08a, enemy:#e05a5a",
+                "children": []
+              },
+              {
+                "id": "w22",
+                "name": "Resume",
+                "type": "button",
+                "anchor": "tl",
+                "x": 0,
+                "y": 0,
+                "w": 160,
+                "h": 44,
+                "wMode": "fixed",
+                "hMode": "fixed",
+                "layout": "free",
+                "gap": 8,
+                "padding": 8,
+                "align": "start",
+                "columns": 3,
+                "style": {
+                  "fill": "var(--tw-panel)",
+                  "border": "var(--tw-border)",
+                  "borderWidth": 2,
+                  "radius": 8,
+                  "align": "center"
+                },
+                "states": {
+                  "hover": {
+                    "fill": "var(--tw-highlight)"
+                  },
+                  "pressed": {
+                    "opacity": 0.8
+                  },
+                  "disabled": {
+                    "opacity": 0.4
+                  },
+                  "focus": {
+                    "border": "var(--tw-accent)"
+                  }
+                },
+                "anim": [],
+                "text": "Resume",
+                "sprite": "",
+                "value": "",
+                "max": "100",
+                "min": 0,
+                "step": 1,
+                "options": "",
+                "source": "",
+                "template": "",
+                "drag": false,
+                "visible": "",
+                "enabled": "",
+                "on": {
+                  "click": [
+                    {
+                      "type": "uiScreen",
+                      "params": {
+                        "op": "back",
+                        "screen": ""
+                      }
+                    }
+                  ],
+                  "hover": [],
+                  "change": []
+                },
+                "focus": {
+                  "up": "",
+                  "down": "",
+                  "left": "",
+                  "right": ""
+                },
+                "tooltip": "",
+                "prefab": "",
+                "overrides": {},
+                "marks": "player:#6fe08a, enemy:#e05a5a",
+                "children": []
+              },
+              {
+                "id": "w23",
+                "name": "PauseSettings",
+                "type": "button",
+                "anchor": "tl",
+                "x": 0,
+                "y": 0,
+                "w": 160,
+                "h": 44,
+                "wMode": "fixed",
+                "hMode": "fixed",
+                "layout": "free",
+                "gap": 8,
+                "padding": 8,
+                "align": "start",
+                "columns": 3,
+                "style": {
+                  "fill": "var(--tw-panel)",
+                  "border": "var(--tw-border)",
+                  "borderWidth": 2,
+                  "radius": 8,
+                  "align": "center"
+                },
+                "states": {
+                  "hover": {
+                    "fill": "var(--tw-highlight)"
+                  },
+                  "pressed": {
+                    "opacity": 0.8
+                  },
+                  "disabled": {
+                    "opacity": 0.4
+                  },
+                  "focus": {
+                    "border": "var(--tw-accent)"
+                  }
+                },
+                "anim": [],
+                "text": "Settings",
+                "sprite": "",
+                "value": "",
+                "max": "100",
+                "min": 0,
+                "step": 1,
+                "options": "",
+                "source": "",
+                "template": "",
+                "drag": false,
+                "visible": "",
+                "enabled": "",
+                "on": {
+                  "click": [
+                    {
+                      "type": "uiScreen",
+                      "params": {
+                        "op": "open",
+                        "screen": "Settings"
+                      }
+                    }
+                  ],
+                  "hover": [],
+                  "change": []
+                },
+                "focus": {
+                  "up": "",
+                  "down": "",
+                  "left": "",
+                  "right": ""
+                },
+                "tooltip": "",
+                "prefab": "",
+                "overrides": {},
+                "marks": "player:#6fe08a, enemy:#e05a5a",
+                "children": []
+              },
+              {
+                "id": "w24",
+                "name": "MainMenu",
+                "type": "button",
+                "anchor": "tl",
+                "x": 0,
+                "y": 0,
+                "w": 160,
+                "h": 44,
+                "wMode": "fixed",
+                "hMode": "fixed",
+                "layout": "free",
+                "gap": 8,
+                "padding": 8,
+                "align": "start",
+                "columns": 3,
+                "style": {
+                  "fill": "var(--tw-panel)",
+                  "border": "var(--tw-border)",
+                  "borderWidth": 2,
+                  "radius": 8,
+                  "align": "center"
+                },
+                "states": {
+                  "hover": {
+                    "fill": "var(--tw-highlight)"
+                  },
+                  "pressed": {
+                    "opacity": 0.8
+                  },
+                  "disabled": {
+                    "opacity": 0.4
+                  },
+                  "focus": {
+                    "border": "var(--tw-accent)"
+                  }
+                },
+                "anim": [],
+                "text": "Main menu",
+                "sprite": "",
+                "value": "",
+                "max": "100",
+                "min": 0,
+                "step": 1,
+                "options": "",
+                "source": "",
+                "template": "",
+                "drag": false,
+                "visible": "",
+                "enabled": "",
+                "on": {
+                  "click": [
+                    {
+                      "type": "uiScreen",
+                      "params": {
+                        "op": "closeAll",
+                        "screen": ""
+                      }
+                    }
+                  ],
+                  "hover": [],
+                  "change": []
+                },
+                "focus": {
+                  "up": "",
+                  "down": "",
+                  "left": "",
+                  "right": ""
+                },
+                "tooltip": "",
+                "prefab": "",
+                "overrides": {},
+                "marks": "player:#6fe08a, enemy:#e05a5a",
+                "children": []
+              }
+            ]
+          }
+        ]
+      },
+      "modal": true,
+      "dim": 0,
+      "transition": "none",
+      "mapX": 480,
+      "mapY": 40,
+      "opensOnStart": false
+    },
+    {
+      "id": "s25",
+      "name": "Inventory",
+      "root": {
+        "id": "w25",
+        "name": "Inventory root",
+        "type": "panel",
+        "anchor": "fill",
+        "x": 0,
+        "y": 0,
+        "w": 240,
+        "h": 160,
+        "wMode": "fixed",
+        "hMode": "fixed",
+        "layout": "free",
+        "gap": 8,
+        "padding": 0,
+        "align": "start",
+        "columns": 3,
+        "style": {},
+        "states": {},
+        "anim": [],
+        "text": "",
+        "sprite": "",
+        "value": "",
+        "max": "100",
+        "min": 0,
+        "step": 1,
+        "options": "",
+        "source": "",
+        "template": "",
+        "drag": false,
+        "visible": "",
+        "enabled": "",
+        "on": {
+          "click": [],
+          "hover": [],
+          "change": []
+        },
+        "focus": {
+          "up": "",
+          "down": "",
+          "left": "",
+          "right": ""
+        },
+        "tooltip": "",
+        "prefab": "",
+        "overrides": {},
+        "marks": "player:#6fe08a, enemy:#e05a5a",
+        "children": [
+          {
+            "id": "w27",
+            "name": "BagBox",
+            "type": "panel",
+            "anchor": "c",
+            "x": 0,
+            "y": 0,
+            "w": 470,
+            "h": 330,
+            "wMode": "fixed",
+            "hMode": "fixed",
+            "layout": "column",
+            "gap": 8,
+            "padding": 8,
+            "align": "stretch",
+            "columns": 3,
+            "style": {
+              "fill": "var(--tw-panel)",
+              "border": "var(--tw-border)",
+              "borderWidth": 2,
+              "radius": 10
+            },
+            "states": {},
+            "anim": [],
+            "text": "",
+            "sprite": "",
+            "value": "",
+            "max": "100",
+            "min": 0,
+            "step": 1,
+            "options": "",
+            "source": "",
+            "template": "",
+            "drag": false,
+            "visible": "",
+            "enabled": "",
+            "on": {
+              "click": [],
+              "hover": [],
+              "change": []
+            },
+            "focus": {
+              "up": "",
+              "down": "",
+              "left": "",
+              "right": ""
+            },
+            "tooltip": "",
+            "prefab": "",
+            "overrides": {},
+            "marks": "player:#6fe08a, enemy:#e05a5a",
+            "children": [
+              {
+                "id": "w28",
+                "name": "BagTitle",
+                "type": "text",
+                "anchor": "tl",
+                "x": 0,
+                "y": 0,
+                "w": 160,
+                "h": 28,
+                "wMode": "auto",
+                "hMode": "auto",
+                "layout": "free",
+                "gap": 8,
+                "padding": 8,
+                "align": "start",
+                "columns": 3,
+                "style": {},
+                "states": {},
+                "anim": [],
+                "text": "Your bag",
+                "sprite": "",
+                "value": "",
+                "max": "100",
+                "min": 0,
+                "step": 1,
+                "options": "",
+                "source": "",
+                "template": "",
+                "drag": false,
+                "visible": "",
+                "enabled": "",
+                "on": {
+                  "click": [],
+                  "hover": [],
+                  "change": []
+                },
+                "focus": {
+                  "up": "",
+                  "down": "",
+                  "left": "",
+                  "right": ""
+                },
+                "tooltip": "",
+                "prefab": "",
+                "overrides": {},
+                "marks": "player:#6fe08a, enemy:#e05a5a",
+                "children": []
+              },
+              {
+                "id": "w29",
+                "name": "Slots",
+                "type": "grid",
+                "anchor": "tl",
+                "x": 0,
+                "y": 0,
+                "w": 420,
+                "h": 220,
+                "wMode": "fixed",
+                "hMode": "fixed",
+                "layout": "grid",
+                "gap": 8,
+                "padding": 8,
+                "align": "start",
+                "columns": 3,
+                "style": {},
+                "states": {},
+                "anim": [],
+                "text": "",
+                "sprite": "",
+                "value": "",
+                "max": "100",
+                "min": 0,
+                "step": 1,
+                "options": "",
+                "source": "table:Bag",
+                "template": "SlotCell",
+                "drag": true,
+                "visible": "",
+                "enabled": "",
+                "on": {
+                  "click": [],
+                  "hover": [],
+                  "change": []
+                },
+                "focus": {
+                  "up": "",
+                  "down": "",
+                  "left": "",
+                  "right": ""
+                },
+                "tooltip": "",
+                "prefab": "",
+                "overrides": {},
+                "marks": "player:#6fe08a, enemy:#e05a5a",
+                "children": []
+              },
+              {
+                "id": "w33",
+                "name": "BagClose",
+                "type": "button",
+                "anchor": "tl",
+                "x": 0,
+                "y": 0,
+                "w": 160,
+                "h": 44,
+                "wMode": "fixed",
+                "hMode": "fixed",
+                "layout": "free",
+                "gap": 8,
+                "padding": 8,
+                "align": "start",
+                "columns": 3,
+                "style": {
+                  "fill": "var(--tw-panel)",
+                  "border": "var(--tw-border)",
+                  "borderWidth": 2,
+                  "radius": 8,
+                  "align": "center"
+                },
+                "states": {
+                  "hover": {
+                    "fill": "var(--tw-highlight)"
+                  },
+                  "pressed": {
+                    "opacity": 0.8
+                  },
+                  "disabled": {
+                    "opacity": 0.4
+                  },
+                  "focus": {
+                    "border": "var(--tw-accent)"
+                  }
+                },
+                "anim": [],
+                "text": "Close",
+                "sprite": "",
+                "value": "",
+                "max": "100",
+                "min": 0,
+                "step": 1,
+                "options": "",
+                "source": "",
+                "template": "",
+                "drag": false,
+                "visible": "",
+                "enabled": "",
+                "on": {
+                  "click": [
+                    {
+                      "type": "uiScreen",
+                      "params": {
+                        "op": "back",
+                        "screen": ""
+                      }
+                    }
+                  ],
+                  "hover": [],
+                  "change": []
+                },
+                "focus": {
+                  "up": "",
+                  "down": "",
+                  "left": "",
+                  "right": ""
+                },
+                "tooltip": "",
+                "prefab": "",
+                "overrides": {},
+                "marks": "player:#6fe08a, enemy:#e05a5a",
+                "children": []
+              }
+            ]
+          }
+        ]
+      },
+      "modal": true,
+      "dim": 0,
+      "transition": "none",
+      "mapX": 40,
+      "mapY": 170,
+      "opensOnStart": false
+    },
+    {
+      "id": "s34",
+      "name": "HUD",
+      "root": {
+        "id": "w34",
+        "name": "HUD root",
+        "type": "panel",
+        "anchor": "fill",
+        "x": 0,
+        "y": 0,
+        "w": 240,
+        "h": 160,
+        "wMode": "fixed",
+        "hMode": "fixed",
+        "layout": "free",
+        "gap": 8,
+        "padding": 0,
+        "align": "start",
+        "columns": 3,
+        "style": {},
+        "states": {},
+        "anim": [],
+        "text": "",
+        "sprite": "",
+        "value": "",
+        "max": "100",
+        "min": 0,
+        "step": 1,
+        "options": "",
+        "source": "",
+        "template": "",
+        "drag": false,
+        "visible": "",
+        "enabled": "",
+        "on": {
+          "click": [],
+          "hover": [],
+          "change": []
+        },
+        "focus": {
+          "up": "",
+          "down": "",
+          "left": "",
+          "right": ""
+        },
+        "tooltip": "",
+        "prefab": "",
+        "overrides": {},
+        "marks": "player:#6fe08a, enemy:#e05a5a",
+        "children": [
+          {
+            "id": "w36",
+            "name": "HudBox",
+            "type": "panel",
+            "anchor": "tl",
+            "x": 0,
+            "y": 0,
+            "w": 240,
+            "h": 160,
+            "wMode": "fixed",
+            "hMode": "fixed",
+            "layout": "column",
+            "gap": 8,
+            "padding": 8,
+            "align": "stretch",
+            "columns": 3,
+            "style": {
+              "fill": "var(--tw-panel)",
+              "border": "var(--tw-border)",
+              "borderWidth": 2,
+              "radius": 10
+            },
+            "states": {},
+            "anim": [],
+            "text": "",
+            "sprite": "",
+            "value": "",
+            "max": "100",
+            "min": 0,
+            "step": 1,
+            "options": "",
+            "source": "",
+            "template": "",
+            "drag": false,
+            "visible": "",
+            "enabled": "",
+            "on": {
+              "click": [],
+              "hover": [],
+              "change": []
+            },
+            "focus": {
+              "up": "",
+              "down": "",
+              "left": "",
+              "right": ""
+            },
+            "tooltip": "",
+            "prefab": "",
+            "overrides": {},
+            "marks": "player:#6fe08a, enemy:#e05a5a",
+            "children": [
+              {
+                "id": "w37",
+                "name": "Health",
+                "type": "bar",
+                "anchor": "tl",
+                "x": 0,
+                "y": 0,
+                "w": 200,
+                "h": 18,
+                "wMode": "fixed",
+                "hMode": "fixed",
+                "layout": "free",
+                "gap": 8,
+                "padding": 8,
+                "align": "start",
+                "columns": 3,
+                "style": {
+                  "fill": "#2a2d36",
+                  "color": "#6fe08a",
+                  "radius": 6
+                },
+                "states": {},
+                "anim": [],
+                "text": "",
+                "sprite": "",
+                "value": "hp",
+                "max": "{hpMax}",
+                "min": 0,
+                "step": 1,
+                "options": "",
+                "source": "",
+                "template": "",
+                "drag": false,
+                "visible": "",
+                "enabled": "",
+                "on": {
+                  "click": [],
+                  "hover": [],
+                  "change": []
+                },
+                "focus": {
+                  "up": "",
+                  "down": "",
+                  "left": "",
+                  "right": ""
+                },
+                "tooltip": "",
+                "prefab": "",
+                "overrides": {},
+                "marks": "player:#6fe08a, enemy:#e05a5a",
+                "children": []
+              },
+              {
+                "id": "w38",
+                "name": "Gold",
+                "type": "text",
+                "anchor": "tl",
+                "x": 0,
+                "y": 0,
+                "w": 160,
+                "h": 28,
+                "wMode": "auto",
+                "hMode": "auto",
+                "layout": "free",
+                "gap": 8,
+                "padding": 8,
+                "align": "start",
+                "columns": 3,
+                "style": {},
+                "states": {},
+                "anim": [],
+                "text": "Gold {gold}   Health {hp}/{hpMax}",
+                "sprite": "",
+                "value": "",
+                "max": "100",
+                "min": 0,
+                "step": 1,
+                "options": "",
+                "source": "",
+                "template": "",
+                "drag": false,
+                "visible": "",
+                "enabled": "",
+                "on": {
+                  "click": [],
+                  "hover": [],
+                  "change": []
+                },
+                "focus": {
+                  "up": "",
+                  "down": "",
+                  "left": "",
+                  "right": ""
+                },
+                "tooltip": "",
+                "prefab": "",
+                "overrides": {},
+                "marks": "player:#6fe08a, enemy:#e05a5a",
+                "children": []
+              },
+              {
+                "id": "w39",
+                "name": "Bag",
+                "type": "button",
+                "anchor": "tl",
+                "x": 0,
+                "y": 0,
+                "w": 160,
+                "h": 44,
+                "wMode": "fixed",
+                "hMode": "fixed",
+                "layout": "free",
+                "gap": 8,
+                "padding": 8,
+                "align": "start",
+                "columns": 3,
+                "style": {
+                  "fill": "var(--tw-panel)",
+                  "border": "var(--tw-border)",
+                  "borderWidth": 2,
+                  "radius": 8,
+                  "align": "center"
+                },
+                "states": {
+                  "hover": {
+                    "fill": "var(--tw-highlight)"
+                  },
+                  "pressed": {
+                    "opacity": 0.8
+                  },
+                  "disabled": {
+                    "opacity": 0.4
+                  },
+                  "focus": {
+                    "border": "var(--tw-accent)"
+                  }
+                },
+                "anim": [],
+                "text": "Bag",
+                "sprite": "",
+                "value": "",
+                "max": "100",
+                "min": 0,
+                "step": 1,
+                "options": "",
+                "source": "",
+                "template": "",
+                "drag": false,
+                "visible": "",
+                "enabled": "",
+                "on": {
+                  "click": [
+                    {
+                      "type": "uiScreen",
+                      "params": {
+                        "op": "open",
+                        "screen": "Inventory"
+                      }
+                    }
+                  ],
+                  "hover": [],
+                  "change": []
+                },
+                "focus": {
+                  "up": "",
+                  "down": "",
+                  "left": "",
+                  "right": ""
+                },
+                "tooltip": "",
+                "prefab": "",
+                "overrides": {},
+                "marks": "player:#6fe08a, enemy:#e05a5a",
+                "children": []
+              }
+            ]
+          }
+        ]
+      },
+      "modal": false,
+      "dim": 0,
+      "transition": "none",
+      "mapX": 260,
+      "mapY": 170,
+      "opensOnStart": true
+    }
+  ],
+  "prefabs": [
+    {
+      "name": "SlotCell",
+      "widget": {
+        "id": "w30",
+        "name": "Slot",
+        "type": "panel",
+        "anchor": "tl",
+        "x": 0,
+        "y": 0,
+        "w": 130,
+        "h": 80,
+        "wMode": "fixed",
+        "hMode": "fixed",
+        "layout": "column",
+        "gap": 8,
+        "padding": 8,
+        "align": "start",
+        "columns": 3,
+        "style": {
+          "fill": "var(--tw-panel)",
+          "border": "var(--tw-border)",
+          "borderWidth": 2,
+          "radius": 10
+        },
+        "states": {},
+        "anim": [],
+        "text": "",
+        "sprite": "",
+        "value": "",
+        "max": "100",
+        "min": 0,
+        "step": 1,
+        "options": "",
+        "source": "",
+        "template": "",
+        "drag": false,
+        "visible": "",
+        "enabled": "",
+        "on": {
+          "click": [],
+          "hover": [],
+          "change": []
+        },
+        "focus": {
+          "up": "",
+          "down": "",
+          "left": "",
+          "right": ""
+        },
+        "tooltip": "",
+        "prefab": "",
+        "overrides": {},
+        "marks": "player:#6fe08a, enemy:#e05a5a",
+        "children": [
+          {
+            "id": "w31",
+            "name": "SlotName",
+            "type": "text",
+            "anchor": "tl",
+            "x": 0,
+            "y": 0,
+            "w": 160,
+            "h": 28,
+            "wMode": "auto",
+            "hMode": "auto",
+            "layout": "free",
+            "gap": 8,
+            "padding": 8,
+            "align": "start",
+            "columns": 3,
+            "style": {},
+            "states": {},
+            "anim": [],
+            "text": "{row.name}",
+            "sprite": "",
+            "value": "",
+            "max": "100",
+            "min": 0,
+            "step": 1,
+            "options": "",
+            "source": "",
+            "template": "",
+            "drag": false,
+            "visible": "",
+            "enabled": "",
+            "on": {
+              "click": [],
+              "hover": [],
+              "change": []
+            },
+            "focus": {
+              "up": "",
+              "down": "",
+              "left": "",
+              "right": ""
+            },
+            "tooltip": "",
+            "prefab": "",
+            "overrides": {},
+            "marks": "player:#6fe08a, enemy:#e05a5a",
+            "children": []
+          },
+          {
+            "id": "w32",
+            "name": "SlotCount",
+            "type": "text",
+            "anchor": "tl",
+            "x": 0,
+            "y": 0,
+            "w": 160,
+            "h": 28,
+            "wMode": "auto",
+            "hMode": "auto",
+            "layout": "free",
+            "gap": 8,
+            "padding": 8,
+            "align": "start",
+            "columns": 3,
+            "style": {},
+            "states": {},
+            "anim": [],
+            "text": "x{row.count}",
+            "sprite": "",
+            "value": "",
+            "max": "100",
+            "min": 0,
+            "step": 1,
+            "options": "",
+            "source": "",
+            "template": "",
+            "drag": false,
+            "visible": "",
+            "enabled": "",
+            "on": {
+              "click": [],
+              "hover": [],
+              "change": []
+            },
+            "focus": {
+              "up": "",
+              "down": "",
+              "left": "",
+              "right": ""
+            },
+            "tooltip": "",
+            "prefab": "",
+            "overrides": {},
+            "marks": "player:#6fe08a, enemy:#e05a5a",
+            "children": []
+          }
+        ]
+      }
+    }
+  ],
+  "safeArea": 0
+}

@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "name": "Bag",
+  "description": "",
+  "columns": [
+    {
+      "id": "name",
+      "label": "Name",
+      "type": "text",
+      "options": [],
+      "table": ""
+    },
+    {
+      "id": "count",
+      "label": "count",
+      "type": "number",
+      "options": [],
+      "table": ""
+    }
+  ],
+  "rows": [
+    {
+      "id": "s1",
+      "name": "Potion",
+      "count": 3
+    },
+    {
+      "id": "s2",
+      "name": "Sword",
+      "count": 1
+    },
+    {
+      "id": "s3",
+      "name": "Brass key",
+      "count": 1
+    },
+    {
+      "id": "s4",
+      "name": "Bread",
+      "count": 5
+    },
+    {
+      "id": "s5",
+      "name": "Torch",
+      "count": 2
+    },
+    {
+      "id": "s6",
+      "name": "",
+      "count": 0
+    }
+  ]
+}
