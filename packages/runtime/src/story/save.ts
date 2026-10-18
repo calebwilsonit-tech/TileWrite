@@ -3,6 +3,7 @@ import '../project/schema'; // sets up Zod before the schemas below are built
 import { VariableValueSchema } from '../project/schema';
 import type { Simulation } from '../core/simulation';
 import { C, type TransformIso } from '../scene/components';
+import { applyTableEdits } from '../data/tables';
 
 /**
  * Save games: what to keep (flags and inventory, where the player is, the last lantern, and the state of
@@ -30,6 +31,8 @@ export const SaveSchema = z.object({
   objects: z.array(z.object({ id: z.string(), components: z.record(z.string(), z.unknown()) })).default([]),
   /** Persistent objects that no longer exist (a picked-up coin, a broken pot). */
   gone: z.array(z.string()).default([]),
+  /** Rows of data tables the game changed (an inventory, a deck), by table name. */
+  tables: z.record(z.string(), z.array(z.record(z.string(), z.unknown()))).default({}),
 });
 export type SaveData = z.infer<typeof SaveSchema>;
 
@@ -83,6 +86,7 @@ export function serializeGame(sim: Simulation, meta: { stamp: string; label?: st
     player: t ? { x: t.x, y: t.y, h: t.h, facing: t.facing, hp } : null,
     objects,
     gone: gone.filter((id) => persistentOnLoad.has(id)),
+    tables: JSON.parse(JSON.stringify(r.tableEdits)),
   });
 }
 
@@ -95,6 +99,8 @@ export function applySave(sim: Simulation, save: SaveData): void {
   r.vars = { ...r.vars, ...save.vars };
   r.checkpoint = save.checkpoint;
   r.difficulty = save.difficulty;
+  r.tableEdits = structuredClone(save.tables) as typeof r.tableEdits;
+  applyTableEdits(sim.assets.tables, r.tableEdits);
   for (const id of save.gone) {
     const live = r.ids.get(id);
     if (live !== undefined) sim.world.destroy(live);

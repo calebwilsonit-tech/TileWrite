@@ -11,6 +11,10 @@ import {
   minigameWon,
   C,
   evalValue,
+  backScreen,
+  closeScreen,
+  openScreen,
+  toggleScreen,
   setClockMode,
   setClockSpeed,
   expandEntities,
@@ -89,7 +93,7 @@ export function describeRef(ref: Ref, names?: Names): string {
 
 // ---------- parameters ----------
 
-export type ParamType = 'number' | 'text' | 'boolean' | 'select' | 'entity' | 'variable' | 'signal' | 'prefab' | 'action' | 'sound';
+export type ParamType = 'number' | 'text' | 'boolean' | 'select' | 'entity' | 'variable' | 'signal' | 'prefab' | 'action' | 'sound' | 'screen';
 
 export interface ParamSpec {
   key: string;
@@ -788,6 +792,33 @@ export const ACTIONS: ActionDef[] = [
     params: [],
     describe: () => 'save the game',
     run: (ctx) => void ctx.events.emit('save-request', { slot: 'autosave' }),
+  },
+  {
+    id: 'uiScreen',
+    label: 'Open or close an interface screen',
+    category: 'Interface',
+    params: [
+      { key: 'op', label: 'Do', type: 'select', default: 'open', options: [{ value: 'open', label: 'open' }, { value: 'close', label: 'close' }, { value: 'toggle', label: 'open or close' }, { value: 'back', label: 'go back one screen' }, { value: 'closeAll', label: 'close every screen' }] },
+      { key: 'screen', label: 'Screen', type: 'screen', default: '' },
+    ],
+    describe: (p) => (str(p, 'op') === 'back' ? 'go back one screen' : str(p, 'op') === 'closeAll' ? 'close every screen' : `${str(p, 'op') || 'open'} the screen "${str(p, 'screen')}"`),
+    run(ctx, p) {
+      const host = { runtime: ctx.runtime, assets: ctx.assets };
+      switch (str(p, 'op')) {
+        case 'close':
+          return closeScreen(host, str(p, 'screen'));
+        case 'toggle':
+          return toggleScreen(host, str(p, 'screen'));
+        case 'back':
+          return backScreen(host);
+        case 'closeAll':
+          ctx.runtime.ui.stack = [];
+          ctx.runtime.ui.modal = false;
+          return;
+        default:
+          if (!openScreen(host, str(p, 'screen'))) ctx.events.emit('problem', { text: `The screen "${str(p, 'screen')}" does not exist.` });
+      }
+    },
   },
   {
     id: 'loadGame',

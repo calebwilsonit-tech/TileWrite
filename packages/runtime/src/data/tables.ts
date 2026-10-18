@@ -126,6 +126,30 @@ export function readCell(tables: Tables, path: string): CellValue | undefined {
   return tableCell(tables.get(table), row, col);
 }
 
+/**
+ * Change one cell while the game runs ("Inventory.slot3.item"). The table is replaced in the game's own copy by one with the
+ * new row, and `edits` (the game's saved record of changed tables) gets the table's rows. False when the cell does not exist.
+ */
+export function writeCell(tables: Map<string, TableData>, edits: Record<string, TableRow[]>, path: string, value: CellValue): boolean {
+  const [table, row, col, ...rest] = path.split('.');
+  if (!table || !row || !col || rest.length > 0) return false;
+  const t = tables.get(table);
+  const c = columnOf(t, col);
+  if (!t || !c || !findRow(t, row)) return false;
+  const rows = t.rows.map((r) => (r.id === row ? { ...r, [col]: coerceCell(c, value) } : r));
+  tables.set(table, { ...t, rows });
+  edits[table] = rows;
+  return true;
+}
+
+/** Put the rows a save remembers back into the game's tables. */
+export function applyTableEdits(tables: Map<string, TableData>, edits: Record<string, TableRow[]>): void {
+  for (const [name, rows] of Object.entries(edits)) {
+    const t = tables.get(name);
+    if (t) tables.set(name, { ...t, rows: structuredClone(rows) });
+  }
+}
+
 /** The values of one column over all rows (for lists and pickers). */
 export function columnValues(t: TableData, col: string): CellValue[] {
   return t.rows.map((r) => tableCell(t, r.id, col)).filter((v): v is CellValue => v !== undefined);

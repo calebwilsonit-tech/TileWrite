@@ -10,6 +10,8 @@ Everything here works with the mouse and keyboard only. Press **Ctrl+K** any tim
 - **Autosave** writes unsaved work to `.tilewright/autosave/` every 20 s (never over your real files). After a crash, reopening the project offers **Recover**. Saving clears the autosave.
 
 ## The window
+Four **workspaces** sit in the top bar: **World** (this page), **Sprites** (see [sprite-studio.md](sprite-studio.md)), **UI** (the screen designer, see [ui-designer.md](ui-designer.md)) and **Code** (see [code-window.md](code-window.md)).
+
 Panels dock, tab, split and float: drag a tab. The layout is remembered; **Commands → Reset panel layout** restores the default.
 
 | Panel | What it is for |

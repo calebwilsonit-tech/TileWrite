@@ -9,6 +9,7 @@ import {
   type ProjectData,
   type SceneData,
 } from '@tilewright/runtime';
+import { LEGACY_PACKS } from '@tilewright/behaviors';
 
 export interface Template {
   id: string;
@@ -61,7 +62,7 @@ function baseProject(name: string, packs?: string[]): ProjectData {
     autotile: [],
     scenes: [MAIN_SCENE_PATH],
     startScene: MAIN_SCENE_PATH,
-    ...(packs ? { packs } : {}),
+    packs: packs ?? [...LEGACY_PACKS],
   };
 }
 

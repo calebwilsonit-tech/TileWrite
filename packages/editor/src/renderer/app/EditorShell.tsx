@@ -14,6 +14,7 @@ import { StudioView } from '../studio/StudioView';
 import { AssetsPanel } from '../panels/AssetsPanel';
 import { EventsPanel } from '../panels/EventsPanel';
 import { GraphPanel } from '../panels/GraphPanel';
+import { UiDesigner } from '../uidesigner/UiDesigner';
 import { StoryPanel } from '../panels/StoryPanel';
 import { DataPanel } from '../panels/DataPanel';
 import { GeneratePanel } from '../panels/GeneratePanel';
@@ -107,6 +108,9 @@ function Toolbar() {
         <button data-testid="btn-ws-sprites" className={ws === 'sprites' ? 'on' : ''} aria-pressed={ws === 'sprites'} onClick={() => store.set({ workspace: 'sprites' })} title="Draw and animate sprites (Ctrl+2)" disabled={mode === 'play'}>
           Sprites
         </button>
+        <button data-testid="btn-ws-ui" className={ws === 'ui' ? 'on' : ''} aria-pressed={ws === 'ui'} onClick={() => store.set({ workspace: 'ui' })} title="Design the game's screens: menus, heads-up display, inventories (Ctrl+4)" disabled={mode === 'play'}>
+          UI
+        </button>
         <button data-testid="btn-ws-code" className={ws === 'code' ? 'on' : ''} aria-pressed={ws === 'code'} onClick={() => store.set({ workspace: 'code' })} title="Write scripts in code (Ctrl+3)">
           Code
         </button>
@@ -138,7 +142,7 @@ function Toolbar() {
       </button>
         </>
       )}
-      {(ws === 'world' || ws === 'code') && (
+      {(ws === 'world' || ws === 'code' || ws === 'ui') && (
         <>
           <span className="sep" />
           {mode === 'edit' ? (
@@ -264,6 +268,7 @@ export function EditorShell() {
         <DockviewReact className={`dockview-theme-${theme}`} components={components} onReady={onReady} />
       </div>
       {ws === 'sprites' && <StudioView />}
+      {ws === 'ui' && <UiDesigner />}
       {ws === 'code' && (
         <Suspense fallback={<p className="hint">Loading the code editor...</p>}>
           <CodeView />

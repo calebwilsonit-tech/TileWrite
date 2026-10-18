@@ -234,6 +234,12 @@ export function activePackIds(): string[] {
  * Turn exactly these packs on (and everything else off). `undefined` means "all the engine's own packs", which is what a project made
  * before packs existed gets, so it plays as it always did.
  */
+/** The packs a project made before phase 2 plays with: the action-adventure ones. Turn-based play, control schemes and simulation helpers are new and opt-in. */
+export const LEGACY_PACKS: readonly string[] = ['combat', 'inventory', 'story', 'ai', 'lighting', 'storytender'];
+
+/** The packs a project file asks for (a file with no list is a project from before packs: the action-adventure set). */
+export const packsOfProject = (project: { packs?: readonly string[] | undefined }): readonly string[] => project.packs ?? LEGACY_PACKS;
+
 export function setActivePacks(ids: readonly string[] | undefined): void {
   const want = new Set(ids ?? [...known.values()].filter((p) => p.builtin).map((p) => p.id));
   for (const id of [...installed.keys()]) if (!want.has(id)) uninstallPack(id);

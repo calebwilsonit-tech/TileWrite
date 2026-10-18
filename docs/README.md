@@ -20,6 +20,7 @@ Start with the tutorial in the app (the project screen's **Take the tutorial** b
 | Resources, production chains, day and night, waves, routes, villagers with needs, fire and growth | [simulation-helpers.md](simulation-helpers.md) |
 | Real time, speed-up and turn-based play | [time-and-turns.md](time-and-turns.md) |
 | Packs and the plugin API | [packs-and-plugins.md](packs-and-plugins.md) |
+| Design screens, menus, HUDs, inventories, shops: the UI designer | [ui-designer.md](ui-designer.md) |
 | Title screen, project settings, controls, HUD layout and theme | [interface-and-controls.md](interface-and-controls.md) |
 | Translate the game, player settings (zoom, full screen, language) | [translations-and-settings.md](translations-and-settings.md) |
 | Draw and animate sprites | [sprite-studio.md](sprite-studio.md) |

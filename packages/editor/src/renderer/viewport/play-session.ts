@@ -21,6 +21,7 @@ import {
   type InputMapDef,
   type ProjectInput,
   type UiLayout,
+  type UiDoc,
   type TableData,
   gridToScreen,
   groundHeightAt,
@@ -100,7 +101,7 @@ export interface PlayOptions {
   /** Switch the window to or from full screen (only a game in its own window can). */
   setFullscreen?: (on: boolean) => void;
   /** The project's prefabs, sprites and story as they are now (for hot reload while playing in the editor). */
-  liveAssets?: () => { prefabs: ReadonlyMap<string, PrefabData>; sprites: ReadonlyMap<string, SpriteData>; story: PlayOptions['story']; skins?: readonly SkinData[]; minigames?: readonly MinigameData[]; worldMap?: WorldMapData | null; layout?: UiLayout; input?: ProjectInput; tables?: readonly TableData[] };
+  liveAssets?: () => { prefabs: ReadonlyMap<string, PrefabData>; sprites: ReadonlyMap<string, SpriteData>; story: PlayOptions['story']; skins?: readonly SkinData[]; minigames?: readonly MinigameData[]; worldMap?: WorldMapData | null; layout?: UiLayout; uiDoc?: UiDoc; input?: ProjectInput; tables?: readonly TableData[] };
   /** The player's other looks. */
   skins?: readonly SkinData[];
   /** The project's minigames. */
@@ -113,6 +114,8 @@ export interface PlayOptions {
   title?: { text: string; subtitle: string };
   /** The project's data tables. */
   tables?: readonly TableData[];
+  /** The interface screens made in the UI designer. */
+  uiDoc?: UiDoc;
   /** How the game's own screen looks and where its pieces sit (Story -> Interface). */
   layout?: UiLayout;
   /** The game's own controls (assets/input.json). */
@@ -168,6 +171,7 @@ export class PlaySession {
     for (const m of o.minigames ?? []) sim.assets.minigames.set(m.name, m);
     sim.assets.worldMap = o.worldMap ?? null;
     for (const t of o.tables ?? []) sim.assets.tables.set(t.name, t);
+    if (o.uiDoc) sim.assets.ui = o.uiDoc;
     this.saves = new SaveManager(
       {
         read: (p) => assetFs.read(p),
@@ -270,6 +274,7 @@ export class PlaySession {
     if (o.layout) this.ui.setLayout(o.layout);
     this.startedAt = performance.now();
     const auto = o.autoPlay;
+    if (!auto && !o.from) this.ui.openStart();
     if (o.title && !auto && !o.from) this.ui.openTitle(o.title);
     if (auto) {
       void languagesReady.then(() => {
@@ -341,6 +346,7 @@ export class PlaySession {
     }
     if (live?.skins) this.skinsNow = live.skins;
     if (live?.layout) this.ui.setLayout(live.layout);
+    if (live?.uiDoc) sim.assets.ui = live.uiDoc;
     if (live?.input) this.useInput(live.input);
     this.applySkinToPlayer();
     return 'Reloaded the game with your changes.';

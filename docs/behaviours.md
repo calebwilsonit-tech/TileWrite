@@ -4,11 +4,12 @@
 
 A behaviour is ready-made logic you add to an object in the Inspector (**Behaviours -> Add**). Its settings appear as fields; its signals can be joined to other objects with the Wire tool. Each behaviour has an id (the key under which it is saved) shown in `code`.
 
-There are 57 behaviours. Behaviours made by scripts (see [code-window.md](code-window.md)) appear in the same list under "Scripts".
+There are 58 behaviours. Behaviours made by scripts (see [code-window.md](code-window.md)) appear in the same list under "Scripts".
 
 - [AI](#ai) (Vision Cone, Chase, Patrol, Boss Phases, State Machine, Behaviour Tree)
 - [Combat](#combat) (Health, Damage on Touch, Melee Attack (quill), Dodge, Ranged Attack)
 - [Control schemes](#control-schemes) (Direct Control, Click to Move, Hotspot, Grid Cursor, Commandable Unit, RTS Control, Camera Rig, Builder)
+- [Interface](#interface) (World UI)
 - [Light](#light) (Light, Light Resource (lantern fuel), Light Sensor, Growing Object)
 - [Logic](#logic) (Logic Gate, Event Node, Action Node, Clickable)
 - [Movement](#movement) (Grid Mover)
@@ -316,6 +317,21 @@ Real-time strategy controls: click a unit or drag a box to select units, right-c
 | --- | --- | --- | --- | --- |
 | Team the person plays | `team` | text | "blue" |  |
 | Smallest drag that makes a box (pixels) | `boxMin` | number | 6 | at least 2 |
+
+## Interface
+
+### World UI
+
+Id: `worldUi`. Each update it reacts to signals (runs last).
+
+Hangs a piece of interface over this object: a health bar above a unit, a speech bubble, a price tag, a "press E" prompt. The piece is a UI prefab from the UI designer; inside it, {self.hp}, {self.name} and {self.health.max} (any setting of any part) mean this object.
+
+| Setting | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| UI prefab | `prefab` | text | (empty) |  |
+| Height above the object (cells) | `height` | number | 1.6 | 0 to 10 |
+| Shown only when | `showWhen` | text | (empty) |  |
+| Hide when the player is farther than (cells, 0 = never) | `maxDistance` | number | 0 | 0 to 60 |
 
 ## Light
 

@@ -93,6 +93,12 @@ export function ParamEditor({ spec, value, onChange, testId, facts, inLoop }: { 
       return <SelectField<string> testId={testId} label={spec.label} value={String(value ?? '')} options={[{ value: '', label: facts.prefabs.length ? '(choose a prefab)' : '(no prefabs yet)' }, ...facts.prefabs.map((p) => ({ value: p, label: p }))]} onChange={onChange} />;
     case 'sound':
       return <SoundField testId={testId} label={spec.label} value={String(value ?? '')} onCommit={onChange} />;
+    case 'screen': {
+      const screens = store.uiDoc.screens.map((s) => ({ value: s.name, label: s.name }));
+      const v = String(value ?? '');
+      if (v && !screens.some((s) => s.value === v)) screens.push({ value: v, label: `${v} (missing)` });
+      return <SelectField<string> testId={testId} label={spec.label} value={v} options={[{ value: '', label: screens.length ? '(choose a screen)' : '(no screens yet - make one in the UI designer)' }, ...screens]} onChange={onChange} />;
+    }
     case 'action':
       return <SelectField<string> testId={testId} label={spec.label} value={String(value ?? '')} options={Object.keys(DEFAULT_INPUT_MAP).map((a) => ({ value: a, label: a }))} onChange={onChange} />;
     case 'variable':

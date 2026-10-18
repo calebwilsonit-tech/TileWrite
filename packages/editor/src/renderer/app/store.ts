@@ -11,12 +11,12 @@ import { analyseLevel, analysePushPuzzles, type LevelIssue } from '@tilewright/p
 import { checkProject, type ProjectProblem } from '../project/check';
 import { deletePlaythrough, listPlaythroughs, loadPlaythrough, nextPlaythroughName, savePlaythrough } from '../project/playthroughs';
 import { Game, newPlaythrough, replayPlaythrough, type GameSetup } from '@tilewright/playbot';
-import { eventsToScript, setActivePacks, syncCustomBlocks } from '@tilewright/behaviors';
+import { eventsToScript, packsOfProject, setActivePacks, syncCustomBlocks } from '@tilewright/behaviors';
 import { reloadScripts, type BreakHit, type ScriptProblemEntry } from '../code/script-manager';
 import { deleteScript as deleteScriptFile, loadScripts as loadScriptFiles, saveScript as saveScriptFile } from '../project/scripts';
 import { setPlayerRequired } from '../model/validate';
 import { deleteComponent, deleteCustomBehavior, deleteTable, loadComponents, loadCustomBehaviors, loadEventDefs, loadTables, saveComponent, saveCustomBehavior, saveEventDefs, saveTable } from '../project/blocks';
-import { loadProjectInput, loadUiLayout, saveProjectInput, saveUiLayout, storyNameProblem } from '../project/story';
+import { loadProjectInput, loadUiDoc, loadUiLayout, saveProjectInput, saveUiDoc, saveUiLayout, storyNameProblem } from '../project/story';
 import { deleteCutscene, deleteDialogue, loadCutscenes, loadDialogues, loadItems, loadMinigames, loadSkins, loadWorldMap, saveCutscene, saveDialogue, saveItems, saveMinigames, saveSkins, saveWorldMap } from '../project/story';
 import {
   UserError,
@@ -33,7 +33,7 @@ import {
   type OpenProject,
   type ProjectFs,
 } from '../project/io';
-import { DEFAULT_TILESET, defaultUiLayout, type CustomBehaviorData, type CustomComponentData, type EventDef, type TableData, emptyProjectInput, groupOf, newScene, tilesetFromList, type AutotileRuleData, type ProjectData, type ProjectInput, type UiLayout, type MinigameData, type SkinData, type WorldMapData, type TileDefData } from '@tilewright/runtime';
+import { DEFAULT_TILESET, emptyUiDoc, type UiDoc, defaultUiLayout, type CustomBehaviorData, type CustomComponentData, type EventDef, type TableData, emptyProjectInput, groupOf, newScene, tilesetFromList, type AutotileRuleData, type ProjectData, type ProjectInput, type UiLayout, type MinigameData, type SkinData, type WorldMapData, type TileDefData } from '@tilewright/runtime';
 
 /** Everything the Story panel edits, as it is at one moment (the parts are replaced, never changed in place). */
 interface StorySnapshot {
@@ -134,7 +134,7 @@ export interface ViewOptions {
 }
 
 export type Mode = 'edit' | 'play';
-export type Workspace = 'world' | 'sprites' | 'code';
+export type Workspace = 'world' | 'sprites' | 'code' | 'ui';
 
 export interface Notice {
   id: number;
@@ -408,7 +408,7 @@ class AppStore {
   }
 
   private async openLoaded(p: OpenProject): Promise<void> {
-    setActivePacks(p.project.packs);
+    setActivePacks(packsOfProject(p.project));
     setPlayerRequired(p.project.packs === undefined);
     await api().recent.add(p.dir, p.project.name);
     this.set({ project: p, workspace: 'world', recent: await api().recent.list() });
@@ -594,6 +594,8 @@ class AppStore {
   input: ProjectInput = emptyProjectInput();
   /** The theme and arrangement of the game's own screen (Story -> Interface), saved in assets/ui.json. */
   uiLayout: UiLayout = defaultUiLayout();
+  /** The interface screens made in the UI designer, saved in assets/screens.json. */
+  uiDoc: UiDoc = emptyUiDoc();
   /** Something to start as soon as the next Play begins (the Story panel's "Test" buttons). */
   autoPlay: { cutscene?: string; dialogue?: string; minigame?: string } | null = null;
   private storyTimers = new Map<string, number>();
@@ -671,6 +673,7 @@ class AppStore {
       this.worldMap = null;
       this.input = emptyProjectInput();
       this.uiLayout = defaultUiLayout();
+      this.uiDoc = emptyUiDoc();
       this.tables = [];
       this.components = [];
       this.customBehaviors = [];
@@ -679,7 +682,7 @@ class AppStore {
       return;
     }
     const [items, dialogues, cutscenes, skins, minigames, world] = await Promise.all([loadItems(assetFs, p.dir), loadDialogues(assetFs, p.dir), loadCutscenes(assetFs, p.dir), loadSkins(assetFs, p.dir), loadMinigames(assetFs, p.dir), loadWorldMap(assetFs, p.dir)]);
-    const [inputFile, uiFile, tablesFile, componentsFile, behaviorsFile, eventsFile] = await Promise.all([loadProjectInput(assetFs, p.dir), loadUiLayout(assetFs, p.dir), loadTables(assetFs, p.dir), loadComponents(assetFs, p.dir), loadCustomBehaviors(assetFs, p.dir), loadEventDefs(assetFs, p.dir)]);
+    const [inputFile, uiFile, uiDocFile, tablesFile, componentsFile, behaviorsFile, eventsFile] = await Promise.all([loadProjectInput(assetFs, p.dir), loadUiLayout(assetFs, p.dir), loadUiDoc(assetFs, p.dir), loadTables(assetFs, p.dir), loadComponents(assetFs, p.dir), loadCustomBehaviors(assetFs, p.dir), loadEventDefs(assetFs, p.dir)]);
     this.tables = tablesFile.items;
     this.components = componentsFile.items;
     this.customBehaviors = behaviorsFile.items;
@@ -687,12 +690,13 @@ class AppStore {
     for (const problem of syncCustomBlocks(this.components, this.customBehaviors)) this.notify('warn', problem);
     this.input = inputFile.input;
     this.uiLayout = uiFile.layout;
+    this.uiDoc = uiDocFile.doc;
     this.worldMap = world.map;
     this.skins = skins.skins;
     this.minigames = minigames.minigames;
     this.story = { items: items.items, dialogues: dialogues.items, cutscenes: cutscenes.items };
     this.set({ storyVersion: this.state.storyVersion + 1 });
-    for (const problem of [...items.problems, ...dialogues.problems, ...cutscenes.problems, ...skins.problems, ...minigames.problems, ...world.problems, ...inputFile.problems, ...uiFile.problems, ...tablesFile.problems, ...componentsFile.problems, ...behaviorsFile.problems, ...eventsFile.problems]) this.notify('warn', problem);
+    for (const problem of [...items.problems, ...dialogues.problems, ...cutscenes.problems, ...skins.problems, ...minigames.problems, ...world.problems, ...inputFile.problems, ...uiFile.problems, ...uiDocFile.problems, ...tablesFile.problems, ...componentsFile.problems, ...behaviorsFile.problems, ...eventsFile.problems]) this.notify('warn', problem);
   }
 
   /** Save a story file a moment after the last edit (typing in a field must not write a file per keystroke). */
@@ -725,6 +729,7 @@ class AppStore {
     if (this.eventDefs.length > 0 || (await assetFs.exists(joinPath(p.dir, 'assets/events.json')))) await saveEventDefs(assetFs, p.dir, this.eventDefs);
     if (this.input.actions.length > 0 || Object.keys(this.input.overrides).length > 0 || (await assetFs.exists(joinPath(p.dir, 'assets/input.json')))) await saveProjectInput(assetFs, p.dir, this.input);
     if (JSON.stringify(this.uiLayout) !== JSON.stringify(defaultUiLayout()) || (await assetFs.exists(joinPath(p.dir, 'assets/ui.json')))) await saveUiLayout(assetFs, p.dir, this.uiLayout);
+    if (this.uiDoc.screens.length > 0 || this.uiDoc.prefabs.length > 0 || (await assetFs.exists(joinPath(p.dir, 'assets/screens.json')))) await saveUiDoc(assetFs, p.dir, this.uiDoc);
     for (const d of this.story.dialogues.values()) await saveDialogue(assetFs, p.dir, d);
     for (const c of this.story.cutscenes.values()) await saveCutscene(assetFs, p.dir, c);
   }
@@ -814,6 +819,15 @@ class AppStore {
     this.maybeHotReload();
     const p = this.state.project;
     if (p) this.persistLater('input', () => saveProjectInput(assetFs, p.dir, this.input));
+  }
+
+  /** The interface screens (the UI designer). Saved a moment after the last edit. */
+  setUiDoc(doc: UiDoc): void {
+    this.uiDoc = doc;
+    this.set({ storyVersion: this.state.storyVersion + 1 });
+    this.maybeHotReload();
+    const p = this.state.project;
+    if (p) this.persistLater('screens', () => saveUiDoc(assetFs, p.dir, this.uiDoc));
   }
 
   /** The look and arrangement of the game's own screen. */

@@ -15,6 +15,10 @@ import {
   emptyProjectInput,
   type ProjectInput,
   type UiLayout,
+  emptyUiDoc,
+  parseUiDoc,
+  stringifyUiDoc,
+  type UiDoc,
   type SkinData,
   type CutsceneData,
   type DialogueData,
@@ -31,6 +35,7 @@ export const MINIGAMES_FILE = 'assets/minigames.json';
 export const WORLDMAP_FILE = 'assets/worldmap.json';
 export const INPUT_FILE = 'assets/input.json';
 export const UI_FILE = 'assets/ui.json';
+export const UI_SCREENS_FILE = 'assets/screens.json';
 export const DIALOGUE_DIR = 'assets/dialogues';
 export const CUTSCENE_DIR = 'assets/cutscenes';
 const DIALOGUE_EXT = '.dialogue.json';
@@ -144,6 +149,21 @@ export async function loadUiLayout(fs: AssetFs, dir: string): Promise<{ layout: 
   } catch (e) {
     return { layout: defaultUiLayout(), problems: [`The interface file could not be read (${(e as Error).message}).`] };
   }
+}
+
+export async function loadUiDoc(fs: AssetFs, dir: string): Promise<{ doc: UiDoc; problems: string[] }> {
+  const file = joinPath(dir, UI_SCREENS_FILE);
+  try {
+    if (!(await fs.exists(file))) return { doc: emptyUiDoc(), problems: [] };
+    const r = parseUiDoc(JSON.parse(await fs.read(file)));
+    return r.ok ? { doc: r.value, problems: [] } : { doc: emptyUiDoc(), problems: [r.error] };
+  } catch (e) {
+    return { doc: emptyUiDoc(), problems: [`The interface screens file could not be read (${(e as Error).message}).`] };
+  }
+}
+
+export async function saveUiDoc(fs: AssetFs, dir: string, doc: UiDoc): Promise<void> {
+  await fs.write(joinPath(dir, UI_SCREENS_FILE), stringifyUiDoc({ ...doc, schemaVersion: CURRENT_SCHEMA_VERSION }));
 }
 
 export async function saveUiLayout(fs: AssetFs, dir: string, layout: UiLayout): Promise<void> {

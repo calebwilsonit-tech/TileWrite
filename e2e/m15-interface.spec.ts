@@ -48,6 +48,7 @@ test('M15: project settings turn on a title screen (New game, Continue); control
   await page.getByTestId('ctl-change-dash').click();
   await page.keyboard.press('KeyZ');
   await expect(page.getByTestId('ctl-keys-dash')).toHaveText('Z');
+  
   await expect(page.getByTestId('ctl-problems')).toHaveCount(0);
   await page.getByTestId('ctl-change-interact').click();
   await page.keyboard.press('KeyF');

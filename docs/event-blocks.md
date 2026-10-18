@@ -4,7 +4,7 @@
 
 An event sheet is a list of rows, each reading like a sentence: **when** its conditions hold, **do** its actions. Rows can have sub-events that run only while the row holds. Objects are chosen as "the player", "anything tagged ...", or a particular object. See [logic.md](logic.md).
 
-There are 28 conditions and 47 actions.
+There are 28 conditions and 48 actions.
 
 ## Conditions
 
@@ -502,6 +502,17 @@ Id: `loadGame`.
 Id: `quitGame`.
 
 No parameters.
+
+### Interface
+
+#### Open or close an interface screen
+
+Id: `uiScreen`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Do | `op` | select | "open" | `open`, `close`, `toggle`, `back`, `closeAll` |
+| Screen | `screen` | screen | (empty) |  |
 
 ### Advanced
 

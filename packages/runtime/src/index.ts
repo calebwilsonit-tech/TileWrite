@@ -38,6 +38,8 @@ export * from './story/minigames';
 export * from './story/worldmap';
 export * from './input/project-input';
 export * from './story/richtext';
+export * from './ui/model';
+export * from './ui/state';
 export * from './data/tables';
 export * from './data/values';
 export * from './data/expr';

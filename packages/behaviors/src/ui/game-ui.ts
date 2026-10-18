@@ -18,6 +18,14 @@ import {
   parseRichText,
   quickSlots,
   type GameSettings,
+  RESERVED_SCREENS,
+  compositeFrame,
+  backScreen,
+  closeScreen,
+  openScreen,
+  openStartScreens,
+  screenNamed,
+  topScreen,
   type InputMapDef,
   type SlotInfo,
   type Simulation,
@@ -28,6 +36,8 @@ import { contextOf } from '../story/context';
 import { confirmDialogue, selectChoice } from '../story/director';
 import { useItem } from '../story/inventory';
 import { MINIGAME_CSS, MINIGAME_STRINGS, MinigameView } from './minigame-ui';
+import { SCREENS_CSS, UiScreens } from './screens-dom';
+import { setUiBridge } from './screens-logic';
 
 /** What the screens need from whoever is running the game (the editor's Play, or an exported game). */
 export interface GameUiHost {
@@ -52,6 +62,8 @@ export interface GameUiHost {
   quit?(): void;
   /** Full screen on and off; only a game running in its own window can offer it. */
   fullscreen?: { get(): boolean; set(on: boolean): void };
+  /** A sprite's first picture as an image address, for image widgets. */
+  spriteUrl?(name: string): string | null;
 }
 
 /**
@@ -200,6 +212,8 @@ export class GameUi {
   /** Inline styles put on a piece by the layout, so the next layout can take them off again. */
   private readonly applied = new Map<HTMLElement, string[]>();
   private readonly minigame: MinigameView;
+  /** The screens made in the UI designer (assets/screens.json). */
+  readonly screens: UiScreens;
   private menuEl: HTMLElement | null = null;
   private readonly style = el('style');
   private screen: Screen = 'main';
@@ -229,8 +243,21 @@ export class GameUi {
     private readonly parent: HTMLElement,
     private readonly host: GameUiHost,
   ) {
-    this.style.textContent = CSS + MINIGAME_CSS;
+    this.style.textContent = CSS + MINIGAME_CSS + SCREENS_CSS;
     this.minigame = new MinigameView(this.root, host.sim);
+    this.screens = new UiScreens(this.root, host.sim);
+    setUiBridge(host.sim, {
+      getSetting: (k) => (host.settings as Record<string, unknown>)[k] as never,
+      setSetting: (k, v) => host.changeSettings({ [k]: v } as Partial<GameSettings>),
+      rebind: (action) => {
+        void host.captureNext().then((id) => {
+          if (id) host.rebind(action, id);
+          this.screens.captured();
+        });
+      },
+      bindingText: (action) => (host.bindings()[action] ?? []).map((b) => bindingLabel(b)).join(' / '),
+      spriteUrl: (name) => host.spriteUrl?.(name) ?? this.spriteFrameUrl(name),
+    });
     this.root.setAttribute('data-testid', 'tw-ui');
     this.hud.setAttribute('data-testid', 'tw-hud');
     this.hearts.setAttribute('data-testid', 'tw-hearts');
@@ -248,6 +275,28 @@ export class GameUi {
       ev.on('item-used', (e) => this.toast(this.fmt('Used {item}', { item: this.itemName(String(e.item)) }))),
       ev.on('died', (e) => host.sim.world.get(Number(e.entity))?.tags.has('player') && this.toast(this.tr('You were defeated.'))),
     );
+  }
+
+  private readonly spriteUrls = new Map<string, string>();
+
+  /** The first picture of a sprite as an image address (for image widgets). */
+  private spriteFrameUrl(name: string): string | null {
+    const cached = this.spriteUrls.get(name);
+    if (cached !== undefined) return cached;
+    const sprite = this.host.sim.assets.sprites.get(name);
+    if (!sprite) return null;
+    try {
+      const rgba = compositeFrame(sprite, 0);
+      const canvas = document.createElement('canvas');
+      canvas.width = sprite.width;
+      canvas.height = sprite.height;
+      canvas.getContext('2d')!.putImageData(new ImageData(new Uint8ClampedArray(rgba), sprite.width, sprite.height), 0, 0);
+      const url = canvas.toDataURL('image/png');
+      this.spriteUrls.set(name, url);
+      return url;
+    } catch {
+      return null;
+    }
   }
 
   private itemName(id: string): string {
@@ -341,13 +390,28 @@ export class GameUi {
     }
   }
 
+  /** A menu or a screen that freezes the game is open. */
   get menuOpen(): boolean {
+    return this.host.sim.runtime.menuOpen || this.host.sim.runtime.ui.modal;
+  }
+
+  /** The built-in pause menu / title is the one showing. */
+  private get builtinOpen(): boolean {
     return this.host.sim.runtime.menuOpen;
+  }
+
+  private hasScreen(name: string): boolean {
+    return screenNamed(this.host.sim.assets, name) !== undefined;
   }
 
   openMenu(screen: Screen = 'main'): void {
     const r = this.host.sim.runtime;
     if (r.dialogue || r.cutscene || r.minigame) return;
+    // a Pause screen made in the designer replaces the built-in menu
+    if (screen === 'main' && this.hasScreen(RESERVED_SCREENS.pause)) {
+      openScreen(this.host.sim, RESERVED_SCREENS.pause);
+      return;
+    }
     r.menuOpen = true;
     this.go(screen);
   }
@@ -355,12 +419,21 @@ export class GameUi {
   /** Show the title screen (New game, Continue, Load game, Settings, Quit); the world waits behind it. */
   openTitle(info: TitleInfo): void {
     this.titleInfo = info;
+    if (this.hasScreen(RESERVED_SCREENS.title)) {
+      openScreen(this.host.sim, RESERVED_SCREENS.title);
+      return;
+    }
     this.host.sim.runtime.menuOpen = true;
     this.go('title');
   }
 
   get titleOpen(): boolean {
     return this.titleInfo !== null;
+  }
+
+  /** Open the screens that open when the game starts (a title screen, a heads-up display). */
+  openStart(): void {
+    openStartScreens(this.host.sim);
   }
 
   closeMenu(): void {
@@ -393,6 +466,8 @@ export class GameUi {
       this.lastTick = sim.tick;
       this.handleInput();
     }
+    this.screens.update();
+    if (this.titleInfo && this.hasScreen(RESERVED_SCREENS.title) && !r.ui.stack.includes(RESERVED_SCREENS.title)) this.titleInfo = null;
     this.drawHud();
     this.drawWidgets();
     this.drawDialogue();
@@ -420,7 +495,21 @@ export class GameUi {
   private handleInput(): void {
     const sim = this.host.sim;
     const ui = sim.uiInput;
-    if (!this.menuOpen) {
+    // screens from the designer: the pause key opens Pause, or goes back from the screen on top
+    const stack = sim.runtime.ui.stack;
+    if (stack.length > 0 || this.hasScreen(RESERVED_SCREENS.pause)) {
+      if (this.builtinOpen) return;
+      const top = topScreen(sim);
+      if (ui.pressed('pause') && !sim.runtime.dialogue && !sim.runtime.cutscene && !sim.runtime.minigame) {
+        if (top?.modal && this.titleInfo === null) {
+          if (top.name === RESERVED_SCREENS.pause) closeScreen(sim, top.name);
+          else backScreen(sim);
+        } else if (!top?.modal && this.hasScreen(RESERVED_SCREENS.pause)) openScreen(sim, RESERVED_SCREENS.pause);
+        else if (!top?.modal) this.openMenu('main');
+      }
+      if (stack.length > 0 && sim.runtime.ui.modal) return;
+    }
+    if (!this.builtinOpen) {
       if (sim.runtime.dialogue || sim.runtime.cutscene || sim.runtime.minigame) return;
       if (ui.pressed('pause')) this.openMenu('main');
       else if (ui.pressed('inventory')) this.openMenu('inventory');
@@ -856,7 +945,7 @@ export class GameUi {
   }
 
   private drawMenu(): void {
-    if (!this.menuOpen) {
+    if (!this.builtinOpen) {
       if (this.menuEl) this.closeMenu();
       return;
     }

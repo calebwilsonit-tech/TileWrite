@@ -1,0 +1,115 @@
+import type { Assets, SceneRuntime } from '../core/simulation';
+import { evalValue } from '../data/expr';
+import type { ValueSource } from '../data/values';
+import type { UiScreen } from './model';
+
+/** Which interface screens are open, and the yes/no questions widgets ask ("visible when gold >= 10"). Plain data and plain functions, so the game, the playbot and the tests share them. */
+
+type Host = { runtime: SceneRuntime; assets: Assets };
+
+export const screenNamed = (assets: Assets, name: string): UiScreen | undefined => assets.ui.screens.find((s) => s.name === name || s.id === name);
+
+function sync(h: Host): void {
+  h.runtime.ui.modal = h.runtime.ui.stack.some((n) => screenNamed(h.assets, n)?.modal === true);
+}
+
+/** Open a screen on top of the others. False when there is no screen by that name. */
+export function openScreen(h: Host, name: string): boolean {
+  const s = screenNamed(h.assets, name);
+  if (!s) return false;
+  const st = h.runtime.ui.stack;
+  if (st[st.length - 1] !== s.name) {
+    const i = st.indexOf(s.name);
+    if (i >= 0) st.splice(i, 1);
+    st.push(s.name);
+  }
+  sync(h);
+  return true;
+}
+
+export function closeScreen(h: Host, name: string): void {
+  const s = screenNamed(h.assets, name);
+  h.runtime.ui.stack = h.runtime.ui.stack.filter((n) => n !== (s?.name ?? name));
+  sync(h);
+}
+
+/** Close the screen on top (go back to the one under it). */
+export function backScreen(h: Host): void {
+  h.runtime.ui.stack.pop();
+  sync(h);
+}
+
+export function toggleScreen(h: Host, name: string): void {
+  const s = screenNamed(h.assets, name);
+  if (s && h.runtime.ui.stack.includes(s.name)) closeScreen(h, name);
+  else openScreen(h, name);
+}
+
+/** Close everything and open the screens that open when the game starts. */
+export function openStartScreens(h: Host): void {
+  h.runtime.ui.stack = [];
+  for (const s of h.assets.ui.screens) if (s.opensOnStart) h.runtime.ui.stack.push(s.name);
+  sync(h);
+}
+
+export function topScreen(h: Host): UiScreen | undefined {
+  const n = h.runtime.ui.stack[h.runtime.ui.stack.length - 1];
+  return n === undefined ? undefined : screenNamed(h.assets, n);
+}
+
+// ---------- questions ----------
+
+const OPS = /^(.*?)(>=|<=|!=|==|=|>|<)(.*)$/s;
+
+const asNumberish = (v: ReturnType<typeof evalValue>): number | string | boolean => v;
+
+function clause(src: ValueSource, raw: string): boolean {
+  let text = raw.trim();
+  let negate = false;
+  while (text.startsWith('!')) {
+    negate = !negate;
+    text = text.slice(1).trim();
+  }
+  // "25%" means 0.25 (so "{hp} / {max} < 25%" reads naturally)
+  const fixed = (t: string): string => t.replace(/(\d+(?:\.\d+)?)%(?!\s*[\d({])/g, (_, n: string) => String(Number(n) / 100));
+  const m = OPS.exec(text);
+  let result: boolean;
+  if (!m) {
+    const v = evalValue(src, fixed(text));
+    // a name that is not known stays in braces, and counts as no
+    result = v === true || (typeof v === 'number' && v !== 0) || (typeof v === 'string' && v !== '' && v !== 'false' && v !== '0' && !/\{[^{}]+\}/.test(v));
+  } else {
+    const a = asNumberish(evalValue(src, fixed(m[1]!.trim())));
+    const b = asNumberish(evalValue(src, fixed(m[3]!.trim())));
+    const op = m[2]!;
+    const numeric = typeof a === 'number' && typeof b === 'number';
+    const l = numeric ? a : String(a);
+    const r = numeric ? b : String(b);
+    switch (op) {
+      case '>':
+        result = l > r;
+        break;
+      case '>=':
+        result = l >= r;
+        break;
+      case '<':
+        result = l < r;
+        break;
+      case '<=':
+        result = l <= r;
+        break;
+      case '!=':
+        result = l !== r;
+        break;
+      default:
+        result = l === r;
+    }
+  }
+  return negate ? !result : result;
+}
+
+/** Does this hold? "{gold} >= 10", "{Player.health.hp} / {Player.health.max} < 25%", "{hasKey} && {door} = open". Empty means yes. */
+export function evalUiCondition(src: ValueSource, text: string): boolean {
+  if (text.trim() === '') return true;
+  return text.split('||').some((or) => or.split('&&').every((and) => clause(src, and)));
+}

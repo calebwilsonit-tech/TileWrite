@@ -3,7 +3,7 @@
 A **pack** is a group of things a project can switch on: behaviours, event-sheet blocks, systems that run every tick, buttons, and additions to the editor. The engine's own optional parts and the reference game's mechanics are packs, and so is anything a programmer writes against the same plugin API. An empty project switches none on.
 
 ## Switching packs on and off
-**Project settings -> Packs** (the **Project settings...** button at the bottom of the Inspector) lists every pack with a tick box, what it needs and the behaviours it adds. Turning one off hides its behaviours and blocks from the pickers and removes the buttons it added from the Controls tab; objects that still use a hidden behaviour do nothing, and the Problems panel says "this belongs to the Combat pack, which is switched off". A project made before packs existed has no list and plays with everything on until you change a box.
+**Project settings -> Packs** (the **Project settings...** button at the bottom of the Inspector) lists every pack with a tick box, what it needs and the behaviours it adds. Turning one off hides its behaviours and blocks from the pickers and removes the buttons it added from the Controls tab; objects that still use a hidden behaviour do nothing, and the Problems panel says "this belongs to the Combat pack, which is switched off". A project made before packs existed has no list and plays with the action-adventure packs (Combat, Inventory, Story, AI, Lighting and The Last Storytender); Turn-based play, Control schemes and Simulation helpers are new and stay off until you tick them.
 
 | Pack | Adds |
 | --- | --- |

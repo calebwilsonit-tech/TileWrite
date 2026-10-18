@@ -10,9 +10,10 @@ import type { DialogueData, DialogueState } from '../story/dialogue';
 import type { ItemData } from '../story/items';
 import { StringTables } from '../story/strings';
 import type { SkinData } from '../story/skins';
+import { emptyUiDoc, type UiDoc } from '../ui/model';
 import type { MinigameData, MinigameState } from '../story/minigames';
 import type { WorldMapData } from '../story/worldmap';
-import type { TableData } from '../data/tables';
+import type { TableData, TableRow } from '../data/tables';
 import type { TileMap } from '../tilemap/tilemap';
 import { EventBus } from './events';
 import { newClock, type SceneClock } from './clock';
@@ -38,6 +39,8 @@ export interface Assets {
   worldMap: WorldMapData | null;
   /** The project's data tables, by name (see data/tables.ts). */
   tables: Map<string, TableData>;
+  /** The interface screens (see ui/model.ts). */
+  ui: UiDoc;
 }
 
 /** A lantern post the player lit or rested at: where death sends them. */
@@ -58,6 +61,10 @@ export interface SceneRuntime {
   sheet: EventRow[];
   /** The scene's logic graphs. */
   graphs: GraphData[];
+  /** Interface screens that are open (the last is on top), and the page each tabs widget shows. */
+  ui: { stack: string[]; tabs: Record<string, string>; /** An open screen freezes the game. */ modal: boolean };
+  /** Rows of data tables the game has changed (an inventory, a deck): saved with the game and put back when it loads. */
+  tableEdits: Record<string, TableRow[]>;
   /** Flags, counters, text, and (as `item:<id>`) the inventory. */
   vars: Record<string, VariableValue>;
   /** What each event-sheet row remembered from the last tick (was it true, timers...). */
@@ -189,6 +196,8 @@ export function newSceneRuntime(): SceneRuntime {
     wires: [],
     sheet: [],
     graphs: [],
+    ui: { stack: [], tabs: {}, modal: false },
+    tableEdits: {},
     vars: {},
     rowState: {},
     ids: new Map(),
@@ -223,7 +232,7 @@ export class Simulation {
   readonly uiInput = new InputState();
   readonly events = new EventBus();
   readonly tweens = new Tweens();
-  readonly assets: Assets = { sprites: new Map(), prefabs: new Map(), dialogues: new Map(), items: new Map(), cutscenes: new Map(), strings: new StringTables(), skins: [], minigames: new Map(), worldMap: null, tables: new Map() };
+  readonly assets: Assets = { sprites: new Map(), prefabs: new Map(), dialogues: new Map(), items: new Map(), cutscenes: new Map(), strings: new StringTables(), skins: [], minigames: new Map(), worldMap: null, tables: new Map(), ui: emptyUiDoc() };
   readonly runtime: SceneRuntime = newSceneRuntime();
   readonly rng: Rng;
   readonly profiler = new Profiler();
@@ -246,7 +255,7 @@ export class Simulation {
   /** Which kind of tick this is, from what is on screen. */
   get modal(): Modal {
     const r = this.runtime;
-    if (r.menuOpen || r.dialogue || r.minigame || r.clock.mode === 'paused') return 'freeze';
+    if (r.menuOpen || r.ui.modal || r.dialogue || r.minigame || r.clock.mode === 'paused') return 'freeze';
     if (r.cutscene) return 'scripted';
     return 'none';
   }
@@ -316,6 +325,8 @@ export class Simulation {
       this.rng.state,
       r.vars,
       r.rowState,
+      r.ui,
+      r.tableEdits,
       r.dialogue,
       r.minigame,
       r.cutscene,
