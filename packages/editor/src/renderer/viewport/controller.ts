@@ -267,6 +267,11 @@ export class ViewportController {
     return { x: rect.left + v.x, y: rect.top + v.y };
   }
 
+  /** Draw again on the next frame (after something moved the camera from outside). */
+  invalidate(): void {
+    this.dirty = true;
+  }
+
   /** Page coordinates of a point on a block's face: the middle of its top, or of its left or right side in this view (end-to-end tests). */
   blockToClient(cx: number, cy: number, z: number, face: 'top' | 'left' | 'right'): { x: number; y: number } {
     const r = this.renderer;

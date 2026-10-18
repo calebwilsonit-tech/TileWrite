@@ -2,7 +2,7 @@ import { Application, Container, Graphics, Rectangle, Sprite as PixiSprite, Text
 import { ANIMATOR, type Animator } from '../anim/animator';
 import type { CellMark } from '../story/cutscene';
 import type { BlockFace, CellStack } from '../tilemap/tilemap';
-import { DEFAULT_ISO, gridToScreen, relToScreen, rotateGrid, screenToCell, unrotateVec, type Cell, type IsoConfig, type ViewRotation } from '../iso/math';
+import { DEFAULT_ISO, gridToScreen, relToScreen, rotateGrid, screenToCell, screenToGrid, unrotateVec, type Cell, type IsoConfig, type ViewRotation } from '../iso/math';
 import type { LightingModel } from '../lighting/lighting';
 import { C, LABEL, type Label, type Sprite, type TransformIso } from '../scene/components';
 import { LightingLayer } from './lighting-layer';
@@ -24,6 +24,8 @@ function shade(color: number, f: number): number {
 
 /** Depth-sort ids at or above this are entities (id - base); below are tile views. */
 const ENTITY_ID_BASE = 2 ** 31;
+/** Tiles are drawn in chunks this many cells wide. */
+const CHUNK = 8;
 
 /** A cell's position as it sits in the turned world (for ordering by depth). */
 function rotateGridCell(x: number, y: number, iso: IsoConfig): { x: number; y: number } {
@@ -159,6 +161,11 @@ export class IsoRenderer {
   private viewById = new Map<number, TileView>();
   private tileList: TileView[] = [];
   private tileListDirty = true;
+  /** Chunks of tiles that are drawn right now, and the range the camera wanted last. */
+  private builtChunks = new Set<number>();
+  private chunkKey = '';
+  /** The highest level in the map (the view looks that far up for tall things). */
+  private maxLevel = 0;
   private nextTileId = 0;
   private readonly entityViews = new Map<number, EntityView>();
   private readonly sprites = new Map<string, SpriteSheetTextures>();
@@ -213,15 +220,103 @@ export class IsoRenderer {
     this.rebuildTiles();
   }
 
-  /** Rebuild all tile graphics (after loading or swapping the map). */
+  /**
+   * Rebuild all tile graphics (after loading or swapping the map). Tiles are drawn in chunks of CHUNK x CHUNK cells, built only
+   * while they are near the camera, so a map of any size starts at once and costs what is on screen.
+   */
   rebuildTiles(): void {
     for (const v of this.viewById.values()) v.gfx.destroy();
     this.cellViews = new Map();
     this.viewById = new Map();
+    this.builtChunks = new Set();
     this.tileListDirty = true;
+    this.maxLevel = 0;
     const map = this.tileMap;
     if (!map) return;
-    map.forEach((x, y) => this.buildCell(map, x, y));
+    for (let i = 0; i < map.heights.length; i++) if (map.heights[i]! > this.maxLevel) this.maxLevel = map.heights[i]!;
+    for (const s of map.stacks.values()) for (const b of s.blocks) this.maxLevel = Math.max(this.maxLevel, b.z + 1);
+    this.ensureChunks(true);
+  }
+
+  /** Build the chunks that are on (or just beside) the picture and drop the ones that are far from it. */
+  private ensureChunks(force = false): void {
+    const map = this.tileMap;
+    if (!map) return;
+    const cam = this.camera;
+    const a = cam.viewToWorld({ x: 0, y: 0 });
+    const z = cam.viewToWorld({ x: cam.viewW, y: cam.viewH });
+    const margin = 128;
+    const left = a.x - margin;
+    const right = z.x + margin;
+    const top = a.y - margin;
+    const bottom = z.y + margin;
+    const key0 = `${Math.round(left / 32)},${Math.round(top / 32)},${Math.round(right / 32)},${Math.round(bottom / 32)},${this.iso.view ?? 0}`;
+    if (!force && key0 === this.chunkKey) return;
+    this.chunkKey = key0;
+    const c = CHUNK;
+    const perRow = Math.ceil(map.width / c);
+    const rows = Math.ceil(map.height / c);
+    const top0 = this.maxLevel + 1;
+    // does a chunk's picture (a diamond and its columns) touch the rectangle?
+    const touches = (cx: number, cy: number, pad: number): boolean => {
+      const x0 = cx * c;
+      const y0 = cy * c;
+      const x1 = Math.min(map.width, x0 + c);
+      const y1 = Math.min(map.height, y0 + c);
+      let minX = Infinity;
+      let maxX = -Infinity;
+      let minY = Infinity;
+      let maxY = -Infinity;
+      for (const [gx, gy] of [[x0, y0], [x1, y0], [x1, y1], [x0, y1]] as const) {
+        for (const h of [-1, top0]) {
+          const p = gridToScreen(gx, gy, h, this.iso);
+          minX = Math.min(minX, p.x);
+          maxX = Math.max(maxX, p.x);
+          minY = Math.min(minY, p.y);
+          maxY = Math.max(maxY, p.y);
+        }
+      }
+      return maxX >= left - pad && minX <= right + pad && maxY >= top - pad && minY <= bottom + pad;
+    };
+    // only the chunks inside the grid rectangle that the picture covers are worth asking about
+    let gx0 = Infinity;
+    let gy0 = Infinity;
+    let gx1 = -Infinity;
+    let gy1 = -Infinity;
+    for (const p of [{ x: left, y: top }, { x: right, y: top }, { x: right, y: bottom }, { x: left, y: bottom }]) {
+      for (const h of [-1, top0]) {
+        const g = screenToGrid(p.x, p.y, h, this.iso);
+        gx0 = Math.min(gx0, g.x);
+        gy0 = Math.min(gy0, g.y);
+        gx1 = Math.max(gx1, g.x);
+        gy1 = Math.max(gy1, g.y);
+      }
+    }
+    const cx0 = Math.max(0, Math.floor(gx0 / c) - 1);
+    const cy0 = Math.max(0, Math.floor(gy0 / c) - 1);
+    const cx1 = Math.min(perRow - 1, Math.floor(gx1 / c) + 1);
+    const cy1 = Math.min(rows - 1, Math.floor(gy1 / c) + 1);
+    for (let cy = cy0; cy <= cy1; cy++) {
+      for (let cx = cx0; cx <= cx1; cx++) {
+        const key = cy * perRow + cx;
+        if (this.builtChunks.has(key) || !touches(cx, cy, 0)) continue;
+        this.builtChunks.add(key);
+        for (let y = cy * c; y < Math.min(map.height, (cy + 1) * c); y++) for (let x = cx * c; x < Math.min(map.width, (cx + 1) * c); x++) if (map.getTile(x, y) !== 0 || map.getStack(x, y)) this.buildCell(map, x, y);
+      }
+    }
+    for (const key of [...this.builtChunks]) {
+      const cx = key % perRow;
+      const cy = Math.floor(key / perRow);
+      if (touches(cx, cy, margin)) continue;
+      this.builtChunks.delete(key);
+      for (let y = cy * c; y < Math.min(map.height, (cy + 1) * c); y++) for (let x = cx * c; x < Math.min(map.width, (cx + 1) * c); x++) this.clearCell(map, x, y);
+    }
+  }
+
+  private cellBuilt(x: number, y: number): boolean {
+    const map = this.tileMap;
+    if (!map) return false;
+    return this.builtChunks.has(Math.floor(y / CHUNK) * Math.ceil(map.width / CHUNK) + Math.floor(x / CHUNK));
   }
 
   /** Rebuild only these cells after an edit (the editor calls this per brush stroke). */
@@ -229,8 +324,15 @@ export class IsoRenderer {
     const map = this.tileMap;
     if (!map) return;
     for (const c of cells) {
+      if (!this.cellBuilt(c.x, c.y)) {
+        if (map.inBounds(c.x, c.y)) this.maxLevel = Math.max(this.maxLevel, map.topHeight(c.x, c.y));
+        continue;
+      }
       this.clearCell(map, c.x, c.y);
-      if (map.inBounds(c.x, c.y) && map.getTile(c.x, c.y) !== 0) this.buildCell(map, c.x, c.y);
+      if (map.inBounds(c.x, c.y) && (map.getTile(c.x, c.y) !== 0 || map.getStack(c.x, c.y))) {
+        this.maxLevel = Math.max(this.maxLevel, map.topHeight(c.x, c.y));
+        this.buildCell(map, c.x, c.y);
+      }
     }
   }
 
@@ -635,6 +737,7 @@ export class IsoRenderer {
   render(world: World): void {
     if (!this.ready) return;
     const t0 = performance.now();
+    this.ensureChunks();
     const tiles = this.tiles;
     const boxes: DepthBox[] = tiles.map((v) => rotateBox(v.box, this.iso));
     const base = ENTITY_ID_BASE;
