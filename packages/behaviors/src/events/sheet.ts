@@ -10,7 +10,10 @@ import {
   lightLevel,
   minigameWon,
   C,
+  evalValue,
   expandEntities,
+  fillValues,
+  resolveValue,
   teleportBody,
   type Collider,
   type Entity,
@@ -44,7 +47,7 @@ export type Ref = string;
 
 export function resolveRef(ctx: SimContext, ref: Ref, picked?: Entity): Entity[] {
   if (!ref) return [];
-  if (ref === 'picked') return picked && picked.alive ? [picked] : [];
+  if (ref === 'picked' || ref === 'self') return picked && picked.alive ? [picked] : [];
   if (ref === 'player') return ctx.world.withTag('player');
   const [kind, ...rest] = ref.split(':');
   const value = rest.join(':');
@@ -65,11 +68,13 @@ export interface Names {
 export function describeRef(ref: Ref, names?: Names): string {
   if (!ref) return 'nothing chosen';
   if (ref === 'picked') return 'the picked object';
+  if (ref === 'self') return 'this object';
   if (ref === 'player') return 'the player';
   const [kind, ...rest] = ref.split(':');
   const value = rest.join(':');
   if (kind === 'id') return `"${names?.entity(value) ?? value}"`;
   if (kind === 'tag') return `anything tagged "${value}"`;
+  if (kind === 'table') return `each row of the table "${value}"`;
   if (kind === 'name') return `"${value}"`;
   return ref;
 }
@@ -199,9 +204,8 @@ export const CONDITIONS: ConditionDef[] = [
     ],
     describe: (p) => `${str(p, 'name') || '(variable)'} ${COMPARISONS.find((c) => c.value === str(p, 'op'))?.label ?? str(p, 'op')} ${str(p, 'value')}`,
     test: (ctx, p) => {
-      const raw = str(p, 'value');
-      const b: VariableValue = raw !== '' && !Number.isNaN(Number(raw)) ? Number(raw) : raw === 'true' ? true : raw === 'false' ? false : raw;
-      return compare(ctx.runtime.vars[str(p, 'name')], str(p, 'op'), b);
+      const src = { vars: ctx.runtime.vars, tables: ctx.assets.tables, world: ctx.world };
+      return compare(resolveValue(src, str(p, 'name')), str(p, 'op'), evalValue(src, str(p, 'value')));
     },
   },
   {
@@ -482,7 +486,7 @@ export const ACTIONS: ActionDef[] = [
       const name = str(p, 'name');
       if (!name) return;
       const cur = ctx.runtime.vars[name];
-      const v = parseValue(str(p, 'value'));
+      const v = evalValue({ vars: ctx.runtime.vars, tables: ctx.assets.tables, world: ctx.world }, str(p, 'value'));
       switch (str(p, 'op')) {
         case 'add':
           ctx.runtime.vars[name] = (typeof cur === 'number' ? cur : 0) + Number(v);
@@ -654,7 +658,7 @@ export const ACTIONS: ActionDef[] = [
     category: 'Basics',
     params: [{ key: 'text', label: 'Text (use {variable} to show a value)', type: 'text', default: 'Hello!' }],
     describe: (p) => `show the message "${str(p, 'text')}"`,
-    run: (ctx, p) => void ctx.events.emit('message', { text: interpolate(ctx.assets.strings.t(str(p, 'text')), ctx.runtime.vars) }),
+    run: (ctx, p) => void ctx.events.emit('message', { text: fillValues(ctx.assets.strings.t(str(p, 'text')), { vars: ctx.runtime.vars, tables: ctx.assets.tables, world: ctx.world }) }),
   },
   {
     id: 'setVisible',
@@ -927,12 +931,52 @@ function testRow(ctx: SimContext, row: EventRow, picked: Entity | undefined): bo
   return row.mode === 'any' ? results.some(Boolean) : results.every(Boolean);
 }
 
-function runRows(ctx: SimContext, rows: EventRow[], picked: Entity | undefined): void {
+/** Variables that exist while a row loops over a table: row.id and row.<column>. */
+function withTableRow<T>(ctx: SimContext, tableName: string, rowIndex: number, run: () => T): T | undefined {
+  const t = ctx.assets.tables.get(tableName);
+  const r = t?.rows[rowIndex];
+  if (!t || !r) return undefined;
+  const set: string[] = [];
+  const put = (k: string, v: VariableValue): void => {
+    set.push(k);
+    ctx.runtime.vars[k] = v;
+  };
+  put('row.id', r.id);
+  for (const c of t.columns) put(`row.${c.id}`, (r[c.id] ?? '') as VariableValue);
+  try {
+    return run();
+  } finally {
+    for (const k of set) delete ctx.runtime.vars[k];
+  }
+}
+
+/** Run rows as another piece of logic's own (a custom behaviour on one object): `scope` keeps their memory apart from the scene's. */
+export function runEventRows(ctx: SimContext, rows: EventRow[], picked: Entity | undefined, scope: string): void {
+  runRows(ctx, rows, picked, scope);
+}
+
+function runRows(ctx: SimContext, rows: EventRow[], picked: Entity | undefined, scope = ''): void {
   for (const row of rows) {
     if (!row.enabled) continue;
+    if (row.forEach.startsWith('table:')) {
+      // "for each row of a table": the row's cells are the variables row.id, row.<column>
+      const name = row.forEach.slice(6);
+      const count = ctx.assets.tables.get(name)?.rows.length ?? 0;
+      for (let i = 0; i < count; i++) {
+        withTableRow(ctx, name, i, () => {
+          const st = (ctx.runtime.rowState[`${scope}${row.id}@row${i}`] ??= { prev: false, timer: 0 });
+          const truth = testRow(ctx, row, picked);
+          const fire = row.once ? truth && !st.prev : truth;
+          st.prev = truth;
+          if (fire) for (let n = 0; n < Math.max(1, row.repeat); n++) for (const a of row.actions) actionDefs.get(a.type)?.run(ctx, a.params, { picked });
+          if (truth && row.children.length > 0) runRows(ctx, row.children, picked, scope);
+        });
+      }
+      continue;
+    }
     const subjects: (Entity | undefined)[] = row.forEach ? resolveRef(ctx, row.forEach, picked) : [picked];
     for (const subject of subjects) {
-      const key = subject && row.forEach ? `${row.id}@${subject.id}` : row.id;
+      const key = scope + (subject && row.forEach ? `${row.id}@${subject.id}` : row.id);
       const st = (ctx.runtime.rowState[key] ??= { prev: false, timer: 0 });
       const truth = testRow(ctx, row, subject);
       const fire = row.once ? truth && !st.prev : truth;
@@ -942,7 +986,7 @@ function runRows(ctx: SimContext, rows: EventRow[], picked: Entity | undefined):
           for (const a of row.actions) actionDefs.get(a.type)?.run(ctx, a.params, { picked: subject });
         }
       }
-      if (truth && row.children.length > 0) runRows(ctx, row.children, subject);
+      if (truth && row.children.length > 0) runRows(ctx, row.children, subject, scope);
     }
   }
 }
@@ -964,6 +1008,8 @@ export interface SheetFacts {
   storyVariables?: ReadonlySet<string>;
   /** Names of the project's sound files; when given, sounds that do not exist are reported. */
   sounds?: ReadonlySet<string>;
+  /** Names of the project's data tables. */
+  tables?: ReadonlySet<string>;
 }
 
 /** Mistakes in a sheet that would stop a row from doing what it says, in plain English. */
@@ -987,6 +1033,10 @@ export function checkSheet(rows: readonly EventRow[], facts: SheetFacts, names?:
     if (ref === 'player') return;
     const [kind, ...rest] = ref.split(':');
     const v = rest.join(':');
+    if (kind === 'table') {
+      if (facts.tables && !facts.tables.has(v)) out.push({ rowId, text: `${where}: there is no data table called "${v}".` });
+      return;
+    }
     if (kind === 'id' && !facts.entityIds.has(v)) out.push({ rowId, text: `${where}: the object ${describeRef(ref, names)} no longer exists.` });
     else if (kind === 'tag' && !facts.tags.has(v)) out.push({ rowId, text: `${where}: no object has the tag "${v}".` });
   };

@@ -11,10 +11,11 @@ import { analyseLevel, analysePushPuzzles, type LevelIssue } from '@tilewright/p
 import { checkProject, type ProjectProblem } from '../project/check';
 import { deletePlaythrough, listPlaythroughs, loadPlaythrough, nextPlaythroughName, savePlaythrough } from '../project/playthroughs';
 import { Game, newPlaythrough, replayPlaythrough, type GameSetup } from '@tilewright/playbot';
-import { eventsToScript, setActivePacks } from '@tilewright/behaviors';
+import { eventsToScript, setActivePacks, syncCustomBlocks } from '@tilewright/behaviors';
 import { reloadScripts, type BreakHit, type ScriptProblemEntry } from '../code/script-manager';
 import { deleteScript as deleteScriptFile, loadScripts as loadScriptFiles, saveScript as saveScriptFile } from '../project/scripts';
 import { setPlayerRequired } from '../model/validate';
+import { deleteComponent, deleteCustomBehavior, deleteTable, loadComponents, loadCustomBehaviors, loadEventDefs, loadTables, saveComponent, saveCustomBehavior, saveEventDefs, saveTable } from '../project/blocks';
 import { loadProjectInput, loadUiLayout, saveProjectInput, saveUiLayout, storyNameProblem } from '../project/story';
 import { deleteCutscene, deleteDialogue, loadCutscenes, loadDialogues, loadItems, loadMinigames, loadSkins, loadWorldMap, saveCutscene, saveDialogue, saveItems, saveMinigames, saveSkins, saveWorldMap } from '../project/story';
 import {
@@ -32,7 +33,7 @@ import {
   type OpenProject,
   type ProjectFs,
 } from '../project/io';
-import { DEFAULT_TILESET, defaultUiLayout, emptyProjectInput, groupOf, newScene, tilesetFromList, type AutotileRuleData, type ProjectData, type ProjectInput, type UiLayout, type MinigameData, type SkinData, type WorldMapData, type TileDefData } from '@tilewright/runtime';
+import { DEFAULT_TILESET, defaultUiLayout, type CustomBehaviorData, type CustomComponentData, type EventDef, type TableData, emptyProjectInput, groupOf, newScene, tilesetFromList, type AutotileRuleData, type ProjectData, type ProjectInput, type UiLayout, type MinigameData, type SkinData, type WorldMapData, type TileDefData } from '@tilewright/runtime';
 
 /** Everything the Story panel edits, as it is at one moment (the parts are replaced, never changed in place). */
 interface StorySnapshot {
@@ -568,6 +569,11 @@ class AppStore {
   minigames: MinigameData[] = [];
   /** The map of places the player can open (Story -> Map), saved in assets/worldmap.json; null when there is none. */
   worldMap: WorldMapData | null = null;
+  /** The project's data tables (assets/tables), custom components and behaviours (assets/components, assets/behaviors) and event names (assets/events.json). */
+  tables: TableData[] = [];
+  components: CustomComponentData[] = [];
+  customBehaviors: CustomBehaviorData[] = [];
+  eventDefs: EventDef[] = [];
   /** The game's own controls (Project settings -> Controls), saved in assets/input.json. */
   input: ProjectInput = emptyProjectInput();
   /** The theme and arrangement of the game's own screen (Story -> Interface), saved in assets/ui.json. */
@@ -649,10 +655,20 @@ class AppStore {
       this.worldMap = null;
       this.input = emptyProjectInput();
       this.uiLayout = defaultUiLayout();
+      this.tables = [];
+      this.components = [];
+      this.customBehaviors = [];
+      this.eventDefs = [];
+      syncCustomBlocks([], []);
       return;
     }
     const [items, dialogues, cutscenes, skins, minigames, world] = await Promise.all([loadItems(assetFs, p.dir), loadDialogues(assetFs, p.dir), loadCutscenes(assetFs, p.dir), loadSkins(assetFs, p.dir), loadMinigames(assetFs, p.dir), loadWorldMap(assetFs, p.dir)]);
-    const [inputFile, uiFile] = await Promise.all([loadProjectInput(assetFs, p.dir), loadUiLayout(assetFs, p.dir)]);
+    const [inputFile, uiFile, tablesFile, componentsFile, behaviorsFile, eventsFile] = await Promise.all([loadProjectInput(assetFs, p.dir), loadUiLayout(assetFs, p.dir), loadTables(assetFs, p.dir), loadComponents(assetFs, p.dir), loadCustomBehaviors(assetFs, p.dir), loadEventDefs(assetFs, p.dir)]);
+    this.tables = tablesFile.items;
+    this.components = componentsFile.items;
+    this.customBehaviors = behaviorsFile.items;
+    this.eventDefs = eventsFile.events;
+    for (const problem of syncCustomBlocks(this.components, this.customBehaviors)) this.notify('warn', problem);
     this.input = inputFile.input;
     this.uiLayout = uiFile.layout;
     this.worldMap = world.map;
@@ -660,7 +676,7 @@ class AppStore {
     this.minigames = minigames.minigames;
     this.story = { items: items.items, dialogues: dialogues.items, cutscenes: cutscenes.items };
     this.set({ storyVersion: this.state.storyVersion + 1 });
-    for (const problem of [...items.problems, ...dialogues.problems, ...cutscenes.problems, ...skins.problems, ...minigames.problems, ...world.problems, ...inputFile.problems, ...uiFile.problems]) this.notify('warn', problem);
+    for (const problem of [...items.problems, ...dialogues.problems, ...cutscenes.problems, ...skins.problems, ...minigames.problems, ...world.problems, ...inputFile.problems, ...uiFile.problems, ...tablesFile.problems, ...componentsFile.problems, ...behaviorsFile.problems, ...eventsFile.problems]) this.notify('warn', problem);
   }
 
   /** Save a story file a moment after the last edit (typing in a field must not write a file per keystroke). */
@@ -687,6 +703,10 @@ class AppStore {
     if (this.skins.length > 0 || (await assetFs.exists(joinPath(p.dir, 'assets/skins.json')))) await saveSkins(assetFs, p.dir, this.skins);
     if (this.minigames.length > 0 || (await assetFs.exists(joinPath(p.dir, 'assets/minigames.json')))) await saveMinigames(assetFs, p.dir, this.minigames);
     if (this.worldMap) await saveWorldMap(assetFs, p.dir, this.worldMap);
+    for (const t of this.tables) await saveTable(assetFs, p.dir, t);
+    for (const c of this.components) await saveComponent(assetFs, p.dir, c);
+    for (const b of this.customBehaviors) await saveCustomBehavior(assetFs, p.dir, b);
+    if (this.eventDefs.length > 0 || (await assetFs.exists(joinPath(p.dir, 'assets/events.json')))) await saveEventDefs(assetFs, p.dir, this.eventDefs);
     if (this.input.actions.length > 0 || Object.keys(this.input.overrides).length > 0 || (await assetFs.exists(joinPath(p.dir, 'assets/input.json')))) await saveProjectInput(assetFs, p.dir, this.input);
     if (JSON.stringify(this.uiLayout) !== JSON.stringify(defaultUiLayout()) || (await assetFs.exists(joinPath(p.dir, 'assets/ui.json')))) await saveUiLayout(assetFs, p.dir, this.uiLayout);
     for (const d of this.story.dialogues.values()) await saveDialogue(assetFs, p.dir, d);
@@ -701,6 +721,74 @@ class AppStore {
     this.maybeHotReload();
     const p = this.state.project;
     if (p) this.persistLater('items', () => saveItems(assetFs, p.dir, this.story.items));
+  }
+
+  // ---- data tables, custom components and behaviours, event names ----
+
+  /** Add or change a table. */
+  setTable(t: TableData): void {
+    const i = this.tables.findIndex((x) => x.name === t.name);
+    this.tables = i >= 0 ? this.tables.map((x, j) => (j === i ? t : x)) : [...this.tables, t].sort((a, b) => a.name.localeCompare(b.name));
+    this.set({ storyVersion: this.state.storyVersion + 1 });
+    this.maybeHotReload();
+    const p = this.state.project;
+    if (p) this.persistLater(`t:${t.name}`, () => saveTable(assetFs, p.dir, t));
+  }
+
+  async removeTable(name: string): Promise<void> {
+    this.tables = this.tables.filter((t) => t.name !== name);
+    window.clearTimeout(this.storyTimers.get(`t:${name}`));
+    this.set({ storyVersion: this.state.storyVersion + 1 });
+    this.maybeHotReload();
+    await this.storyWrites.get(`t:${name}`);
+    const p = this.state.project;
+    if (p) await deleteTable(assetFs, p.dir, name).catch(() => undefined);
+  }
+
+  /** Add or change a custom component; the Inspector offers it at once. */
+  setComponent(c: CustomComponentData): void {
+    const i = this.components.findIndex((x) => x.name === c.name);
+    this.components = i >= 0 ? this.components.map((x, j) => (j === i ? c : x)) : [...this.components, c];
+    this.resyncCustom();
+    const p = this.state.project;
+    if (p) this.persistLater(`c:${c.name}.cmp`, () => saveComponent(assetFs, p.dir, c));
+  }
+
+  async removeComponent(name: string): Promise<void> {
+    this.components = this.components.filter((c) => c.name !== name);
+    window.clearTimeout(this.storyTimers.get(`c:${name}.cmp`));
+    this.resyncCustom();
+    const p = this.state.project;
+    if (p) await deleteComponent(assetFs, p.dir, name).catch(() => undefined);
+  }
+
+  setCustomBehavior(b: CustomBehaviorData): void {
+    const i = this.customBehaviors.findIndex((x) => x.name === b.name);
+    this.customBehaviors = i >= 0 ? this.customBehaviors.map((x, j) => (j === i ? b : x)) : [...this.customBehaviors, b];
+    this.resyncCustom();
+    const p = this.state.project;
+    if (p) this.persistLater(`b:${b.name}`, () => saveCustomBehavior(assetFs, p.dir, b));
+  }
+
+  async removeCustomBehavior(name: string): Promise<void> {
+    this.customBehaviors = this.customBehaviors.filter((b) => b.name !== name);
+    window.clearTimeout(this.storyTimers.get(`b:${name}`));
+    this.resyncCustom();
+    const p = this.state.project;
+    if (p) await deleteCustomBehavior(assetFs, p.dir, name).catch(() => undefined);
+  }
+
+  setEventDefs(events: EventDef[]): void {
+    this.eventDefs = events;
+    this.set({ storyVersion: this.state.storyVersion + 1 });
+    const p = this.state.project;
+    if (p) this.persistLater('events', () => saveEventDefs(assetFs, p.dir, this.eventDefs));
+  }
+
+  private resyncCustom(): void {
+    for (const problem of syncCustomBlocks(this.components, this.customBehaviors)) this.notify('warn', problem);
+    this.set({ storyVersion: this.state.storyVersion + 1, docVersion: this.state.docVersion + 1 });
+    this.maybeHotReload();
   }
 
   /** The game's own controls. */
@@ -972,7 +1060,7 @@ class AppStore {
   headlessSetup(): GameSetup | null {
     const scene = this.doc?.toScene();
     if (!scene) return null;
-    return { scene, scenePath: this.state.scenePath ?? '', prefabs: this.prefabs, items: this.story.items, dialogues: this.story.dialogues, cutscenes: this.story.cutscenes, minigames: this.minigames };
+    return { scene, scenePath: this.state.scenePath ?? '', prefabs: this.prefabs, items: this.story.items, dialogues: this.story.dialogues, cutscenes: this.story.cutscenes, minigames: this.minigames, tables: this.tables };
   }
 
   /** The game, headless, from the open scene as it is now (unsaved edits included). */
@@ -988,6 +1076,7 @@ class AppStore {
       items: this.story.items,
       dialogues: this.story.dialogues,
       cutscenes: this.story.cutscenes,
+      tables: this.tables,
     });
   }
 

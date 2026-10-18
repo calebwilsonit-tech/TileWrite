@@ -1,11 +1,12 @@
 import 'pixi.js/unsafe-eval'; // Pixi's shader helpers without `new Function`, which the Content-Security-Policy forbids
 import { IsoRenderer, crashReport, formatCrashReport, tilesetFromList, type SpriteData } from '@tilewright/runtime';
-import { activate, defaultImporter, installScriptGlobals, loadScript, setActivePacks, type Transpiler } from '@tilewright/behaviors';
+import { activate, defaultImporter, installScriptGlobals, loadScript, setActivePacks, syncCustomBlocks, type Transpiler } from '@tilewright/behaviors';
 import { GameManifestSchema, ScriptsBundleSchema, type GameManifest } from '@tilewright/exporter';
 import { joinPath } from '../renderer/project/api';
 import { assetFs } from '../renderer/project/assetFs';
 import { loadScene, openProject } from '../renderer/project/io';
 import { loadAllPrefabs } from '../renderer/project/prefabs';
+import { loadComponents, loadCustomBehaviors, loadTables } from '../renderer/project/blocks';
 import { loadCutscenes, loadDialogues, loadItems, loadMinigames, loadProjectInput, loadSkins, loadUiLayout, loadWorldMap } from '../renderer/project/story';
 import { loadAllSprites } from '../renderer/studio/assets';
 import { PlaySession } from '../renderer/viewport/play-session';
@@ -120,6 +121,8 @@ async function boot(): Promise<void> {
 
   const { project } = await openProject(assetFs, root);
   setActivePacks(project.packs);
+  const [tables, components, customBehaviors] = await Promise.all([loadTables(assetFs, root), loadComponents(assetFs, root), loadCustomBehaviors(assetFs, root)]);
+  for (const p of syncCustomBlocks(components.items, customBehaviors.items)) console.warn(p);
   const [{ prefabs, problems: prefabProblems }, { sprites, problems: spriteProblems }, items, dialogues, cutscenes, skins, minigames, worldMap, controls, ui] = await Promise.all([
     loadAllPrefabs(assetFs, root),
     loadAllSprites(assetFs, root),
@@ -178,6 +181,7 @@ async function boot(): Promise<void> {
     skins: skins.skins,
     minigames: minigames.minigames,
     worldMap: worldMap.map,
+    tables: tables.items,
     layout: ui.layout,
     input: controls.input,
     tileset: () => tileset,

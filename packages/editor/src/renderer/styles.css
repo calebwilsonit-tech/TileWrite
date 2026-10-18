@@ -1498,3 +1498,9 @@ button.small {
 /* ---- state machine editor ---- */
 .sm-canvas { width: 100%; height: 340px; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; touch-action: none; cursor: grab; user-select: none; }
 .dg-overlay .sm-canvas { height: 46vh; }
+
+/* ---- data tables ---- */
+.data-grid { border-collapse: collapse; font-size: 12px; }
+.data-grid th, .data-grid td { border: 1px solid var(--border, #3a3d46); padding: 2px 4px; vertical-align: top; }
+.data-grid th { background: var(--panel-2, #23262d); text-align: left; }
+.data-grid input[type='text'], .data-grid input[type='number'], .data-grid select { width: 100%; min-width: 70px; box-sizing: border-box; }

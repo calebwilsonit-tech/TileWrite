@@ -35,6 +35,7 @@ function useFacts(): {
   variables: string[];
   signals: string[];
   prefabs: string[];
+  tables: string[];
 } {
   useApp((s) => s.docVersion);
   const prefabs = useApp((s) => s.prefabNames);
@@ -55,8 +56,8 @@ function useFacts(): {
       if (p?.variable) vars.add(p.variable);
     }
     const signals = [...new Set(behaviorList().flatMap((b) => [...b.inputs, ...b.outputs].map((s) => s.name)))].sort();
-    return { entities, tags, variables: [...vars].sort(), signals, prefabs };
-  }, [doc, doc?.entities.length, doc?.events, doc?.variables, prefabs]);
+    return { entities, tags, variables: [...vars].sort(), signals, prefabs, tables: store.tables.map((t) => t.name) };
+  }, [doc, doc?.entities.length, doc?.events, doc?.variables, prefabs, store.tables]);
 }
 
 function ParamEditor({ spec, value, onChange, testId, facts, inLoop }: { spec: ParamSpec; value: unknown; onChange(v: unknown): void; testId: string; facts: ReturnType<typeof useFacts>; inLoop: boolean }) {
@@ -72,6 +73,7 @@ function ParamEditor({ spec, value, onChange, testId, facts, inLoop }: { spec: P
         { value: '', label: '(choose an object)' },
         { value: 'player', label: 'The player' },
         ...(inLoop ? [{ value: 'picked', label: 'The picked object (from "for each")' }] : []),
+        { value: 'self', label: 'This object (inside a custom behaviour)' },
         ...facts.tags.map((t) => ({ value: `tag:${t}`, label: `Anything tagged “${t}”` })),
         ...facts.entities.map((e) => ({ value: `id:${e.id}`, label: e.name })),
       ];
@@ -141,7 +143,7 @@ function CategorySelect({ items, testId, onPick, placeholder }: { items: { id: s
   );
 }
 
-function RowCard({ row, path, update, facts, inLoop, names }: { row: EventRow; path: number[]; update(label: string, fn: (rows: Rows) => void): void; facts: ReturnType<typeof useFacts>; inLoop: boolean; names: { entity(id: string): string | undefined } }) {
+function RowCard({ row, path, update, facts, inLoop, names, newId }: { row: EventRow; path: number[]; update(label: string, fn: (rows: Rows) => void): void; facts: ReturnType<typeof useFacts>; inLoop: boolean; names: { entity(id: string): string | undefined }; newId(): string }) {
   const mutate = (label: string, fn: (r: EventRow) => void): void =>
     update(label, (rows) => {
       const list = listAt(rows, path.slice(0, -1));
@@ -161,6 +163,7 @@ function RowCard({ row, path, update, facts, inLoop, names }: { row: EventRow; p
     { value: '', label: '(no loop)' },
     ...facts.tags.map((t) => ({ value: `tag:${t}`, label: `each thing tagged “${t}”` })),
     ...facts.entities.map((e) => ({ value: `id:${e.id}`, label: `${e.name}` })),
+    ...facts.tables.map((t) => ({ value: `table:${t}`, label: `each row of the table “${t}”` })),
   ];
 
   return (
@@ -259,12 +262,33 @@ function RowCard({ row, path, update, facts, inLoop, names }: { row: EventRow; p
         <SelectField<string> testId={`foreach-${row.id}`} label="Repeat for" value={row.forEach} options={forEachOptions} onChange={(v) => mutate('Change loop', (r) => (r.forEach = v))} />
         <NumberField label="Run actions this many times" min={1} max={100} value={row.repeat} onCommit={(v) => mutate('Change repeat', (r) => (r.repeat = Math.max(1, Math.round(v))))} />
         <TextField label="Note" value={row.comment} onCommit={(v) => mutate('Edit note', (r) => (r.comment = v))} />
-        <button data-testid={`add-child-${row.id}`} onClick={() => update('Add sub-event', (rows) => void listAt(rows, path)[index]!.children.push(newRow(store.doc!.newId('ev'))))}>
+        <button data-testid={`add-child-${row.id}`} onClick={() => update('Add sub-event', (rows) => void listAt(rows, path)[index]!.children.push(newRow(newId())))}>
           + Sub-event
         </button>
       </div>
       {row.children.map((child, i) => (
-        <RowCard key={child.id} row={child} path={[...path, i]} update={update} facts={facts} inLoop={loop} names={names} />
+        <RowCard key={child.id} row={child} path={[...path, i]} update={update} facts={facts} inLoop={loop} names={names} newId={newId} />
+      ))}
+    </div>
+  );
+}
+
+/** Event rows with their own list (a custom behaviour's rows): the same cards as the scene's event sheet. */
+export function RowsEditor({ rows, onChange, newId }: { rows: EventRow[]; onChange(label: string, rows: EventRow[]): void; newId(): string }) {
+  const facts = useFacts();
+  const names = useMemo(() => ({ entity: (id: string): string | undefined => store.doc?.getEntity(id)?.name }), []);
+  const update = (label: string, fn: (rows: Rows) => void): void => {
+    const next = structuredClone(rows);
+    fn(next);
+    onChange(label, next);
+  };
+  return (
+    <div data-testid="rows-editor">
+      <button data-testid="rows-add" className="primary" onClick={() => update('Add event row', (r) => void r.push(newRow(newId())))}>
+        + Event row
+      </button>
+      {rows.map((row, i) => (
+        <RowCard key={row.id} row={row} path={[i]} update={update} facts={facts} inLoop={false} names={names} newId={newId} />
       ))}
     </div>
   );
@@ -310,7 +334,7 @@ export function EventsPanel() {
       </div>
       {doc.events.length === 0 && <p className="hint">An event row reads like a sentence: “When the player is inside the door area, show a message.” Add a row, then pick what it waits for and what it does.</p>}
       {doc.events.map((row, i) => (
-        <RowCard key={row.id} row={row} path={[i]} update={update} facts={facts} inLoop={false} names={names} />
+        <RowCard key={row.id} row={row} path={[i]} update={update} facts={facts} inLoop={false} names={names} newId={() => doc.newId('ev')} />
       ))}
       {problems.length > 0 && (
         <div className="event-problems" data-testid="event-problems">

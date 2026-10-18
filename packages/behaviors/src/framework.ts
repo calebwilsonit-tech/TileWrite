@@ -1,6 +1,6 @@
 import { SystemError, type Entity, type SimContext, type System } from '@tilewright/runtime';
 
-export type FieldType = 'number' | 'boolean' | 'text' | 'select' | 'prefab';
+export type FieldType = 'number' | 'boolean' | 'text' | 'select' | 'prefab' | 'color' | 'sprite' | 'sound' | 'tableRow';
 
 /** One setting shown in the inspector. */
 export interface FieldSpec {
@@ -12,6 +12,8 @@ export interface FieldSpec {
   max?: number;
   step?: number;
   options?: { value: string; label: string }[];
+  /** For `tableRow`: the data table the row is picked from. */
+  table?: string;
 }
 
 /** A named signal an object can send (output) or receive (input) over wires. */
@@ -36,6 +38,8 @@ export interface BehaviorDef<S extends object = Record<string, unknown>> {
   phase: Phase;
   /** Made and removed by the engine (echoes); not offered in the inspector's Add menu. */
   hidden?: boolean;
+  /** Only carries settings (a custom component): there is nothing to run each tick. */
+  dataOnly?: boolean;
   defaults: S;
   fields: FieldSpec[];
   inputs: SignalSpec[];
@@ -57,6 +61,12 @@ const shelf = new Map<string, BehaviorDef<any>>(); // eslint-disable-line @types
 /** A behaviour definition that is not registered by itself: a pack installs it. */
 export function behaviorDef<S extends object>(def: BehaviorDef<S>): BehaviorDef<S> {
   return def;
+}
+
+/** Take a behaviour out of the registry AND the shelf (a custom block that was deleted). */
+export function forgetBehavior(id: string): void {
+  registry.delete(id);
+  shelf.delete(id);
 }
 
 export function shelvedBehavior(id: string): BehaviorDef | undefined {
@@ -128,7 +138,7 @@ export function settingsOf<S extends object>(e: Entity, def: BehaviorDef<S>): S 
 export function behaviorPhase(phase: Phase): System {
   return (ctx) => {
     for (const def of registry.values()) {
-      if (def.phase !== phase) continue;
+      if (def.phase !== phase || def.dataOnly) continue;
       const prof = ctx.profiler;
       for (const e of ctx.world.query(def.id)) {
         if (!e.alive) continue;

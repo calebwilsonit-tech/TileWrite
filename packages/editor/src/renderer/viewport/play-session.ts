@@ -21,6 +21,7 @@ import {
   type InputMapDef,
   type ProjectInput,
   type UiLayout,
+  type TableData,
   gridToScreen,
   groundHeightAt,
   loadScene,
@@ -95,7 +96,7 @@ export interface PlayOptions {
   /** Switch the window to or from full screen (only a game in its own window can). */
   setFullscreen?: (on: boolean) => void;
   /** The project's prefabs, sprites and story as they are now (for hot reload while playing in the editor). */
-  liveAssets?: () => { prefabs: ReadonlyMap<string, PrefabData>; sprites: ReadonlyMap<string, SpriteData>; story: PlayOptions['story']; skins?: readonly SkinData[]; minigames?: readonly MinigameData[]; worldMap?: WorldMapData | null; layout?: UiLayout; input?: ProjectInput };
+  liveAssets?: () => { prefabs: ReadonlyMap<string, PrefabData>; sprites: ReadonlyMap<string, SpriteData>; story: PlayOptions['story']; skins?: readonly SkinData[]; minigames?: readonly MinigameData[]; worldMap?: WorldMapData | null; layout?: UiLayout; input?: ProjectInput; tables?: readonly TableData[] };
   /** The player's other looks. */
   skins?: readonly SkinData[];
   /** The project's minigames. */
@@ -106,6 +107,8 @@ export interface PlayOptions {
   mixer?: { get(): MixerData; subscribe(fn: () => void): () => void };
   /** Show the title screen first (the game's name and a line under it). */
   title?: { text: string; subtitle: string };
+  /** The project's data tables. */
+  tables?: readonly TableData[];
   /** How the game's own screen looks and where its pieces sit (Story -> Interface). */
   layout?: UiLayout;
   /** The game's own controls (assets/input.json). */
@@ -160,6 +163,7 @@ export class PlaySession {
     for (const [name, c] of o.story.cutscenes) sim.assets.cutscenes.set(name, c);
     for (const m of o.minigames ?? []) sim.assets.minigames.set(m.name, m);
     sim.assets.worldMap = o.worldMap ?? null;
+    for (const t of o.tables ?? []) sim.assets.tables.set(t.name, t);
     this.saves = new SaveManager(
       {
         read: (p) => assetFs.read(p),
@@ -293,6 +297,10 @@ export class PlaySession {
       sim.assets.cutscenes.clear();
       for (const [name, c] of live.story.cutscenes) sim.assets.cutscenes.set(name, c);
       if (live.worldMap !== undefined) sim.assets.worldMap = live.worldMap;
+      if (live.tables) {
+        sim.assets.tables.clear();
+        for (const t of live.tables) sim.assets.tables.set(t.name, t);
+      }
       if (live.minigames) {
         sim.assets.minigames.clear();
         for (const m of live.minigames) sim.assets.minigames.set(m.name, m);

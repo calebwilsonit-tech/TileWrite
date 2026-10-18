@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { attachBehavior, behaviorList, getBehavior, type BehaviorDef, type BehaviorTree, type FieldSpec, type StateMachine } from '@tilewright/behaviors';
 import type { EntityData } from '@tilewright/runtime';
-import { useApp } from '../app/store';
+import { store, useApp } from '../app/store';
+import { useStudio } from '../studio/store';
+import { SoundField } from './SoundField';
 import { CheckField, NumberField, SelectField, TextField } from './fields';
 import { StateMachineEditor } from './StateMachineEditor';
 import { BehaviorTreeEditor } from './BehaviorTreeEditor';
@@ -27,9 +29,30 @@ function FieldView({ spec, value, onChange, prefabs }: { spec: FieldSpec; value:
           onChange={onChange}
         />
       );
+    case 'color':
+      return (
+        <label className="field">
+          <span>{spec.label}</span>
+          <input data-testid={testId} type="color" value={/^#[0-9a-fA-F]{6}$/.test(String(value)) ? String(value) : '#ffffff'} onChange={(e) => onChange(e.target.value)} />
+        </label>
+      );
+    case 'sprite':
+      return <SpriteChoice testId={testId} label={spec.label} value={String(value ?? '')} onChange={onChange} />;
+    case 'sound':
+      return <SoundField testId={testId} label={spec.label} value={String(value ?? '')} onCommit={onChange} />;
+    case 'tableRow': {
+      const table = store.tables.find((t) => t.name === spec.table);
+      const options = [{ value: '', label: table ? '(choose a row)' : `(no table called ${spec.table})` }, ...(table?.rows ?? []).map((r) => ({ value: r.id, label: String(r.name ?? r.id) === r.id ? r.id : `${String(r.name)} (${r.id})` }))];
+      return <SelectField<string> testId={testId} label={spec.label} value={String(value ?? '')} options={options} onChange={onChange} />;
+    }
     default:
       return <TextField testId={testId} label={spec.label} value={String(value ?? '')} onCommit={onChange} />;
   }
+}
+
+function SpriteChoice({ testId, label, value, onChange }: { testId: string; label: string; value: string; onChange(v: unknown): void }) {
+  const names = useStudio((s) => s.names);
+  return <SelectField<string> testId={testId} label={label} value={value} options={[{ value: '', label: '(none)' }, ...names.map((n) => ({ value: n, label: n }))]} onChange={onChange} />;
 }
 
 function BehaviorCard({ entity, def, edit, prefabs }: { entity: EntityData; def: BehaviorDef; edit: Edit; prefabs: string[] }) {

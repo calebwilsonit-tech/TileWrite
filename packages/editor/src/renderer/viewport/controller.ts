@@ -745,8 +745,9 @@ export class ViewportController {
         worldMap: store.worldMap,
         layout: store.uiLayout,
         input: store.input,
+        tables: store.tables,
         mixer: studio.mixerSource,
-        liveAssets: () => ({ prefabs: store.prefabs, sprites: studio.assets, story: store.story, skins: store.skins, minigames: store.minigames, worldMap: store.worldMap, layout: store.uiLayout, input: store.input }),
+        liveAssets: () => ({ prefabs: store.prefabs, sprites: studio.assets, story: store.story, skins: store.skins, minigames: store.minigames, worldMap: store.worldMap, layout: store.uiLayout, input: store.input, tables: store.tables }),
       });
     } catch (e) {
       store.notify('error', `The game could not start: ${e instanceof Error ? e.message : String(e)}`);
