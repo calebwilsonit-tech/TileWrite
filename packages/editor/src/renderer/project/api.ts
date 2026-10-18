@@ -26,9 +26,11 @@ export interface AssistantToolCall {
 export interface TilewrightApi {
   platform: string;
   versions: { electron: string; chrome: string };
-  info(): Promise<{ version: string; userData: string; testMode: boolean; platform: string }>;
+  info(): Promise<{ version: string; userData: string; library: string; testMode: boolean; platform: string }>;
   chooseFolder(title: string): Promise<string | null>;
   importFile(title: string, extensions: string[]): Promise<{ name: string; bytes: Uint8Array } | null>;
+  /** Pick where to save a text file (an asset pack); returns where it went, or null when cancelled. */
+  saveFile(title: string, suggested: string, text: string): Promise<string | null>;
   fs: {
     read(file: string): Promise<string>;
     readBinary(file: string): Promise<Uint8Array>;

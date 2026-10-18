@@ -33,6 +33,11 @@ function resolveInside(file: string): string {
   throw new Error(`Tilewright can only use files inside a project folder you chose. "${file}" is outside.`);
 }
 
+/** The personal asset library lives outside any project, next to the settings (tests point it somewhere temporary). */
+function libraryDir(): string {
+  return process.env.TILEWRIGHT_LIBRARY ?? path.join(app.getPath('userData'), 'library');
+}
+
 function userFile(name: string): string {
   return path.join(app.getPath('userData'), name);
 }
@@ -50,9 +55,12 @@ function registerIpc(): void {
   registerExport({ resolveInside, distDir: path.join(here, '..') });
   registerSamples({ resolveInside, distDir: path.join(here, '..') });
   registerPreview({ resolveInside, distDir: path.join(here, '..'), testMode: TEST_DIR !== undefined });
+  // the library folder may always be used by the editor
+  allow(libraryDir());
   ipcMain.handle('app:info', () => ({
     version: app.getVersion(),
     userData: app.getPath('userData'),
+    library: libraryDir(),
     testMode: TEST_DIR !== undefined,
     platform: process.platform,
   }));
@@ -96,6 +104,24 @@ function registerIpc(): void {
     const stat = await fs.stat(file);
     if (stat.size > 32 * 1024 * 1024) throw new Error('That file is larger than 32 MB, which is too big to import.');
     return { name: path.basename(file), bytes: new Uint8Array(await fs.readFile(file)) };
+  });
+
+  /**
+   * "Save a file": the user picks where in a native dialog and the text is written there (an asset pack to share).
+   * (Tests set TILEWRIGHT_TEST_SAVE to a folder to skip the dialog.)
+   */
+  ipcMain.handle('dialog:saveFile', async (_e, title: string, suggested: string, text: string) => {
+    let target: string | undefined;
+    const testDir = process.env.TILEWRIGHT_TEST_SAVE;
+    if (testDir) target = path.join(testDir, suggested);
+    else {
+      const r = await dialog.showSaveDialog({ title, defaultPath: suggested });
+      if (r.canceled || !r.filePath) return null;
+      target = r.filePath;
+    }
+    await fs.mkdir(path.dirname(target), { recursive: true });
+    await fs.writeFile(target, text, 'utf8');
+    return target;
   });
 
   ipcMain.handle('fs:exists', async (_e, file: string) => {

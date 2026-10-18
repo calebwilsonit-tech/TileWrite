@@ -12,6 +12,7 @@ contextBridge.exposeInMainWorld('tilewright', {
   info: () => invoke('app:info'),
   chooseFolder: (title: string) => invoke<string | null>('dialog:chooseFolder', title),
   importFile: (title: string, extensions: string[]) => invoke<{ name: string; bytes: Uint8Array } | null>('dialog:importFile', title, extensions),
+  saveFile: (title: string, suggested: string, text: string) => invoke<string | null>('dialog:saveFile', title, suggested, text),
   fs: {
     read: (file: string) => invoke<string>('fs:read', file),
     readBinary: (file: string) => invoke<Uint8Array>('fs:readBinary', file),

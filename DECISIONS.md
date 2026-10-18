@@ -197,3 +197,11 @@ Occlusion fade: renderer-only (not simulation state). Tiles taller than the focu
 - Interface layout keeps every built-in piece on the "default" anchor, in the old column, until it is dragged; a game that never opened the editor looks exactly as before. Placement maths (`widgetCss`, `offsetsFor`, `anchorAt`) is one pure module used by both the game and the editor's preview, so the preview cannot drift from the game.
 - Controls: the project stores only differences from the built-in bindings plus its own actions; a player's own rebinding is stored separately and still wins. Custom actions are ordinary action names, so events, scripts and echo recordings use them without special cases.
 - `project.iso` stays in the file format but is not used by the renderer; it was left out of the settings dialog rather than offering a setting that does nothing.
+
+## D0xx - The personal library is a folder of packs (Phase 2)
+- Every library item is stored as a pack (`packs/<id>/v<n>.pack.json`) plus one `index.json`; a pack is the same file that is shared as a `.twpack`, so saving, exporting, importing and the community hub all use one format and one reader. Nothing is stored in a database.
+- The library lives next to the settings (`userData/library`, or `TILEWRIGHT_LIBRARY`) and is an allowed root of the editor's file access; projects reach it only through the editor, never from the game.
+- Packs hold project-relative files plus tile definitions with pack-local ids. On import, tile ids are remapped to free numbers and the files that contain tile ids (structures) are rewritten, so two packs never fight over a number. Name clashes are shown first and resolved as keep both (numbered), replace (keeps the project's tile id so placed tiles follow), or skip.
+- Link versus copy is only a record (`assets/library-links.json`): both put real files in the project, so an exported game never needs the library. "Update linked" re-imports the current version with replace.
+- Saving to an existing item adds a version; older versions are kept and restoring only moves the "current" pointer.
+- A pack that contains code is flagged, and installing it needs an explicit tick; the same flag will gate the community hub.

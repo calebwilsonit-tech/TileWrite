@@ -25,6 +25,7 @@ Start with the tutorial in the app (the project screen's **Take the tutorial** b
 | Translate the game, player settings (zoom, full screen, language) | [translations-and-settings.md](translations-and-settings.md) |
 | Draw and animate sprites | [sprite-studio.md](sprite-studio.md) |
 | Floor tiles, walls and cliffs, edge sets, trees and tall props, wall attachments, structures | [tile-studio.md](tile-studio.md) |
+| Your library of tiles, props, characters, structures, interface pieces, behaviours and sounds; asset packs; versions; link or copy | [asset-library.md](asset-library.md) |
 | Shores, edges and cliff faces that draw themselves; hide and lock layers | [autotiling-and-layers.md](autotiling-and-layers.md) |
 | Add sounds and music, hit shake, sparks | [sound-and-effects.md](sound-and-effects.md) |
 | Write scripts (TypeScript), breakpoints, watch | [code-window.md](code-window.md) |

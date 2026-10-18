@@ -1596,3 +1596,54 @@ button.small {
 .ts-slot.missing { border-color: #a55; background: #2c2024; }
 .ts-slot small { opacity: 0.7; overflow: hidden; text-overflow: ellipsis; max-width: 100%; white-space: nowrap; }
 .ts-slot-none { width: 48px; height: 24px; }
+
+.library-folders {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 6px 0;
+}
+
+.library-folders button.on,
+.library-card.on {
+  outline: 1px solid var(--accent);
+}
+
+.library-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 6px;
+}
+
+.library-card {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+
+.library-thumb {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.library-picks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  max-height: 110px;
+  overflow: auto;
+  margin: 4px 0;
+}
+
+.library-add,
+.library-details,
+.library-save {
+  border-top: 1px solid var(--line);
+  margin-top: 8px;
+  padding-top: 4px;
+}
