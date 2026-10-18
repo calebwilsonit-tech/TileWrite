@@ -119,6 +119,13 @@ export function LayersPanel() {
         </li>
         <li>
           <label>
+            <input data-testid="view-wires" type="checkbox" checked={view.wires} onChange={(e) => store.setView({ wires: e.target.checked })} />
+            <span>Wires (lit while playing)</span>
+          </label>
+          <small>the lines between buttons, plates, gates and nodes; they glow while a signal runs through them</small>
+        </li>
+        <li>
+          <label>
             <input data-testid="view-profiler" type="checkbox" checked={view.profiler} onChange={(e) => store.setView({ profiler: e.target.checked })} />
             <span>Speed meter (while playing)</span>
           </label>

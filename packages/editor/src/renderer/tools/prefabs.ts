@@ -293,6 +293,27 @@ export const PREFABS: Prefab[] = [
     make: (x, y, h) => thing('Logic gate', ['logic'], { color: 0x6aa8ff, w: 0.5, d: 0.5, height: 0.5 }, x, y, h, ['logic']),
   },
   {
+    id: 'eventNode',
+    label: 'Event node',
+    group: 'Logic',
+    hint: 'Watches for anything the event sheet can see (a variable, the player coming near, something happening) and sends a signal. Wire it to a gate, a logic gate or an action node.',
+    make: (x, y, h) => thing('Event node', ['logic-node'], { shape: 'diamond', color: 0xf0b429, w: 0.45, d: 0.45, height: 0.05 }, x, y, h, ['eventNode']),
+  },
+  {
+    id: 'actionNode',
+    label: 'Action node',
+    group: 'Logic',
+    hint: 'Does a list of actions (change a variable, play a sound, go to a scene, open a screen...) when a signal reaches it. Wire a button, plate or logic gate into it.',
+    make: (x, y, h) => thing('Action node', ['logic-node'], { color: 0x6aa8ff, w: 0.45, d: 0.45, height: 0.4 }, x, y, h, ['actionNode']),
+  },
+  {
+    id: 'clickable',
+    label: 'Button (clickable)',
+    group: 'Logic',
+    hint: 'Something the mouse can click. Use Quick actions in the Inspector to say what a click does, or wire its "Clicked" signal.',
+    make: (x, y, h) => thing('Button', ['button'], { color: 0xd9534f, w: 0.8, d: 0.8, height: 0.3 }, x, y, h, ['clickable']),
+  },
+  {
     id: 'spawner',
     label: 'Spawner',
     group: 'World',

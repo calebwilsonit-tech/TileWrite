@@ -112,3 +112,91 @@ export function shapesOf(components: Record<string, unknown>): { cone?: Omit<Con
   if (!out.light && cp) out.light = { x: t.x, y: t.y, h: t.h + 0.05, radius: cp.lightRadius ?? 5 };
   return out;
 }
+
+// ---------- wires ----------
+
+/** One line between two objects: a signal wire, or the line from an action node to the object its actions change. */
+export interface WireShape {
+  a: { x: number; y: number; h: number };
+  b: { x: number; y: number; h: number };
+  hot: boolean;
+  kind: 'signal' | 'ref';
+  /** 0 = idle, 1 = a signal is running through it right now (fades out over half a second while playing). */
+  lit: number;
+  /** For the wires drawn while playing: the id the line belongs to (a signal wire's id, or "ref:node:target"). */
+  id: string;
+}
+
+/** An object as the wire drawing needs it: the same for editor data and for live objects (ids are scene ids). */
+export interface WireEnd {
+  id: string;
+  components: Record<string, unknown>;
+}
+
+const anchorOfEnd = (e: WireEnd): { x: number; y: number; h: number } | null => {
+  const t = e.components.transform as { x: number; y: number; h: number } | undefined;
+  const s = e.components.sprite as { height?: number } | undefined;
+  return t ? { x: t.x, y: t.y, h: t.h + Math.min(1, (s?.height ?? 0.5) / 2) } : null;
+};
+
+/** Every line to draw: the wires, plus a dotted line from each action node to the objects its actions point at. */
+export function wireShapes(
+  entities: readonly WireEnd[],
+  wires: readonly { id: string; from: { entity: string }; to: { entity: string } }[],
+  selected: readonly string[],
+  lit: (id: string) => number = () => 0,
+): WireShape[] {
+  const byId = new Map(entities.map((e) => [e.id, e]));
+  const out: WireShape[] = [];
+  for (const w of wires) {
+    const f = byId.get(w.from.entity);
+    const t = byId.get(w.to.entity);
+    const a = f && anchorOfEnd(f);
+    const b = t && anchorOfEnd(t);
+    if (a && b) out.push({ a, b, hot: selected.includes(w.from.entity) || selected.includes(w.to.entity), kind: 'signal', lit: lit(w.id), id: w.id });
+  }
+  for (const e of entities) {
+    const an = e.components.actionNode as { actions?: { params: Record<string, unknown> }[] } | undefined;
+    if (!an?.actions) continue;
+    const seen = new Set<string>();
+    for (const act of an.actions) {
+      for (const v of Object.values(act.params)) {
+        if (typeof v !== 'string' || !v.startsWith('id:')) continue;
+        const target = byId.get(v.slice(3));
+        const a = anchorOfEnd(e);
+        const b = target && anchorOfEnd(target);
+        if (a && b && !seen.has(target!.id)) {
+          seen.add(target!.id);
+          const id = `ref:${e.id}:${target!.id}`;
+          out.push({ a, b, hot: selected.includes(e.id) || selected.includes(target!.id), kind: 'ref', lit: lit(id), id });
+        }
+      }
+    }
+  }
+  return out;
+}
+
+/** A wire as a line with an arrowhead. Signal wires are yellow (green and thick while a signal runs); action lines are blue and dotted. */
+export function drawWire(g: Graphics, w: WireShape, iso: IsoConfig): void {
+  const pa = gridToScreen(w.a.x, w.a.y, w.a.h, iso);
+  const pb = gridToScreen(w.b.x, w.b.y, w.b.h, iso);
+  const live = w.lit > 0.02;
+  const color = live ? 0x6fe08a : w.kind === 'ref' ? 0x6aa8ff : w.hot ? 0xffd34a : 0xe8b84a;
+  const width = (w.hot ? 3 : 2) + (live ? 2 * w.lit : 0);
+  const alpha = live ? 0.55 + 0.45 * w.lit : w.kind === 'ref' ? 0.7 : 0.95;
+  if (w.kind === 'ref') {
+    const dx = pb.x - pa.x;
+    const dy = pb.y - pa.y;
+    const len = Math.hypot(dx, dy) || 1;
+    for (let d = 0; d < len; d += 12) {
+      const e = Math.min(len, d + 6);
+      g.moveTo(pa.x + (dx * d) / len, pa.y + (dy * d) / len).lineTo(pa.x + (dx * e) / len, pa.y + (dy * e) / len).stroke({ width, color, alpha });
+    }
+  } else {
+    g.moveTo(pa.x, pa.y).lineTo(pb.x, pb.y).stroke({ width, color, alpha });
+  }
+  g.circle(pa.x, pa.y, width + 1).fill({ color, alpha });
+  const angle = Math.atan2(pb.y - pa.y, pb.x - pa.x);
+  const head = 10;
+  g.poly([pb.x, pb.y, pb.x - head * Math.cos(angle - 0.45), pb.y - head * Math.sin(angle - 0.45), pb.x - head * Math.cos(angle + 0.45), pb.y - head * Math.sin(angle + 0.45)]).fill({ color, alpha });
+}

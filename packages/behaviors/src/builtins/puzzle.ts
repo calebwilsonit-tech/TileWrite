@@ -7,8 +7,11 @@ import {
   type SimContext,
   type Sprite,
   type TransformIso,
+  evalValue,
+  resolveValue,
 } from '@tilewright/runtime';
 import { defineBehavior, stateOf } from '../framework';
+import { compare } from '../events/sheet';
 import { input, output, setOutput } from '../signals';
 
 const collider = (e: Entity): Collider | undefined => e.get<Collider>(C.Collider);
@@ -200,21 +203,29 @@ export const timer = defineBehavior<Timer>({
 
 // ---------- logic node ----------
 
-export type LogicKind = 'and' | 'or' | 'not' | 'xor' | 'nand' | 'nor' | 'latch' | 'toggle' | 'delay' | 'pulse';
+export type LogicKind = 'and' | 'or' | 'not' | 'xor' | 'nand' | 'nor' | 'latch' | 'toggle' | 'delay' | 'pulse' | 'counter' | 'random' | 'compare';
 
 export interface Logic {
   kind: LogicKind;
   /** Seconds, for delay and pulse. */
   seconds: number;
+  /** Counter: turns on when In has turned on this many times. */
+  count: number;
+  /** Random: the chance (0-100) that each time In turns on, Out turns on. */
+  chance: number;
+  /** Compare: Out is on while this variable compares true against the value. */
+  variable: string;
+  op: string;
+  value: string;
 }
 
 export const logic = defineBehavior<Logic>({
   id: 'logic',
   name: 'Logic Gate',
   category: 'Logic',
-  description: 'Combines signals: AND, OR, NOT, XOR, a latch that remembers, a toggle, a delay, or a timed pulse. Place it in the world and wire things into it.',
+  description: 'Combines signals: AND, OR, NOT, XOR, a latch that remembers, a toggle, a delay, a timed pulse, a counter, a random chance or a variable check. Place it in the world and wire things into it.',
   phase: 'logic',
-  defaults: { kind: 'and', seconds: 1 },
+  defaults: { kind: 'and', seconds: 1, count: 3, chance: 50, variable: '', op: '>=', value: '1' },
   fields: [
     {
       key: 'kind',
@@ -231,9 +242,23 @@ export const logic = defineBehavior<Logic>({
         { value: 'toggle', label: 'Toggle: flips each time the input turns on' },
         { value: 'delay', label: 'Delay: repeats the input later' },
         { value: 'pulse', label: 'Pulse: on for a while when the input turns on' },
+        { value: 'counter', label: 'Counter: on once In has turned on a number of times (Reset starts again)' },
+        { value: 'random', label: 'Random: each time In turns on, Out is on by chance' },
+        { value: 'compare', label: 'Compare: on while a variable compares true' },
       ],
     },
-    { key: 'seconds', label: 'Seconds (delay / pulse)', type: 'number', min: 0, max: 600, step: 0.1 },
+    { key: 'seconds', label: 'Seconds', type: 'number', min: 0, max: 600, step: 0.1, showWhen: { key: 'kind', is: ['delay', 'pulse'] } },
+    { key: 'count', label: 'How many times', type: 'number', min: 1, max: 9999, step: 1, showWhen: { key: 'kind', is: ['counter'] } },
+    { key: 'chance', label: 'Chance (%)', type: 'number', min: 0, max: 100, step: 5, showWhen: { key: 'kind', is: ['random'] } },
+    { key: 'variable', label: 'Variable', type: 'text', showWhen: { key: 'kind', is: ['compare'] } },
+    {
+      key: 'op',
+      label: 'It must be',
+      type: 'select',
+      options: [{ value: '=', label: 'equal to' }, { value: '!=', label: 'not equal to' }, { value: '>', label: 'more than' }, { value: '>=', label: 'at least' }, { value: '<', label: 'less than' }, { value: '<=', label: 'at most' }],
+      showWhen: { key: 'kind', is: ['compare'] },
+    },
+    { key: 'value', label: 'Value', type: 'text', showWhen: { key: 'kind', is: ['compare'] } },
   ],
   inputs: [
     { name: 'a', label: 'A' },
@@ -244,10 +269,10 @@ export const logic = defineBehavior<Logic>({
   ],
   outputs: [{ name: 'out', label: 'Out' }],
   requires: {},
-  summary: (s) => ({ and: 'On when A and B are both on.', or: 'On when A or B is on.', not: 'On when In is off.', xor: 'On when exactly one of A and B is on.', nand: 'Off only when A and B are both on.', nor: 'On only when A and B are both off.', latch: 'Set turns it on and keeps it on until Reset.', toggle: 'Flips each time In turns on.', delay: `Repeats In after ${s.seconds} s.`, pulse: `On for ${s.seconds} s each time In turns on.` })[s.kind],
+  summary: (s) => ({ and: 'On when A and B are both on.', or: 'On when A or B is on.', not: 'On when In is off.', xor: 'On when exactly one of A and B is on.', nand: 'Off only when A and B are both on.', nor: 'On only when A and B are both off.', latch: 'Set turns it on and keeps it on until Reset.', toggle: 'Flips each time In turns on.', delay: `Repeats In after ${s.seconds} s.`, pulse: `On for ${s.seconds} s each time In turns on.`, counter: `On after In has turned on ${s.count} times; Reset starts again.`, random: `Each time In turns on, Out is on with a ${s.chance}% chance.`, compare: `On while ${s.variable || '(a variable)'} ${s.op} ${s.value}.` })[s.kind],
   update(ctx, e, s) {
     // Logic nodes run several times per tick while signals settle, so time and edges advance only once per tick.
-    const st = stateOf(e, 'logic', () => ({ tick: -1, prevAtStart: {} as Record<string, boolean>, cur: {} as Record<string, boolean>, value: false, fired: -1, timeLeft: 0, queue: [] as { at: number; v: boolean }[] }));
+    const st = stateOf(e, 'logic', () => ({ tick: -1, prevAtStart: {} as Record<string, boolean>, cur: {} as Record<string, boolean>, value: false, fired: -1, timeLeft: 0, queue: [] as { at: number; v: boolean }[], n: 0 }));
     const first = st.tick !== ctx.tick;
     if (first) {
       st.tick = ctx.tick;
@@ -298,6 +323,26 @@ export const logic = defineBehavior<Logic>({
         }
         out = st.timeLeft > 0;
         break;
+      case 'counter':
+        if (st.cur.reset) st.n = 0;
+        else if (rising('in') && st.fired !== ctx.tick) {
+          st.n++;
+          st.fired = ctx.tick;
+        }
+        out = st.n >= s.count;
+        break;
+      case 'random':
+        if (rising('in') && st.fired !== ctx.tick) {
+          st.value = ctx.rng.next() * 100 < s.chance;
+          st.fired = ctx.tick;
+        }
+        out = st.value;
+        break;
+      case 'compare': {
+        const src = { vars: ctx.runtime.vars, tables: ctx.assets.tables, world: ctx.world };
+        out = s.variable !== '' && compare(resolveValue(src, s.variable), s.op, evalValue(src, s.value));
+        break;
+      }
       case 'delay': {
         const now = ctx.tick;
         if (first) {

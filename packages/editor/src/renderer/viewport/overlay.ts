@@ -1,5 +1,5 @@
 import { Container, Graphics, Text } from 'pixi.js';
-import { drawCone, drawFootprint, drawLightRadius, drawPath, type ConeShape, type FootprintShape, type LightShape, type PathShape } from './debug-draw';
+import { drawCone, drawFootprint, drawLightRadius, drawPath, drawWire, type ConeShape, type FootprintShape, type LightShape, type PathShape, type WireShape } from './debug-draw';
 import { DEFAULT_ISO, gridToScreen, type IsoConfig, type RegionData, type TileMap } from '@tilewright/runtime';
 import { collisionKind, type CollisionKind, type P } from '../tools/algorithms';
 import type { Preview } from '../tools/tools';
@@ -19,7 +19,7 @@ export interface OverlayInput {
   regions: { list: RegionData[]; visible: boolean; selected: string | null };
   walk: Set<string> | null;
   /** Wires between objects, as points in grid space; hot ones belong to the selected object. */
-  wires: { a: { x: number; y: number; h: number }; b: { x: number; y: number; h: number }; hot: boolean }[];
+  wires: WireShape[];
   /** Patrol routes (grid space); the selected object's is bright. */
   paths: PathShape[];
   /** What guards can see and hear. */
@@ -111,7 +111,7 @@ export class OverlayDrawer {
     for (const l of o.lights) drawLightRadius(g, l, iso);
     for (const c of o.cones) drawCone(g, c, iso);
     for (const pa of o.paths) drawPath(g, pa, iso);
-    for (const w of o.wires) this.wireLine(g, w.a, w.b, w.hot ? 0xffd34a : 0xe8b84a, w.hot ? 3 : 2, iso);
+    for (const w of o.wires) drawWire(g, w, iso);
     for (const pv of o.previews) {
       if (pv.kind === 'wire') {
         this.wireLine(g, pv.from, { ...pv.to, h: pv.from.h }, 0xffffff, 2, iso);

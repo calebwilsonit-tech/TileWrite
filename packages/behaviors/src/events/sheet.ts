@@ -27,7 +27,7 @@ import {
   type TransformIso,
   type VariableValue,
 } from '@tilewright/runtime';
-import { input, output, setOutput } from '../signals';
+import { input, output, setInput, setOutput } from '../signals';
 import { damage, heal, healthOf } from '../builtins/combat';
 import { beginDialogue, beginMinigame, playCutscene } from '../story/director';
 import { echoEntities } from '../builtins/echo';
@@ -385,6 +385,44 @@ export const CONDITIONS: ConditionDef[] = [
     test: (ctx, p) => (str(p, 'mode') === 'held' ? ctx.input.down(str(p, 'name')) : str(p, 'mode') === 'released' ? ctx.input.released(str(p, 'name')) : ctx.input.pressed(str(p, 'name'))),
   },
   {
+    id: 'entityEvent',
+    label: 'Something happens to an object',
+    category: 'Objects',
+    params: [
+      entityParam('who', 'Object', ''),
+      {
+        key: 'name',
+        label: 'What happens to it',
+        type: 'select',
+        default: 'died',
+        options: [
+          { value: 'died', label: 'is defeated' },
+          { value: 'damaged', label: 'is hurt' },
+          { value: 'pickup', label: 'is picked up' },
+          { value: 'turn-start', label: 'starts its turn' },
+          { value: 'turn-end', label: 'ends its turn' },
+          { value: 'unit-moved', label: 'finishes walking' },
+          { value: 'noticed', label: 'notices something' },
+          { value: 'state-changed', label: 'changes state' },
+          { value: 'hotspot-used', label: 'is used (hotspot)' },
+          { value: 'boss-defeated', label: 'is defeated (boss)' },
+        ],
+      },
+    ],
+    describe: (p, n) => `${describeRef(str(p, 'who'), n)} ${ENTITY_EVENT_TEXT[str(p, 'name')] ?? str(p, 'name')}`,
+    test(ctx, p, row) {
+      const who = str(p, 'who');
+      const ids = new Set<number>();
+      // a defeated object is already gone, so its own name is looked up directly and a tag is read from what the event carried
+      if (who.startsWith('id:')) {
+        const live = ctx.runtime.ids.get(who.slice(3));
+        if (live !== undefined) ids.add(live);
+      } else for (const e of resolveRef(ctx, who, row.picked)) ids.add(e.id);
+      const tag = who.startsWith('tag:') ? who.slice(4) : '';
+      return ctx.events.of(str(p, 'name')).some((ev) => ids.has(Number(ev.entity)) || (tag !== '' && Array.isArray(ev.tags) && (ev.tags as string[]).includes(tag)));
+    },
+  },
+  {
     id: 'onEvent',
     label: 'Something happens in the game',
     category: 'Basics',
@@ -444,6 +482,19 @@ export const CONDITIONS: ConditionDef[] = [
     test: (ctx, p) => ctx.events.of(str(p, 'name')).length > 0,
   },
 ];
+
+const ENTITY_EVENT_TEXT: Record<string, string> = {
+  died: 'is defeated',
+  damaged: 'is hurt',
+  pickup: 'is picked up',
+  'turn-start': 'starts its turn',
+  'turn-end': 'ends its turn',
+  'unit-moved': 'finishes walking',
+  noticed: 'notices something',
+  'state-changed': 'changes state',
+  'hotspot-used': 'is used',
+  'boss-defeated': 'is defeated',
+};
 
 const COND_EVENT_TEXT: Record<string, string> = {
   pickup: 'something is picked up',
@@ -583,6 +634,27 @@ export const ACTIONS: ActionDef[] = [
     },
   },
   {
+    id: 'sendSignal',
+    label: "Send a signal into an object (open a gate, start a timer...)",
+    category: 'Objects',
+    params: [entityParam('who', 'Object', ''), { key: 'name', label: 'Signal it receives', type: 'signal', default: '' }, { key: 'state', label: 'Turn it', type: 'select', default: 'on', options: [...onOff, { value: 'pulse', label: 'on for a moment (a pulse)' }] }],
+    describe: (p, n) => `${str(p, 'state') === 'toggle' ? 'flip' : str(p, 'state') === 'off' ? 'turn off' : str(p, 'state') === 'pulse' ? 'pulse' : 'turn on'} ${describeRef(str(p, 'who'), n)}'s "${str(p, 'name')}" input`,
+    run(ctx, p, row) {
+      for (const e of resolveRef(ctx, str(p, 'who'), row.picked)) {
+        const name = str(p, 'name');
+        const cur = input(e, name);
+        const state = str(p, 'state');
+        setInput(e, name, state === 'toggle' ? !cur : state !== 'off');
+        if (state === 'pulse') {
+          // wires leave the input alone when nothing feeds it, so a pulse is switched off again two ticks later
+          const list = (ctx.runtime.scratch.get('pulses') as { id: number; name: string; tick: number }[] | undefined) ?? [];
+          list.push({ id: e.id, name, tick: ctx.tick });
+          ctx.runtime.scratch.set('pulses', list);
+        }
+      }
+    },
+  },
+  {
     id: 'destroy',
     label: 'Remove an object',
     category: 'Objects',
@@ -716,6 +788,22 @@ export const ACTIONS: ActionDef[] = [
     params: [],
     describe: () => 'save the game',
     run: (ctx) => void ctx.events.emit('save-request', { slot: 'autosave' }),
+  },
+  {
+    id: 'loadGame',
+    label: 'Load a saved game (continue)',
+    category: 'Story',
+    params: [{ key: 'slot', label: 'Save slot', type: 'text', default: 'autosave' }],
+    describe: (p) => `load the saved game "${str(p, 'slot') || 'autosave'}"`,
+    run: (ctx, p) => void ctx.events.emit('load-request', { slot: str(p, 'slot') || 'autosave' }),
+  },
+  {
+    id: 'quitGame',
+    label: 'Quit the game',
+    category: 'Story',
+    params: [],
+    describe: () => 'quit the game',
+    run: (ctx) => void ctx.events.emit('quit-request', {}),
   },  {
     id: 'message',
     label: 'Show a message',
@@ -955,7 +1043,7 @@ export function newAction(id: string): EventAction {
 }
 
 export function newRow(id: string): EventRow {
-  return { id, enabled: true, comment: '', mode: 'all', once: false, forEach: '', repeat: 1, conditions: [newCondition('always')], actions: [], children: [] };
+  return { id, enabled: true, comment: '', mode: 'all', once: false, forEach: '', breakpoint: false, repeat: 1, conditions: [newCondition('always')], actions: [], children: [] };
 }
 
 // ---------- plain English ----------
@@ -984,6 +1072,27 @@ export function describeRow(row: EventRow, n?: Names): string {
 
 // ---------- running ----------
 
+/**
+ * Remember that a row, wire node or graph box just ran (the editor lights it up while the game plays) and, when it has a
+ * breakpoint, announce "logic-break" so the editor can stop the game there.
+ */
+export function noteFired(ctx: SimContext, id: string, breakpoint: boolean, what: string): void {
+  let fired = ctx.runtime.scratch.get('fired') as Map<string, number> | undefined;
+  if (!fired) ctx.runtime.scratch.set('fired', (fired = new Map()));
+  fired.set(id, ctx.tick);
+  if (breakpoint) ctx.events.emit('logic-break', { id, text: what });
+}
+
+/** Do all (or any) of these conditions hold now? Used by the logic nodes and graph boxes that are not event rows. */
+export function testConditionList(ctx: SimContext, conditions: readonly EventCondition[], mode: 'all' | 'any', picked?: Entity): boolean {
+  return testRow(ctx, { conditions: conditions as EventCondition[], mode } as EventRow, picked);
+}
+
+/** Run actions in order, as an event row would. */
+export function runActionList(ctx: SimContext, actions: readonly EventAction[], picked?: Entity): void {
+  for (const a of actions) actionDefs.get(a.type)?.run(ctx, a.params, { picked });
+}
+
 function testRow(ctx: SimContext, row: EventRow, picked: Entity | undefined): boolean {
   if (row.conditions.length === 0) return true;
   const results = row.conditions.map((c) => {
@@ -996,7 +1105,7 @@ function testRow(ctx: SimContext, row: EventRow, picked: Entity | undefined): bo
 }
 
 /** Variables that exist while a row loops over a table: row.id and row.<column>. */
-function withTableRow<T>(ctx: SimContext, tableName: string, rowIndex: number, run: () => T): T | undefined {
+export function withTableRow<T>(ctx: SimContext, tableName: string, rowIndex: number, run: () => T): T | undefined {
   const t = ctx.assets.tables.get(tableName);
   const r = t?.rows[rowIndex];
   if (!t || !r) return undefined;
@@ -1032,7 +1141,10 @@ function runRows(ctx: SimContext, rows: EventRow[], picked: Entity | undefined, 
           const truth = testRow(ctx, row, picked);
           const fire = row.once ? truth && !st.prev : truth;
           st.prev = truth;
-          if (fire) for (let n = 0; n < Math.max(1, row.repeat); n++) for (const a of row.actions) actionDefs.get(a.type)?.run(ctx, a.params, { picked });
+          if (fire) {
+            noteFired(ctx, `${scope}${row.id}`, row.breakpoint, describeRow(row));
+            for (let n = 0; n < Math.max(1, row.repeat); n++) for (const a of row.actions) actionDefs.get(a.type)?.run(ctx, a.params, { picked });
+          }
           if (truth && row.children.length > 0) runRows(ctx, row.children, picked, scope);
         });
       }
@@ -1046,6 +1158,7 @@ function runRows(ctx: SimContext, rows: EventRow[], picked: Entity | undefined, 
       const fire = row.once ? truth && !st.prev : truth;
       st.prev = truth;
       if (fire) {
+        noteFired(ctx, `${scope}${row.id}`, row.breakpoint, describeRow(row));
         for (let i = 0; i < Math.max(1, row.repeat); i++) {
           for (const a of row.actions) actionDefs.get(a.type)?.run(ctx, a.params, { picked: subject });
         }

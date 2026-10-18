@@ -16,6 +16,7 @@ Start with the tutorial in the app (the project screen's **Take the tutorial** b
 | Your own tables, components, behaviours and events, with no code | [data-and-blocks.md](data-and-blocks.md) |
 | Control schemes, the pointer, building with ghosts, the four isometric views | [control-schemes.md](control-schemes.md) |
 | Procedural maps (rooms, caves, islands, towns), seeds, new runs, very large maps | [procedural-maps.md](procedural-maps.md) |
+| Buttons, wires, logic nodes and graphs: the three levels of logic, breakpoints | [logic.md](logic.md) |
 | Resources, production chains, day and night, waves, routes, villagers with needs, fire and growth | [simulation-helpers.md](simulation-helpers.md) |
 | Real time, speed-up and turn-based play | [time-and-turns.md](time-and-turns.md) |
 | Packs and the plugin API | [packs-and-plugins.md](packs-and-plugins.md) |

@@ -1,7 +1,8 @@
-import { behaviorList, checkMachine, checkSheet, checkTree, getBehavior, knownPackOfBehavior, listPacks, parsePoints, type BehaviorTree, type StateMachine } from '@tilewright/behaviors';
+import { actionDef, behaviorList, checkGraphs, checkMachine, checkSheet, checkTree, conditionDef, describeGraphNode, getBehavior, knownPackOfBehavior, listPacks, parsePoints, type BehaviorTree, type StateMachine } from '@tilewright/behaviors';
 import { EMPTY_TILE, FLAG, SLOPE_RISE, findPath, groundHeightAt, reachableCells, textBridgeCells } from '@tilewright/runtime';
 import { highSide, lowSide, meetsTop } from '../tools/algorithms';
 import type { EditorDoc } from './doc';
+import type { ProblemFix } from './logic-fix';
 
 export interface Problem {
   id: string;
@@ -9,6 +10,8 @@ export interface Problem {
   message: string;
   /** Where "go to" takes you. */
   target?: { kind: 'entity'; id: string; x: number; y: number } | { kind: 'cell'; x: number; y: number } | { kind: 'region'; id: string; x: number; y: number };
+  /** A one-click repair, when there is an obvious one. */
+  fix?: ProblemFix;
 }
 
 interface T {
@@ -203,15 +206,62 @@ export function validateScene(doc: EditorDoc, sprites?: ReadonlySet<string>, pre
     const from = doc.getEntity(w.from.entity);
     const to = doc.getEntity(w.to.entity);
     if (!from || !to) {
-      out.push({ id: `wire-gone-${w.id}`, severity: 'warning', message: 'A wire connects to an object that no longer exists.' });
+      out.push({ id: `wire-gone-${w.id}`, severity: 'warning', message: 'A wire connects to an object that no longer exists.', fix: { kind: 'remove-wire', id: w.id, label: 'Remove the wire' } });
       continue;
     }
     const ft = from.components.transform as T | undefined;
     if (!signalsOf(from.id, 'outputs').has(w.from.output)) {
-      out.push({ id: `wire-out-${w.id}`, severity: 'warning', message: `"${from.name}" does not send a signal called "${w.from.output}" (its behaviour was removed?), so the wire to "${to.name}" does nothing.`, target: ft ? pos('entity', from.id, ft) : undefined });
+      out.push({ id: `wire-out-${w.id}`, severity: 'warning', message: `"${from.name}" does not send a signal called "${w.from.output}" (its behaviour was removed?), so the wire to "${to.name}" does nothing.`, target: ft ? pos('entity', from.id, ft) : undefined, fix: { kind: 'remove-wire', id: w.id, label: 'Remove the wire' } });
     } else if (!signalsOf(to.id, 'inputs').has(w.to.input)) {
-      out.push({ id: `wire-in-${w.id}`, severity: 'warning', message: `"${to.name}" does not receive a signal called "${w.to.input}" (its behaviour was removed?), so the wire from "${from.name}" does nothing.`, target: ft ? pos('entity', from.id, ft) : undefined });
+      out.push({ id: `wire-in-${w.id}`, severity: 'warning', message: `"${to.name}" does not receive a signal called "${w.to.input}" (its behaviour was removed?), so the wire from "${from.name}" does nothing.`, target: ft ? pos('entity', from.id, ft) : undefined, fix: { kind: 'remove-wire', id: w.id, label: 'Remove the wire' } });
     }
+  }
+
+  // event and action nodes (quick actions and wires that make something happen)
+  const entityIds = new Set(doc.entities.map((e) => e.id));
+  for (const e of doc.entities) {
+    const t = e.components.transform as T | undefined;
+    const target = t ? pos('entity', e.id, t) : undefined;
+    const an = e.components.actionNode as { actions?: { type: string; params: Record<string, unknown> }[] } | undefined;
+    const en = e.components.eventNode as { conditions?: { type: string; params: Record<string, unknown> }[] } | undefined;
+    if (an) {
+      if (!doc.wires.some((w) => w.to.entity === e.id && w.to.input === 'do')) {
+        out.push({ id: `anode-idle-${e.id}`, severity: 'warning', message: `The action node "${e.name}" has nothing wired to its "Do it" input, so it never runs.`, target, fix: { kind: 'remove-entity', id: e.id, label: 'Remove the action node' } });
+      }
+      (an.actions ?? []).forEach((a, i) => {
+        const def = actionDef(a.type);
+        if (!def) {
+          out.push({ id: `anode-missing-${e.id}-${i}`, severity: 'warning', message: `"${e.name}" does an action ("${a.type}") that is not available - its pack may be switched off.`, target, fix: { kind: 'remove-action', node: e.id, index: i, label: 'Remove that action' } });
+          return;
+        }
+        for (const p of def.params) {
+          const v = a.params[p.key];
+          if (p.type === 'entity' && typeof v === 'string' && v.startsWith('id:') && !entityIds.has(v.slice(3))) {
+            out.push({ id: `anode-gone-${e.id}-${i}-${p.key}`, severity: 'warning', message: `"${e.name}" acts on an object that no longer exists (it was deleted), so "${def.label}" does nothing.`, target, fix: { kind: 'remove-action', node: e.id, index: i, label: 'Remove that action' } });
+          }
+        }
+      });
+      if ((an.actions ?? []).length === 0) out.push({ id: `anode-empty-${e.id}`, severity: 'warning', message: `The action node "${e.name}" has no actions yet, so it does nothing.`, target });
+    }
+    if (en) {
+      if (!doc.wires.some((w) => w.from.entity === e.id)) {
+        out.push({ id: `enode-idle-${e.id}`, severity: 'warning', message: `The event node "${e.name}" is not wired to anything, so seeing its event changes nothing.`, target, fix: { kind: 'remove-entity', id: e.id, label: 'Remove the event node' } });
+      }
+      for (const c of en.conditions ?? []) {
+        if (!conditionDef(c.type)) out.push({ id: `enode-missing-${e.id}-${c.type}`, severity: 'warning', message: `The event node "${e.name}" watches for something ("${c.type}") that is not available - its pack may be switched off.`, target });
+      }
+    }
+  }
+  // logic graphs
+  for (const p of checkGraphs(doc.graphs)) {
+    const g = doc.graphs.find((x) => x.id === p.graph);
+    const node = p.node ? g?.nodes.find((n) => n.id === p.node) : undefined;
+    out.push({
+      id: `graph-${p.graph}-${p.node ?? p.link ?? out.length}-${out.length}`,
+      severity: 'warning',
+      message: p.text,
+      ...(p.link !== undefined ? { fix: { kind: 'remove-graph-link' as const, graph: p.graph, index: p.link, label: 'Remove the line' } } : node ? { fix: { kind: 'remove-graph-node' as const, graph: p.graph, node: node.id, label: `Remove "${describeGraphNode(node)}"` } } : {}),
+    });
   }
 
   if (sounds) {

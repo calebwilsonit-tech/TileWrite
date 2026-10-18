@@ -22,7 +22,7 @@ export function flatScene(w = 24, h = 24): { map: TileMap; scene: SceneData } {
   map.fill(1, 0);
   return {
     map,
-    scene: { schemaVersion: CURRENT_SCHEMA_VERSION, name: 'T', map: tileMapToRows(map), entities: [], regions: [], wires: [], variables: [], events: [] },
+    scene: { schemaVersion: CURRENT_SCHEMA_VERSION, name: 'T', map: tileMapToRows(map), entities: [], regions: [], wires: [], variables: [], events: [], graphs: [] },
   };
 }
 

@@ -14,6 +14,8 @@ export interface FieldSpec {
   options?: { value: string; label: string }[];
   /** For `tableRow`: the data table the row is picked from. */
   table?: string;
+  /** Only show this setting while another setting has one of these values (the Logic Gate shows "count" only for a counter). */
+  showWhen?: { key: string; is: string[] };
 }
 
 /** A named signal an object can send (output) or receive (input) over wires. */
@@ -47,7 +49,7 @@ export interface BehaviorDef<S extends object = Record<string, unknown>> {
   inputs: SignalSpec[];
   outputs: SignalSpec[];
   /** Settings that are not simple fields have their own editor in the Inspector (a graph, for state machines). */
-  editor?: 'stateMachine' | 'behaviorTree';
+  editor?: 'stateMachine' | 'behaviorTree' | 'eventNode' | 'actionNode';
   /** Components that must exist for it to work, with the defaults to add when they are missing. */
   requires: Record<string, unknown>;
   /** Runs once per tick for every object that has this behaviour. */

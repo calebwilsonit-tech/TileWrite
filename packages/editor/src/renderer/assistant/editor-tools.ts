@@ -586,6 +586,7 @@ function buildRow(doc: EditorDoc, r: RowInput): EventRow {
     mode: r.mode ?? 'all',
     once: r.once ?? false,
     forEach: r.forEach ? normaliseRef(doc, r.forEach) : '',
+    breakpoint: false,
     repeat: r.repeat ?? 1,
     conditions: r.conditions.length > 0 ? r.conditions.map((c) => ({ type: c.type, params: buildParams(doc, 'condition', c.type, c.params), negate: c.negate ?? false })) : [newCondition('always')],
     actions: r.actions.map((a) => ({ type: a.type, params: buildParams(doc, 'action', a.type, a.params) })),

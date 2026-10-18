@@ -7,6 +7,7 @@ export function ViewportPanel() {
   const host = useRef<HTMLDivElement>(null);
   const mode = useApp((s) => s.mode);
   const paused = useApp((s) => s.paused);
+  const logicHit = useApp((s) => s.logicHit);
 
   useEffect(() => {
     const vp = new ViewportController();
@@ -28,7 +29,18 @@ export function ViewportPanel() {
   return (
     <div className="viewport-wrap">
       <div ref={host} className="viewport-host" data-testid="viewport" tabIndex={0} />
-      {mode === 'play' && (
+      {mode === 'play' && logicHit && (
+        <div className="play-badge logic-break" data-testid="logic-break" role="status">
+          Stopped at a breakpoint: {logicHit.text}.{' '}
+          <button data-testid="logic-break-resume" onClick={() => store.togglePause()}>
+            Resume
+          </button>{' '}
+          <button data-testid="logic-break-step" onClick={() => store.step()}>
+            Step
+          </button>
+        </div>
+      )}
+      {mode === 'play' && !logicHit && (
         <div className="play-badge" data-testid="play-badge">
           {paused ? 'Paused' : 'Playing'}: WASD / arrows move, Shift runs, Space jumps, E interacts, R records an echo, J attacks, Q dodges, P pauses. Esc stops.
         </div>

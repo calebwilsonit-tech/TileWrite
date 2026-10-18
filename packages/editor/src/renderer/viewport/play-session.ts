@@ -56,11 +56,12 @@ import {
   litPosts,
   placeAtSpawn,
   playCutscene,
+  output,
   type GameUiHost,
   activeInput,
 } from '@tilewright/behaviors';
 import { POINTER_BINDINGS } from '@tilewright/runtime';
-import { drawCone, drawFootprint, drawLightRadius, drawPath, shapesOf } from './debug-draw';
+import { drawCone, drawFootprint, drawLightRadius, drawPath, drawWire, shapesOf, wireShapes } from './debug-draw';
 import { assetFs } from '../project/assetFs';
 import { joinPath } from '../project/api';
 import { loadScene as loadSceneFile } from '../project/io';
@@ -89,9 +90,11 @@ export interface PlayOptions {
   onError(error: unknown): void;
   /** Quit the game (back to editing). */
   quit(): void;
+  /** A row, node or graph box with a breakpoint ran: the editor stops the game and says where. */
+  onLogicBreak?(text: string): void;
   autoPlay: { cutscene?: string; dialogue?: string; minigame?: string } | null;
   /** Which debugging aids are on right now (read every frame). */
-  flags: () => { ai: boolean; triggers: boolean; lights: boolean; depth: boolean; profiler: boolean };
+  flags: () => { ai: boolean; triggers: boolean; lights: boolean; depth: boolean; profiler: boolean; wires?: boolean };
   /** Record the buttons pressed, to save as a playthrough. */
   record: boolean;
   /** Switch the window to or from full screen (only a game in its own window can). */
@@ -192,6 +195,9 @@ export class PlaySession {
       }
     });
     sim.events.on('save-request', () => void this.saveTo('autosave'));
+    sim.events.on('logic-break', (e) => o.onLogicBreak?.(String(e.text ?? '')));
+    sim.events.on('load-request', (e) => void this.loadFrom(String(e.slot ?? 'autosave')));
+    sim.events.on('quit-request', () => o.quit());
     sim.events.on('lantern-lit', () => void this.saveTo('autosave'));
     sim.events.on('rested', () => void this.saveTo('autosave'));
 
@@ -440,8 +446,22 @@ export class PlaySession {
 
   // ---------- each tick ----------
 
+  /** The tick each wire last carried a signal (for the glow). */
+  private readonly wireOn = new Map<string, number>();
+  private nodeCount = 0;
+
+  private trackWires(): void {
+    const { sim } = this;
+    this.nodeCount = sim.world.query('actionNode').length;
+    for (const w of sim.runtime.wires) {
+      const from = sim.world.get(sim.runtime.ids.get(w.from.entity) ?? -1);
+      if (from && output(from, w.from.output)) this.wireOn.set(w.id, sim.tick);
+    }
+  }
+
   private afterTick(): void {
     const { sim, o } = this;
+    this.trackWires();
     const player = sim.world.withTag('player')[0];
     const t = player?.get<TransformIso>(C.Transform);
     this.syncAmbient();
@@ -548,7 +568,21 @@ export class PlaySession {
       }
     }
     if (flags.lights) for (const l of sim.runtime.lighting?.lights ?? []) drawLightRadius(g, { x: l.x, y: l.y, h: l.h, radius: l.radius }, iso);
-    this.debugLayer.visible = flags.ai || flags.triggers || flags.lights;
+    if (flags.wires !== false && sim.runtime.wires.length + this.nodeCount > 0) {
+      // wires and the lines from action nodes to what they change, lit while a signal runs through them
+      const ends = sim.world.all().map((e) => ({ id: e.get<{ sceneId?: string }>('meta')?.sceneId ?? String(e.id), components: Object.fromEntries(e.components) as Record<string, unknown> }));
+      const fired = sim.runtime.scratch.get('fired') as Map<string, number> | undefined;
+      const lit = (id: string): number => {
+        if (id.startsWith('ref:')) {
+          const at = fired?.get(`e:${id.split(':')[1]}`);
+          return at === undefined ? 0 : Math.max(0, 1 - (sim.tick - at) / 30);
+        }
+        const on = this.wireOn.get(id);
+        return on === undefined ? 0 : Math.max(0, 1 - (sim.tick - on) / 30);
+      };
+      for (const w of wireShapes(ends, sim.runtime.wires, [], lit)) drawWire(g, w, iso);
+    }
+    this.debugLayer.visible = flags.ai || flags.triggers || flags.lights || (flags.wires !== false && (sim.runtime.wires.length > 0 || this.nodeCount > 0));
 
     // profiler: switched on only while it is shown
     sim.profiler.enabled = flags.profiler;

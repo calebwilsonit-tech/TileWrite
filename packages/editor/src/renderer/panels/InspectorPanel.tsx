@@ -2,6 +2,7 @@ import { FACING_NAMES, type Animator, type EntityData, type RegionData } from '@
 import { behaviorList } from '@tilewright/behaviors';
 import { applySprite, setLocomotionClips, setPlainClip } from '../studio/apply';
 import { BehaviorsSection } from './BehaviorsSection';
+import { QuickActionsSection } from './LogicEditors';
 import { SoundField } from './SoundField';
 import { PrefabBanner, WiresSection } from './LogicSections';
 import { studio, useStudio } from '../studio/store';
@@ -156,6 +157,7 @@ function EntityInspector({ ids }: { ids: string[] }) {
         </fieldset>
       )}
       <BehaviorsSection entity={e} edit={edit} />
+      <QuickActionsSection entity={e} />
       <WiresSection entityId={e.id} />
       {Object.keys(e.components).some((k) => !isHidden(k)) && (
         <fieldset>

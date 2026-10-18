@@ -1,6 +1,6 @@
 import { Tweens } from '../anim/tween';
 import type { LightingModel } from '../lighting/lighting';
-import type { EventRow, PrefabData, RegionData, VariableValue, WireData } from '../project/schema';
+import type { EventRow, GraphData, PrefabData, RegionData, VariableValue, WireData } from '../project/schema';
 import { InputState, type ActionSnapshot } from '../input/input';
 import { World } from '../scene/world';
 import type { SpriteData } from '../sprites/format';
@@ -56,6 +56,8 @@ export type Difficulty = 'easy' | 'normal' | 'hard';
 export interface SceneRuntime {
   wires: WireData[];
   sheet: EventRow[];
+  /** The scene's logic graphs. */
+  graphs: GraphData[];
   /** Flags, counters, text, and (as `item:<id>`) the inventory. */
   vars: Record<string, VariableValue>;
   /** What each event-sheet row remembered from the last tick (was it true, timers...). */
@@ -186,6 +188,7 @@ export function newSceneRuntime(): SceneRuntime {
   return {
     wires: [],
     sheet: [],
+    graphs: [],
     vars: {},
     rowState: {},
     ids: new Map(),

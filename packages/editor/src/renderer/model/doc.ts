@@ -16,6 +16,7 @@ import {
   tileMapToRows,
   type EntityData,
   type EventRow,
+  type GraphData,
   type RegionData,
   type SceneData,
   type VariableData,
@@ -32,6 +33,7 @@ export type DocEvent =
   | { type: 'regions' }
   | { type: 'wires' }
   | { type: 'events' }
+  | { type: 'graphs' }
   | { type: 'meta' }
   | { type: 'history' };
 
@@ -152,6 +154,7 @@ export class EditorDoc {
     public wires: WireData[] = [],
     public variables: VariableData[] = [],
     public events: EventRow[] = [],
+    public graphs: GraphData[] = [],
   ) {
     this.nextId = this.computeNextId();
   }
@@ -160,7 +163,7 @@ export class EditorDoc {
   static fromScene(scene: SceneData, prefabs: ReadonlyMap<string, PrefabData> = new Map()): EditorDoc {
     const copy = structuredClone(scene);
     const entities = copy.entities.map((e) => (e.prefab && prefabs.has(e.prefab) ? (resolveInstance(e, prefabs) ?? e) : e));
-    const doc = new EditorDoc(copy.name, tileMapFromRows(copy.map), entities, copy.regions, copy.wires, copy.variables, copy.events);
+    const doc = new EditorDoc(copy.name, tileMapFromRows(copy.map), entities, copy.regions, copy.wires, copy.variables, copy.events, copy.graphs ?? []);
     doc.prefabs = prefabs;
     const rules = copy.generator ? GeneratorSpecSchema.safeParse(copy.generator) : null;
     doc.generator = rules?.success ? rules.data : null;
@@ -181,13 +184,14 @@ export class EditorDoc {
       wires: this.wires,
       variables: this.variables,
       events: this.events,
+      graphs: this.graphs,
       ...(this.generator ? { generator: this.generator } : {}),
     });
   }
 
   private computeNextId(): number {
     let max = 0;
-    for (const e of [...this.entities, ...this.regions, ...this.wires, ...this.events]) {
+    for (const e of [...this.entities, ...this.regions, ...this.wires, ...this.events, ...this.graphs]) {
       const m = /(\d+)$/.exec(e.id);
       if (m) max = Math.max(max, Number(m[1]));
     }
@@ -379,7 +383,12 @@ export class EditorDoc {
   }
 
   removeEntities(ids: string[], label = 'Delete'): void {
+    // the event and action nodes made for an object go with it
     const set = new Set(ids);
+    for (const e of this.entities) {
+      const owner = (e.components.quick as { owner?: string } | undefined)?.owner;
+      if (owner && set.has(owner)) set.add(e.id);
+    }
     const removed = this.entities.map((e, index) => ({ e: structuredClone(e), index })).filter((r) => set.has(r.e.id));
     if (removed.length === 0) return;
     const droppedWires = this.wires.map((w, index) => ({ w: structuredClone(w), index })).filter((r) => set.has(r.w.from.entity) || set.has(r.w.to.entity));
@@ -521,6 +530,24 @@ export class EditorDoc {
       undo: () => {
         this.events = structuredClone(before);
         this.emit({ type: 'events' });
+      },
+    });
+  }
+
+  /** Replace all the logic graphs (every edit in the graph editor is one undo step). */
+  setGraphs(label: string, graphs: GraphData[]): void {
+    const before = structuredClone(this.graphs);
+    const after = structuredClone(graphs);
+    if (JSON.stringify(before) === JSON.stringify(after)) return;
+    this.run({
+      label,
+      redo: () => {
+        this.graphs = structuredClone(after);
+        this.emit({ type: 'graphs' });
+      },
+      undo: () => {
+        this.graphs = structuredClone(before);
+        this.emit({ type: 'graphs' });
       },
     });
   }

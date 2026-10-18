@@ -28,7 +28,7 @@ import { PREFABS, prefabById } from '../tools/prefabs';
 import type { P } from '../tools/algorithms';
 import { OverlayDrawer, cellTopHeight } from './overlay';
 import { PlaySession } from './play-session';
-import { shapesOf } from './debug-draw';
+import { shapesOf, wireShapes, type WireShape } from './debug-draw';
 
 interface SpriteLike {
   shape: 'box' | 'diamond';
@@ -444,17 +444,10 @@ export class ViewportController {
     return { x: t.x, y: t.y, h: t.h + Math.min(1, (s?.height ?? 0.5) / 2) };
   }
 
-  private wirePoints(): { a: { x: number; y: number; h: number }; b: { x: number; y: number; h: number }; hot: boolean }[] {
+  private wirePoints(): WireShape[] {
     const doc = this.doc;
-    if (!doc) return [];
-    const sel = store.state.selection;
-    const out: { a: { x: number; y: number; h: number }; b: { x: number; y: number; h: number }; hot: boolean }[] = [];
-    for (const w of doc.wires) {
-      const a = this.anchorOf(w.from.entity);
-      const b = this.anchorOf(w.to.entity);
-      if (a && b) out.push({ a, b, hot: sel.includes(w.from.entity) || sel.includes(w.to.entity) });
-    }
-    return out;
+    if (!doc || !store.state.view.wires) return [];
+    return wireShapes(doc.entities, doc.wires, store.state.selection);
   }
   /** Debug shapes for the overlay: patrol routes and view cones, trigger areas and solid things, light reach. */
   private aiGizmos(): Pick<Parameters<OverlayDrawer['draw']>[0], 'paths' | 'cones' | 'footprints' | 'lights'> {
@@ -757,6 +750,7 @@ export class ViewportController {
           store.set({ paused: true });
         },
         quit: () => store.stop(),
+        onLogicBreak: (text) => store.set({ paused: true, logicHit: { text } }),
         autoPlay,
         ...(project?.project.title?.enabled ? { title: { text: project.project.name, subtitle: project.project.title.subtitle } } : {}),
         flags: () => store.state.view,

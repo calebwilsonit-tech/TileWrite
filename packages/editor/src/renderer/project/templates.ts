@@ -66,7 +66,7 @@ function baseProject(name: string, packs?: string[]): ProjectData {
 }
 
 function sceneFrom(map: TileMap, entities: EntityData[]): SceneData {
-  return { schemaVersion: CURRENT_SCHEMA_VERSION, name: 'Main', map: tileMapToRows(map), entities, regions: [], wires: [], variables: [], events: [] };
+  return { schemaVersion: CURRENT_SCHEMA_VERSION, name: 'Main', map: tileMapToRows(map), entities, regions: [], wires: [], variables: [], events: [], graphs: [] };
 }
 
 /** Nothing at all: a flat field and a camera. No player, no rules, no packs. Every genre starts from here. */

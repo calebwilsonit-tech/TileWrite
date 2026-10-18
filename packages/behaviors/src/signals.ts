@@ -42,6 +42,17 @@ const MAX_PASSES = 8;
  * logic nodes react, and repeats until nothing changes, so chains like plate -> AND -> gate settle in one tick.
  */
 export function propagateSignals(ctx: SimContext): void {
+  // pulses sent by the "send a signal" action last two ticks, then go off again
+  const pulses = ctx.runtime.scratch.get('pulses') as { id: number; name: string; tick: number }[] | undefined;
+  if (pulses && pulses.length > 0) {
+    const keep = pulses.filter((p) => {
+      if (ctx.tick < p.tick + 2) return true;
+      const e = ctx.world.get(p.id);
+      if (e) setInput(e, p.name, false);
+      return false;
+    });
+    ctx.runtime.scratch.set('pulses', keep);
+  }
   const wires = ctx.runtime.wires;
   const logic = behaviorPhase('logic');
   if (wires.length === 0) {

@@ -12,6 +12,8 @@ import {
 } from '@tilewright/runtime';
 import { defineBehavior } from './framework';
 import { eventSheetSystem } from './events/sheet';
+import { graphSystem } from './events/graph';
+import { eventNodeSystem } from './builtins/nodes';
 import { cutsceneSystem, dialogueSystem, minigameSystem } from './story/director';
 import { quickSlotSystem } from './story/inventory';
 import { behaviorSystems } from './signals';
@@ -104,6 +106,8 @@ export function addStandardSystems(sim: Simulation, physics: (ctx: SimContext) =
   for (const s of behaviorSystems()) sim.addSystem(s.name, s.fn, 'gameplay');
   for (const s of packSystems()) sim.addSystem(s.name, s.fn, s.mode);
   sim.addSystem('event-sheet', eventSheetSystem, 'gameplay');
+  sim.addSystem('logic-graphs', graphSystem, 'gameplay');
+  sim.addSystem('event-nodes', eventNodeSystem, 'gameplay');
   sim.addSystem('physics', physics, 'gameplay');
   sim.addSystem('animation', animationSystem, 'gameplay');
 }

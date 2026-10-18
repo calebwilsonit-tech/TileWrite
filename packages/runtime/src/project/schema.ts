@@ -103,6 +103,8 @@ export const EventRowSchema = z.object({
   once: z.boolean().default(false),
   /** Loop: check the row once for each object matching this reference (like 	ag:enemy); picked then means that object. */
   forEach: z.string().default(''),
+  /** Stop the game when this row fires (in the editor, to look at what happened). */
+  breakpoint: z.boolean().default(false),
   /** Run the actions this many times each time the row fires. */
   repeat: z.number().int().min(1).max(100).default(1),
   conditions: z.array(EventConditionSchema).default([]),
@@ -112,6 +114,36 @@ export const EventRowSchema = z.object({
   },
 });
 export type EventRow = z.infer<typeof EventRowSchema>;
+
+/** One box of a logic graph: an event that starts a flow, an action, a branch, a loop, a delay or a call. */
+export const GraphNodeSchema = z.object({
+  id: z.string().min(1),
+  type: z.string().min(1),
+  x: z.number().default(0),
+  y: z.number().default(0),
+  params: z.record(z.string(), z.unknown()).default({}),
+  /** Stop the game when the flow reaches this box. */
+  breakpoint: z.boolean().default(false),
+  comment: z.string().default(''),
+});
+export type GraphNodeData = z.infer<typeof GraphNodeSchema>;
+
+/** A line from one box's output pin to another box's input. */
+export const GraphLinkSchema = z.object({
+  from: z.object({ node: z.string().min(1), pin: z.string().min(1) }),
+  to: z.object({ node: z.string().min(1), pin: z.string().default('in') }),
+});
+export type GraphLinkData = z.infer<typeof GraphLinkSchema>;
+
+/** A logic graph (the Blueprint-style level of the logic system). A graph with a "function" box is a reusable node other graphs can call. */
+export const GraphSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().default('Graph'),
+  enabled: z.boolean().default(true),
+  nodes: z.array(GraphNodeSchema).default([]),
+  links: z.array(GraphLinkSchema).default([]),
+});
+export type GraphData = z.infer<typeof GraphSchema>;
 export type EventCondition = z.infer<typeof EventConditionSchema>;
 export type EventAction = z.infer<typeof EventActionSchema>;
 
@@ -172,6 +204,8 @@ export const SceneSchema = z.object({
   variables: z.array(VariableSchema).default([]),
   /** The scene's event sheet. */
   events: z.array(EventRowSchema).default([]),
+  /** Logic graphs: the node-and-line view of the same actions and conditions (see docs/logic.md). */
+  graphs: z.array(GraphSchema).default([]),
   /** The rules that make this scene's map (see procgen/generate.ts); kept as plain data here and checked where it is used. */
   generator: z.record(z.string(), z.unknown()).optional(),
 });

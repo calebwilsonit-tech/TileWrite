@@ -76,6 +76,7 @@ export function newScene(name: string, width = 32, height = 32, tile = 1): Scene
     wires: [],
     variables: [],
     events: [],
+    graphs: [],
   };
 }
 
@@ -147,6 +148,7 @@ export function loadScene(sim: Simulation, scene: SceneData, opts: LoadOptions =
   }
   sim.runtime.wires = structuredClone(scene.wires);
   sim.runtime.sheet = structuredClone(scene.events);
+  sim.runtime.graphs = structuredClone(scene.graphs ?? []);
   const defaults = Object.fromEntries(scene.variables.map((v) => [v.name, v.value]));
   sim.runtime.vars = opts.travel ? { ...defaults, ...sim.runtime.vars } : defaults;
   sim.runtime.rowState = {};

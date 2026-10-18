@@ -127,7 +127,7 @@ describe('walking in and around blocks', () => {
     const scene = { schemaVersion: CURRENT_SCHEMA_VERSION, name: 'T', map: tileMapToRows(m), entities: [
       { id: 'a', name: 'Through', tags: [], components: { transform: { x: 3.5, y: 0.4, h: 0, facing: 2 }, body: { ...body } } },
       { id: 'b', name: 'Blocked', tags: [], components: { transform: { x: 5.5, y: 0.4, h: 0, facing: 2 }, body: { ...body } } },
-    ], regions: [], wires: [], variables: [], events: [] };
+    ], regions: [], wires: [], variables: [], events: [], graphs: [] };
     const ids = loadScene(sim, scene);
     const a = ids.get('a')!;
     const b = ids.get('b')!;

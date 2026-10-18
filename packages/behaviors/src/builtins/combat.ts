@@ -246,7 +246,7 @@ export const health = defineBehavior<Health>({
 
     if (st.hp <= 0 && !st.dead) {
       st.dead = true;
-      ctx.events.emit('died', { entity: e.id });
+      ctx.events.emit('died', { entity: e.id, tags: [...e.tags] });
       emitFx(ctx.runtime, { kind: 'burst', preset: 'puff', x: t.x, y: t.y, h: t.h });
       emitFx(ctx.runtime, { kind: 'sound', name: 'defeat' });
       if (s.onDeath === 'remove') {

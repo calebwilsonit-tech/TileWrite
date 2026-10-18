@@ -4,7 +4,7 @@
 
 An event sheet is a list of rows, each reading like a sentence: **when** its conditions hold, **do** its actions. Rows can have sub-events that run only while the row holds. Objects are chosen as "the player", "anything tagged ...", or a particular object. See [logic.md](logic.md).
 
-There are 27 conditions and 44 actions.
+There are 28 conditions and 47 actions.
 
 ## Conditions
 
@@ -129,6 +129,15 @@ Id: `near`.
 | First | `a` | entity | "player" |  |
 | Second | `b` | entity | (empty) |  |
 | Within (cells) | `cells` | number | 2 | at least 0.1 |
+
+#### Something happens to an object
+
+Id: `entityEvent`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Object | `who` | entity | (empty) |  |
+| What happens to it | `name` | select | "died" | `died`, `damaged`, `pickup`, `turn-start`, `turn-end`, `unit-moved`, `noticed`, `state-changed`, `hotspot-used`, `boss-defeated` |
 
 ### Story
 
@@ -345,6 +354,16 @@ Id: `setSignal`.
 | Signal it sends | `name` | signal | (empty) |  |
 | Turn it | `state` | select | "on" | `on`, `off`, `toggle` |
 
+#### Send a signal into an object (open a gate, start a timer...)
+
+Id: `sendSignal`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Object | `who` | entity | (empty) |  |
+| Signal it receives | `name` | signal | (empty) |  |
+| Turn it | `state` | select | "on" | `on`, `off`, `toggle`, `pulse` |
+
 #### Remove an object
 
 Id: `destroy`.
@@ -467,6 +486,20 @@ Id: `travel`.
 #### Save the game (autosave)
 
 Id: `saveGame`.
+
+No parameters.
+
+#### Load a saved game (continue)
+
+Id: `loadGame`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Save slot | `slot` | text | "autosave" |  |
+
+#### Quit the game
+
+Id: `quitGame`.
 
 No parameters.
 

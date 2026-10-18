@@ -7,6 +7,7 @@ import { SoundField } from './SoundField';
 import { CheckField, NumberField, SelectField, TextField } from './fields';
 import { StateMachineEditor } from './StateMachineEditor';
 import { BehaviorTreeEditor } from './BehaviorTreeEditor';
+import { ActionNodeEditor, EventNodeEditor } from './LogicEditors';
 
 type Edit = (label: string, fn: (x: EntityData) => void) => void;
 
@@ -78,7 +79,7 @@ function BehaviorCard({ entity, def, edit, prefabs }: { entity: EntityData; def:
         </button>
       </summary>
       <p className="hint">{def.description}</p>
-      {def.fields.map((f) => (
+      {def.fields.filter((f) => !f.showWhen || f.showWhen.is.includes(String(complete[f.showWhen.key] ?? ''))).map((f) => (
         <FieldView
           key={f.key}
           spec={f}
@@ -103,6 +104,8 @@ function BehaviorCard({ entity, def, edit, prefabs }: { entity: EntityData; def:
           }
         />
       )}
+      {def.editor === 'actionNode' && <ActionNodeEditor entity={entity} edit={edit} />}
+      {def.editor === 'eventNode' && <EventNodeEditor entity={entity} edit={edit} />}
       {def.editor === 'behaviorTree' && (
         <BehaviorTreeEditor
           tree={complete as unknown as BehaviorTree}

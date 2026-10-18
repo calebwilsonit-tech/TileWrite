@@ -29,7 +29,7 @@ function listAt(rows: Rows, path: number[]): Rows {
 }
 
 /** Everything the pickers need to know about the scene. */
-function useFacts(): {
+export function useFacts(): {
   entities: { id: string; name: string }[];
   tags: string[];
   variables: string[];
@@ -61,7 +61,7 @@ function useFacts(): {
   }, [doc, doc?.entities.length, doc?.events, doc?.variables, prefabs, store.tables]);
 }
 
-function ParamEditor({ spec, value, onChange, testId, facts, inLoop }: { spec: ParamSpec; value: unknown; onChange(v: unknown): void; testId: string; facts: ReturnType<typeof useFacts>; inLoop: boolean }) {
+export function ParamEditor({ spec, value, onChange, testId, facts, inLoop }: { spec: ParamSpec; value: unknown; onChange(v: unknown): void; testId: string; facts: ReturnType<typeof useFacts>; inLoop: boolean }) {
   switch (spec.type) {
     case 'number':
       return <NumberField testId={testId} label={spec.label} value={Number(value ?? 0)} min={spec.min} max={spec.max} step={spec.step ?? 1} onCommit={onChange} />;
@@ -124,7 +124,7 @@ function ParamEditor({ spec, value, onChange, testId, facts, inLoop }: { spec: P
   }
 }
 
-function CategorySelect({ items, testId, onPick, placeholder }: { items: { id: string; label: string; category: string }[]; testId: string; onPick(id: string): void; placeholder: string }) {
+export function CategorySelect({ items, testId, onPick, placeholder }: { items: { id: string; label: string; category: string }[]; testId: string; onPick(id: string): void; placeholder: string }) {
   const categories = [...new Set(items.map((i) => i.category))];
   return (
     <select
@@ -266,6 +266,7 @@ function RowCard({ row, path, update, facts, inLoop, names, newId }: { row: Even
         {row.conditions.length > 1 && (
           <SelectField<string> label="Conditions" value={row.mode} options={[{ value: 'all', label: 'all must hold (AND)' }, { value: 'any', label: 'any one is enough (OR)' }]} onChange={(v) => mutate('Change AND/OR', (r) => (r.mode = v as 'all' | 'any'))} />
         )}
+        <CheckField testId={`breakpoint-${row.id}`} label="Stop the game here when this row runs (debugging)" value={row.breakpoint} onChange={(v) => mutate('Toggle breakpoint', (r) => (r.breakpoint = v))} />
         <CheckField testId={`once-${row.id}`} label="Only the moment it becomes true" value={row.once} onChange={(v) => mutate('Toggle once', (r) => (r.once = v))} />
         <SelectField<string> testId={`foreach-${row.id}`} label="Repeat for" value={row.forEach} options={forEachOptions} onChange={(v) => mutate('Change loop', (r) => (r.forEach = v))} />
         <NumberField label="Run actions this many times" min={1} max={100} value={row.repeat} onCommit={(v) => mutate('Change repeat', (r) => (r.repeat = Math.max(1, Math.round(v))))} />

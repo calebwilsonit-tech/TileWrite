@@ -3,6 +3,7 @@ import { formatCrashReport } from '@tilewright/runtime';
 import { useApp, store } from '../app/store';
 import { viewportRef } from '../app/commands';
 import { validateScene, type Problem } from '../model/validate';
+import { applyFix } from '../model/logic-fix';
 import { storyVariables } from '../model/story-vars';
 import type { ProjectProblem } from '../project/check';
 import { studio, useStudio } from '../studio/store';
@@ -139,6 +140,11 @@ export function ProblemsPanel() {
                 {p.severity === 'error' ? '✕' : '!'}
               </span>
               <span className="msg">{p.message}</span>
+              {p.fix && (
+                <button data-testid="problem-quickfix" className="primary" onClick={() => store.doc && applyFix(store.doc, p.fix!)} title="Fix it with one click (you can undo it)">
+                  {p.fix.label}
+                </button>
+              )}
               {p.target && (
                 <button onClick={() => goTo(p)} title="Select it and show it in the viewport">
                   Go to

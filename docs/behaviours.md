@@ -4,13 +4,13 @@
 
 A behaviour is ready-made logic you add to an object in the Inspector (**Behaviours -> Add**). Its settings appear as fields; its signals can be joined to other objects with the Wire tool. Each behaviour has an id (the key under which it is saved) shown in `code`.
 
-There are 54 behaviours. Behaviours made by scripts (see [code-window.md](code-window.md)) appear in the same list under "Scripts".
+There are 57 behaviours. Behaviours made by scripts (see [code-window.md](code-window.md)) appear in the same list under "Scripts".
 
 - [AI](#ai) (Vision Cone, Chase, Patrol, Boss Phases, State Machine, Behaviour Tree)
 - [Combat](#combat) (Health, Damage on Touch, Melee Attack (quill), Dodge, Ranged Attack)
 - [Control schemes](#control-schemes) (Direct Control, Click to Move, Hotspot, Grid Cursor, Commandable Unit, RTS Control, Camera Rig, Builder)
 - [Light](#light) (Light, Light Resource (lantern fuel), Light Sensor, Growing Object)
-- [Logic](#logic) (Logic Gate)
+- [Logic](#logic) (Logic Gate, Event Node, Action Node, Clickable)
 - [Movement](#movement) (Grid Mover)
 - [Player](#player) (Echo Recorder)
 - [Puzzle](#puzzle) (Pressure Plate, Trigger Zone, Lever, Timer, Gate / Door, Pushable)
@@ -391,16 +391,61 @@ Sends: **Condition met** (`active`).
 
 ## Logic
 
+### Action Node
+
+Id: `actionNode`. Each update it combines signals.
+
+Does a list of actions (anything the event sheet can do: change a variable, open a gate, play a sound, go to another scene...) when its "Do it" signal turns on. "Done" pulses afterwards, so nodes can follow each other. "This object" in its actions means the node itself.
+
+| Setting | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Keep doing it every tick while the signal is on | `whileOn` | boolean | false |  |
+| Stop the game here when it runs (debugging) | `breakpoint` | boolean | false |  |
+
+Receives: **Do it** (`do`).
+
+Sends: **Done (one tick)** (`done`).
+
+### Clickable
+
+Id: `clickable`. Each update it makes signals.
+
+Reacts to the mouse (or a finger): "On click" pulses when the main button goes down over it, "On right-click" for the other button, and "While the pointer is over it" stays on while it hovers. Wire the pulses to anything, or use Quick actions in the Inspector.
+
+| Setting | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Area (cells wide and deep) | `size` | number | 1 | 0.5 to 20 |
+
+Sends: **Clicked** (`clicked`); **Right-clicked** (`rightClicked`); **Pointer is over it** (`hovered`).
+
+### Event Node
+
+Id: `eventNode`. Each update it makes signals.
+
+Watches for anything the event sheet can see (a variable reaching a number, the player coming near, a button being pressed, something happening in the game) and sends a signal. "Is true" stays on while the conditions hold; "Happened" is a short pulse the moment they become true. Wire it to gates, logic gates or action nodes.
+
+| Setting | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| It is true when | `mode` | select | "all" | `all`, `any` |
+| Stop the game here when it happens (debugging) | `breakpoint` | boolean | false |  |
+
+Sends: **Is true** (`on`); **Happened (one tick)** (`happened`).
+
 ### Logic Gate
 
 Id: `logic`. Each update it combines signals.
 
-Combines signals: AND, OR, NOT, XOR, a latch that remembers, a toggle, a delay, or a timed pulse. Place it in the world and wire things into it.
+Combines signals: AND, OR, NOT, XOR, a latch that remembers, a toggle, a delay, a timed pulse, a counter, a random chance or a variable check. Place it in the world and wire things into it.
 
 | Setting | Key | Kind | Starts as | Choices and notes |
 | --- | --- | --- | --- | --- |
-| Kind | `kind` | select | "and" | `and`, `or`, `not`, `xor`, `nand`, `nor`, `latch`, `toggle`, `delay`, `pulse` |
-| Seconds (delay / pulse) | `seconds` | number | 1 | 0 to 600 |
+| Kind | `kind` | select | "and" | `and`, `or`, `not`, `xor`, `nand`, `nor`, `latch`, `toggle`, `delay`, `pulse`, `counter`, `random`, `compare` |
+| Seconds | `seconds` | number | 1 | 0 to 600 |
+| How many times | `count` | number | 3 | 1 to 9999 |
+| Chance (%) | `chance` | number | 50 | 0 to 100 |
+| Variable | `variable` | text | (empty) |  |
+| It must be | `op` | select | ">=" | `=`, `!=`, `>`, `>=`, `<`, `<=` |
+| Value | `value` | text | "1" |  |
 
 Receives: **A** (`a`); **B** (`b`); **In (for NOT, toggle, delay, pulse)** (`in`); **Set (latch)** (`set`); **Reset (latch)** (`reset`).
 

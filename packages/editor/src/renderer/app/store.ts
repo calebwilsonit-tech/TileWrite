@@ -120,6 +120,8 @@ export interface ViewOptions {
   xray: boolean;
   /** Frame time and what is slow, while playing. */
   profiler: boolean;
+  /** Wires between objects, lit while the game plays. */
+  wires: boolean;
   ground: boolean;
   /** Tiles marked as walls. */
   walls: boolean;
@@ -177,6 +179,10 @@ export interface AppState {
   breakpoints: Record<string, number[]>;
   /** Set while the game is stopped at a breakpoint. */
   debugHit: { script: string; line: number } | null;
+  /** Set while the game is stopped at a breakpoint on an event row, node or graph box. */
+  logicHit: { text: string } | null;
+  /** The logic graph open in the Graph panel. */
+  graphId: string | null;
   /** The script the Code panel should show. */
   openScript: string | null;
   /** Saved playthroughs (recorded by playing or by the bot). */
@@ -214,7 +220,7 @@ const initial: AppState = {
     edge: 1,
     blockMode: 'add',
   },
-  view: { grid: true, collision: false, collisionLevel: null, heightLabels: false, triggers: false, ai: true, lights: false, depth: false, slice: 0, xray: false, profiler: false, ground: true, walls: true, objects: true, decoration: true, lightsLayer: true, regions: true },
+  view: { grid: true, collision: false, collisionLevel: null, heightLabels: false, triggers: false, ai: true, lights: false, depth: false, slice: 0, xray: false, profiler: false, wires: true, ground: true, walls: true, objects: true, decoration: true, lightsLayer: true, regions: true },
   locks: { ground: false, walls: false, objects: false, decoration: false, lightsLayer: false, regions: false },
   selection: [],
   selectedRegion: null,
@@ -235,6 +241,8 @@ const initial: AppState = {
   scriptProblems: [],
   breakpoints: {},
   debugHit: null,
+  logicHit: null,
+  graphId: null,
   openScript: null,
   playthroughs: [],
   botLog: [],
@@ -1264,13 +1272,13 @@ class AppStore {
 
   stop(): void {
     this.hitContext = null;
-    this.set({ mode: 'edit', paused: false, debugHit: null });
+    this.set({ mode: 'edit', paused: false, debugHit: null, logicHit: null });
   }
 
   togglePause(): void {
     if (this.state.mode === 'play') {
       this.hitContext = null;
-      this.set({ paused: !this.state.paused, debugHit: null });
+      this.set({ paused: !this.state.paused, debugHit: null, logicHit: null });
     }
   }
 
@@ -1306,7 +1314,7 @@ class AppStore {
   step(): void {
     if (this.state.mode !== 'play') return;
     this.stepToken++;
-    this.set({ paused: true, docVersion: this.state.docVersion });
+    this.set({ paused: true, logicHit: null, docVersion: this.state.docVersion });
   }
 }
 
