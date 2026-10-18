@@ -4,16 +4,18 @@
 
 A behaviour is ready-made logic you add to an object in the Inspector (**Behaviours -> Add**). Its settings appear as fields; its signals can be joined to other objects with the Wire tool. Each behaviour has an id (the key under which it is saved) shown in `code`.
 
-There are 37 behaviours. Behaviours made by scripts (see [code-window.md](code-window.md)) appear in the same list under "Scripts".
+There are 40 behaviours. Behaviours made by scripts (see [code-window.md](code-window.md)) appear in the same list under "Scripts".
 
 - [AI](#ai) (Vision Cone, Chase, Patrol, Boss Phases, State Machine, Behaviour Tree)
 - [Combat](#combat) (Health, Damage on Touch, Melee Attack (quill), Dodge, Ranged Attack)
 - [Light](#light) (Light, Light Resource (lantern fuel), Light Sensor, Growing Object)
 - [Logic](#logic) (Logic Gate)
+- [Movement](#movement) (Grid Mover)
 - [Player](#player) (Echo Recorder)
 - [Puzzle](#puzzle) (Pressure Plate, Trigger Zone, Lever, Timer, Gate / Door, Pushable)
 - [Story](#story) (NPC Talk, Sound Source, Minigame, Scene Portal, Cutscene Trigger, Lantern Post (checkpoint))
 - [Story puzzles](#story-puzzles) (Sentence Stone, Formattable Text Block)
+- [Turn-based](#turn-based) (Turn Taker, Unit AI)
 - [World](#world) (Spawner, Pickup, Moving Platform, Falling Floor, Projectile, Follow Camera)
 
 ## AI
@@ -289,6 +291,25 @@ Receives: **A** (`a`); **B** (`b`); **In (for NOT, toggle, delay, pulse)** (`in`
 
 Sends: **Out** (`out`).
 
+## Movement
+
+### Grid Mover
+
+Id: `gridMover`. Each update it reacts to signals (runs last).
+
+Moves an object cell by cell along a path, over stairs and heights, one step at a time (it never stops between cells). Turn-based units use it; so can a real-time game that moves on a grid. Orders come from the interface, a Unit AI, or the "Move a unit" action.
+
+| Setting | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Action points per cell | `moveCost` | number | 1 | at least 0 |
+| Walking speed (cells per second) | `speed` | number | 6 | at least 1 |
+| Highest step it can climb (levels) | `stepUp` | number | 1 | at least 0 |
+| Furthest it will step down (levels) | `maxDrop` | number | 2 | at least 0 |
+
+Sends: **Moving** (`moving`).
+
+Adds automatically: `body`.
+
 ## Player
 
 ### Echo Recorder
@@ -543,6 +564,37 @@ Receives: **Next word** (`next`, A rising signal swaps to the next word.).
 Sends: **Word 1 is chosen** (`word1`); **Word 2 is chosen** (`word2`); **Word 3 is chosen** (`word3`); **Word 4 is chosen** (`word4`).
 
 Adds automatically: `collider`.
+
+## Turn-based
+
+### Turn Taker
+
+Id: `turnTaker`. Each update it combines signals.
+
+Makes an object a unit in a turn-based battle: its team, its place in the order, its action points and how it attacks. Start the battle with the "Start a turn-based battle" action.
+
+| Setting | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Team | `team` | text | "blue" | Units with the same team are on the same side. |
+| Speed in the order (higher goes first) | `initiative` | number | 5 |  |
+| Action points each turn | `apMax` | number | 4 | at least 0 |
+| Attack range (cells) | `attackRange` | number | 1 | at least 1 |
+| Attack damage | `attackDamage` | number | 3 | at least 0 |
+| Action points an attack costs | `attackCost` | number | 2 | at least 0 |
+| Extra damage per level above the target | `heightBonus` | number | 1 |  |
+| End the turn when out of action points | `autoEnd` | boolean | true |  |
+
+### Unit AI
+
+Id: `unitAi`. Each update it brain.
+
+Plays the unit's turn by itself: it picks the best cell it can reach (close to an enemy, on higher ground, within attack range), attacks if it can, and ends its turn.
+
+| Setting | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Style | `style` | select | "rush" | `rush`, `cautious` |
+
+Adds automatically: `turnTaker`, `gridMover`.
 
 ## World
 

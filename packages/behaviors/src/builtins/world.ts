@@ -38,6 +38,7 @@ export interface Spawner {
 
 export const spawner = defineBehavior<Spawner>({
   id: 'spawner',
+  timing: 'realtime',
   name: 'Spawner',
   category: 'World',
   description: 'Creates copies of a prefab, on a timer and/or each time its Spawn signal turns on.',
@@ -182,6 +183,7 @@ export interface MovingPlatform {
 
 export const movingPlatform = defineBehavior<MovingPlatform>({
   id: 'movingPlatform',
+  timing: 'realtime',
   name: 'Moving Platform',
   category: 'World',
   description: 'A solid platform that travels back and forth and carries whatever stands on it.',
@@ -308,6 +310,7 @@ const FACING_DIRS: [number, number][] = [[1, -1], [1, 0], [1, 1], [0, 1], [-1, 1
 
 export const projectile = defineBehavior<Projectile>({
   id: 'projectile',
+  timing: 'realtime',
   name: 'Projectile',
   category: 'World',
   description: 'Flies in a straight line and disappears when it hits a wall or a solid object (or runs out of time), announcing the hit.',

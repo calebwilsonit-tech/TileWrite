@@ -252,6 +252,7 @@ function enter(ctx: SimContext, e: Entity, m: StateMachine, rt: MachineRuntime, 
 
 export const stateMachine = defineBehavior<StateMachine>({
   id: 'stateMachine',
+  timing: 'realtime',
   name: 'State Machine',
   category: 'AI',
   description:

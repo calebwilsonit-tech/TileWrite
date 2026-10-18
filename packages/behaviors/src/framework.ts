@@ -40,6 +40,8 @@ export interface BehaviorDef<S extends object = Record<string, unknown>> {
   hidden?: boolean;
   /** Only carries settings (a custom component): there is nothing to run each tick. */
   dataOnly?: boolean;
+  /** `realtime` behaviours move things by themselves (patrols, chases, projectiles) and stop while the clock is in turn mode; the default runs always. */
+  timing?: 'realtime' | 'always';
   defaults: S;
   fields: FieldSpec[];
   inputs: SignalSpec[];
@@ -142,6 +144,7 @@ export function behaviorPhase(phase: Phase): System {
       const prof = ctx.profiler;
       for (const e of ctx.world.query(def.id)) {
         if (!e.alive) continue;
+        if (def.timing === 'realtime' && ctx.runtime.clock.mode === 'turns') continue; // by-turns: only what the turn system commands moves
         if (def.phase !== 'brain' && e.get<{ off: string[] }>('state:machineGate')?.off.includes(def.id)) continue; // a state machine has switched this behaviour off for now
         try {
           if (prof?.enabled) prof.behaviour(def.name, () => def.update(ctx, e, settingsOf(e, def)));

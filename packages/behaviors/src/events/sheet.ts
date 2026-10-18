@@ -11,6 +11,8 @@ import {
   minigameWon,
   C,
   evalValue,
+  setClockMode,
+  setClockSpeed,
   expandEntities,
   fillValues,
   resolveValue,
@@ -49,6 +51,11 @@ export function resolveRef(ctx: SimContext, ref: Ref, picked?: Entity): Entity[]
   if (!ref) return [];
   if (ref === 'picked' || ref === 'self') return picked && picked.alive ? [picked] : [];
   if (ref === 'player') return ctx.world.withTag('player');
+  if (ref === 'turn') {
+    const t = ctx.runtime.turns;
+    const e = t.active ? ctx.world.get(t.order[t.index] ?? -1) : undefined;
+    return e ? [e] : [];
+  }
   const [kind, ...rest] = ref.split(':');
   const value = rest.join(':');
   if (kind === 'id') {
@@ -69,6 +76,7 @@ export function describeRef(ref: Ref, names?: Names): string {
   if (!ref) return 'nothing chosen';
   if (ref === 'picked') return 'the picked object';
   if (ref === 'self') return 'this object';
+  if (ref === 'turn') return 'the unit whose turn it is';
   if (ref === 'player') return 'the player';
   const [kind, ...rest] = ref.split(':');
   const value = rest.join(':');
@@ -184,6 +192,14 @@ export const CONDITIONS: ConditionDef[] = [
     params: [{ key: 'seconds', label: 'Seconds', type: 'number', default: 2, min: 0.1, step: 0.1 }],
     describe: (p) => `every ${num(p, 'seconds', 2)} seconds`,
     test: (ctx, p) => ctx.tick > 0 && ctx.tick % Math.max(1, Math.round(num(p, 'seconds', 2) * 60)) === 0,
+  },
+  {
+    id: 'clockIs',
+    label: 'The game clock is',
+    category: 'Time',
+    params: [{ key: 'mode', label: 'Mode', type: 'select', default: 'paused', options: [{ value: 'realtime', label: 'running in real time' }, { value: 'paused', label: 'paused' }, { value: 'turns', label: 'turn-based' }] }],
+    describe: (p) => `the game is ${str(p, 'mode') === 'turns' ? 'turn-based' : str(p, 'mode') === 'paused' ? 'paused' : 'running in real time'}`,
+    test: (ctx, p) => ctx.runtime.clock.mode === str(p, 'mode'),
   },
   {
     id: 'chance',
@@ -503,6 +519,20 @@ export const ACTIONS: ActionDef[] = [
         default:
           ctx.runtime.vars[name] = v;
       }
+    },
+  },
+  {
+    id: 'setClock',
+    label: 'Pause or resume the game, or change its speed',
+    category: 'Time',
+    params: [
+      { key: 'mode', label: 'Clock', type: 'select', default: 'realtime', options: [{ value: 'realtime', label: 'run in real time' }, { value: 'paused', label: 'pause' }, { value: 'turns', label: 'go by turns' }] },
+      { key: 'speed', label: 'Speed', type: 'select', default: '1', options: [{ value: '1', label: 'Normal (1x)' }, { value: '2', label: 'Fast (2x)' }, { value: '4', label: 'Faster (4x)' }, { value: '8', label: 'Fastest (8x)' }] },
+    ],
+    describe: (p) => `${str(p, 'mode') === 'paused' ? 'pause the game' : str(p, 'mode') === 'turns' ? 'switch to turn-based time' : `run the game at ${str(p, 'speed') || '1'}x`}`,
+    run(ctx, p) {
+      setClockMode(ctx.runtime.clock, str(p, 'mode') === 'paused' ? 'paused' : str(p, 'mode') === 'turns' ? 'turns' : 'realtime');
+      setClockSpeed(ctx.runtime.clock, Number(str(p, 'speed') || 1));
     },
   },
   {

@@ -273,6 +273,7 @@ interface ChaseState {
 
 export const chase = defineBehavior<Chase>({
   id: 'chase',
+  timing: 'realtime',
   name: 'Chase',
   category: 'AI',
   description:
@@ -391,6 +392,7 @@ interface PatrolState {
 
 export const patrol = defineBehavior<Patrol>({
   id: 'patrol',
+  timing: 'realtime',
   name: 'Patrol',
   category: 'AI',
   description: 'Walks between waypoints, pausing at each. Draw the route with the Patrol path tool. It stays out of the way while Chase is steering.',
@@ -468,6 +470,7 @@ interface BossState {
 
 export const bossPhases = defineBehavior<BossPhases>({
   id: 'bossPhases',
+  timing: 'realtime',
   name: 'Boss Phases',
   category: 'AI',
   description:

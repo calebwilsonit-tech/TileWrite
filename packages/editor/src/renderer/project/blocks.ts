@@ -28,7 +28,7 @@ const json = (v: unknown): string => JSON.stringify(v, null, 2) + '\n';
 async function loadFolder<S extends z.ZodTypeAny>(fs: AssetFs, dir: string, folder: string, ext: string, schema: S, what: string): Promise<{ items: z.output<S>[]; problems: string[] }> {
   const items: z.output<S>[] = [];
   const problems: string[] = [];
-  let entries: { name: string; dir: boolean }[] = [];
+  let entries: { name: string; dir: boolean }[];
   try {
     entries = await fs.list(joinPath(dir, folder));
   } catch {

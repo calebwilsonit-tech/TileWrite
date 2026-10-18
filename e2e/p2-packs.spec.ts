@@ -24,7 +24,7 @@ test('Phase 2: a new empty project has no player, no rules and no packs; it stil
   // the Packs tab lists the engine's parts, all off; switch one on
   await page.getByTestId('btn-project-settings').click();
   await page.getByTestId('ps-tab-packs').click();
-  for (const id of ['combat', 'inventory', 'story', 'ai', 'lighting', 'storytender']) await expect(page.getByTestId(`pack-toggle-${id}`)).not.toBeChecked();
+  for (const id of ['combat', 'inventory', 'story', 'ai', 'lighting', 'storytender', 'turns']) await expect(page.getByTestId(`pack-toggle-${id}`)).not.toBeChecked();
   await page.getByTestId('pack-toggle-storytender').click();
   await expect(page.getByTestId('pack-toggle-storytender')).toBeChecked();
   await expect(page.getByTestId('pack-toggle-lighting')).toBeChecked(); // it needs lighting

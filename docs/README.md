@@ -14,6 +14,7 @@ Start with the tutorial in the app (the project screen's **Take the tutorial** b
 | Conversations, cutscenes, items, saves, menus | [story-systems.md](story-systems.md) |
 | What the engine assumes about games, and what is changing (phase 2) | [genre_audit.md](genre_audit.md) |
 | Your own tables, components, behaviours and events, with no code | [data-and-blocks.md](data-and-blocks.md) |
+| Real time, speed-up and turn-based play | [time-and-turns.md](time-and-turns.md) |
 | Packs and the plugin API | [packs-and-plugins.md](packs-and-plugins.md) |
 | Title screen, project settings, controls, HUD layout and theme | [interface-and-controls.md](interface-and-controls.md) |
 | Translate the game, player settings (zoom, full screen, language) | [translations-and-settings.md](translations-and-settings.md) |

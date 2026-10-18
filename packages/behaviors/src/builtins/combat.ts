@@ -314,6 +314,7 @@ export interface DamageOnTouch {
 
 export const damageOnTouch = defineBehavior<DamageOnTouch>({
   id: 'damageOnTouch',
+  timing: 'realtime',
   name: 'Damage on Touch',
   category: 'Combat',
   description: 'Hurts anything that is close enough and has Health: enemies that bump into you, spikes, lava, projectiles.',
@@ -395,6 +396,7 @@ export function swingHits(attacker: TransformIso, targetX: number, targetY: numb
 
 export const meleeAttack = defineBehavior<MeleeAttack>({
   id: 'meleeAttack',
+  timing: 'realtime',
   name: 'Melee Attack (quill)',
   category: 'Combat',
   description: 'Press the Attack button (J) to swing in the direction you face, hurting enemies in front of you. A short wind-up and recovery keep it fair.',
@@ -490,6 +492,7 @@ export interface Dodge {
 
 export const dodge = defineBehavior<Dodge>({
   id: 'dodge',
+  timing: 'realtime',
   name: 'Dodge',
   category: 'Combat',
   description: 'Press the Dodge button for a quick burst of movement in the direction you are moving (or facing). You cannot be hurt while dodging.',

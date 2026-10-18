@@ -97,6 +97,7 @@ function fire(ctx: SimContext, e: Entity, s: RangedAttack, dx: number, dy: numbe
 
 export const rangedAttack = defineBehavior<RangedAttack>({
   id: 'rangedAttack',
+  timing: 'realtime',
   name: 'Ranged Attack',
   category: 'Combat',
   description:

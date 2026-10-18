@@ -74,6 +74,7 @@ function ParamEditor({ spec, value, onChange, testId, facts, inLoop }: { spec: P
         { value: 'player', label: 'The player' },
         ...(inLoop ? [{ value: 'picked', label: 'The picked object (from "for each")' }] : []),
         { value: 'self', label: 'This object (inside a custom behaviour)' },
+        { value: 'turn', label: 'The unit whose turn it is' },
         ...facts.tags.map((t) => ({ value: `tag:${t}`, label: `Anything tagged “${t}”` })),
         ...facts.entities.map((e) => ({ value: `id:${e.id}`, label: e.name })),
       ];

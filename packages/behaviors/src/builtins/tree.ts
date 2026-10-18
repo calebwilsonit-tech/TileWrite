@@ -593,6 +593,7 @@ function run(r: Run, id: string, depth: number): Result {
 
 export const behaviorTree = defineBehavior<BehaviorTree>({
   id: 'behaviorTree',
+  timing: 'realtime',
   name: 'Behaviour Tree',
   category: 'AI',
   description:

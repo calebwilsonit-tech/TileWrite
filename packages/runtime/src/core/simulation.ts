@@ -15,6 +15,7 @@ import type { WorldMapData } from '../story/worldmap';
 import type { TableData } from '../data/tables';
 import type { TileMap } from '../tilemap/tilemap';
 import { EventBus } from './events';
+import { newClock, type SceneClock } from './clock';
 import { Profiler, SystemError } from './profiler';
 import { Rng } from './rng';
 import { TICK_DT } from './timestep';
@@ -90,7 +91,31 @@ export interface SceneRuntime {
   hitStop: number;
   /** Pictures and sounds for the host to show (sparks, dust, a sound or music change). Never read by game logic. */
   fx: FxEvent[];
+  /** How game time passes: real time (at some speed), paused, or by turns. */
+  clock: SceneClock;
+  /** The turn queue while the clock is in turn mode (see the behaviours package, turns). Plain data so it saves and replays. */
+  turns: TurnState;
 }
+
+/** Whose turn it is. `order` lists entity ids by initiative; `index` is the unit acting now. */
+export interface TurnState {
+  /** The turn system is running (a battle has begun). */
+  active: boolean;
+  order: number[];
+  index: number;
+  /** Completed rounds (a round is every unit having had its turn). */
+  round: number;
+  /** Action points left, by entity id. */
+  ap: Record<number, number>;
+  /** 'start': the unit is about to act; 'acting': waiting for it to finish; 'between': a short pause so moves can be seen. */
+  phase: 'start' | 'acting' | 'between';
+  /** Ticks left in the 'between' pause. */
+  wait: number;
+  /** Which team won, when a battle has ended ('' while it goes on). */
+  winner: string;
+}
+
+export const newTurnState = (): TurnState => ({ active: false, order: [], index: 0, round: 0, ap: {}, phase: 'start', wait: 0, winner: '' });
 
 /** A cosmetic request from a behaviour or event row. The host (editor, exported game, or nobody in a headless run) shows it. */
 export type FxEvent =
@@ -173,6 +198,8 @@ export function newSceneRuntime(): SceneRuntime {
     persistentIds: [],
     hitStop: 0,
     fx: [],
+    clock: newClock(),
+    turns: newTurnState(),
   };
 }
 
@@ -210,7 +237,7 @@ export class Simulation {
   /** Which kind of tick this is, from what is on screen. */
   get modal(): Modal {
     const r = this.runtime;
-    if (r.menuOpen || r.dialogue || r.minigame) return 'freeze';
+    if (r.menuOpen || r.dialogue || r.minigame || r.clock.mode === 'paused') return 'freeze';
     if (r.cutscene) return 'scripted';
     return 'none';
   }
@@ -231,6 +258,8 @@ export class Simulation {
       gameplay = {};
       for (const [k, v] of Object.entries(snapshot)) if (!this.suppressed.has(k)) gameplay[k] = v;
     }
+    // game time passes only while the world is really moving (not paused, not turn-based, not frozen by a conversation)
+    if (modal !== 'freeze' && this.runtime.clock.mode === 'realtime') this.runtime.clock.elapsed++;
     this.input.update(gameplay);
     this.uiInput.update(snapshot);
     this.events.beginTick();
@@ -281,6 +310,8 @@ export class Simulation {
       r.minigame,
       r.cutscene,
       r.checkpoint,
+      r.clock,
+      r.turns,
       this.world.all().map((e) => [e.id, e.name, [...e.tags].sort(), [...e.components.entries()]]),
     ]);
     let h = 0x811c9dc5;

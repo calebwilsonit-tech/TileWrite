@@ -70,7 +70,9 @@ export class GameRunner {
             this.holdTicks--; // hit-stop: the world holds still for a few frames (the picture, sparks and shake carry on)
             continue;
           }
-          this.stepOnce();
+          // a sped-up clock runs several simulation ticks for each real one
+          const speed = this.o.sim.runtime.clock.mode === 'realtime' ? this.o.sim.runtime.clock.speed : 1;
+          for (let s = 0; s < speed && !this.paused; s++) this.stepOnce();
         }
       }
       this.draw();

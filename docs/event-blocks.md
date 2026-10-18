@@ -4,7 +4,7 @@
 
 An event sheet is a list of rows, each reading like a sentence: **when** its conditions hold, **do** its actions. Rows can have sub-events that run only while the row holds. Objects are chosen as "the player", "anything tagged ...", or a particular object. See [logic.md](logic.md).
 
-There are 19 conditions and 28 actions.
+There are 23 conditions and 35 actions.
 
 ## Conditions
 
@@ -47,6 +47,16 @@ Id: `onEvent`.
 | Parameter | Key | Kind | Starts as | Choices and notes |
 | --- | --- | --- | --- | --- |
 | What happens | `name` | select | "pickup" | `pickup`, `pushed`, `landed`, `fell`, `floor-fell`, `projectile-hit`, `spawned`, `anim-event`, `damaged`, `died`, `attack`, `dodge`, `noticed`, `lost`, `state-changed`, `boss-phase`, `boss-defeated`, `echo-made`, `sentence-changed`, `text-formatted`, `dialogue-started`, `dialogue-ended`, `minigame-started`, `minigame-ended`, `cutscene-started`, `cutscene-ended`, `lantern-lit`, `rested`, `item-given`, `portal` |
+
+### Time
+
+#### The game clock is
+
+Id: `clockIs`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Mode | `mode` | select | "paused" | `realtime`, `paused`, `turns` |
 
 ### Variables
 
@@ -188,6 +198,32 @@ Id: `textIs`.
 | Which text block | `block` | entity | (empty) |  |
 | Formatting | `format` | select | "underline" | `plain`, `underline`, `bold`, `italic` |
 
+### Turn-based
+
+#### It is a unit's turn
+
+Id: `turnOf`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Unit | `who` | entity | "tag:unit" |  |
+
+#### It is a team's turn
+
+Id: `teamTurn`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Team | `team` | text | "blue" |  |
+
+#### A battle has been won
+
+Id: `battleWon`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| By team (empty for any) | `team` | text | (empty) |  |
+
 ## Actions
 
 What a row does.
@@ -211,6 +247,17 @@ Id: `addLight`.
 | Parameter | Key | Kind | Starts as | Choices and notes |
 | --- | --- | --- | --- | --- |
 | Amount (negative takes light away; 0 fills it up) | `amount` | number | 0 |  |
+
+### Time
+
+#### Pause or resume the game, or change its speed
+
+Id: `setClock`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Clock | `mode` | select | "realtime" | `realtime`, `paused`, `turns` |
+| Speed | `speed` | select | "1" | `1`, `2`, `4`, `8` |
 
 ### Objects
 
@@ -452,3 +499,50 @@ Id: `formatText`.
 Id: `clearEchoes`.
 
 No parameters.
+
+### Turn-based
+
+#### Start a turn-based battle
+
+Id: `startBattle`.
+
+No parameters.
+
+#### End the current turn
+
+Id: `endTurn`.
+
+No parameters.
+
+#### End the battle (back to real time)
+
+Id: `endBattle`.
+
+No parameters.
+
+#### Change action points
+
+Id: `setAp`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Unit | `who` | entity | "turn" |  |
+| Add (negative to take away) | `amount` | number | 1 |  |
+
+#### Move a unit to a cell
+
+Id: `moveUnit`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Unit | `who` | entity | "turn" |  |
+| Cell across | `x` | number | 0 |  |
+| Cell down | `y` | number | 0 |  |
+
+#### Make a unit attack the nearest enemy in range
+
+Id: `attackNearest`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Unit | `who` | entity | "turn" |  |

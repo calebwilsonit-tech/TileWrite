@@ -28,7 +28,7 @@ describe('packs', () => {
     expect(getBehavior('health')).toBeDefined();
     expect(conditionDef('stoneSays')).toBeDefined();
     expect(actionDef('damage')).toBeDefined();
-    expect(activePackIds().sort()).toEqual(['ai', 'combat', 'inventory', 'lighting', 'story', 'storytender']);
+    expect(activePackIds().sort()).toEqual(['ai', 'combat', 'inventory', 'lighting', 'story', 'storytender', 'turns']);
   });
 
   it('an empty list turns every optional part off, leaving only the core', () => {

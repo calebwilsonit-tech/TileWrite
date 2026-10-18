@@ -33,7 +33,8 @@ export function makePlayerController(partial: Partial<PlayerController> = {}): P
 }
 
 /** 8-direction movement from the move_* actions, plus run and jump. Replaced by the behaviour framework in M5. */
-export function playerControllerSystem({ world, input }: SimContext): void {
+export function playerControllerSystem({ world, input, runtime }: SimContext): void {
+  if (runtime.clock.mode === 'turns') return; // by turns, units move when the turn system says so
   for (const e of world.query(C.Transform, C.Body, PLAYER_CONTROLLER)) {
     driveBody(e.require<PlayerController>(PLAYER_CONTROLLER), e.require<Body>(C.Body), e.require<TransformIso>(C.Transform), input);
   }
@@ -50,6 +51,16 @@ export function driveBody(cfg: PlayerController, b: Body, t: TransformIso, input
   if (cfg.jumpSpeed > 0 && input.pressed('jump')) jumpBody(b, cfg.jumpSpeed);
 }
 
+/** By turns, nothing coasts: bodies that were moving when the clock went to turn mode stop (only commanded moves happen). */
+export function turnClockGuard({ world, runtime }: SimContext): void {
+  if (runtime.clock.mode !== 'turns') return;
+  for (const e of world.query(C.Body)) {
+    const b = e.require<Body>(C.Body);
+    b.vx = 0;
+    b.vy = 0;
+  }
+}
+
 /**
  * Add the engine's standard systems in the right order: the player controller, the behaviour phases
  * (control, sources, wires and logic, actuators), the event sheet, then physics and animation.
@@ -59,6 +70,7 @@ export function addStandardSystems(sim: Simulation, physics: (ctx: SimContext) =
   sim.addSystem('dialogue', dialogueSystem, 'always');
   sim.addSystem('minigame', minigameSystem, 'always');
   sim.addSystem('cutscene', cutsceneSystem, 'always');
+  sim.addSystem('clock-guard', turnClockGuard, 'gameplay');
   sim.addSystem('player-controller', playerControllerSystem, 'player');
   sim.addSystem('quick-slots', quickSlotSystem, 'player');
   for (const s of behaviorSystems()) sim.addSystem(s.name, s.fn, 'gameplay');

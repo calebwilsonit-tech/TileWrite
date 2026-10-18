@@ -42,3 +42,4 @@ export * from './data/custom';
 export * from './ui/layout';
 export * from './core/profiler';
 export * from './core/crash';
+export * from './core/clock';
