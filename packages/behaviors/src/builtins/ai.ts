@@ -98,8 +98,10 @@ export function steerTo(ctx: SimContext, e: Entity, goal: Cell2, speed: number, 
       nav.path = [{ x: goal.x, y: goal.y }];
       nav.failed = false;
     } else {
-      const p = findPath(ctx.map, t, goal, { ...opts, diagonal: false });
+      // a walker that cannot get there gives up looking early, and looks again only after a while (so a crowd with no way is cheap)
+      const p = findPath(ctx.map, t, goal, { ...opts, diagonal: false, maxNodes: 6000 });
       nav.failed = p === null;
+      if (p === null) nav.repath = 2;
       nav.path = p ?? [];
       if (p && p.length > 0) p[p.length - 1] = { x: goal.x, y: goal.y };
     }

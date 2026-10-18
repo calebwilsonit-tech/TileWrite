@@ -2,6 +2,7 @@ import {
   C,
   timeOfDay,
   type Body,
+  type Collider,
   type Entity,
   type SimContext,
   type TableRow,
@@ -435,14 +436,23 @@ export const utilityAgent = behaviorDef<UtilityAgent>({
         return;
       }
       const tt = target.require<TransformIso>(C.Transform);
-      if (Math.hypot(tt.x - t.x, tt.y - t.y) < 1.4) {
+      // a building is solid: the villager goes to its doorstep (a point just outside it, on the side it comes from) and works from there
+      const tc = target.get<Collider>(C.Collider);
+      const half = tc && tc.solid && tc.enabled ? Math.max(tc.w, tc.d) / 2 : 0;
+      if (Math.hypot(tt.x - t.x, tt.y - t.y) < Math.max(1.4, half + 1.1)) {
         st.phase = 'doing';
         st.left = Number(row(st.activity)?.seconds ?? 3);
         if (b) b.vx = b.vy = 0;
         return;
       }
-      const r = steerTo(ctx, e, { x: tt.x, y: tt.y }, s.speed, st.nav, 1.2);
-      if (r === 'stuck') st.phase = 'choosing';
+      const away = Math.hypot(t.x - tt.x, t.y - tt.y) || 1;
+      const door = half > 0 ? { x: tt.x + ((t.x - tt.x) / away) * (half + 0.8), y: tt.y + ((t.y - tt.y) / away) * (half + 0.8) } : { x: tt.x, y: tt.y };
+      const r = steerTo(ctx, e, door, s.speed, st.nav, 0.6);
+      if (r === 'arrived') {
+        st.phase = 'doing';
+        st.left = Number(row(st.activity)?.seconds ?? 3);
+        if (b) b.vx = b.vy = 0;
+      } else if (r === 'stuck') st.phase = 'choosing';
       return;
     }
     // choosing: a fresh look every half second

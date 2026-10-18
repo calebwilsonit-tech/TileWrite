@@ -266,3 +266,20 @@ describe('cellular automata', () => {
     expect(dirty.length).toBeGreaterThan(0);
   });
 });
+
+describe('villagers and solid buildings', () => {
+  it('walk to the doorstep of a farm they cannot enter, work there, and the work is paid', async () => {
+    const { TableSchema } = await import('@tilewright/runtime');
+    const { flatScene, rig, thing } = await import('./testing');
+    const { scene } = flatScene(40, 40);
+    scene.entities.push({ ...thing('f', 'Farm', 20.5, 20.5, {}, { collider: { w: 1.8, d: 1.8, height: 1, solid: true, trigger: false, layer: 16, mask: 65535, enabled: true, inside: [] } }), tags: ['farm'] });
+    scene.entities.push(thing('v', 'Villager', 3.5, 3.5, { utilityAgent: { table: 'Activities', needs: 'hunger:0.1', speed: 4 } }));
+    const r = rig(scene);
+    r.sim.assets.tables.set('Activities', TableSchema.parse({ name: 'Activities', columns: [{ id: 'target', type: 'text' }, { id: 'seconds', type: 'number' }, { id: 'weight', type: 'number' }, { id: 'when', type: 'text' }, { id: 'makes', type: 'text' }], rows: [{ id: 'tend', target: 'farm', seconds: 2, weight: 30, when: 'any', makes: 'food:1' }] }));
+    let done = 0;
+    r.sim.events.on('activity-done', () => void done++);
+    r.run(60 * 25);
+    expect(done).toBeGreaterThan(0);
+    expect(Number(r.sim.runtime.vars.food)).toBe(done);
+  });
+});
