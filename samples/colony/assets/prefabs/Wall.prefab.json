@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "name": "Wall",
+  "root": {
+    "name": "Wall",
+    "tags": [
+      "building"
+    ],
+    "children": [],
+    "components": {
+      "transform": {
+        "x": 0,
+        "y": 0,
+        "h": 0,
+        "facing": 2
+      },
+      "sprite": {
+        "shape": "box",
+        "color": 8947848,
+        "w": 1,
+        "d": 1,
+        "height": 1.5,
+        "sortOffset": 0,
+        "visible": true
+      },
+      "collider": {
+        "w": 0.95,
+        "d": 0.95,
+        "height": 1.5,
+        "solid": true,
+        "trigger": false,
+        "layer": 16,
+        "mask": 65535,
+        "enabled": true,
+        "inside": []
+      }
+    }
+  }
+}

@@ -38,7 +38,7 @@ describe('resources and production', () => {
     const stalled = rig(flatScene().scene);
     stalled.sim.world.spawn({ name: 'Mill', components: { producer: { makes: 'flour:1', uses: 'grain:2', seconds: 1, enabled: true }, signals: { inputs: {}, outputs: {} } } });
     stalled.run(200);
-    expect(stalled.sim.runtime.vars.flour).toBeUndefined();
+    expect(stalled.sim.runtime.vars.flour).toBe(0); // it never made any: the resource exists, at zero
     expect(stalled.sim.world.all()[0]!.get<{ outputs: Record<string, boolean> }>('signals')!.outputs.blocked).toBe(true);
   });
 

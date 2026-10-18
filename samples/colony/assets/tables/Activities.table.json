@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "name": "Activities",
+  "description": "",
+  "columns": [
+    {
+      "id": "name",
+      "label": "Name",
+      "type": "text",
+      "options": [],
+      "table": ""
+    },
+    {
+      "id": "need",
+      "label": "need",
+      "type": "text",
+      "options": [],
+      "table": ""
+    },
+    {
+      "id": "gain",
+      "label": "gain",
+      "type": "number",
+      "options": [],
+      "table": ""
+    },
+    {
+      "id": "target",
+      "label": "target",
+      "type": "text",
+      "options": [],
+      "table": ""
+    },
+    {
+      "id": "seconds",
+      "label": "seconds",
+      "type": "number",
+      "options": [],
+      "table": ""
+    },
+    {
+      "id": "weight",
+      "label": "weight",
+      "type": "number",
+      "options": [],
+      "table": ""
+    },
+    {
+      "id": "when",
+      "label": "when",
+      "type": "text",
+      "options": [],
+      "table": ""
+    },
+    {
+      "id": "makes",
+      "label": "makes",
+      "type": "text",
+      "options": [],
+      "table": ""
+    }
+  ],
+  "rows": [
+    {
+      "id": "tend",
+      "name": "",
+      "need": "",
+      "gain": 0,
+      "target": "farm",
+      "seconds": 3,
+      "weight": 30,
+      "when": "any",
+      "makes": "food:1"
+    },
+    {
+      "id": "trade",
+      "name": "",
+      "need": "",
+      "gain": 0,
+      "target": "market",
+      "seconds": 3,
+      "weight": 25,
+      "when": "any",
+      "makes": "gold:2"
+    }
+  ]
+}

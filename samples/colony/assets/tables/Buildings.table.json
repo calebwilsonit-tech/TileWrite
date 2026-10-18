@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "name": "Buildings",
+  "description": "",
+  "columns": [
+    {
+      "id": "name",
+      "label": "",
+      "type": "text",
+      "options": [],
+      "table": ""
+    },
+    {
+      "id": "prefab",
+      "label": "",
+      "type": "prefab",
+      "options": [],
+      "table": ""
+    },
+    {
+      "id": "w",
+      "label": "",
+      "type": "number",
+      "options": [],
+      "table": ""
+    },
+    {
+      "id": "d",
+      "label": "",
+      "type": "number",
+      "options": [],
+      "table": ""
+    },
+    {
+      "id": "cost",
+      "label": "",
+      "type": "number",
+      "options": [],
+      "table": ""
+    }
+  ],
+  "rows": [
+    {
+      "id": "house",
+      "name": "House",
+      "prefab": "House",
+      "w": 2,
+      "d": 3,
+      "cost": 30
+    },
+    {
+      "id": "wall",
+      "name": "Wall",
+      "prefab": "Wall",
+      "w": 1,
+      "d": 1,
+      "cost": 2
+    },
+    {
+      "id": "farm",
+      "name": "Farm",
+      "prefab": "Farm",
+      "w": 2,
+      "d": 2,
+      "cost": 20
+    },
+    {
+      "id": "market",
+      "name": "Market",
+      "prefab": "Market",
+      "w": 2,
+      "d": 2,
+      "cost": 40
+    }
+  ]
+}

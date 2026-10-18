@@ -1,3 +1,4 @@
+import { fillValues } from '@tilewright/runtime';
 import { builder, cameraRig, clickToMove, commandable, giveOrder, gridCursor, hotspot, rtsControl, useHotspot, type Order } from '../builtins/controls';
 import { resolveRef, type ActionDef, type ConditionDef } from '../events/sheet';
 import { registerPack, type Pack } from '../packs';
@@ -42,7 +43,8 @@ const actions: ActionDef[] = [
     category: 'Control schemes',
     params: [{ key: 'row', label: 'Row of the buildings table (empty to put it away)', type: 'text', default: '' }],
     describe: (p) => (String(p.row ?? '') ? `choose the building "${String(p.row)}" to place` : 'put the building away'),
-    run: (ctx, p) => void (ctx.runtime.vars['build.selected'] = String(p.row ?? '')),
+    // a list of buildings passes the row it is showing: {row.id}
+    run: (ctx, p) => void (ctx.runtime.vars['build.selected'] = fillValues(String(p.row ?? ''), { vars: ctx.runtime.vars, tables: ctx.assets.tables, world: ctx.world })),
   },
   {
     id: 'setVerb',

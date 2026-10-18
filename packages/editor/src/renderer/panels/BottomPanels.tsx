@@ -4,7 +4,7 @@ import { useApp, store } from '../app/store';
 import { viewportRef } from '../app/commands';
 import { validateScene, type Problem } from '../model/validate';
 import { applyFix } from '../model/logic-fix';
-import { storyVariables } from '../model/story-vars';
+import { knownVariables } from '../app/known-variables';
 import type { ProjectProblem } from '../project/check';
 import { studio, useStudio } from '../studio/store';
 import { assistant } from '../assistant/store';
@@ -21,7 +21,7 @@ export function useProblems(): Problem[] {
   const analysis = useApp((s) => s.analysis);
   const storyVersion = useApp((s) => s.storyVersion);
   const deferred = useDeferredValue(version);
-  const scene = useMemo(() => (store.doc ? validateScene(store.doc, new Set(studio.assets.keys()), new Set(prefabs), storyVariables(store.story.dialogues, store.story.cutscenes), new Set(studio.sounds.map((s) => s.name))) : []), [deferred, assets, prefabs, storyVersion]);
+  const scene = useMemo(() => (store.doc ? validateScene(store.doc, new Set(studio.assets.keys()), new Set(prefabs), knownVariables(store.doc), new Set(studio.sounds.map((s) => s.name))) : []), [deferred, assets, prefabs, storyVersion]);
   // puzzle checks (bypasses, soft-locks) come from the last time they were run
   const puzzles = useMemo<Problem[]>(
     () =>

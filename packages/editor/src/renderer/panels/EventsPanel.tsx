@@ -14,7 +14,7 @@ import {
 } from '@tilewright/behaviors';
 import { DEFAULT_INPUT_MAP, type EventRow } from '@tilewright/runtime';
 import { store, useApp } from '../app/store';
-import { storyVariables } from '../model/story-vars';
+import { knownVariables } from '../app/known-variables';
 import { assistant } from '../assistant/store';
 import { CheckField, NumberField, SelectField, TextField } from './fields';
 import { SoundField } from './SoundField';
@@ -321,7 +321,7 @@ export function EventsPanel() {
     fn(rows);
     doc.setEvents(label, rows);
   };
-  const problems = checkSheet(doc.events, { entityIds: new Set(doc.entities.map((e) => e.id)), tags: new Set(facts.tags), variables: new Set(doc.variables.map((v) => v.name)), prefabs: new Set(facts.prefabs), storyVariables: storyVariables(store.story.dialogues, store.story.cutscenes), sounds: new Set(studio.sounds.map((s) => s.name)) }, names);
+  const problems = checkSheet(doc.events, { entityIds: new Set(doc.entities.map((e) => e.id)), tags: new Set(facts.tags), variables: new Set(doc.variables.map((v) => v.name)), prefabs: new Set(facts.prefabs), storyVariables: knownVariables(doc), sounds: new Set(studio.sounds.map((s) => s.name)) }, names);
 
   return (
     <div className="panel events-panel" data-testid="events-panel">

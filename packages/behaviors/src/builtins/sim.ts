@@ -80,7 +80,11 @@ export const producer = behaviorDef<Producer>({
   requires: {},
   summary: (s) => `Every ${s.seconds} s: ${s.uses ? `uses ${s.uses}, ` : ''}makes ${s.makes}.`,
   update(ctx, e, s) {
-    const st = stateOf<{ t: number; blocked: boolean }>(e, 'producer', () => ({ t: 0, blocked: false }));
+    const st = stateOf<{ t: number; blocked: boolean }>(e, 'producer', () => {
+      // the resources it makes and uses exist (at zero) from the start, so a screen can show them before the first batch
+      for (const [name] of [...parseCosts(s.makes), ...parseCosts(s.uses)]) if (ctx.runtime.vars[name] === undefined) ctx.runtime.vars[name] = 0;
+      return { t: 0, blocked: false };
+    });
     const sig = e.get<{ inputs: Record<string, boolean>; outputs: Record<string, boolean> }>('signals');
     const gate = sig && 'run' in sig.inputs ? sig.inputs.run === true : true;
     if (sig) sig.outputs.made = false;

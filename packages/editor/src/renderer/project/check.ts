@@ -1,9 +1,9 @@
 import { checkDialogue, checkProjectInput, checkUiLayout, type ProjectInput, type UiLayout } from '@tilewright/runtime';
-import { checkCutscene, checkMinigame, checkMixer, checkWorldMap, expandEntities, type WorldMapData, type MixerData, type MinigameData, type SkinData, type CutsceneData, type DialogueData, type LanguageData, type EventRow, type ItemData, type PrefabData, type ProjectData, type SceneData } from '@tilewright/runtime';
+import { checkCutscene, checkMinigame, checkMixer, checkWorldMap, expandEntities, type WorldMapData, type MixerData, type MinigameData, type SkinData, type CutsceneData, type DialogueData, type LanguageData, type EventRow, type ItemData, type PrefabData, type ProjectData, type SceneData, type TableData } from '@tilewright/runtime';
 import { analyseLevel, analysePushPuzzles } from '@tilewright/playbot';
 import { EditorDoc } from '../model/doc';
 import { validateScene } from '../model/validate';
-import { storyVariables } from '../model/story-vars';
+import { madeVariables, storyVariables } from '../model/story-vars';
 import { loadScene, type ProjectFs } from './io';
 import { checkRules, missingTiles, ownTiles, tileArtProblems } from './tiles';
 import { collectStrings, coverage, interfaceTexts } from './localization';
@@ -53,7 +53,7 @@ export async function checkProject(
   minigames: readonly MinigameData[] = [],
   mixer?: MixerData,
   worldMap?: WorldMapData | null,
-  extras: { input?: ProjectInput; layout?: UiLayout } = {},
+  extras: { input?: ProjectInput; layout?: UiLayout; tables?: readonly TableData[] } = {},
 ): Promise<ProjectProblem[]> {
   const out: ProjectProblem[] = [];
   const scenes = new Map<string, SceneData>();
@@ -71,13 +71,14 @@ export async function checkProject(
   for (const text of checkRules(tiles, project.autotile)) out.push({ id: `autotile:${text}`, severity: 'warning', scene: '', message: `Autotiling: ${text}` });
   const itemIds = new Set(story.items.map((i) => i.id));
   const prefabNames = new Set(prefabs.keys());
+  const tables = extras.tables ?? [];
   const minigameNames = new Set(minigames.map((m) => m.name));
 
   for (const [path, scene] of scenes) {
     const doc = EditorDoc.fromScene(scene, prefabs);
     const lost = missingTiles(doc.map.tiles, tiles);
     if (lost.length > 0) out.push({ id: `${path}:tiles-missing`, severity: 'warning', scene: path, message: `This scene uses tile number ${lost.join(', ')}, which is not in the tile list any more, so it is drawn as a magenta square. Paint over those cells or run Autotiling -> Save and apply.` });
-    for (const p of validateScene(doc, spriteNames, prefabNames, storyVariables(story.dialogues, story.cutscenes), soundNames)) {
+    for (const p of validateScene(doc, spriteNames, prefabNames, new Set([...storyVariables(story.dialogues, story.cutscenes), ...madeVariables(doc.entities, prefabs.values(), tables)]), soundNames)) {
       out.push({ id: `${path}:${p.id}`, severity: p.severity, scene: path, message: p.message, entity: p.target?.kind === 'entity' ? p.target.id : undefined, x: p.target?.x, y: p.target?.y });
     }
     for (const i of [...analyseLevel(scene, prefabs), ...analysePushPuzzles(scene, prefabs)]) {

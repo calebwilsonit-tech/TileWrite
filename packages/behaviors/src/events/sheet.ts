@@ -1227,6 +1227,8 @@ export function checkSheet(rows: readonly EventRow[], facts: SheetFacts, names?:
   const walk = (list: readonly EventRow[]): void => {
     for (const r of list) {
       for (const a of r.actions) if (a.type === 'setVariable' && str(a.params, 'name')) assigned.add(str(a.params, 'name'));
+      // paying and receiving resources (name:amount, ...) makes those variables
+      for (const a of r.actions) if (a.type === 'earn' || a.type === 'spend') for (const part of (str(a.params, a.type === 'earn' ? 'gains' : 'costs') || '').split(',')) if (part.split(':')[0]!.trim()) assigned.add(part.split(':')[0]!.trim());
       for (const a of r.actions) if (a.type === 'pickup') continue;
       walk(r.children);
     }

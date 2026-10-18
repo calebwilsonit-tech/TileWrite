@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { C, TableSchema, cameraSnapshot, pictureOf, pointerSnapshot, type TransformIso } from '@tilewright/runtime';
 import { ctxOf, flatScene, player, rig, thing, type Rig } from './testing';
-import { beginTurns, currentUnit, healthOf, selectedUnits, setActivePacks } from './index';
+import { actionDef, beginTurns, currentUnit, healthOf, selectedUnits, setActivePacks } from './index';
 
 setActivePacks(undefined);
 
@@ -284,5 +284,19 @@ describe('camera rig and builder', () => {
     r.sim.map!.set(20, 20, 1, 2);
     r.run(1, { ...cameraSnapshot(camera), ...pointerSnapshot({ x: 20, y: 20 }) });
     expect(String(r.sim.runtime.vars['build.why'])).toContain('not flat enough');
+  });
+});
+
+describe('buttons in a list of buildings', () => {
+  it('choose the building of their own row, and producers start their resources at zero', () => {
+    const { scene } = flatScene(10, 10);
+    scene.entities.push(thing('f', 'Farm', 3.5, 3.5, { producer: { makes: 'food:3', uses: 'seed:1', seconds: 4 } }));
+    const r = rig(scene);
+    r.run(2);
+    expect(r.sim.runtime.vars.food).toBe(0);
+    expect(r.sim.runtime.vars.seed).toBe(0);
+    r.sim.runtime.vars['row.id'] = 'farm'; // what a list does while it runs a button's actions
+    actionDef('selectBuilding')!.run(ctxOf(r), { row: '{row.id}' }, { picked: undefined } as never);
+    expect(r.sim.runtime.vars['build.selected']).toBe('farm');
   });
 });
