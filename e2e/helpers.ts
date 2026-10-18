@@ -1,4 +1,4 @@
-import { _electron as electron, type ElectronApplication, type Page } from '@playwright/test';
+import { _electron as electron, expect, type ElectronApplication, type Page } from '@playwright/test';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -39,7 +39,9 @@ export async function launchEditor(reuseBase?: string, extraEnv: Record<string, 
 export async function createProjectViaUi(page: Page, name: string, template: string): Promise<void> {
   await page.getByTestId('btn-new-project').click();
   await page.getByTestId('project-name-input').fill(name);
-  await page.getByTestId(`template-${template}`).check({ force: true });
+  // click the whole card (a list of nine can scroll, and a page zoomed in makes the little radio a hard target)
+  await page.getByTestId(`template-${template}`).locator('..').click();
+  await expect(page.getByTestId(`template-${template}`)).toBeChecked();
   await page.getByTestId('btn-create-project').click();
   await page.getByTestId('editor-shell').waitFor();
   await page.waitForFunction(() => window.__viewport !== undefined && window.__viewport.doc !== null);

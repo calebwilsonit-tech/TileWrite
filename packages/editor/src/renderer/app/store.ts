@@ -445,6 +445,8 @@ class AppStore {
     await this.loadPlaythroughNames();
     await this.loadScripts();
     await this.openScene(p.project.startScene);
+    // a game that has a player needs to keep one; a game with none (a tactics battle, a builder) plays without
+    setPlayerRequired(p.project.packs === undefined || (this.doc?.entities.some((e) => e.tags.includes('player')) ?? false));
     this.set({ screen: 'editor' });
     this.startAutosave();
     const { studio } = await import('../studio/store');
@@ -924,7 +926,7 @@ class AppStore {
       await saveProject(realFs, p.dir, project);
       if (patch.packs) {
         setActivePacks(patch.packs);
-        setPlayerRequired(false);
+        setPlayerRequired(this.doc?.entities.some((e) => e.tags.includes('player')) ?? false);
       }
       this.set({ project: { ...p, project }, docVersion: this.state.docVersion + 1, storyVersion: this.state.storyVersion + 1 });
       return true;

@@ -574,7 +574,7 @@
   "variables": [
     {
       "name": "gold",
-      "value": 50
+      "value": 0
     },
     {
       "name": "train",
