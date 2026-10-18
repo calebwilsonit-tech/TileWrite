@@ -4,7 +4,7 @@
 
 An event sheet is a list of rows, each reading like a sentence: **when** its conditions hold, **do** its actions. Rows can have sub-events that run only while the row holds. Objects are chosen as "the player", "anything tagged ...", or a particular object. See [logic.md](logic.md).
 
-There are 24 conditions and 41 actions.
+There are 27 conditions and 44 actions.
 
 ## Conditions
 
@@ -234,6 +234,32 @@ Id: `hotspotUsed`.
 | --- | --- | --- | --- | --- |
 | Hotspot name (empty for any) | `name` | text | (empty) |  |
 | Verb | `verb` | select | (empty) | ``, `look`, `use`, `talk` |
+
+### Simulation
+
+#### The player can afford something
+
+Id: `canAfford`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Costs (name:amount, ...) | `costs` | text | "gold:10" |  |
+
+#### The time of day or season is
+
+Id: `timeIs`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| It is | `when` | select | "night" | `night`, `day`, `morning`, `afternoon`, `spring`, `summer`, `autumn`, `winter` |
+
+#### The wave of enemies is
+
+Id: `waveIs`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| State | `state` | select | "fighting" | `resting`, `spawning`, `fighting`, `done` |
 
 ## Actions
 
@@ -612,3 +638,27 @@ Id: `turnView`.
 | Parameter | Key | Kind | Starts as | Choices and notes |
 | --- | --- | --- | --- | --- |
 | View | `view` | select | "1" | `0`, `1`, `2`, `3` |
+
+### Simulation
+
+#### Pay a cost (if it can be afforded)
+
+Id: `spend`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Costs (name:amount, ...) | `costs` | text | "gold:10" |  |
+
+#### Receive resources
+
+Id: `earn`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Gains (name:amount, ...) | `gains` | text | "gold:10" |  |
+
+#### Start the next wave of enemies
+
+Id: `nextWave`.
+
+No parameters.

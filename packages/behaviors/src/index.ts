@@ -7,6 +7,8 @@ export * from './packs/modules';
 export * from './packs/storytender';
 export * from './packs/turns';
 export * from './packs/controls';
+export * from './packs/sim';
+export * from './builtins/sim';
 export * from './builtins/controls';
 export * from './builtins/turns';
 export * from './signals';

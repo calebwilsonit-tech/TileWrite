@@ -135,6 +135,7 @@ const CSS = `
 .tw-game-title { margin: 6px 0 4px; font-size: 40px; font-weight: normal; color: var(--tw-accent, #ffd98a); text-align: center; letter-spacing: .04em; }
 .tw-subtitle { text-align: center; opacity: .8; margin-bottom: 16px; }
 .tw-hidden { display: none !important; }
+.tw-tint { position: absolute; inset: 0; pointer-events: none; display: none; mix-blend-mode: multiply; }
 .tw-selectbox { position: absolute; border: 1px solid #7dffb2; background: #7dffb222; display: none; pointer-events: none; }
 .tw-bosses[data-pinned] .tw-boss { width: 320px; }
 .tw-widget { text-shadow: 0 1px 3px #000; font-size: 15px; }
@@ -190,6 +191,8 @@ export class GameUi {
   private readonly skip = el('div', 'tw-skip');
   /** The rectangle being dragged to select units. */
   private readonly selectBox = el('div', 'tw-selectbox');
+  /** Night and dusk: a colour over the picture. */
+  private readonly tint = el('div', 'tw-tint');
   private dialogueEl: HTMLElement | null = null;
   private layout: UiLayout = defaultUiLayout();
   /** The game's own counters, bars and texts, by name. */
@@ -234,6 +237,7 @@ export class GameUi {
     this.lightBar.setAttribute('data-testid', 'tw-lightbar');
     this.hud.append(this.hearts, this.lightBar, this.slotsEl, this.bosses);
     this.selectBox.setAttribute('data-testid', 'tw-selectbox');
+    this.root.prepend(this.tint);
     this.root.append(this.style, this.hud, this.toasts, this.fade, this.skip, this.selectBox);
     parent.appendChild(this.root);
     this.setLayout(defaultUiLayout());
@@ -394,6 +398,9 @@ export class GameUi {
     this.drawDialogue();
     this.minigame.update();
     this.drawMenu();
+    const tint = r.view.tint;
+    if (tint) Object.assign(this.tint.style, { display: 'block', background: hex(tint.color), opacity: String(Math.min(0.85, tint.alpha)) });
+    else if (this.tint.style.display !== 'none') this.tint.style.display = 'none';
     const box = r.view.selectBox;
     if (box) {
       Object.assign(this.selectBox.style, { display: 'block', left: `${Math.min(box.x0, box.x1)}px`, top: `${Math.min(box.y0, box.y1)}px`, width: `${Math.abs(box.x1 - box.x0)}px`, height: `${Math.abs(box.y1 - box.y0)}px` });

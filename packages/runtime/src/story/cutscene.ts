@@ -81,6 +81,8 @@ export interface ViewState {
   cells: CellMark[];
   /** A selection rectangle being dragged, in picture pixels. */
   selectBox: { x0: number; y0: number; x1: number; y1: number } | null;
+  /** A colour laid over the whole picture (night, dusk), or null. Cosmetic. */
+  tint: { color: number; alpha: number } | null;
 }
 
 /** A cell tinted on the ground. */
@@ -95,7 +97,7 @@ export interface CellMark {
   outline?: boolean;
 }
 
-export const newView = (): ViewState => ({ rotation: 0, cells: [], selectBox: null, cameraTarget: null, cameraZoom: null, shake: 0, impact: 0, fade: { alpha: 0, color: 0 } });
+export const newView = (): ViewState => ({ rotation: 0, cells: [], selectBox: null, tint: null, cameraTarget: null, cameraZoom: null, shake: 0, impact: 0, fade: { alpha: 0, color: 0 } });
 
 /** A cutscene that is playing right now. */
 export interface CutsceneState {

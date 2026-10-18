@@ -127,6 +127,11 @@ export class GameRunner {
       }
       this.o.renderer.shake = this.shakeEnabled ? Math.max(view.shake, view.impact) : 0;
       this.drainFx();
+      const dirty = this.o.sim.runtime.scratch.get('dirtyCells') as { x: number; y: number }[] | undefined;
+      if (dirty && dirty.length > 0) {
+        this.o.renderer.updateCells(dirty);
+        dirty.length = 0;
+      }
       const rt = this.o.sim.runtime;
       if (rt.hitStop > 0) {
         if (this.hitStopEnabled) this.holdTicks = Math.max(this.holdTicks, rt.hitStop);

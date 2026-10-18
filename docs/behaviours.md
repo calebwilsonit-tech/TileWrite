@@ -4,7 +4,7 @@
 
 A behaviour is ready-made logic you add to an object in the Inspector (**Behaviours -> Add**). Its settings appear as fields; its signals can be joined to other objects with the Wire tool. Each behaviour has an id (the key under which it is saved) shown in `code`.
 
-There are 48 behaviours. Behaviours made by scripts (see [code-window.md](code-window.md)) appear in the same list under "Scripts".
+There are 54 behaviours. Behaviours made by scripts (see [code-window.md](code-window.md)) appear in the same list under "Scripts".
 
 - [AI](#ai) (Vision Cone, Chase, Patrol, Boss Phases, State Machine, Behaviour Tree)
 - [Combat](#combat) (Health, Damage on Touch, Melee Attack (quill), Dodge, Ranged Attack)
@@ -14,6 +14,7 @@ There are 48 behaviours. Behaviours made by scripts (see [code-window.md](code-w
 - [Movement](#movement) (Grid Mover)
 - [Player](#player) (Echo Recorder)
 - [Puzzle](#puzzle) (Pressure Plate, Trigger Zone, Lever, Timer, Gate / Door, Pushable)
+- [Simulation](#simulation) (Producer, Calendar, Wave Spawner, Path Follower, Utility Agent (needs), Cellular Automaton)
 - [Story](#story) (NPC Talk, Sound Source, Minigame, Scene Portal, Cutscene Trigger, Lantern Post (checkpoint))
 - [Story puzzles](#story-puzzles) (Sentence Stone, Formattable Text Block)
 - [Turn-based](#turn-based) (Turn Taker, Unit AI)
@@ -533,6 +534,100 @@ An invisible area that sends a signal while something is inside it. Use it with 
 Sends: **Someone is inside** (`occupied`).
 
 Adds automatically: `collider`.
+
+## Simulation
+
+### Calendar
+
+Id: `calendar`. Each update it makes signals.
+
+Keeps the date and time of day from the game clock: variables time.hour (0-24), time.clock ("08:30"), time.day, time.season (0-3) and time.seasonName, time.year, time.night. It announces new-day, day-start, night-start and new-season, and can darken the screen at night. Time passes only while the world runs (not while paused or in turn-based mode) and at the chosen game speed. Put it on any object.
+
+| Setting | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Seconds per day | `dayLength` | number | 120 | at least 10 |
+| The game starts at (hour) | `startHour` | number | 8 | 0 to 23 |
+| Days per season | `daysPerSeason` | number | 10 | at least 1 |
+| Darken the picture at night | `tint` | boolean | true |  |
+
+Sends: **It is night** (`night`).
+
+### Cellular Automaton
+
+Id: `automaton`. Each update it reacts to signals (runs last).
+
+Rules that change the map itself over time: every step each tile may turn into another when enough of its neighbours are a certain tile (grass catches fire next to fire; fire dies out; crops grow; water spreads). A data table lists the rules: from, to, near, min, chance. All the cells change at once, with the game's seeded random numbers, so a replay is identical. Put it on any object.
+
+| Setting | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Table of rules | `table` | text | "Automata" |  |
+| Seconds between steps | `every` | number | 0.5 | at least 0.05 |
+| Count diagonal neighbours too | `diagonal` | boolean | false |  |
+
+### Path Follower
+
+Id: `pathFollower`. Each update it moves things (runs first).
+
+Walks a fixed route from point to point and, at the end, announces "path-end" (and removes itself if asked). Tower-defence enemies, trains, conveyor items. The route is a list of points, or objects with a tag numbered "Waypoint 1", "Waypoint 2"...
+
+| Setting | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Points (x,y; x,y; ...) | `points` | text | (empty) |  |
+| Or the tag of the waypoint objects | `routeTag` | text | "route" |  |
+| Speed (cells per second) | `speed` | number | 2 | at least 0.1 |
+| Remove itself at the end | `removeAtEnd` | boolean | false |  |
+
+Sends: **Reached the end** (`arrived`).
+
+Adds automatically: `body`.
+
+### Producer
+
+Id: `producer`. Each update it reacts to signals (runs last).
+
+Makes resources over time: every few seconds it uses up what is in "Uses" (if all of it is there) and adds what is in "Makes". Chain them: a farm makes grain, a mill turns grain into flour, a bakery turns flour into bread. Resources are ordinary variables, so costs, the interface and event rows all see them.
+
+| Setting | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Makes (name:amount, ...) | `makes` | text | "gold:1" |  |
+| Uses up each batch (name:amount, ...) | `uses` | text | (empty) |  |
+| Seconds per batch | `seconds` | number | 5 | at least 0.1 |
+| Working | `enabled` | boolean | true |  |
+
+Receives: **Work only while this is on (when wired)** (`run`).
+
+Sends: **Waiting for what it needs** (`blocked`); **Just made something** (`made`).
+
+### Utility Agent (needs)
+
+Id: `utilityAgent`. Each update it brain.
+
+A villager that decides what to do from its needs. It has needs that fall over time (hunger, energy...). A data table lists activities: which need one satisfies, how much it restores per second, which tagged object to walk to (a farm, a bed, a workplace), how long it takes, when it can be done (any time, day, night), how much the character wants it anyway, and a resource it makes. Each time it is free it scores every activity (the weight, plus how badly it needs it, minus the walk) and does the best one it can reach. Table columns: id, need, gain, target, seconds, weight, when, makes.
+
+| Setting | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Table of activities | `table` | text | "Activities" |  |
+| Needs (name:fall per second, ...) | `needs` | text | "hunger:1, energy:0.6" |  |
+| Walking speed (cells per second) | `speed` | number | 3 | at least 0.5 |
+
+Adds automatically: `body`.
+
+### Wave Spawner
+
+Id: `waveSpawner`. Each update it reacts to signals (runs last).
+
+Sends waves of enemies from a data table (rows: prefab, count, gap between spawns, delay before the wave). They appear at this object. When every enemy of a wave is gone the next wave comes after a rest. Variables: wave.index, wave.total, wave.alive, wave.state, wave.countdown. Events: wave-started, wave-cleared, waves-done. Use the "Start the next wave" action for a button, or switch on automatic start.
+
+| Setting | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Table of waves | `table` | text | "Waves" |  |
+| Start on its own | `autoStart` | boolean | true |  |
+| Rest between waves (seconds) | `rest` | number | 5 | at least 0 |
+| Keep going after the last wave (stronger copies) | `endless` | boolean | false |  |
+
+Receives: **Start the next wave** (`next`).
+
+Sends: **A wave was beaten** (`cleared`).
 
 ## Story
 
