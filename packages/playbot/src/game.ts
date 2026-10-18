@@ -3,6 +3,7 @@ import {
   Simulation,
   groundHeightAt,
   loadScene,
+  openStartScreens,
   physicsSystem,
   teleportBody,
   type CutsceneData,
@@ -73,6 +74,7 @@ export class Game {
     for (const [k, v] of setup.sprites ?? []) this.sim.assets.sprites.set(k, v);
     this.problems = loadScene(this.sim, setup.scene, { prefabs: setup.prefabs, tileset: setup.tileset, scene: setup.scenePath ?? '' }).problems;
     addStandardSystems(this.sim, physicsSystem);
+    if (setup.ui) openStartScreens(this.sim);
   }
 
   get ctx(): SimContext {
