@@ -2,7 +2,6 @@ import { expect, test, type Page } from '@playwright/test';
 import { createProjectViaUi, launchEditor, shot } from './helpers';
 import { loadSampleGame, saveSample, selectObject, setFields, tab } from './sample-helpers';
 
-const outline = (page: Page, name: string) => page.getByTestId(`ui-outline-${name}`);
 async function setText(page: Page, testId: string, value: string): Promise<void> {
   await page.getByTestId(testId).fill(value);
   await page.getByTestId(testId).press('Enter');

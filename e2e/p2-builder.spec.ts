@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { createProjectViaUi, launchEditor, shot } from './helpers';
-import { addBehaviors, addObject, loadSampleGame, saveSample, selectObject, setFields, tab } from './sample-helpers';
+import { addBehaviors, addObject, loadSampleGame, saveSample, setFields, tab } from './sample-helpers';
 
 const outline = (page: Page, name: string) => page.getByTestId(`ui-outline-${name}`);
 const addWidget = (page: Page, type: string) => page.getByTestId(`ui-palette-${type}`).click();

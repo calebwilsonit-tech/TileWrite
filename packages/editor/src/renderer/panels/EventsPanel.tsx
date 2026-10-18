@@ -233,7 +233,7 @@ function RowCard({ row, path, update, facts, inLoop, names, newId }: { row: Even
                     {!def && <option value={c.type}>{c.type} (unknown)</option>}
                   </select>
                   <label className="check">
-                    <input type="checkbox" checked={c.negate} onChange={(e) => mutate('Toggle NOT', (r) => (r.conditions[i]!.negate = e.target.checked))} /> not
+                    <input type="checkbox" data-testid={`cond-not-${row.id}-${i}`} checked={c.negate} onChange={(e) => mutate('Toggle NOT', (r) => (r.conditions[i]!.negate = e.target.checked))} /> not
                   </label>
                   <button aria-label="Remove condition" onClick={() => mutate('Remove condition', (r) => void r.conditions.splice(i, 1))}>✕</button>
                 </div>
