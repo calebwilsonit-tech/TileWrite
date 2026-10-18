@@ -181,3 +181,19 @@ Occlusion fade: renderer-only (not simulation state). Tiles taller than the focu
 - Entering a state stops the object, so a behaviour that was switched off cannot leave it sliding; the machine's own movement (toward / away / home) reuses the same path-following the AI uses.
 - Conditions read what other behaviours already publish (the Vision Cone's `state:vision`, health, variables, wires), so the machine is only a decision layer. The cost is one tick of delay for vision-based conditions.
 - Examples (Guard, Boss) are plain data; there is no hidden template logic.
+
+## D025 - Skins, minigames, world map, mixer, collision levels, vector layers (after M14, 2026-10-17)
+- Each is plain data next to the project (`assets/skins.json`, `minigames.json`, `worldmap.json`, `audio/mixer.json`) validated by Zod, with a checker that explains problems in plain English; the same checkers feed the Problems panel, the editor panels and the assistant's cards.
+- A minigame is a modal state of the simulation (the world freezes like a conversation) driven only by the player's buttons, so the playbot plays it the way a person would. Results are always left in variables (`minigame:<name>:played/won/best`) so event rows need no special case.
+- The world map is a separate view of "scenes the player has been to" (every scene a game loads is remembered as `visited:`), not a new kind of scene; travel reuses the portal path so flags, items and health come along.
+- Collision levels are two optional layers (`blockLow`, `blockHigh`) on the tile map; an absent layer means "blocks every height", so old scenes load and play as before.
+- Vector shapes are a layer type in sprite files that is rasterised on demand with the same pixel pipeline; they are not anti-aliased so they stay inside the sprite's palette.
+- The mixer sits between sounds and the output (buses, ducking, per-sound variation, loop points) and falls back to the old straight path when there is no `mixer.json`.
+- Story undo records whole-story snapshots as steps of the scene's own history, so one Ctrl+Z order covers everything; the history belongs to the open scene and is lost on a scene switch.
+
+## D026 - The game's front door and screen are data too (title, formatting, interface, controls) (2026-10-17)
+- Inline formatting is a tiny tag language (`[b] [i] [u] [s] [color=...]`) parsed to spans and built with DOM nodes, never HTML, so text from a project cannot inject markup. Unknown tags stay as written ("Press [E]"); `[[` is a literal bracket.
+- The title screen is one more screen of the existing menu code over a frozen world (not a second scene), so Load, Settings and Controls come for free. It only shows when the project turns it on, and not for "From here" or Test buttons, so day-to-day editing is not slowed.
+- Interface layout keeps every built-in piece on the "default" anchor, in the old column, until it is dragged; a game that never opened the editor looks exactly as before. Placement maths (`widgetCss`, `offsetsFor`, `anchorAt`) is one pure module used by both the game and the editor's preview, so the preview cannot drift from the game.
+- Controls: the project stores only differences from the built-in bindings plus its own actions; a player's own rebinding is stored separately and still wins. Custom actions are ordinary action names, so events, scripts and echo recordings use them without special cases.
+- `project.iso` stays in the file format but is not used by the renderer; it was left out of the settings dialog rather than offering a setting that does nothing.

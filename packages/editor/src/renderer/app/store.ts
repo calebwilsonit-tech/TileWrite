@@ -572,6 +572,8 @@ class AppStore {
   /** Something to start as soon as the next Play begins (the Story panel's "Test" buttons). */
   autoPlay: { cutscene?: string; dialogue?: string; minigame?: string } | null = null;
   private storyTimers = new Map<string, number>();
+  /** Writes that have started but not finished, so a delete can wait for them instead of being undone by them. */
+  private storyWrites = new Map<string, Promise<void>>();
 
   // ---- undo for story edits (items, conversations, cutscenes, skins, minigames, the world map) ----
 
@@ -665,7 +667,9 @@ class AppStore {
       key,
       window.setTimeout(() => {
         this.storyTimers.delete(key);
-        void write().catch((e) => this.notify('error', e instanceof UserError ? e.message : `Could not save: ${(e as Error).message}`));
+        const done = write().catch((e) => this.notify('error', e instanceof UserError ? e.message : `Could not save: ${(e as Error).message}`));
+        this.storyWrites.set(key, done);
+        void done.finally(() => this.storyWrites.get(key) === done && this.storyWrites.delete(key));
       }, 350),
     );
   }
@@ -787,6 +791,7 @@ class AppStore {
     this.recordStory(`Delete the conversation "${name}"`, `d-del:${name}`, before);
     window.clearTimeout(this.storyTimers.get(`d:${name}`));
     this.set({ storyVersion: this.state.storyVersion + 1 });
+    await this.storyWrites.get(`d:${name}`);
     if (p) await deleteDialogue(assetFs, p.dir, name).catch(() => undefined);
   }
 
@@ -809,6 +814,7 @@ class AppStore {
     this.recordStory(`Delete the cutscene "${name}"`, `c-del:${name}`, before);
     window.clearTimeout(this.storyTimers.get(`c:${name}`));
     this.set({ storyVersion: this.state.storyVersion + 1 });
+    await this.storyWrites.get(`c:${name}`);
     if (p) await deleteCutscene(assetFs, p.dir, name).catch(() => undefined);
   }
   // ---- scripts (code) ----

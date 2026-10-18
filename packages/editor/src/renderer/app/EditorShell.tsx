@@ -127,9 +127,6 @@ function Toolbar() {
       <button data-testid="btn-export" onClick={run('file.export')} disabled={mode === 'play'} title="Make the game into a program you can give to other people">
         Export…
       </button>
-      <button data-testid="btn-project-settings" onClick={run('file.projectSettings')} disabled={mode === 'play'} title="The game's name, title screen and controls">
-        Project…
-      </button>
         </>
       )}
       {(ws === 'world' || ws === 'code') && (

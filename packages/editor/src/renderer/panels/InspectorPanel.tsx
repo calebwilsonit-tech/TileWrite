@@ -227,6 +227,9 @@ function SceneInspector() {
       <p className="hint">
         {doc.entities.length} object{doc.entities.length === 1 ? '' : 's'}, {doc.regions.length} region{doc.regions.length === 1 ? '' : 's'}. Project: {project?.project.name}
       </p>
+      <button className="small" data-testid="btn-project-settings" onClick={() => document.dispatchEvent(new CustomEvent('tw:project-settings'))} title="The game's name, title screen and controls">
+        Project settings…
+      </button>
     </div>
   );
 }

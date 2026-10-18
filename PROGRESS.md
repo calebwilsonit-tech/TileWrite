@@ -3,7 +3,7 @@
 Boxes are ticked only when the milestone's tests pass and the sample has been played.
 Spec: `ENGINE_BUILD_PROMPT.md`. Read `DECISIONS.md` and `KNOWN_ISSUES.md` before continuing.
 
-**Next up:** all seven acceptance criteria hold (see the final summary below). What is left is the list of engine features still owed from the spec (vector drawing, minigames, skins; autotiling, the layers, localization, video settings, the dialogue graph, the cutscene timeline, hot reload, the game window and the state-machine editor were added after the first summary): bigger than polish, listed honestly in KNOWN_ISSUES.md.
+**Next up:** all seven acceptance criteria hold (see the final summary below), and every feature the spec listed is now built (see "After M14" below). What is left is what could not be run on this machine: the live Claude API, the CI jobs, the NSIS installer and listening to the sound. See KNOWN_ISSUES.md.
 
 ## Final summary (2026-10-16)
 
@@ -13,8 +13,8 @@ Spec: `ENGINE_BUILD_PROMPT.md`. Read `DECISIONS.md` and `KNOWN_ISSUES.md` before
 | 1 | A new user follows the tutorial and makes a playable room in under 15 minutes without code | holds | `e2e/m14-tutorial.spec.ts` (ten self-ticking steps drive the real UI; the room is played); a person has not timed it |
 | 2 | A slice of "The Last Storytender" built only with the editor | holds | `e2e/m13-acceptance.spec.ts` builds a hub and a dungeon with mouse and keyboard (a minute), `docs/acceptance.md` |
 | 3 | The playbot finishes it; validators find no bypass or soft-lock | holds | `e2e/slice-bot.ts` finishes in 47 s of game time; the full project check is clear and does catch a hole cut in a wall |
-| 4 | The slice exports to a Windows program that runs with no editor | holds on this machine | `e2e/m12-export.spec.ts` and the slice export; the NSIS installer and the CI jobs have never run |
-| 5 | Unit, e2e, golden-picture and determinism tests pass; 60 fps within budget | holds | 690 unit tests, 24 e2e (2 optional skipped), golden pictures of both scenes, three identical replays, about 1 ms of game logic per step |
+| 4 | The slice exports to a Windows program that runs with no editor | holds on this machine | `e2e/m12-export.spec.ts` and the slice export; the NSIS installer (its helper download times out here) and the CI jobs have never run |
+| 5 | Unit, e2e, golden-picture and determinism tests pass; 60 fps within budget | holds | 943 unit tests, 46 e2e (2 optional skipped), golden pictures of both scenes, three identical replays, about 1 ms of game logic per step |
 | 6 | The Claude assistant explains a broken event sheet, fixes it with an approved change, builds a plate-and-gate room | holds against a mocked API only | `e2e/m11-assistant.spec.ts`; the live test (`npm run test:live`) has never been run (no key) |
 | 7 | Docs explain every panel, behaviour and recipe; BUILDING.md explains compiling on Windows | holds | `docs/` (generated behaviour and event-block pages compared by tests, a test that every panel is described and every link resolves), `docs/BUILDING.md` |
 
@@ -26,13 +26,23 @@ An Electron + React editor and a PixiJS runtime in an npm-workspace monorepo (ru
 - Every picture is procedural box art; the slice looks like a prototype. The only drawn-art path is the sprite studio.
 - The playbot's walkthrough of the slice is a script for that game, not a general "play any game" solver.
 - The tutorial was driven by a test, never timed with a real beginner. Expect rough wording.
-- Whole spec areas are unfinished (vector drawing, minigames, skins). See KNOWN_ISSUES.md.
+- Every spec area is built, but some are thin (see the limits by area in KNOWN_ISSUES.md): tile art covers top faces only, the solver searches short echo/lever/push plans, the world map has no background picture.
 - Exported games are 250-300 MB (a full Electron runtime each), unsigned, Windows-tested only.
 
 ### What next
 1. Run the things that could not be run here: `npm run test:live` with a key, the CI workflow on a real remote, `npm run dist:win`, and listen to the audio.
 2. Watch a new user take the tutorial and fix what trips them.
-3. Real art and a second, longer game to find the engine's next gaps; then the owed editor features, starting with real art (the sprite studio's vector mode) and minigames.
+3. Real art and a second, longer game to find the engine's next gaps.
+## After M14 (the features the spec owed, all built, tested and documented)
+- [x] Autotiling and the Decoration / Walls / Lights layers; per-height collision painting; hot reload and a game window; a state-machine editor; a dialogue graph and a cutscene timeline; localization and video settings
+- [x] Vector drawing in the sprite studio, turn by any angle and scale a selection
+- [x] Minigames (timing, pattern, pairs), cosmetic skins, a world map
+- [x] A mixer (buses, ducking, variation, loop points) and positional sound
+- [x] Behaviour trees, ranged enemies, a lantern fuel resource, a puzzle solver for the playbot
+- [x] Tile art from sprites and imported PNGs; undo and redo for story edits
+- [x] Assistant tools for all story data, prefabs, single event rows, the mix, the interface, the controls and project settings
+- [x] Inline text formatting, a title screen, project settings, a controls editor and an interface layout and theme editor (`docs/interface-and-controls.md`)
+
 ## Milestones
 
 - [x] M0 Foundations (repo, workspaces, lint, typecheck, tests, CI, Electron window, state docs)

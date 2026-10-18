@@ -3,7 +3,7 @@
 Three things shape how the game greets and talks to the player. None needs code.
 
 ## Project settings and the title screen
-**Project...** in the top bar (or *Commands -> Project settings*) opens the project settings.
+**Project settings...** at the bottom of the Inspector (when nothing is selected), or *Commands -> Project settings*, opens the project settings.
 - **Game**: the name of the game, the scene it starts in, and **Show a title screen first** with an optional line under the name. The title screen offers *New game*, *Continue* (only once the player has a save; it loads the newest one), *Load game*, *Settings* and *Quit*. The world waits behind it and the pause keys cannot close it. It shows in the exported game and when you press **Play** (not with **From here** or a Test button). The name and the line can be translated.
 - **Controls**: see below.
 
