@@ -1,4 +1,4 @@
-import type { TileMap } from '@tilewright/runtime';
+import { cloneStack, type CellStack, type TileMap } from '@tilewright/runtime';
 
 /** Everything stored for one map cell. */
 export interface CellData {
@@ -12,6 +12,8 @@ export interface CellData {
   /** Level-limited blocker: the first level it covers and the level where it stops (0 = every height). */
   blockLow: number;
   blockHigh: number;
+  /** Set when the cell is edited block by block (see CellStack); null for a plain column. */
+  stack: CellStack | null;
 }
 
 export type CellPatch = Partial<CellData>;
@@ -35,6 +37,7 @@ export function readCell(map: TileMap, x: number, y: number): CellData {
     oneWay: map.oneWay[i]!,
     blockLow: map.blockLow[i]!,
     blockHigh: map.blockHigh[i]!,
+    stack: map.stacks.has(i) ? cloneStack(map.stacks.get(i)!) : null,
   };
 }
 
@@ -49,6 +52,8 @@ export function writeCell(map: TileMap, x: number, y: number, c: CellData): void
   map.oneWay[i] = c.oneWay;
   map.blockLow[i] = c.blockLow;
   map.blockHigh[i] = c.blockHigh;
+  if (c.stack) map.stacks.set(i, cloneStack(c.stack));
+  else map.stacks.delete(i);
 }
 
 export function sameCell(a: CellData, b: CellData): boolean {
@@ -61,7 +66,8 @@ export function sameCell(a: CellData, b: CellData): boolean {
     a.deckTile === b.deckTile &&
     a.oneWay === b.oneWay &&
     a.blockLow === b.blockLow &&
-    a.blockHigh === b.blockHigh
+    a.blockHigh === b.blockHigh &&
+    JSON.stringify(a.stack) === JSON.stringify(b.stack)
   );
 }
 

@@ -17,6 +17,7 @@ const baseOpts: ToolOptions = {
   prefab: 'crate',
   outline: false,
   edge: 1,
+  blockMode: 'add',
 };
 
 function setup(w = 12, h = 12, opts: Partial<ToolOptions> = {}) {
@@ -37,6 +38,7 @@ function setup(w = 12, h = 12, opts: Partial<ToolOptions> = {}) {
     },
     notify: (kind, text) => log.push({ kind, text }),
     setWalk: (c) => (state.walk = c),
+    pickBlock: () => null,
     setMarquee: () => {},
     pickEntity: (s) => state.picks.get(`${s.x},${s.y}`) ?? null,
     pickRegion: () => null,

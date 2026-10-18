@@ -51,6 +51,8 @@ export class Stroke {
     const before = readCell(this.doc.map, x, y);
     const p = typeof patch === 'function' ? patch(before) : patch;
     const after = { ...before, ...p };
+    // painting a whole column over a cell that was edited block by block starts it afresh
+    if (p.stack === undefined && before.stack && ((p.tile !== undefined && p.tile !== before.tile) || (p.height !== undefined && p.height !== before.height) || (p.slope !== undefined && p.slope !== before.slope) || (p.deck !== undefined && p.deck !== before.deck))) after.stack = null;
     if (sameCell(before, after)) return true;
     if (this.doc.cellGuard && !this.doc.cellGuard(before, after)) return true; // a locked layer: the cell stays as it is
     writeCell(this.doc.map, x, y, after);
@@ -68,7 +70,7 @@ export class Stroke {
     for (const c of around(this.doc.map, x, y)) {
       const to = resolveTile(this.doc.map, at.tileset, at.rules, c.x, c.y);
       const before = readCell(this.doc.map, c.x, c.y);
-      if (to === before.tile) continue;
+      if (to === before.tile || before.stack) continue;
       const after = { ...before, tile: to };
       writeCell(this.doc.map, c.x, c.y, after);
       this.buffer.record(c.x, c.y, before, after);
@@ -86,7 +88,7 @@ export class Stroke {
       for (let x = 0; x < this.doc.map.width; x++) {
         const before = readCell(this.doc.map, x, y);
         const to = resolveTile(this.doc.map, at.tileset, at.rules, x, y);
-        if (to === before.tile) continue;
+        if (to === before.tile || before.stack) continue;
         const after = { ...before, tile: to };
         writeCell(this.doc.map, x, y, after);
         this.buffer.record(x, y, before, after);

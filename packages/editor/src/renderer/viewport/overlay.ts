@@ -177,6 +177,25 @@ export class OverlayDrawer {
     });
   }
 
+  /** Outline one block (the cube of cell (x, y) between levels z and z + 1). */
+  cube(g: Graphics, x: number, y: number, z: number, color: number, iso: IsoConfig = DEFAULT_ISO): void {
+    const P = (dx: number, dy: number, dz: number): [number, number] => {
+      const p = gridToScreen(x + dx, y + dy, z + dz, iso);
+      return [p.x, p.y];
+    };
+    const edges: [[number, number, number], [number, number, number]][] = [];
+    for (const dz of [0, 1]) {
+      edges.push([[0, 0, dz], [1, 0, dz]], [[1, 0, dz], [1, 1, dz]], [[1, 1, dz], [0, 1, dz]], [[0, 1, dz], [0, 0, dz]]);
+    }
+    for (const [dx, dy] of [[0, 0], [1, 0], [1, 1], [0, 1]] as const) edges.push([[dx, dy, 0], [dx, dy, 1]]);
+    for (const [a, b] of edges) {
+      const pa = P(...a);
+      const pb = P(...b);
+      g.moveTo(pa[0], pa[1]).lineTo(pb[0], pb[1]);
+    }
+    g.stroke({ width: 2, color, alpha: 0.95 });
+  }
+
   /** Draw a translucent box for an object about to be placed. */
   ghost(g: Graphics, x: number, y: number, h: number, w: number, d: number, height: number, color: number, iso: IsoConfig = DEFAULT_ISO): void {
     const pt = (dx: number, dy: number, dh: number): number[] => {

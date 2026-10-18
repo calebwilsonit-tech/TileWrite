@@ -28,6 +28,17 @@ export const TileMapRowsSchema = z
     /** Optional (only maps with level-limited blockers have them). */
     blockLow: rows.optional(),
     blockHigh: rows.optional(),
+    /** Cells edited block by block (only maps that have some carry this). */
+    stacks: z
+      .array(
+        z.object({
+          x: z.number().int().min(0),
+          y: z.number().int().min(0),
+          floor: z.number().int().min(0),
+          blocks: z.array(z.object({ z: z.number().int().min(0).max(254), tile: z.number().int().min(1), faces: z.object({ top: z.number().int().min(1).optional(), n: z.number().int().min(1).optional(), e: z.number().int().min(1).optional(), s: z.number().int().min(1).optional(), w: z.number().int().min(1).optional() }).optional() })),
+        }),
+      )
+      .optional(),
   })
   .superRefine((m, ctx) => {
     for (const key of ['tiles', 'heights', 'slopes', 'flags', 'decks', 'deckTiles', 'oneWay', 'blockLow', 'blockHigh'] as const) {

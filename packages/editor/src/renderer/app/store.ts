@@ -53,6 +53,7 @@ interface StoryCommand {
 }
 
 export type ToolId =
+  | 'blocks'
   | 'select'
   | 'paint'
   | 'rect'
@@ -95,6 +96,8 @@ export interface ToolOptions {
   prefab: string;
   outline: boolean;
   edge: number;
+  /** The Blocks tool: what a click does. */
+  blockMode: 'add' | 'replace' | 'face' | 'delete';
 }
 
 export interface ViewOptions {
@@ -111,6 +114,10 @@ export interface ViewOptions {
   lights: boolean;
   /** Draw order numbers. */
   depth: boolean;
+  /** Show only the blocks below this level (0 = everything), to reach inner blocks. */
+  slice: number;
+  /** See through the world. */
+  xray: boolean;
   /** Frame time and what is slow, while playing. */
   profiler: boolean;
   ground: boolean;
@@ -205,8 +212,9 @@ const initial: AppState = {
     prefab: 'crate',
     outline: false,
     edge: 1,
+    blockMode: 'add',
   },
-  view: { grid: true, collision: false, collisionLevel: null, heightLabels: false, triggers: false, ai: true, lights: false, depth: false, profiler: false, ground: true, walls: true, objects: true, decoration: true, lightsLayer: true, regions: true },
+  view: { grid: true, collision: false, collisionLevel: null, heightLabels: false, triggers: false, ai: true, lights: false, depth: false, slice: 0, xray: false, profiler: false, ground: true, walls: true, objects: true, decoration: true, lightsLayer: true, regions: true },
   locks: { ground: false, walls: false, objects: false, decoration: false, lightsLayer: false, regions: false },
   selection: [],
   selectedRegion: null,

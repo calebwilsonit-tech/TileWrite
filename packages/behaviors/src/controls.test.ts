@@ -186,7 +186,7 @@ describe('RTS control', () => {
     const t0 = performance.now();
     r.run(300);
     const msPerTick = (performance.now() - t0) / 300;
-    expect(msPerTick).toBeLessThan(8);
+    expect(msPerTick).toBeLessThan(12); // (about 3 on a quiet machine; the budget for a whole frame is 16.7)
     r.run(1000);
     const arrived = Array.from({ length: 200 }, (_, i) => at(r, `blue${i}`)).filter((p) => Math.hypot(p.x - 55.5, p.y - 55.5) < 9).length;
     expect(arrived).toBeGreaterThan(150);

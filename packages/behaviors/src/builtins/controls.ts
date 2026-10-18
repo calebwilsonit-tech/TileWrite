@@ -321,8 +321,9 @@ export function bumpNav(ctx: SimContext): void {
 /** Cells buildings and other solid things take up. Units walk around them. */
 function solidCells(ctx: SimContext): Set<number> {
   const key = `solid:${ctx.runtime.scene}:${String(ctx.runtime.vars[NAV_VERSION] ?? 0)}`;
-  const cached = ctx.runtime.scratch.get(key) as { at: number; set: Set<number> } | undefined;
-  if (cached && cached.at === ctx.world.count) return cached.set;
+  const cached = ctx.runtime.scratch.get(key) as { tick: number; set: Set<number> } | undefined;
+  // worked out once every few ticks: buildings are placed through the builder, which bumps the navigation version
+  if (cached && ctx.tick - cached.tick < 30) return cached.set;
   const w = ctx.map?.width ?? 0;
   const set = new Set<number>();
   for (const o of ctx.world.query(C.Transform, C.Collider)) {
@@ -332,7 +333,7 @@ function solidCells(ctx: SimContext): Set<number> {
     const t = o.require<TransformIso>(C.Transform);
     for (let x = Math.floor(t.x - c.w / 2 + 0.05); x <= Math.floor(t.x + c.w / 2 - 0.05); x++) for (let y = Math.floor(t.y - c.d / 2 + 0.05); y <= Math.floor(t.y + c.d / 2 - 0.05); y++) set.add(y * w + x);
   }
-  ctx.runtime.scratch.set(key, { at: ctx.world.count, set });
+  ctx.runtime.scratch.set(key, { tick: ctx.tick, set });
   return set;
 }
 

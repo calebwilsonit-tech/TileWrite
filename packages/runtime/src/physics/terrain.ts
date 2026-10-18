@@ -59,6 +59,8 @@ export function surfaceAt(map: TileMap, x: number, y: number, z: number, q: Surf
   const flags = map.getFlags(cx, cy);
   if (map.blockedAt(cx, cy, z, q.bodyHeight)) return { kind: 'solid', z: Infinity };
 
+  const stack = map.getStack(cx, cy);
+  if (stack) return stackSurface(map, cx, cy, z, q, flags);
   const deck = map.getDeck(cx, cy);
   if (deck > 0) {
     if (z >= deck - q.stepUp) return { kind: 'deck', z: deck };
@@ -69,6 +71,39 @@ export function surfaceAt(map: TileMap, x: number, y: number, z: number, q: Surf
   const g = groundHeightAt(map, x, y);
   if (flags & FLAG.WATER) return { kind: 'water', z: g };
   return { kind: 'ground', z: g };
+}
+
+/**
+ * What a body finds in a cell built block by block: it stands on the highest surface (the floor or the top of a run of blocks)
+ * it can step onto from where its feet are, is stopped by blocks it would walk into, and cannot go where a block above would
+ * hit its head. That is what lets it walk under an arch and over a balcony.
+ */
+function stackSurface(map: TileMap, cx: number, cy: number, z: number, q: SurfaceQuery, flags: number): Surface {
+  const runs = map.runs(cx, cy);
+  const stack = map.getStack(cx, cy)!;
+  // inside a block (not just at its top edge): solid
+  for (const r of runs) if (z < r.top - q.stepUp - 1e-6 && z + q.bodyHeight > r.bottom + 1e-6 && z >= r.bottom - 1e-6) return { kind: 'solid', z: Infinity };
+  // candidate surfaces: the floor and the top of each run
+  let best = -Infinity;
+  let kind: SurfaceKind = 'pit';
+  const hasFloor = stack.floor !== 0 && !(runs[0] && runs[0].bottom === 0);
+  if (hasFloor && 0 <= z + q.stepUp) {
+    best = 0;
+    kind = flags & FLAG.WATER ? 'water' : 'ground';
+  }
+  for (const r of runs) {
+    if (r.top <= z + q.stepUp + 1e-6 && r.top > best) {
+      best = r.top;
+      kind = 'ground';
+    }
+  }
+  if (best === -Infinity) {
+    // no floor and nothing to stand on below: a hole
+    return flags & FLAG.PIT || !hasFloor ? { kind: 'pit', z: -Infinity } : { kind: 'ground', z: 0 };
+  }
+  // a block overhead that would hit the head
+  for (const r of runs) if (r.bottom >= best - 1e-6 && r.top > best + 1e-6 && best + q.bodyHeight > r.bottom + 1e-6) return { kind: 'solid', z: Infinity };
+  return { kind, z: best };
 }
 
 /** Which edge of a cell you cross when stepping from (ax,ay) to the orthogonally adjacent (bx,by). */

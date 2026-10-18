@@ -73,6 +73,19 @@ export function LayersPanel() {
         </li>
         <li>
           <label>
+            <input data-testid="view-xray" type="checkbox" checked={view.xray} onChange={(e) => store.setView({ xray: e.target.checked })} />
+            <span>See through the world (x-ray)</span>
+          </label>
+        </li>
+        <li>
+          <label>
+            <span>Show only blocks below level </span>
+            <input data-testid="view-slice" type="number" min={0} max={12} value={view.slice} style={{ width: 54 }} onChange={(e) => store.setView({ slice: Math.max(0, Math.min(255, Math.round(Number(e.target.value) || 0))) })} />
+            <span> (0 shows all)</span>
+          </label>
+        </li>
+        <li>
+          <label>
             <input data-testid="view-heights" type="checkbox" checked={view.heightLabels} onChange={(e) => store.setView({ heightLabels: e.target.checked })} />
             <span>Height numbers</span>
           </label>

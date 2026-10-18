@@ -1,6 +1,6 @@
 import { formatPoints, parsePoints } from '@tilewright/behaviors';
-import { EMPTY_TILE, FLAG, SLOPE, groundHeightAt, reachableCells, type PrefabData, type SlopeDir } from '@tilewright/runtime';
-import type { CellData } from '../model/cells';
+import { EMPTY_TILE, FLAG, SLOPE, columnToStack, groundHeightAt, reachableCells, stackColumn, stackRemoveBlock, stackSetBlock, stackSetFace, type BlockFace, type PrefabData, type SlopeDir } from '@tilewright/runtime';
+import type { CellData, CellPatch } from '../model/cells';
 import type { EditorDoc, Stroke } from '../model/doc';
 import type { ToolId, ToolOptions } from '../app/store';
 import {
@@ -29,6 +29,7 @@ export interface Pointer {
 }
 
 export type Preview =
+  | { kind: 'cube'; x: number; y: number; z: number; color: number }
   | { kind: 'wire'; from: { x: number; y: number; h: number }; to: { x: number; y: number } }
   | { kind: 'cells'; cells: P[]; color: number; alpha?: number }
   | { kind: 'ghost'; x: number; y: number; h: number; prefab: string };
@@ -54,6 +55,8 @@ export interface ToolEnv {
   entitiesInRect(r: { x0: number; y0: number; x1: number; y1: number }): string[];
   /** Grid position under a screen point, on the plane at height h. */
   worldAt(screen: { x: number; y: number }, h: number): { x: number; y: number };
+  /** The block (and the face of it) under a screen point. */
+  pickBlock(screen: { x: number; y: number }): { x: number; y: number; z: number; face: BlockFace } | null;
 }
 
 export interface ToolImpl {
@@ -69,7 +72,7 @@ export interface ToolImpl {
 export interface ToolMeta {
   id: ToolId;
   label: string;
-  group: 'Select' | 'Paint' | 'Height' | 'Terrain' | 'Collision' | 'Objects' | 'Logic' | 'Helpers';
+  group: 'Select' | 'Paint' | 'Height' | 'Blocks' | 'Terrain' | 'Collision' | 'Objects' | 'Logic' | 'Helpers';
   hotkey?: string;
   hint: string;
   /** Which layer this tool edits (so a locked layer can refuse it). */
@@ -89,6 +92,7 @@ export const TOOL_META: ToolMeta[] = [
   { id: 'eraser', label: 'Eraser', group: 'Paint', hotkey: 'E', hint: 'Remove tiles completely (leaves empty space).', edits: 'ground', options: ['size'] },
   { id: 'scatter', label: 'Scatter', group: 'Paint', hotkey: 'S', hint: 'Sprinkle the chosen tile randomly inside the brush. Density sets how much.', edits: 'ground', options: ['tile', 'size', 'density'] },
   { id: 'stamp', label: 'Stamp', group: 'Paint', hotkey: 'T', hint: 'Drag to copy an area as a pattern, then click to stamp it down. Esc forgets the pattern.', edits: 'ground', options: [] },
+  { id: 'blocks', label: 'Blocks', group: 'Blocks', hotkey: 'D', hint: 'Edit single blocks at any height. Click a face to add a block against it; Alt+click changes the block\'s tile; the Face mode changes only that face; Shift+click (or Delete mode) removes a block, leaving gaps for arches, tunnels and overhangs. Use the Layers panel to slice the world or see through it.', edits: 'ground', options: ['tile', 'blockMode'] },
   { id: 'raise', label: 'Raise', group: 'Height', hotkey: 'Q', hint: 'Raise ground by one level per click or drag. Hold Shift to lower.', edits: 'ground', options: ['size'] },
   { id: 'lower', label: 'Lower', group: 'Height', hotkey: 'W', hint: 'Lower ground by one level per click or drag.', edits: 'ground', options: ['size'] },
   { id: 'setheight', label: 'Set height', group: 'Height', hint: 'Set cells to an exact height level.', edits: 'ground', options: ['height', 'size'] },
@@ -689,7 +693,84 @@ const patrolTool = (): ToolImpl => ({
   hover() {},
 });
 
+/** Where a block added against a face goes. */
+function cellBeside(hit: { x: number; y: number; z: number; face: BlockFace }): { x: number; y: number; z: number } {
+  switch (hit.face) {
+    case 'top':
+      return { x: hit.x, y: hit.y, z: hit.z + 1 };
+    case 'n':
+      return { x: hit.x, y: hit.y - 1, z: hit.z };
+    case 'e':
+      return { x: hit.x + 1, y: hit.y, z: hit.z };
+    case 's':
+      return { x: hit.x, y: hit.y + 1, z: hit.z };
+    default:
+      return { x: hit.x - 1, y: hit.y, z: hit.z };
+  }
+}
+
+/** Change the cell so it has a block at a level (the cell becomes block-by-block). Null if the cell cannot take blocks. */
+export function cellWithBlock(c: CellData, z: number, tile: number): CellPatch | null {
+  const base = c.stack ?? (c.slope !== 0 || c.deck !== 0 ? null : columnToStack(c.tile, c.height));
+  if (!base) return null;
+  const stack = stackSetBlock(base, z, tile);
+  const col = stackColumn(stack);
+  return { stack, tile: col.tile, height: col.height };
+}
+
+export function cellWithoutBlock(c: CellData, z: number): CellPatch | null {
+  const base = c.stack ?? (c.slope !== 0 || c.deck !== 0 ? null : columnToStack(c.tile, c.height));
+  if (!base) return null;
+  const stack = stackRemoveBlock(base, z, c.tile);
+  const col = stackColumn(stack);
+  return { stack, tile: col.tile, height: col.height };
+}
+
+export function cellWithFace(c: CellData, z: number, face: BlockFace, tile: number): CellPatch | null {
+  const base = c.stack ?? (c.slope !== 0 || c.deck !== 0 ? null : columnToStack(c.tile, c.height));
+  if (!base) return null;
+  const stack = stackSetFace(base, z, face, tile);
+  const col = stackColumn(stack);
+  return { stack, tile: col.tile, height: col.height };
+}
+
+/** Edit single blocks: add against a face, replace, paint one face, or remove. */
+function blocksTool(): ToolImpl {
+  const act = (p: Pointer, env: ToolEnv): void => {
+    const hit = env.pickBlock(p.screen);
+    if (!hit) return;
+    const mode = p.shift ? 'delete' : p.alt ? 'replace' : env.opts.blockMode;
+    const doc = env.doc;
+    const apply = (label: string, x: number, y: number, patch: (c: CellData) => CellPatch | null): void => {
+      let refused = false;
+      doc.paint(label, [{ x, y, patch: (c) => patch(c) ?? ((refused = true), {}) }]);
+      if (refused) env.notify('warn', 'Stairs, ramps and bridges cannot be split into blocks. Paint the cell with the Brush first.');
+    };
+    if (mode === 'delete') apply('Remove block', hit.x, hit.y, (c) => (hit.z < 0 ? { tile: 0 } : cellWithoutBlock(c, hit.z)));
+    else if (mode === 'replace') apply('Change block', hit.x, hit.y, (c) => (hit.z < 0 ? { tile: env.opts.tile } : cellWithBlock(c, hit.z, env.opts.tile)));
+    else if (mode === 'face') apply('Paint a block face', hit.x, hit.y, (c) => (hit.z < 0 ? null : cellWithFace(c, hit.z, hit.face, env.opts.tile)));
+    else {
+      const at = cellBeside(hit);
+      if (!doc.map.inBounds(at.x, at.y) || at.z < 0) return;
+      apply('Add block', at.x, at.y, (c) => cellWithBlock(c, at.z, env.opts.tile));
+    }
+  };
+  return {
+    down: act,
+    move() {},
+    up() {},
+    cancel(env) {
+      env.setPreview([]);
+    },
+    hover(p, env) {
+      const hit = env.pickBlock(p.screen);
+      env.setPreview(hit ? [{ kind: 'cube', x: hit.x, y: hit.y, z: hit.z, color: p.shift ? 0xe0566b : 0xffffff }] : []);
+    },
+  };
+}
+
 export const TOOLS: Record<ToolId, ToolImpl> = {
+  blocks: blocksTool(),
   patrol: patrolTool(),
   wire: wireTool(),
   room: roomTool(),

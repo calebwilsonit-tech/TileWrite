@@ -13,6 +13,7 @@ export * from './input/input';
 export * from './input/keyboard';
 export * from './input/pointer';
 export * from './tilemap/tilemap';
+export * from './tilemap/stack-ops';
 export * from './tilemap/autotile';
 export * from './lighting/lighting';
 export * from './render/camera';

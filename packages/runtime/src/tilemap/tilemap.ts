@@ -66,6 +66,37 @@ export interface SlopeInfo {
   style: SlopeStyle;
 }
 
+/** A face of a block: its top, or one of the four sides (named by where the side faces in the world). */
+export type BlockFace = 'top' | 'n' | 'e' | 's' | 'w';
+
+/** One block of a stack: a cube one level tall, with its own tile and optionally another tile on single faces. */
+export interface StackBlock {
+  /** The level its bottom is on. */
+  z: number;
+  tile: number;
+  faces?: Partial<Record<BlockFace, number>>;
+}
+
+/**
+ * A cell edited block by block. Normally a cell is a column (one tile, one height). A cell with a stack lists its blocks, with
+ * gaps allowed (arches, tunnels, overhangs, balconies); the cell's column fields keep describing the ground-level part (the run
+ * of blocks that starts at level 0, or the floor), so everything that only needs the ground keeps working.
+ */
+export interface CellStack {
+  /** The tile of the ground at level 0 where no block stands (0 = no floor: a hole). */
+  floor: number;
+  /** Sorted by z, one block per level. */
+  blocks: StackBlock[];
+}
+
+/** A solid run of blocks in a stack: from level `bottom` up to `top`. */
+export interface BlockRun {
+  bottom: number;
+  top: number;
+  /** Tile of the run's top block. */
+  tile: number;
+}
+
 /**
  * Dense grid of columns. Each cell has a tile id and a ground height (levels). A column fills from
  * below the floor up to its height, so sorting and collision treat it as solid ground at that level.
@@ -85,6 +116,8 @@ export class TileMap {
   readonly blockLow: Uint8Array;
   /** With BLOCK: 0 = the blocker covers every height; otherwise the level where it stops (exclusive). */
   readonly blockHigh: Uint8Array;
+  /** Cells edited block by block (see CellStack), by cell index. */
+  readonly stacks = new Map<number, CellStack>();
 
   constructor(
     readonly width: number,
@@ -132,6 +165,7 @@ export class TileMap {
     this.oneWay[i] = 0;
     this.blockLow[i] = 0;
     this.blockHigh[i] = 0;
+    this.stacks.delete(i);
   }
 
   getSlope(x: number, y: number): SlopeInfo | null {
@@ -234,6 +268,145 @@ export class TileMap {
     this.oneWay.fill(0);
     this.blockLow.fill(0);
     this.blockHigh.fill(0);
+    this.stacks.clear();
+  }
+
+  // ---------- blocks ----------
+
+  getStack(x: number, y: number): CellStack | undefined {
+    return this.inBounds(x, y) ? this.stacks.get(this.idx(x, y)) : undefined;
+  }
+
+  /**
+   * Make the cell block-by-block (its column becomes one block per level, in the cell's tile) and return the stack.
+   * Stairs, ramps and decks cannot be split into blocks: this returns null for those.
+   */
+  toStack(x: number, y: number): CellStack | null {
+    if (!this.inBounds(x, y)) return null;
+    const i = this.idx(x, y);
+    const have = this.stacks.get(i);
+    if (have) return have;
+    if (this.slopes[i] !== 0 || this.decks[i] !== 0) return null;
+    const tile = this.tiles[i]!;
+    const h = this.heights[i]!;
+    const blocks: StackBlock[] = [];
+    for (let z = 0; z < h; z++) blocks.push({ z, tile });
+    const stack: CellStack = { floor: h === 0 ? tile : 0, blocks };
+    this.stacks.set(i, stack);
+    return stack;
+  }
+
+  /** The block at a level of a cell (a plain column counts: one block per level up to its height). */
+  blockAt(x: number, y: number, z: number): StackBlock | undefined {
+    if (!this.inBounds(x, y)) return undefined;
+    const i = this.idx(x, y);
+    const s = this.stacks.get(i);
+    if (s) return s.blocks.find((b) => b.z === z);
+    if (this.slopes[i] === 0 && this.tiles[i] !== EMPTY_TILE && z >= 0 && z < this.heights[i]!) return { z, tile: this.tiles[i]! };
+    return undefined;
+  }
+
+  /** Put a block at a level (replacing the one there). False when the cell cannot take blocks. */
+  setBlock(x: number, y: number, z: number, tile: number, faces?: StackBlock['faces']): boolean {
+    const s = this.toStack(x, y);
+    if (!s || z < 0 || z > 254 || tile === EMPTY_TILE) return false;
+    const block: StackBlock = faces && Object.keys(faces).length > 0 ? { z, tile, faces: { ...faces } } : { z, tile };
+    const at = s.blocks.findIndex((b) => b.z === z);
+    if (at >= 0) s.blocks[at] = block;
+    else {
+      s.blocks.push(block);
+      s.blocks.sort((a, b) => a.z - b.z);
+    }
+    this.syncColumn(x, y);
+    return true;
+  }
+
+  /** Take the block at a level away (the cell becomes block-by-block if it was a column). */
+  removeBlock(x: number, y: number, z: number): boolean {
+    const s = this.toStack(x, y);
+    if (!s) return false;
+    const at = s.blocks.findIndex((b) => b.z === z);
+    if (at < 0) return false;
+    s.blocks.splice(at, 1);
+    if (s.floor === 0 && !s.blocks.some((b) => b.z === 0)) s.floor = this.tiles[this.idx(x, y)] || 0;
+    this.syncColumn(x, y);
+    return true;
+  }
+
+  /** Change the tile of one face of a block (tile 0 puts the block's own tile back). */
+  setBlockFace(x: number, y: number, z: number, face: BlockFace, tile: number): boolean {
+    const s = this.toStack(x, y);
+    const b = s?.blocks.find((v) => v.z === z);
+    if (!s || !b) return false;
+    const faces = { ...(b.faces ?? {}) };
+    if (tile === 0 || tile === b.tile) delete faces[face];
+    else faces[face] = tile;
+    if (Object.keys(faces).length > 0) b.faces = faces;
+    else delete b.faces;
+    return true;
+  }
+
+  /** Solid runs of blocks in a cell, from the bottom up (a plain column is one run). */
+  runs(x: number, y: number): BlockRun[] {
+    if (!this.inBounds(x, y)) return [];
+    const i = this.idx(x, y);
+    const s = this.stacks.get(i);
+    if (!s) {
+      const h = this.heights[i]!;
+      return this.tiles[i] !== EMPTY_TILE && h > 0 && this.slopes[i] === 0 ? [{ bottom: 0, top: h, tile: this.tiles[i]! }] : [];
+    }
+    const out: BlockRun[] = [];
+    for (const b of s.blocks) {
+      const last = out[out.length - 1];
+      if (last && last.top === b.z) {
+        last.top = b.z + 1;
+        last.tile = b.tile;
+      } else out.push({ bottom: b.z, top: b.z + 1, tile: b.tile });
+    }
+    return out;
+  }
+
+  /** Levels a body can stand at in this cell (the floor, and the top of every run), lowest first. */
+  surfaces(x: number, y: number): number[] {
+    if (!this.inBounds(x, y)) return [];
+    const s = this.stacks.get(this.idx(x, y));
+    if (!s) return [this.walkLevel(x, y)];
+    const out: number[] = [];
+    const runs = this.runs(x, y);
+    if (s.floor !== 0 && !(runs[0] && runs[0].bottom === 0)) out.push(0);
+    for (const r of runs) out.push(r.top);
+    return out;
+  }
+
+  /** Bring the column fields (tile and height) in line with the stack: the ground-level run, or the floor. */
+  syncColumn(x: number, y: number): void {
+    const i = this.idx(x, y);
+    const s = this.stacks.get(i);
+    if (!s) return;
+    const run = this.runs(x, y)[0];
+    if (run && run.bottom === 0) {
+      this.heights[i] = Math.min(255, run.top);
+      this.tiles[i] = run.tile;
+    } else {
+      this.heights[i] = 0;
+      this.tiles[i] = s.floor;
+    }
+  }
+
+  /** Every stack as plain data (what scene files store). */
+  stacksToJSON(): StackData[] {
+    const out: StackData[] = [];
+    for (const [i, s] of [...this.stacks.entries()].sort((a, b) => a[0] - b[0])) out.push({ x: i % this.width, y: Math.floor(i / this.width), floor: s.floor, blocks: s.blocks.map((b) => (b.faces ? { z: b.z, tile: b.tile, faces: { ...b.faces } } : { z: b.z, tile: b.tile })) });
+    return out;
+  }
+
+  stacksFromJSON(data: readonly StackData[]): void {
+    for (const d of data) {
+      if (!this.inBounds(d.x, d.y)) continue;
+      const blocks = d.blocks.map((b) => (b.faces ? { z: b.z, tile: b.tile, faces: { ...b.faces } } : { z: b.z, tile: b.tile })).sort((a, b) => a.z - b.z);
+      this.stacks.set(this.idx(d.x, d.y), { floor: d.floor, blocks });
+      this.syncColumn(d.x, d.y);
+    }
   }
 
   /** Visit every non-empty cell. */
@@ -246,8 +419,10 @@ export class TileMap {
     }
   }
 
-  /** Highest point of the cell's ground (top of a slope). */
+  /** Highest point of the cell's ground (top of a slope), or of its highest block. */
   topHeight(x: number, y: number): number {
+    const s = this.getStack(x, y);
+    if (s && s.blocks.length > 0) return s.blocks[s.blocks.length - 1]!.z + 1;
     return this.getHeight(x, y) + (this.getSlope(x, y) ? SLOPE_RISE : 0);
   }
 
@@ -269,6 +444,7 @@ export class TileMap {
       oneWay: [...this.oneWay],
       blockLow: [...this.blockLow],
       blockHigh: [...this.blockHigh],
+      ...(this.stacks.size > 0 ? { stacks: this.stacksToJSON() } : {}),
     };
   }
 
@@ -283,8 +459,17 @@ export class TileMap {
     if (d.oneWay) m.oneWay.set(d.oneWay);
     if (d.blockLow) m.blockLow.set(d.blockLow);
     if (d.blockHigh) m.blockHigh.set(d.blockHigh);
+    if (d.stacks) m.stacksFromJSON(d.stacks);
     return m;
   }
+}
+
+/** One block-by-block cell as stored in files. */
+export interface StackData {
+  x: number;
+  y: number;
+  floor: number;
+  blocks: { z: number; tile: number; faces?: Partial<Record<BlockFace, number>> }[];
 }
 
 export interface TileMapData {
@@ -299,4 +484,5 @@ export interface TileMapData {
   oneWay?: number[];
   blockLow?: number[];
   blockHigh?: number[];
+  stacks?: StackData[];
 }

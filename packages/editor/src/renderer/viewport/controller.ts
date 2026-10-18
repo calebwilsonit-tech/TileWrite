@@ -11,6 +11,7 @@ import {
   gridToScreen,
   screenRect,
   screenToGrid,
+  unrotateVec,
   tilesetFromList,
   type Cell,
   type TileSet,
@@ -266,6 +267,17 @@ export class ViewportController {
     return { x: rect.left + v.x, y: rect.top + v.y };
   }
 
+  /** Page coordinates of a point on a block's face: the middle of its top, or of its left or right side in this view (end-to-end tests). */
+  blockToClient(cx: number, cy: number, z: number, face: 'top' | 'left' | 'right'): { x: number; y: number } {
+    const r = this.renderer;
+    const l = unrotateVec(0, 1, r.view);
+    const rt = unrotateVec(1, 0, r.view);
+    const p = face === 'top' ? gridToScreen(cx + 0.5, cy + 0.5, z + 1, r.iso) : face === 'left' ? gridToScreen(cx + 0.5 + l.x * 0.5, cy + 0.5 + l.y * 0.5, z + 0.5, r.iso) : gridToScreen(cx + 0.5 + rt.x * 0.5, cy + 0.5 + rt.y * 0.5, z + 0.5, r.iso);
+    const v = this.camera.worldToView(p);
+    const rect = r.canvas.getBoundingClientRect();
+    return { x: rect.left + v.x, y: rect.top + v.y };
+  }
+
   /** Page coordinates of the middle of an object (for real mouse events in end-to-end tests). */
   entityToClient(id: string): { x: number; y: number } | null {
     const e = this.doc?.getEntity(id);
@@ -403,7 +415,10 @@ export class ViewportController {
     this.overlay.outline(boxes, this.renderer.iso);
 
     this.ghostG.clear();
+    this.renderer.setSlice(s.view.slice > 0 ? s.view.slice : null);
+    this.renderer.setXray(s.view.xray);
     for (const pv of this.previews) {
+      if (pv.kind === 'cube') this.overlay.cube(this.ghostG, pv.x, pv.y, pv.z, pv.color, this.renderer.iso);
       if (pv.kind === 'ghost') {
         const prefab = prefabById(pv.prefab, store.prefabs);
         const data = prefab.make(pv.x, pv.y, pv.h);
@@ -554,6 +569,7 @@ export class ViewportController {
       connect: (from, to) => store.set({ connect: { from, to } }),
       entityAnchor: (id) => this.anchorOf(id),
       entitiesInRect: (r) => this.entitiesInRect(r),
+      pickBlock: (sc) => this.renderer.pickBlock(sc.x, sc.y),
       worldAt: (sc, h) => {
         const w = this.camera.viewToWorld(sc);
         return screenToGrid(w.x, w.y, h, this.renderer.iso);

@@ -4,7 +4,7 @@ import { describeKeys } from '../app/commands';
 import { allPrefabs, prefabById } from '../tools/prefabs';
 import { TOOL_META, toolMeta, type ToolMeta } from '../tools/tools';
 
-const GROUPS: ToolMeta['group'][] = ['Select', 'Paint', 'Height', 'Terrain', 'Collision', 'Objects', 'Logic', 'Helpers'];
+const GROUPS: ToolMeta['group'][] = ['Select', 'Paint', 'Height', 'Blocks', 'Terrain', 'Collision', 'Objects', 'Logic', 'Helpers'];
 
 const DIRS: { dir: SlopeDir; label: string; arrow: string }[] = [
   { dir: SLOPE.N, label: 'North (up-right on screen)', arrow: '↗' },
@@ -57,6 +57,26 @@ export function ToolOptionsView({ tool, options }: { tool: ToolId; options: Tool
             </>
           )}
         </>
+      )}
+      {meta.options.includes('blockMode') && (
+        <div className="opt">
+          <span>A click...</span>
+          <div className="seg" role="group" aria-label="What a click does to a block">
+            {(
+              [
+                ['add', 'adds a block'],
+                ['replace', 'changes the tile'],
+                ['face', 'paints one face'],
+                ['delete', 'removes it'],
+              ] as const
+            ).map(([mode, label]) => (
+              <button key={mode} data-testid={`block-mode-${mode}`} className={options.blockMode === mode ? 'on' : ''} onClick={() => set({ blockMode: mode })}>
+                {label}
+              </button>
+            ))}
+          </div>
+          <p className="hint">Shift+click always removes, Alt+click always changes the tile. Blocks of a plain column appear as you edit them.</p>
+        </div>
       )}
       {meta.options.includes('outline') && (
         <label className="opt check">

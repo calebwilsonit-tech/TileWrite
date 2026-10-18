@@ -1,7 +1,8 @@
 import { Application, Container, Graphics, Rectangle, Sprite as PixiSprite, Text, Texture } from 'pixi.js';
 import { ANIMATOR, type Animator } from '../anim/animator';
 import type { CellMark } from '../story/cutscene';
-import { DEFAULT_ISO, gridToScreen, relToScreen, screenToCell, unrotateVec, type Cell, type IsoConfig, type ViewRotation } from '../iso/math';
+import type { BlockFace, CellStack } from '../tilemap/tilemap';
+import { DEFAULT_ISO, gridToScreen, relToScreen, rotateGrid, screenToCell, unrotateVec, type Cell, type IsoConfig, type ViewRotation } from '../iso/math';
 import type { LightingModel } from '../lighting/lighting';
 import { C, LABEL, type Label, type Sprite, type TransformIso } from '../scene/components';
 import { LightingLayer } from './lighting-layer';
@@ -23,6 +24,11 @@ function shade(color: number, f: number): number {
 
 /** Depth-sort ids at or above this are entities (id - base); below are tile views. */
 const ENTITY_ID_BASE = 2 ** 31;
+
+/** A cell's position as it sits in the turned world (for ordering by depth). */
+function rotateGridCell(x: number, y: number, iso: IsoConfig): { x: number; y: number } {
+  return rotateGrid(x + 0.5, y + 0.5, iso);
+}
 /** Draw-order ids of the ground marks (move ranges, building footprints): above the tiles' ids, below the entities'. */
 const MARK_ID_BASE = 2 ** 30;
 const MISSING_TILE: TileDef = { name: '?', top: 0xff00ff, left: 0xbb00bb, right: 0x880088 };
@@ -137,6 +143,10 @@ export class IsoRenderer {
   lighting: LightingModel | null = null;
   private readonly lightLayer = new LightingLayer();
   private readonly labelLayer = new Container();
+  /** Show only the blocks below this level (null = all): lets inner blocks be reached. */
+  private sliceTop: number | null = null;
+  /** See through the world (every tile drawn faint). */
+  private xray = false;
   /** Cells to tint on the ground this frame (see ViewState.cells). */
   marks: readonly CellMark[] = [];
   private readonly markViews: Graphics[] = [];
@@ -236,6 +246,81 @@ export class IsoRenderer {
     this.tileListDirty = true;
   }
 
+  /** The block (and which of its faces) under a viewport pixel, counting every level of plain columns too; null over nothing. */
+  pickBlock(px: number, py: number): { x: number; y: number; z: number; face: BlockFace } | null {
+    const map = this.tileMap;
+    if (!map) return null;
+    const w = this.camera.viewToWorld({ x: px, y: py });
+    const l = unrotateVec(0, 1, this.view);
+    const r = unrotateVec(1, 0, this.view);
+    const faceName = (nx: number, ny: number): BlockFace => (nx === 1 ? 'e' : nx === -1 ? 'w' : ny === 1 ? 's' : 'n');
+    const leftFace = faceName(l.x, l.y);
+    const rightFace = faceName(r.x, r.y);
+    const inside = (pts: number[], x: number, y: number): boolean => {
+      let c = false;
+      for (let i = 0, j = pts.length - 2; i < pts.length; j = i, i += 2) {
+        const xi = pts[i]!;
+        const yi = pts[i + 1]!;
+        const xj = pts[j]!;
+        const yj = pts[j + 1]!;
+        if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) c = !c;
+      }
+      return c;
+    };
+    const hw = this.iso.tileW / 2;
+    const hh = this.iso.tileH / 2;
+    let best: { x: number; y: number; z: number; face: BlockFace; key: number } | null = null;
+    const test = (x: number, y: number, z: number): void => {
+      if (this.sliceTop !== null && z >= this.sliceTop) return;
+      const c = gridToScreen(x + 0.5, y + 0.5, z + 1, this.iso);
+      if (w.x < c.x - hw || w.x > c.x + hw || w.y < c.y - hh || w.y > c.y + hh + this.iso.heightPx) return;
+      const rc = relToScreen;
+      const P = (fx: number, fy: number, h: number): [number, number] => {
+        const p = rc(fx - 0.5, fy - 0.5, h, this.iso);
+        return [c.x + p.x, c.y + p.y];
+      };
+      const top = [P(0, 0, 0), P(1, 0, 0), P(1, 1, 0), P(0, 1, 0)].flat();
+      const CORNERS: Record<string, [number, number]> = { n: [0, 0], e: [1, 0], s: [1, 1], w: [0, 1] };
+      const sideOf = (pair: [Corner, Corner]): number[] => {
+        const [a, b] = pair;
+        return [...P(CORNERS[a]![0], CORNERS[a]![1], 0), ...P(CORNERS[b]![0], CORNERS[b]![1], 0), ...P(CORNERS[b]![0], CORNERS[b]![1], -1), ...P(CORNERS[a]![0], CORNERS[a]![1], -1)];
+      };
+      const sides = this.visibleSides();
+      let face: BlockFace | null = null;
+      if (map.blockAt(x, y, z + 1) === undefined && inside(top, w.x, w.y)) face = 'top';
+      else if (map.blockAt(x + l.x, y + l.y, z) === undefined && inside(sideOf(sides.left), w.x, w.y)) face = leftFace;
+      else if (map.blockAt(x + r.x, y + r.y, z) === undefined && inside(sideOf(sides.right), w.x, w.y)) face = rightFace;
+      if (!face) return;
+      const rot = rotateGridCell(x, y, this.iso);
+      const key = rot.x + rot.y + z * 1.0001;
+      if (!best || key > best.key) best = { x, y, z, face, key };
+    };
+    for (let y = 0; y < map.height; y++) {
+      for (let x = 0; x < map.width; x++) {
+        if (map.getTile(x, y) === 0 && !map.getStack(x, y)) continue;
+        const st = map.getStack(x, y);
+        if (st) for (const b of st.blocks) test(x, y, b.z);
+        else if (!map.getSlope(x, y) && map.getDeck(x, y) === 0) for (let z = 0; z < map.getHeight(x, y); z++) test(x, y, z);
+        else test(x, y, Math.max(0, Math.ceil(map.topHeight(x, y)) - 1));
+        // a floor (the ground of a cell with no block on it) can be picked too
+        if (st && st.floor !== 0 && !st.blocks.some((b) => b.z === 0)) test(x, y, -1);
+      }
+    }
+    const hit = best as { x: number; y: number; z: number; face: BlockFace } | null;
+    return hit ? { x: hit.x, y: hit.y, z: hit.z, face: hit.face } : null;
+  }
+
+  /** Show only the blocks below level `top` (null shows everything). */
+  setSlice(top: number | null): void {
+    if (this.sliceTop === top) return;
+    this.sliceTop = top;
+    this.rebuildTiles();
+  }
+
+  setXray(on: boolean): void {
+    this.xray = on;
+  }
+
   /** Turn the world a quarter turn at a time on screen. Everything is drawn again; the caller recentres the camera. */
   setView(view: ViewRotation): void {
     if ((this.iso.view ?? 0) === view) return;
@@ -299,7 +384,28 @@ export class IsoRenderer {
       this.viewById.set(box.id, view);
     };
 
+    const stack = map.getStack(x, y);
+    if (stack) {
+      this.buildStack(map, x, y, stack, add);
+      this.cellViews.set(y * map.width + x, views);
+      this.tileListDirty = true;
+      return;
+    }
     const g = new Graphics();
+    const cut = this.sliceTop;
+    // a column cut by the slice shows only its lower levels
+    if (cut !== null && height > cut) {
+      const low = Math.max(0, cut);
+      if (low === 0) {
+        this.cellViews.set(y * map.width + x, views);
+        return;
+      }
+      this.drawCell(g, { n: 0, e: 0, s: 0, w: 0 }, -(low + 1), def);
+      add(g, low, { id: 0, minX: x, maxX: x + 1, minY: y, maxY: y + 1, minZ: -1, maxZ: low }, true);
+      this.cellViews.set(y * map.width + x, views);
+      this.tileListDirty = true;
+      return;
+    }
     const bottom = -(height + 1);
     let box = map.boxFor(x, y, 0);
     if (flags & FLAG.PIT) {
@@ -350,8 +456,38 @@ export class IsoRenderer {
     return this.tileList;
   }
 
+  /** A cell built block by block: its floor, then every block as its own cube with its own faces. */
+  private buildStack(map: TileMap, x: number, y: number, stack: CellStack, add: (gfx: Graphics, h: number, box: DepthBox, occluder: boolean) => void): void {
+    const def = (t: number): TileDef => this.tileset[t] ?? MISSING_TILE;
+    const flat = { n: 0, e: 0, s: 0, w: 0 };
+    const hasGround = stack.blocks.some((b) => b.z === 0);
+    if (stack.floor !== 0 && !hasGround && (this.sliceTop === null || this.sliceTop > 0)) {
+      const g = new Graphics();
+      this.drawCell(g, flat, -1, def(stack.floor));
+      add(g, 0, { id: 0, minX: x, maxX: x + 1, minY: y, maxY: y + 1, minZ: -1, maxZ: 0 }, true);
+    }
+    const l = unrotateVec(0, 1, this.view);
+    const r = unrotateVec(1, 0, this.view);
+    const faceName = (nx: number, ny: number): BlockFace => (nx === 1 ? 'e' : nx === -1 ? 'w' : ny === 1 ? 's' : 'n');
+    const leftFace = faceName(l.x, l.y);
+    const rightFace = faceName(r.x, r.y);
+    for (const b of stack.blocks) {
+      if (this.sliceTop !== null && b.z >= this.sliceTop) continue;
+      const g = new Graphics();
+      const own = def(b.tile);
+      const faces = { top: def(b.faces?.top ?? b.tile), left: def(b.faces?.[leftFace] ?? b.tile), right: def(b.faces?.[rightFace] ?? b.tile) };
+      // a side that is against another block at the same level is never seen
+      const hidden = (nx: number, ny: number): boolean => map.blockAt(x + nx, y + ny, b.z) !== undefined;
+      const skip = { left: hidden(l.x, l.y), right: hidden(r.x, r.y) };
+      this.drawCell(g, flat, -1, own, faces, skip);
+      const wall = own.wall === true;
+      add(g, b.z + 1, { id: 0, minX: x, maxX: x + 1, minY: y, maxY: y + 1, minZ: b.z, maxZ: b.z + 1 }, true);
+      void wall;
+    }
+  }
+
   /** A column top with per-corner heights, plus the two camera-facing sides down to `bottom`. */
-  private drawCell(g: Graphics, c: Corners, bottom: number, def: TileDef): void {
+  private drawCell(g: Graphics, c: Corners, bottom: number, def: TileDef, faces?: { top: TileDef; left: TileDef; right: TileDef }, skip?: { left: boolean; right: boolean }): void {
     const P = (fx: number, fy: number, h: number): [number, number] => this.local(fx, fy, h);
     const [nx, ny] = P(0, 0, c.n);
     const [ex, ey] = P(1, 0, c.e);
@@ -366,11 +502,12 @@ export class IsoRenderer {
       const Bb = P(CORNER_AT[b][0], CORNER_AT[b][1], bottom);
       g.poly([A[0], A[1], B[0], B[1], Bb[0], Bb[1], Ab[0], Ab[1]]).fill(fill);
     };
-    side(sides.left, def.left);
-    side(sides.right, def.right);
-    g.poly([nx, ny, ex, ey, sx, sy, wx, wy]).fill(this.topFill(def));
-    g.poly([nx, ny, ex, ey, sx, sy, wx, wy]).stroke({ width: 1, color: shade(def.top, 0.85), alpha: this.hasTileArt(def) ? 0.15 : 0.6 });
-    if (def.rim) this.drawRim(g, [nx, ny], [ex, ey], [sx, sy], [wx, wy], def.rim);
+    if (!skip?.left) side(sides.left, (faces?.left ?? def).left);
+    if (!skip?.right) side(sides.right, (faces?.right ?? def).right);
+    const top = faces?.top ?? def;
+    g.poly([nx, ny, ex, ey, sx, sy, wx, wy]).fill(this.topFill(top));
+    g.poly([nx, ny, ex, ey, sx, sy, wx, wy]).stroke({ width: 1, color: shade(top.top, 0.85), alpha: this.hasTileArt(top) ? 0.15 : 0.6 });
+    if (top.rim) this.drawRim(g, [nx, ny], [ex, ey], [sx, sy], [wx, wy], top.rim);
   }
 
   /** What fills a tile's top face: its art stretched over the face (the art's own picture of a diamond), or its flat colour. */
@@ -676,6 +813,7 @@ export class IsoRenderer {
         const vb = rotateBox(v.box, this.iso);
         if (rectsOverlap(focusRect, screenRect(vb, this.iso)) && isInFront(focusBox, vb)) target = this.fadeAlpha;
       }
+      if (this.xray) target = Math.min(target, 0.3);
       const a = v.gfx.alpha;
       v.gfx.alpha = Math.abs(a - target) < 0.02 ? target : a + (target - a) * 0.25;
     }
