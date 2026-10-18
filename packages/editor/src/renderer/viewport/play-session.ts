@@ -59,6 +59,7 @@ import {
   type GameUiHost,
   activeInput,
 } from '@tilewright/behaviors';
+import { POINTER_BINDINGS } from '@tilewright/runtime';
 import { drawCone, drawFootprint, drawLightRadius, drawPath, shapesOf } from './debug-draw';
 import { assetFs } from '../project/assetFs';
 import { joinPath } from '../project/api';
@@ -254,6 +255,12 @@ export class PlaySession {
     renderer.world.addChild(this.debugLayer);
     if (o.record) this.runner.recorder = new InputRecorder();
     this.ui = new GameUi(o.uiParent, this.uiHost());
+    // the mouse reaches the game as cells under the pointer (control schemes read them)
+    this.source.setPointer(
+      renderer.canvas,
+      (x, y) => (this.ui.menuOpen ? null : renderer.pickCell(x, y)),
+      () => ({ x: renderer.camera.x, y: renderer.camera.y, zoom: renderer.camera.zoom, w: renderer.camera.viewW, h: renderer.camera.viewH }),
+    );
     if (o.layout) this.ui.setLayout(o.layout);
     this.startedAt = performance.now();
     const auto = o.autoPlay;
@@ -338,7 +345,7 @@ export class PlaySession {
     const base = activeInput();
     this.defaults = projectDefaults(input, base.map);
     this.labels = projectActionLabels(input, base.labels);
-    this.inputMap.bindings = effectiveBindings(this.settings, this.defaults);
+    this.inputMap.bindings = { ...effectiveBindings(this.settings, this.defaults), ...POINTER_BINDINGS };
   }
 
   // ---------- sound and effects ----------
@@ -613,11 +620,11 @@ export class PlaySession {
       rebind: (action, binding) => {
         const next = rebind(effectiveBindings(this.settings, this.defaults), action, binding);
         this.setSettings({ ...this.settings, bindings: bindingChanges(next, this.defaults) });
-        this.inputMap.bindings = next;
+        this.inputMap.bindings = { ...next, ...POINTER_BINDINGS };
       },
       resetBindings: () => {
         this.setSettings({ ...this.settings, bindings: {} });
-        this.inputMap.bindings = effectiveBindings(this.settings, this.defaults);
+        this.inputMap.bindings = { ...effectiveBindings(this.settings, this.defaults), ...POINTER_BINDINGS };
       },
       captureNext: () => this.source.captureNext(),
       restart: () => {

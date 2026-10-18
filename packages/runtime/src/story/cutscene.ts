@@ -75,9 +75,27 @@ export interface ViewState {
   /** Pixels of quick shake from hits and bangs; fades by itself (see `Simulation.step`). */
   impact: number;
   fade: { alpha: number; color: number };
+  /** Which way the world is turned on screen (0 = usual; each step is a quarter turn). The game host draws it; controls follow it. */
+  rotation: 0 | 1 | 2 | 3;
+  /** Cells the game wants lit up on the ground (a move range, a building's footprint). Cosmetic: rebuilt by whoever wants them every tick. */
+  cells: CellMark[];
+  /** A selection rectangle being dragged, in picture pixels. */
+  selectBox: { x0: number; y0: number; x1: number; y1: number } | null;
 }
 
-export const newView = (): ViewState => ({ cameraTarget: null, cameraZoom: null, shake: 0, impact: 0, fade: { alpha: 0, color: 0 } });
+/** A cell tinted on the ground. */
+export interface CellMark {
+  x: number;
+  y: number;
+  /** Height of the surface it sits on (levels). */
+  h: number;
+  color: number;
+  alpha?: number;
+  /** Draw only the outline. */
+  outline?: boolean;
+}
+
+export const newView = (): ViewState => ({ rotation: 0, cells: [], selectBox: null, cameraTarget: null, cameraZoom: null, shake: 0, impact: 0, fade: { alpha: 0, color: 0 } });
 
 /** A cutscene that is playing right now. */
 export interface CutsceneState {

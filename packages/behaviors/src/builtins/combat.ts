@@ -517,7 +517,7 @@ export const dodge = defineBehavior<Dodge>({
     if (own?.dead) return;
     if (st.left <= 0 && st.wait <= 0 && ctx.input.pressed('dodge') && b.state === 'ground') {
       const v = ctx.input.vector('move_left', 'move_right', 'move_up', 'move_down');
-      let g = screenIntentToGrid(v.x, v.y);
+      let g = screenIntentToGrid(v.x, v.y, ctx.runtime.view.rotation);
       if (g.x === 0 && g.y === 0) g = facingVector(transform(e).facing);
       st.dx = g.x;
       st.dy = g.y;

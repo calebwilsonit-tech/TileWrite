@@ -36,6 +36,7 @@ function useFacts(): {
   signals: string[];
   prefabs: string[];
   tables: string[];
+  events: string[];
 } {
   useApp((s) => s.docVersion);
   const prefabs = useApp((s) => s.prefabNames);
@@ -56,7 +57,7 @@ function useFacts(): {
       if (p?.variable) vars.add(p.variable);
     }
     const signals = [...new Set(behaviorList().flatMap((b) => [...b.inputs, ...b.outputs].map((s) => s.name)))].sort();
-    return { entities, tags, variables: [...vars].sort(), signals, prefabs, tables: store.tables.map((t) => t.name) };
+    return { entities, tags, variables: [...vars].sort(), signals, prefabs, tables: store.tables.map((t) => t.name), events: store.eventDefs.map((e) => e.name) };
   }, [doc, doc?.entities.length, doc?.events, doc?.variables, prefabs, store.tables]);
 }
 
@@ -66,8 +67,14 @@ function ParamEditor({ spec, value, onChange, testId, facts, inLoop }: { spec: P
       return <NumberField testId={testId} label={spec.label} value={Number(value ?? 0)} min={spec.min} max={spec.max} step={spec.step ?? 1} onCommit={onChange} />;
     case 'boolean':
       return <CheckField testId={testId} label={spec.label} value={value === true} onChange={onChange} />;
-    case 'select':
-      return <SelectField<string> testId={testId} label={spec.label} value={String(value ?? '')} options={spec.options ?? []} onChange={onChange} />;
+    case 'select': {
+      const options = [...(spec.options ?? [])];
+      // the project's own events are offered next to the engine's
+      if (spec.extra === 'events') for (const ev of facts.events) if (!options.some((o) => o.value === ev)) options.push({ value: ev, label: `${ev} (your event)` });
+      const v = String(value ?? '');
+      if (v && !options.some((o) => o.value === v)) options.push({ value: v, label: v });
+      return <SelectField<string> testId={testId} label={spec.label} value={v} options={options} onChange={onChange} />;
+    }
     case 'entity': {
       const options = [
         { value: '', label: '(choose an object)' },
@@ -113,7 +120,7 @@ function ParamEditor({ spec, value, onChange, testId, facts, inLoop }: { spec: P
         </label>
       );
     default:
-      return <TextField testId={testId} label={spec.label} value={String(value ?? '')} onCommit={onChange} />;
+      return <TextField testId={testId} label={spec.label} value={String(value ?? '')} onCommit={onChange} suggestions={spec.extra === 'events' ? facts.events : undefined} />;
   }
 }
 

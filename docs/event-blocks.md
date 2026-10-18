@@ -4,7 +4,7 @@
 
 An event sheet is a list of rows, each reading like a sentence: **when** its conditions hold, **do** its actions. Rows can have sub-events that run only while the row holds. Objects are chosen as "the player", "anything tagged ...", or a particular object. See [logic.md](logic.md).
 
-There are 23 conditions and 35 actions.
+There are 24 conditions and 40 actions.
 
 ## Conditions
 
@@ -46,7 +46,7 @@ Id: `onEvent`.
 
 | Parameter | Key | Kind | Starts as | Choices and notes |
 | --- | --- | --- | --- | --- |
-| What happens | `name` | select | "pickup" | `pickup`, `pushed`, `landed`, `fell`, `floor-fell`, `projectile-hit`, `spawned`, `anim-event`, `damaged`, `died`, `attack`, `dodge`, `noticed`, `lost`, `state-changed`, `boss-phase`, `boss-defeated`, `echo-made`, `sentence-changed`, `text-formatted`, `dialogue-started`, `dialogue-ended`, `minigame-started`, `minigame-ended`, `cutscene-started`, `cutscene-ended`, `lantern-lit`, `rested`, `item-given`, `portal` |
+| What happens | `name` | select | "pickup" | `pickup`, `pushed`, `landed`, `fell`, `floor-fell`, `projectile-hit`, `spawned`, `anim-event`, `damaged`, `died`, `attack`, `dodge`, `noticed`, `lost`, `state-changed`, `boss-phase`, `boss-defeated`, `echo-made`, `sentence-changed`, `text-formatted`, `dialogue-started`, `dialogue-ended`, `minigame-started`, `minigame-ended`, `cutscene-started`, `cutscene-ended`, `lantern-lit`, `rested`, `item-given`, `portal`, `battle-started`, `turn-start`, `turn-end`, `round-start`, `battle-won`, `unit-moved`, `unit-attacked`, `building-placed`, `orders-given`, `click-move`, `hotspot-used` |
 
 ### Time
 
@@ -223,6 +223,17 @@ Id: `battleWon`.
 | Parameter | Key | Kind | Starts as | Choices and notes |
 | --- | --- | --- | --- | --- |
 | By team (empty for any) | `team` | text | (empty) |  |
+
+### Control schemes
+
+#### A hotspot was used
+
+Id: `hotspotUsed`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Hotspot name (empty for any) | `name` | text | (empty) |  |
+| Verb | `verb` | select | (empty) | ``, `look`, `use`, `talk` |
 
 ## Actions
 
@@ -546,3 +557,50 @@ Id: `attackNearest`.
 | Parameter | Key | Kind | Starts as | Choices and notes |
 | --- | --- | --- | --- | --- |
 | Unit | `who` | entity | "turn" |  |
+
+### Control schemes
+
+#### Order units somewhere
+
+Id: `orderUnits`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Units | `who` | entity | "tag:unit" |  |
+| Order | `order` | select | "attackMove" | `move`, `attackMove`, `stop` |
+| Cell across | `x` | number | 0 |  |
+| Cell down | `y` | number | 0 |  |
+| After their current orders | `queue` | boolean | false |  |
+
+#### Choose a building to place
+
+Id: `selectBuilding`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Row of the buildings table (empty to put it away) | `row` | text | (empty) |  |
+
+#### Choose the verb (look, use, talk)
+
+Id: `setVerb`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Verb | `verb` | select | "use" | `look`, `use`, `talk` |
+
+#### Use a hotspot
+
+Id: `useHotspot`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Hotspot | `who` | entity | "picked" |  |
+| Verb | `verb` | select | "use" | `look`, `use`, `talk` |
+
+#### Turn the world to another view
+
+Id: `turnView`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| View | `view` | select | "1" | `0`, `1`, `2`, `3` |

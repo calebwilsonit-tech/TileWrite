@@ -45,10 +45,43 @@ export class DomInputSource {
   };
   private readonly onMouseDown = (e: MouseEvent): void => {
     this.raw[`mouse:${e.button}`] = 1;
+    // a click on the game's picture (not on a menu or button drawn over it) is a click on the world
+    if (this.overWorld(e)) this.raw[`ptr:${['left', 'middle', 'right'][e.button] ?? 'left'}`] = 1;
   };
   private readonly onMouseUp = (e: MouseEvent): void => {
     delete this.raw[`mouse:${e.button}`];
+    delete this.raw[`ptr:${['left', 'middle', 'right'][e.button] ?? 'left'}`];
   };
+  private readonly onMouseMove = (e: MouseEvent): void => {
+    this.mouse = { x: e.clientX, y: e.clientY, over: this.overWorld(e) };
+  };
+  private readonly onWheel = (e: WheelEvent): void => {
+    if (this.overWorld(e)) this.wheel = e.deltaY < 0 ? 1 : -1;
+  };
+  private readonly onContextMenu = (e: MouseEvent): void => {
+    if (this.pointerEl && this.overWorld(e)) e.preventDefault();
+  };
+  /** Where the pointer last was, and whether it was over the world picture. */
+  private mouse = { x: 0, y: 0, over: false };
+  private wheel = 0;
+  private pointerEl: HTMLElement | null = null;
+  private probe: ((localX: number, localY: number) => { x: number; y: number } | null) | null = null;
+  private cameraProbe: (() => { x: number; y: number; zoom: number; w: number; h: number }) | null = null;
+
+  private overWorld(e: MouseEvent): boolean {
+    const el = this.pointerEl;
+    return !!el && e.target instanceof Element && e.target.tagName === 'CANVAS' && el.contains(e.target);
+  }
+
+  /**
+   * Let the pointer drive the world: `el` holds the game picture; `probe` turns a position in it (pixels) into the cell
+   * there (or null). Until this is called a mouse is only a button.
+   */
+  setPointer(el: HTMLElement, probe: (localX: number, localY: number) => { x: number; y: number } | null, camera?: () => { x: number; y: number; zoom: number; w: number; h: number }): void {
+    this.pointerEl = el;
+    this.probe = probe;
+    this.cameraProbe = camera ?? null;
+  }
 
   constructor(
     private readonly target: Window = window,
@@ -59,10 +92,41 @@ export class DomInputSource {
     target.addEventListener('blur', this.onBlur);
     target.addEventListener('mousedown', this.onMouseDown);
     target.addEventListener('mouseup', this.onMouseUp);
+    target.addEventListener('mousemove', this.onMouseMove);
+    target.addEventListener('wheel', this.onWheel, { passive: true });
+    target.addEventListener('contextmenu', this.onContextMenu);
   }
 
   read(): RawInput {
-    return { ...this.raw, ...readGamepads(this.pads()) };
+    const out: RawInput = { ...this.raw, ...readGamepads(this.pads()) };
+    const el = this.pointerEl;
+    if (el && this.probe) {
+      const r = el.getBoundingClientRect();
+      const lx = this.mouse.x - r.left;
+      const ly = this.mouse.y - r.top;
+      if (lx >= 0 && ly >= 0 && lx <= r.width && ly <= r.height) {
+        out['ptr:sx'] = Math.round(lx) + 1;
+        out['ptr:sy'] = Math.round(ly) + 1;
+      }
+      const cell = this.mouse.over ? this.probe(lx, ly) : null;
+      if (cell) {
+        out['ptr:cx'] = cell.x + 1;
+        out['ptr:cy'] = cell.y + 1;
+      }
+      if (this.cameraProbe) {
+        const c = this.cameraProbe();
+        out['ptr:camx'] = Math.round(c.x) + 100000;
+        out['ptr:camy'] = Math.round(c.y) + 100000;
+        out['ptr:zoom'] = Math.round(c.zoom * 1000);
+        out['ptr:vw'] = Math.round(c.w);
+        out['ptr:vh'] = Math.round(c.h);
+      }
+      if (this.wheel !== 0) {
+        out[this.wheel > 0 ? 'ptr:wheelUp' : 'ptr:wheelDown'] = 1;
+        this.wheel = 0;
+      }
+    }
+    return out;
   }
 
   /**
@@ -102,6 +166,9 @@ export class DomInputSource {
     this.target.removeEventListener('blur', this.onBlur);
     this.target.removeEventListener('mousedown', this.onMouseDown);
     this.target.removeEventListener('mouseup', this.onMouseUp);
+    this.target.removeEventListener('mousemove', this.onMouseMove);
+    this.target.removeEventListener('wheel', this.onWheel);
+    this.target.removeEventListener('contextmenu', this.onContextMenu);
   }
 }
 

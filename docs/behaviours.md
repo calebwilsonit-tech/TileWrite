@@ -4,10 +4,11 @@
 
 A behaviour is ready-made logic you add to an object in the Inspector (**Behaviours -> Add**). Its settings appear as fields; its signals can be joined to other objects with the Wire tool. Each behaviour has an id (the key under which it is saved) shown in `code`.
 
-There are 40 behaviours. Behaviours made by scripts (see [code-window.md](code-window.md)) appear in the same list under "Scripts".
+There are 48 behaviours. Behaviours made by scripts (see [code-window.md](code-window.md)) appear in the same list under "Scripts".
 
 - [AI](#ai) (Vision Cone, Chase, Patrol, Boss Phases, State Machine, Behaviour Tree)
 - [Combat](#combat) (Health, Damage on Touch, Melee Attack (quill), Dodge, Ranged Attack)
+- [Control schemes](#control-schemes) (Direct Control, Click to Move, Hotspot, Grid Cursor, Commandable Unit, RTS Control, Camera Rig, Builder)
 - [Light](#light) (Light, Light Resource (lantern fuel), Light Sensor, Growing Object)
 - [Logic](#logic) (Logic Gate)
 - [Movement](#movement) (Grid Mover)
@@ -201,6 +202,119 @@ Shoots at its target from a distance: when the target is in range (and nothing b
 | Sound at each shot (a file in Assets -> Sounds) | `sound` | text | (empty) |  |
 
 Sends: **Is taking aim or shooting** (`aiming`); **Just fired** (`shot`).
+
+## Control schemes
+
+### Builder
+
+Id: `builder`. Each update it moves things (runs first).
+
+Place buildings from a data table: pick one (the variable "build.selected" holds its row id), move the pointer to see a ghost footprint (green where it fits, red where it does not), R turns it a quarter turn, click to place it and pay its cost, right-click to put it away. Holding the button and dragging places 1 x 1 pieces (walls, fences) along the way. Footprints can be any number of cells.
+
+| Setting | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Table of buildings | `table` | text | "Buildings" | Needs the columns prefab, w, d and cost. |
+| Paid from the variable | `currency` | text | "gold" |  |
+| Highest slope a building may stand on (levels) | `flatness` | number | 0 | at least 0 |
+
+### Camera Rig
+
+Id: `cameraRig`. Each update it moves things (runs first).
+
+A free camera for builders and strategy games: the move buttons (or the pointer at the edge of the picture, or the middle mouse button dragged) pan it, the mouse wheel zooms, and the camera-turn buttons (Q and E) turn the whole world between the four isometric views. Put it on any object.
+
+| Setting | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Pan speed (cells per second) | `panSpeed` | number | 12 | at least 1 |
+| Pan when the pointer is at the edge | `edgePan` | boolean | true |  |
+| Furthest out (zoom) | `zoomMin` | number | 0.5 | at least 0.25 |
+| Closest in (zoom) | `zoomMax` | number | 2.5 | at least 1 |
+| Turn the view with Q and E | `rotate` | boolean | true |  |
+
+### Click to Move
+
+Id: `clickToMove`. Each update it moves things (runs first).
+
+Point-and-click movement: click the ground and this object walks there, around walls, up stairs and over bridges. Clicking a Hotspot walks up to it and uses it.
+
+| Setting | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Walking speed (cells per second) | `speed` | number | 4 | at least 0.5 |
+| Show where it is going | `marker` | boolean | true |  |
+
+Sends: **Walking** (`walking`).
+
+Adds automatically: `body`.
+
+### Commandable Unit
+
+Id: `commandable`. Each update it moves things (runs first).
+
+A unit that follows orders (move, attack, attack-move, stop), one after another when queued. Crowds of them share one flow field per destination, so hundreds can move at once without bumping into each other. Units on a team attack enemies that come close by themselves if "Auto-attack range" is more than 0.
+
+| Setting | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Team | `team` | text | "blue" |  |
+| Walking speed (cells per second) | `speed` | number | 3 | at least 0.5 |
+| Personal space (cells) | `spacing` | number | 0.7 | at least 0.2 |
+| Attack range (cells) | `attackRange` | number | 1.2 | at least 0.5 |
+| Attack damage | `attackDamage` | number | 2 | at least 0 |
+| Seconds between attacks | `attackCooldown` | number | 0.8 | at least 0.1 |
+| Auto-attack range (0 = only when ordered) | `aggro` | number | 4 | at least 0 |
+
+Adds automatically: `body`.
+
+### Direct Control
+
+Id: `playerController`. Each update it moves things (runs first).
+
+The player walks, runs and jumps with the move buttons (WASD or the arrows, Shift, Space). The classic action-game control. Without it nothing moves by itself: other control schemes (click to move, a grid cursor, an RTS selection) are other behaviours.
+
+| Setting | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Walking speed (cells per second) | `speed` | number | 4 | at least 0.5 |
+| Run speed multiplier | `runMultiplier` | number | 1.6 | at least 1 |
+| Jump strength (0 = cannot jump) | `jumpSpeed` | number | 11 | at least 0 |
+
+Adds automatically: `body`.
+
+### Grid Cursor
+
+Id: `gridCursor`. Each update it moves things (runs first).
+
+Tactics controls: a cursor over the grid. Click one of your units to select it (the cells it can walk to light up blue, enemies in reach red), click a blue cell to walk there, click an enemy in reach to attack, right-click to deselect, and the End turn button ends the turn. Put it on any object (an empty "Controls" object works).
+
+| Setting | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Team the person plays | `team` | text | "blue" |  |
+| Tint movement and attack range | `showRange` | boolean | true |  |
+
+### Hotspot
+
+Id: `hotspot`. Each update it combines signals.
+
+Something to click: with the Look, Use or Talk verb chosen (the variable "verb"), the walker goes up to it and its words are said, or a conversation starts ("dialogue:Name"). Event rows can react with the "A hotspot was used" condition.
+
+| Setting | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Name shown under the pointer | `label` | text | "Thing" |  |
+| Look says (or dialogue:Name) | `look` | text | "Nothing special." |  |
+| Use says (or dialogue:Name) | `use` | text | (empty) |  |
+| Talk says (or dialogue:Name) | `talk` | text | (empty) |  |
+| How close to stand (cells) | `reach` | number | 1.5 | at least 0.5 |
+
+Sends: **Was used** (`used`).
+
+### RTS Control
+
+Id: `rtsControl`. Each update it moves things (runs first).
+
+Real-time strategy controls: click a unit or drag a box to select units, right-click the ground to send them there (spread out), right-click an enemy to attack, Shift+right-click to queue the order after the current ones, A then click to attack-move, S to stop. Put it on any object (an empty "Controls" object works).
+
+| Setting | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Team the person plays | `team` | text | "blue" |  |
+| Smallest drag that makes a box (pixels) | `boxMin` | number | 6 | at least 2 |
 
 ## Light
 

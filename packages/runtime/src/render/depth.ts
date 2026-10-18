@@ -192,3 +192,19 @@ export function sortBoxes(boxes: readonly DepthBox[], cfg: IsoConfig = DEFAULT_I
 export function boxAt(id: number, x: number, y: number, h: number, w: number, d: number, height: number, sortOffset = 0): DepthBox {
   return { id, minX: x - w / 2, maxX: x + w / 2, minY: y - d / 2, maxY: y + d / 2, minZ: h, maxZ: h + height, sortOffset };
 }
+
+/** A box as it sits in the turned world (see IsoConfig.view): the footprint is turned around the map, its height stays. */
+export function rotateBox(box: DepthBox, cfg: IsoConfig): DepthBox {
+  const view = cfg.view ?? 0;
+  if (view === 0) return box;
+  const w = cfg.mapW ?? 0;
+  const h = cfg.mapH ?? 0;
+  switch (view) {
+    case 1:
+      return { ...box, minX: h - box.maxY, maxX: h - box.minY, minY: box.minX, maxY: box.maxX };
+    case 2:
+      return { ...box, minX: w - box.maxX, maxX: w - box.minX, minY: h - box.maxY, maxY: h - box.minY };
+    default:
+      return { ...box, minX: box.minY, maxX: box.maxY, minY: w - box.maxX, maxY: w - box.minX };
+  }
+}

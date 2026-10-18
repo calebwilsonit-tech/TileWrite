@@ -95,6 +95,8 @@ export interface SceneRuntime {
   clock: SceneClock;
   /** The turn queue while the clock is in turn mode (see the behaviours package, turns). Plain data so it saves and replays. */
   turns: TurnState;
+  /** Caches that can always be rebuilt (flow fields, the crowd index). Never saved and never part of the state hash. */
+  scratch: Map<string, unknown>;
 }
 
 /** Whose turn it is. `order` lists entity ids by initiative; `index` is the unit acting now. */
@@ -171,6 +173,9 @@ export interface SimContext {
 
 export type System = (ctx: SimContext) => void;
 
+/** Values that are where the pointer and camera are, not buttons: never held back after a menu closes. */
+const CONTINUOUS = /^pointer_(cx|cy|sx|sy|camx|camy|zoom|vw|vh)$/;
+
 /**
  * When a system runs: `always`, only while the world is moving (`gameplay`: skipped when frozen), or only while
  * the player is in control (`player`: skipped when frozen or in a cutscene).
@@ -200,6 +205,7 @@ export function newSceneRuntime(): SceneRuntime {
     fx: [],
     clock: newClock(),
     turns: newTurnState(),
+    scratch: new Map(),
   };
 }
 
@@ -252,7 +258,7 @@ export class Simulation {
     // moment (the one that closed a conversation) stays ignored until it is released, so it cannot fire twice.
     let gameplay: ActionSnapshot = {};
     if (modal !== 'none') {
-      for (const k of Object.keys(snapshot)) this.suppressed.add(k);
+      for (const k of Object.keys(snapshot)) if (!CONTINUOUS.test(k)) this.suppressed.add(k);
     } else {
       for (const k of [...this.suppressed]) if (!(k in snapshot)) this.suppressed.delete(k);
       gameplay = {};
@@ -278,6 +284,7 @@ export class Simulation {
       tick: this.tick,
       profiler: this.profiler,
     };
+    this.runtime.view.cells.length = 0; // ground marks are asked for again every tick
     this.world.beginTick();
     this.profiler.beginTick();
     try {

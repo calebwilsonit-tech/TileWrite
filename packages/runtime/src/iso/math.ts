@@ -5,7 +5,16 @@ export interface IsoConfig {
   tileH: number;
   /** Screen pixels per height level. */
   heightPx: number;
+  /**
+   * Which of the four ways the world is turned on screen (0 = the usual view; each step turns the camera a quarter turn clockwise).
+   * With a view other than 0, `mapW` and `mapH` (the map's size in cells) say what the world is turned around.
+   */
+  view?: ViewRotation;
+  mapW?: number;
+  mapH?: number;
 }
+
+export type ViewRotation = 0 | 1 | 2 | 3;
 
 export const DEFAULT_ISO: IsoConfig = { tileW: 64, tileH: 32, heightPx: 16 };
 
@@ -19,19 +28,80 @@ export interface Cell {
   y: number;
 }
 
-/** Grid (gx, gy) at height h -> screen pixels (origin = grid origin, h = 0). */
+/** A direction (not a place) as seen from this view: the world turned a quarter turn per view step. */
+export function rotateVec(dx: number, dy: number, view: ViewRotation = 0): Vec2 {
+  switch (view) {
+    case 1:
+      return { x: -dy, y: dx };
+    case 2:
+      return { x: -dx, y: -dy };
+    case 3:
+      return { x: dy, y: -dx };
+    default:
+      return { x: dx, y: dy };
+  }
+}
+
+/** The opposite of rotateVec: a direction on screen -> the direction in the world. */
+export function unrotateVec(dx: number, dy: number, view: ViewRotation = 0): Vec2 {
+  return rotateVec(dx, dy, ((4 - view) % 4) as ViewRotation);
+}
+
+/** A world position as it sits in the turned world (the map's corner that was at the top stays at the top of the picture). */
+export function rotateGrid(gx: number, gy: number, cfg: IsoConfig): Vec2 {
+  const view = cfg.view ?? 0;
+  if (view === 0) return { x: gx, y: gy };
+  const w = cfg.mapW ?? 0;
+  const h = cfg.mapH ?? 0;
+  switch (view) {
+    case 1:
+      return { x: h - gy, y: gx };
+    case 2:
+      return { x: w - gx, y: h - gy };
+    default:
+      return { x: gy, y: w - gx };
+  }
+}
+
+export function unrotateGrid(rx: number, ry: number, cfg: IsoConfig): Vec2 {
+  const view = cfg.view ?? 0;
+  if (view === 0) return { x: rx, y: ry };
+  const w = cfg.mapW ?? 0;
+  const h = cfg.mapH ?? 0;
+  switch (view) {
+    case 1:
+      return { x: ry, y: h - rx };
+    case 2:
+      return { x: w - rx, y: h - ry };
+    default:
+      return { x: w - ry, y: rx };
+  }
+}
+
+/** Grid (gx, gy) at height h -> screen pixels (origin = grid origin, h = 0). Follows the view rotation. */
 export function gridToScreen(gx: number, gy: number, h = 0, cfg: IsoConfig = DEFAULT_ISO): Vec2 {
+  const r = cfg.view ? rotateGrid(gx, gy, cfg) : { x: gx, y: gy };
   return {
-    x: (gx - gy) * (cfg.tileW / 2),
-    y: (gx + gy) * (cfg.tileH / 2) - h * cfg.heightPx,
+    x: (r.x - r.y) * (cfg.tileW / 2),
+    y: (r.x + r.y) * (cfg.tileH / 2) - h * cfg.heightPx,
+  };
+}
+
+/** A small step on the ground (dx, dy cells) as a screen offset: like gridToScreen but with no position, only a direction. */
+export function relToScreen(dx: number, dy: number, h = 0, cfg: IsoConfig = DEFAULT_ISO): Vec2 {
+  const r = rotateVec(dx, dy, cfg.view ?? 0);
+  return {
+    x: (r.x - r.y) * (cfg.tileW / 2),
+    y: (r.x + r.y) * (cfg.tileH / 2) - h * cfg.heightPx,
   };
 }
 
 /** Screen pixels -> grid position on the plane at height h. */
 export function screenToGrid(sx: number, sy: number, h = 0, cfg: IsoConfig = DEFAULT_ISO): Vec2 {
-  const a = sx / (cfg.tileW / 2); // gx - gy
-  const b = (sy + h * cfg.heightPx) / (cfg.tileH / 2); // gx + gy
-  return { x: (a + b) / 2, y: (b - a) / 2 };
+  const a = sx / (cfg.tileW / 2); // rx - ry
+  const b = (sy + h * cfg.heightPx) / (cfg.tileH / 2); // rx + ry
+  const r = { x: (a + b) / 2, y: (b - a) / 2 };
+  return cfg.view ? unrotateGrid(r.x, r.y, cfg) : r;
 }
 
 /** Grid position -> the cell that contains it. */
@@ -78,10 +148,11 @@ export function neighbours(c: Cell, diagonals = false): Cell[] {
 export const FACING_NAMES = ['E', 'SE', 'S', 'SW', 'W', 'NW', 'N', 'NE'] as const;
 export type Facing = (typeof FACING_NAMES)[number];
 
-/** Screen-space intent (right = +x, down = +y) -> unit vector in grid space. Zero in, zero out. */
-export function screenIntentToGrid(dx: number, dy: number): Vec2 {
-  const gx = dx + dy;
-  const gy = dy - dx;
+/** Screen-space intent (right = +x, down = +y) -> unit vector in grid space. Zero in, zero out. `view` is how the world is turned on screen. */
+export function screenIntentToGrid(dx: number, dy: number, view: ViewRotation = 0): Vec2 {
+  const v = view === 0 ? { x: dx + dy, y: dy - dx } : unrotateVec(dx + dy, dy - dx, view);
+  const gx = v.x;
+  const gy = v.y;
   const len = Math.hypot(gx, gy);
   if (len === 0) return { x: 0, y: 0 };
   return { x: gx / len, y: gy / len };

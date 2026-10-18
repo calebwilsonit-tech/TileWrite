@@ -13,6 +13,7 @@ A **pack** is a group of things a project can switch on: behaviours, event-sheet
 | **AI** | Vision Cone, Chase, Patrol, Boss Phases, Behaviour Tree |
 | **Lighting** | Light |
 | **Turn-based play** | Turn Taker, Grid Mover, Unit AI; the *turn of*, *team turn* and *battle won* conditions; start battle, end turn, end battle, change action points, move a unit, attack actions; the end-turn button. See [time-and-turns.md](time-and-turns.md) |
+| **Control schemes** | Click to Move, Hotspot, Grid Cursor, Commandable Unit, RTS Control, Camera Rig, Builder; the hotspot condition; order units, choose a building, set the verb, use a hotspot and turn-the-view actions; the camera-turn, building and RTS buttons. See [control-schemes.md](control-schemes.md) |
 | **The Last Storytender** | Echo Recorder, Sentence Stone, Formattable Text Block, Lantern Post, Light Resource, Light Sensor, Growing Object, their event blocks, the echo button. Needs Lighting |
 
 Everything not listed (gates, plates, levers, timers, logic gates, moving platforms, state machines, spawners, portals, the follow camera, sound sources) is core and always there.

@@ -101,6 +101,8 @@ export interface ParamSpec {
   max?: number;
   step?: number;
   help?: string;
+  /** The picker also offers this project's own things of this kind (the editor reads it). */
+  extra?: 'events';
 }
 
 const COMPARISONS = [
@@ -423,7 +425,19 @@ export const CONDITIONS: ConditionDef[] = [
           { value: 'rested', label: 'the player rests at a lantern' },
           { value: 'item-given', label: 'the player receives an item' },
           { value: 'portal', label: 'the player walks through a portal' },
+          { value: 'battle-started', label: 'a turn-based battle starts' },
+          { value: 'turn-start', label: 'a unit\'s turn starts' },
+          { value: 'turn-end', label: 'a unit\'s turn ends' },
+          { value: 'round-start', label: 'a new round of turns starts' },
+          { value: 'battle-won', label: 'a battle is won' },
+          { value: 'unit-moved', label: 'a unit finishes walking' },
+          { value: 'unit-attacked', label: 'a unit attacks' },
+          { value: 'building-placed', label: 'a building is placed' },
+          { value: 'orders-given', label: 'units are given an order' },
+          { value: 'click-move', label: 'the player clicks to walk somewhere' },
+          { value: 'hotspot-used', label: 'a hotspot is used' },
         ],
+        extra: 'events',
       },
     ],
     describe: (p) => (COND_EVENT_TEXT[str(p, 'name')] ?? `"${str(p, 'name')}" happens`),
@@ -733,7 +747,7 @@ export const ACTIONS: ActionDef[] = [
     id: 'emit',
     label: 'Announce an event',
     category: 'Advanced',
-    params: [{ key: 'name', label: 'Event name', type: 'text', default: 'my-event' }],
+    params: [{ key: 'name', label: 'Event name', type: 'text', default: 'my-event', extra: 'events' }],
     describe: (p) => `announce the event "${str(p, 'name')}"`,
     run: (ctx, p) => void ctx.events.emit(str(p, 'name'), {}),
   },

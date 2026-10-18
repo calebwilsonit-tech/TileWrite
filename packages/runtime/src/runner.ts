@@ -1,6 +1,6 @@
 import { FixedTimestep, TICK_DT } from './core/timestep';
 import type { FxEvent, Simulation } from './core/simulation';
-import { gridToScreen } from './iso/math';
+import { gridToScreen, screenToGrid } from './iso/math';
 import { InputMap, InputRecorder, type ActionSnapshot, type RawInput } from './input/input';
 import { IsoRenderer } from './render/iso-renderer';
 import { C, type TransformIso } from './scene/components';
@@ -105,6 +105,12 @@ export class GameRunner {
       this.o.sim.step(snap);
       const cam = this.o.renderer.camera;
       const view = this.o.sim.runtime.view;
+      if (view.rotation !== this.o.renderer.view) {
+        // the world was turned: keep looking at the same place
+        const centre = screenToGrid(cam.x, cam.y, 0, this.o.renderer.iso);
+        this.o.renderer.setView(view.rotation);
+        cam.snapTo(gridToScreen(centre.x, centre.y, 0, this.o.renderer.iso));
+      }
       if (view.cameraTarget) {
         cam.follow(gridToScreen(view.cameraTarget.x, view.cameraTarget.y, 0, this.o.renderer.iso)); // a cutscene is directing the camera
       } else if (this.follow !== undefined) {
@@ -148,6 +154,7 @@ export class GameRunner {
 
   private draw(): void {
     this.o.renderer.lighting = this.o.sim.runtime.lighting ?? null;
+    this.o.renderer.marks = this.o.sim.runtime.view.cells;
     this.o.renderer.render(this.o.sim.world);
   }
 }

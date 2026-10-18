@@ -10,6 +10,7 @@ import {
   type SimContext,
   type TransformIso,
 } from '@tilewright/runtime';
+import { defineBehavior } from './framework';
 import { eventSheetSystem } from './events/sheet';
 import { cutsceneSystem, dialogueSystem, minigameSystem } from './story/director';
 import { quickSlotSystem } from './story/inventory';
@@ -32,18 +33,45 @@ export function makePlayerController(partial: Partial<PlayerController> = {}): P
   return { speed: 4, runMultiplier: 1.6, jumpSpeed: 11, ...partial };
 }
 
-/** 8-direction movement from the move_* actions, plus run and jump. Replaced by the behaviour framework in M5. */
+/**
+ * Direct control: 8-direction movement from the move buttons, run and jump. A behaviour like any other, so a game that is not
+ * about walking around (a tactics game, a builder) simply never adds it.
+ */
+export const directControl = defineBehavior<PlayerController>({
+  id: PLAYER_CONTROLLER,
+  name: 'Direct Control',
+  category: 'Control schemes',
+  description: 'The player walks, runs and jumps with the move buttons (WASD or the arrows, Shift, Space). The classic action-game control. Without it nothing moves by itself: other control schemes (click to move, a grid cursor, an RTS selection) are other behaviours.',
+  phase: 'control',
+  // it runs as the first system of every tick (before any behaviour), so it only carries the settings here
+  dataOnly: true,
+  defaults: { speed: 4, runMultiplier: 1.6, jumpSpeed: 11 },
+  fields: [
+    { key: 'speed', label: 'Walking speed (cells per second)', type: 'number', min: 0.5, step: 0.5 },
+    { key: 'runMultiplier', label: 'Run speed multiplier', type: 'number', min: 1, step: 0.1 },
+    { key: 'jumpSpeed', label: 'Jump strength (0 = cannot jump)', type: 'number', min: 0, step: 1 },
+  ],
+  inputs: [],
+  outputs: [],
+  requires: {
+    body: { vx: 0, vy: 0, vz: 0, radius: 0.3, height: 1.2, state: 'ground', stepUp: 0.35, stepDown: 0.4, ledge: 'fall', pits: 'fall', wade: false, gravity: 1, peakZ: 0, layer: 2, mask: 65535, noclip: false, blockedBy: [], blockedTerrain: false },
+  },
+  update: () => undefined,
+});
+
+/** The direct control system: moves every object that has the Direct Control behaviour. */
 export function playerControllerSystem({ world, input, runtime }: SimContext): void {
   if (runtime.clock.mode === 'turns') return; // by turns, units move when the turn system says so
+  const view = runtime.view.rotation;
   for (const e of world.query(C.Transform, C.Body, PLAYER_CONTROLLER)) {
-    driveBody(e.require<PlayerController>(PLAYER_CONTROLLER), e.require<Body>(C.Body), e.require<TransformIso>(C.Transform), input);
+    driveBody(e.require<PlayerController>(PLAYER_CONTROLLER), e.require<Body>(C.Body), e.require<TransformIso>(C.Transform), input, view);
   }
 }
 
 /** Turn one tick of actions into movement; the player uses live input, echoes use their recording. */
-export function driveBody(cfg: PlayerController, b: Body, t: TransformIso, input: InputState): void {
+export function driveBody(cfg: PlayerController, b: Body, t: TransformIso, input: InputState, view: 0 | 1 | 2 | 3 = 0): void {
   const v = input.vector('move_left', 'move_right', 'move_up', 'move_down');
-  const g = screenIntentToGrid(v.x, v.y);
+  const g = screenIntentToGrid(v.x, v.y, view);
   const speed = cfg.speed * (input.down('run') ? cfg.runMultiplier : 1);
   b.vx = g.x * speed;
   b.vy = g.y * speed;

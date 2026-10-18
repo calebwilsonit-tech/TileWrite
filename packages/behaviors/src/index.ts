@@ -6,6 +6,8 @@ export * from './custom';
 export * from './packs/modules';
 export * from './packs/storytender';
 export * from './packs/turns';
+export * from './packs/controls';
+export * from './builtins/controls';
 export * from './builtins/turns';
 export * from './signals';
 export * from './player-controller';
