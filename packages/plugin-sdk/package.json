@@ -1,0 +1,13 @@
+{
+  "name": "@tilewright/plugin-sdk",
+  "version": "1.0.0",
+  "private": true,
+  "description": "The public API for Tilewright plugins: types, helpers and what a plugin may add",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@tilewright/runtime": "*",
+    "@tilewright/behaviors": "*"
+  }
+}

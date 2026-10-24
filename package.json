@@ -5,7 +5,8 @@
   "description": "Tilewright - a no-code 2D isometric game engine",
   "type": "module",
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "packages/plugins/*"
   ],
   "scripts": {
     "typecheck": "tsc --noEmit",

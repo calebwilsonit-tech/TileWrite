@@ -1,0 +1,13 @@
+{
+  "name": "@tilewright/bundled-plugins",
+  "version": "0.0.1",
+  "private": true,
+  "description": "The plugins that ship with Tilewright, registered with the plugin host",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@tilewright/behaviors": "*",
+    "@tilewright/plugin-sdk": "*"
+  }
+}

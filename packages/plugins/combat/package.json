@@ -1,0 +1,12 @@
+{
+  "name": "@tilewright/plugin-combat",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Health, damage, melee and ranged attacks, dodging and projectiles",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@tilewright/plugin-sdk": "*"
+  }
+}
