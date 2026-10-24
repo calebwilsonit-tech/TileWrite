@@ -20,6 +20,7 @@ export * from './builtins/turns';
 export * from './signals';
 export * from './player-controller';
 export * from './builtins/puzzle';
+export * from './builtins/filters';
 export * from './builtins/nodes';
 export * from './logic-catalog';
 export * from './builtins/world';

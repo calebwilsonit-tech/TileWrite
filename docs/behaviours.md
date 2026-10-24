@@ -11,15 +11,15 @@ There are 58 behaviours. Behaviours made by scripts (see [code-window.md](code-w
 - [Control schemes](#control-schemes) (Direct Control, Click to Move, Hotspot, Grid Cursor, Commandable Unit, RTS Control, Camera Rig, Builder)
 - [Interface](#interface) (World UI)
 - [Light](#light) (Light, Light Resource (lantern fuel), Light Sensor, Growing Object)
-- [Logic](#logic) (Logic Gate, Event Node, Action Node, Clickable)
+- [Logic](#logic) (Event Node, Action Node, Clickable, Logic Gate)
 - [Movement](#movement) (Grid Mover)
 - [Player](#player) (Echo Recorder)
 - [Puzzle](#puzzle) (Pressure Plate, Trigger Zone, Lever, Timer, Gate / Door, Pushable)
 - [Simulation](#simulation) (Producer, Calendar, Wave Spawner, Path Follower, Utility Agent (needs), Cellular Automaton)
-- [Story](#story) (NPC Talk, Sound Source, Minigame, Scene Portal, Cutscene Trigger, Lantern Post (checkpoint))
+- [Story](#story) (Sound Source, Scene Portal, NPC Talk, Minigame, Cutscene Trigger, Lantern Post (checkpoint))
 - [Story puzzles](#story-puzzles) (Sentence Stone, Formattable Text Block)
 - [Turn-based](#turn-based) (Turn Taker, Unit AI)
-- [World](#world) (Spawner, Pickup, Moving Platform, Falling Floor, Projectile, Follow Camera)
+- [World](#world) (Spawner, Moving Platform, Falling Floor, Follow Camera, Pickup, Projectile)
 
 ## AI
 
@@ -516,7 +516,7 @@ A solid barrier that slides open while its Open signal is on (or off, if inverte
 | Open when the signal is OFF | `invert` | boolean | false |  |
 | Seconds to open | `speed` | number | 0.6 | 0 to 10 |
 | Height when closed | `closedHeight` | number | 1.6 | 0.2 to 6 |
-| Echoes can pass through | `ghostsPass` | boolean | false |  |
+| Ghosts can pass through | `ghostsPass` | boolean | false |  |
 
 Receives: **Open** (`open`).
 

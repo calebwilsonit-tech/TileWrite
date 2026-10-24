@@ -45,6 +45,25 @@ export interface CollisionLayerDef {
   /** Which bit of the layer number it is (0 to 15). Saved files keep the number, so a layer keeps its bit forever. */
   bit: number;
   label?: string;
+  /** True for layers of ghosts (recorded copies, spirits): a gate set to let ghosts pass lets these through. */
+  ghost?: boolean;
+}
+
+/** A group of objects that plates and zones can react to ("crates", "helpers"). */
+export interface WhoFilterDef {
+  id: string;
+  label: string;
+  match(entity: Entity): boolean;
+}
+
+/** A method scripts can call on an object or on the game (me.damage, game.startDialogue...), implemented by a plugin. */
+export interface ScriptMethodDef {
+  /** The name scripts call. */
+  id: string;
+  /** Runs with the game's context and the object the script is on; returns whatever the method returns. */
+  run(ctx: SimContext, self: Entity, args: unknown[]): unknown;
+  /** What a script gets when the plugin is off. */
+  fallback?: unknown;
 }
 
 /** A tile that is a kind of block with its own rules (ice, a trampoline, a conveyor). */
@@ -209,6 +228,8 @@ export interface Extensions {
   events: Map<string, EventDef & OwnedBy>;
   physicsModifiers: Map<string, PhysicsModifierDef & OwnedBy>;
   collisionLayers: Map<string, CollisionLayerDef & OwnedBy>;
+  whoFilters: Map<string, WhoFilterDef & OwnedBy>;
+  scriptMethods: Map<string, ScriptMethodDef & OwnedBy>;
   blockTypes: Map<string, BlockTypeDef & OwnedBy>;
   widgets: Map<string, WidgetDef & OwnedBy>;
   screens: Map<string, ScreenDef & OwnedBy>;

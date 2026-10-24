@@ -5,6 +5,7 @@ import type { ComponentDef, EventDef, Extensions, ExtensionKind, InputActionDef,
 import type * as X from './extensions';
 import { ENGINE_VERSION, grants, worksWithEngine, type PluginManifest } from './manifest';
 import { satisfies } from './semver';
+import { addWhoFilter, removeWhoFilter, setGhostLayer } from '../builtins/filters';
 
 /**
  * The plugin host: everything that turns a plugin into parts of the editor and the game, and takes them away again.
@@ -95,6 +96,10 @@ export interface PluginApi {
   collisionLayer(def: X.CollisionLayerDef): void;
   /** Change how bodies move before each step (wind, ice, a conveyor). */
   physicsModifier(def: X.PhysicsModifierDef): void;
+  /** Add a group plates and zones can react to ("crates", "helpers"). */
+  whoFilter(def: X.WhoFilterDef): void;
+  /** Give scripts a method (me.damage, game.startDialogue...) that this plugin implements. */
+  scriptMethod(def: X.ScriptMethodDef): void;
   /** Add a kind of block (a tile with its own colours and rules). */
   blockType(def: X.BlockTypeDef): void;
 
@@ -170,6 +175,8 @@ const emptyExtensions = (): Extensions => ({
   events: new Map(),
   physicsModifiers: new Map(),
   collisionLayers: new Map(),
+  whoFilters: new Map(),
+  scriptMethods: new Map(),
   blockTypes: new Map(),
   widgets: new Map(),
   screens: new Map(),
@@ -305,7 +312,8 @@ export class PluginHost {
     removePhysicsModifiersOf(id);
     for (const { kind, id: key } of rec.added) {
       (this.ext[kind] as Map<string, unknown>).delete(key);
-      if (kind === 'collisionLayers') continue;
+      if (kind === 'collisionLayers') setGhostLayer(key, null);
+      if (kind === 'whoFilters') removeWhoFilter(key);
     }
     for (const t of ['panels', 'tools', 'importers'] as const) for (const [key, v] of this.editor[t]) if (v.plugin === id) this.editor[t].delete(key);
     this.installed.delete(id);
@@ -417,6 +425,14 @@ export class PluginHost {
         if (def.bit < 0 || def.bit > 15 || !Number.isInteger(def.bit)) throw new PluginError(`The collision layer "${def.name}" needs a bit from 0 to 15.`);
         for (const [key, l] of host.ext.collisionLayers) if ((l.bit === def.bit || key === def.name) && l.plugin !== id) throw new PluginError(`The collision layer "${def.name}" (bit ${def.bit}) clashes with "${key}" (bit ${l.bit}) of the plugin "${l.plugin}".`);
         host.add(rec, id, 'collisionLayers', def.name, def);
+        if (def.ghost) setGhostLayer(def.name, def.bit);
+      },
+      whoFilter(def) {
+        host.add(rec, id, 'whoFilters', def.id, def);
+        addWhoFilter(def.id, def.label, host.watched(id, `the group "${def.label}"`, def.match.bind(def)));
+      },
+      scriptMethod(def) {
+        host.add(rec, id, 'scriptMethods', def.id, { ...def, run: host.watched(id, `the script method "${def.id}"`, def.run.bind(def)) });
       },
       physicsModifier(def) {
         addPhysicsModifier({ id: `${id}:${def.id}`, plugin: id, order: def.order ?? 0, apply: host.watched(id, `the physics modifier "${def.id}"`, def.apply.bind(def)) });

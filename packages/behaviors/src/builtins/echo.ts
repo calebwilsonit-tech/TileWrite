@@ -3,7 +3,6 @@ import {
   InputPlayback,
   InputRecorder,
   InputState,
-  LAYER,
   teleportBody,
   type ActionSnapshot,
   type Body,
@@ -17,6 +16,8 @@ import { behaviorDef, stateOf } from '../framework';
 import { driveBody, PLAYER_CONTROLLER, type PlayerController } from '../player-controller';
 
 const ECHO_TAG = 'echo';
+/** The collision layer of echoes: bit 3, saved scenes already use the number 8. */
+export const ECHO_LAYER = 8;
 
 /** What an echo ends up doing once its recording runs out. */
 export type EchoEnding = 'hold' | 'loop' | 'vanish';
@@ -132,7 +133,7 @@ export const echoRecorder = behaviorDef<EchoRecorder>({
 function spawnEcho(ctx: SimContext, player: Entity, start: NonNullable<RecorderState['start']>, rec: InputRecording, cfg: PlayerController, s: EchoRecorder): Entity {
   const sprite = structuredClone(player.get<Sprite>(C.Sprite)) ?? undefined;
   const body = structuredClone(player.require<Body>(C.Body));
-  body.layer = LAYER.ECHO;
+  body.layer = ECHO_LAYER;
   body.vx = body.vy = body.vz = 0;
   body.blockedBy = [];
   const components: Record<string, unknown> = {

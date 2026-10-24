@@ -1,6 +1,6 @@
 import { C, addItem, autoSlot, type Collider, type Entity } from '@tilewright/runtime';
 import { defineBehavior } from '../framework';
-import { matchesWho, WHO_OPTIONS, type Who } from './puzzle';
+import { matchesWho, WHO_OPTIONS, type Who } from './filters';
 
 const collider = (e: Entity): Collider | undefined => e.get<Collider>(C.Collider);
 

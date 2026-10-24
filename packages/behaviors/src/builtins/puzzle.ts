@@ -10,6 +10,7 @@ import {
   evalValue,
   resolveValue,
 } from '@tilewright/runtime';
+import { ghostLayerMask, matchesWho, WHO_OPTIONS, type Who } from './filters';
 import { defineBehavior, stateOf } from '../framework';
 import { compare } from '../events/sheet';
 import { input, output, setOutput } from '../signals';
@@ -17,29 +18,6 @@ import { input, output, setOutput } from '../signals';
 const collider = (e: Entity): Collider | undefined => e.get<Collider>(C.Collider);
 const sprite = (e: Entity): Sprite | undefined => e.get<Sprite>(C.Sprite);
 const transform = (e: Entity): TransformIso => e.require<TransformIso>(C.Transform);
-
-/** Who counts for a plate or zone: everyone, the player, crates, or echoes (ghost replays of the player). */
-export type Who = 'anyone' | 'player' | 'crates' | 'echoes';
-
-export const WHO_OPTIONS = [
-  { value: 'anyone', label: 'Anything' },
-  { value: 'player', label: 'The player' },
-  { value: 'crates', label: 'Crates' },
-  { value: 'echoes', label: 'Echoes' },
-];
-
-export function matchesWho(e: Entity, who: Who): boolean {
-  switch (who) {
-    case 'anyone':
-      return true;
-    case 'player':
-      return e.tags.has('player');
-    case 'crates':
-      return e.has('pushable');
-    case 'echoes':
-      return e.tags.has('echo');
-  }
-}
 
 /** Live occupants of a trigger area, filtered by who counts. */
 export function occupants(ctx: SimContext, e: Entity, who: Who): Entity[] {
@@ -369,7 +347,7 @@ export interface Gate {
   speed: number;
   /** Height when closed. */
   closedHeight: number;
-  /** Echoes (ghost replays) can walk through even when it is closed. */
+  /** Ghosts (recorded copies, spirits) can walk through even when it is closed. */
   ghostsPass: boolean;
 }
 
@@ -384,7 +362,7 @@ export const gate = defineBehavior<Gate>({
     { key: 'invert', label: 'Open when the signal is OFF', type: 'boolean' },
     { key: 'speed', label: 'Seconds to open', type: 'number', min: 0, max: 10, step: 0.1 },
     { key: 'closedHeight', label: 'Height when closed', type: 'number', min: 0.2, max: 6, step: 0.1 },
-    { key: 'ghostsPass', label: 'Echoes can pass through', type: 'boolean' },
+    { key: 'ghostsPass', label: 'Ghosts can pass through', type: 'boolean' },
   ],
   inputs: [{ name: 'open', label: 'Open' }],
   outputs: [{ name: 'isOpen', label: 'Fully open' }],
@@ -400,8 +378,9 @@ export const gate = defineBehavior<Gate>({
     if (c) {
       c.height = Math.max(0.05, height);
       c.enabled = st.open < 0.85;
-      // echoes (layer 8) are allowed through by dropping them from this collider's mask
-      c.mask = s.ghostsPass ? c.mask & ~8 : c.mask | 8;
+      // ghosts are allowed through by dropping their layers from this collider's mask
+      const ghosts = ghostLayerMask();
+      c.mask = s.ghostsPass ? c.mask & ~ghosts : c.mask | ghosts;
     }
     const sp = sprite(e);
     if (sp) sp.height = Math.max(0.05, height);

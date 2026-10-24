@@ -27,6 +27,8 @@ export const storytenderPack: Pack = {
     for (const b of behaviors) api.behavior(b);
     for (const c of CONDITIONS) api.condition(c);
     for (const a of ACTIONS) api.action(a);
+    api.collisionLayer({ name: 'echo', bit: 3, label: 'Echoes', ghost: true });
+    api.whoFilter({ id: 'echoes', label: 'Echoes', match: (e) => e.tags.has('echo') });
     api.inputAction('echo', { label: 'Record an echo', bindings: ['key:KeyR', 'pad:button4'] });
   },
 };

@@ -22,7 +22,6 @@ export const LAYER = {
   DEFAULT: 1,
   PLAYER: 2,
   ENEMY: 4,
-  ECHO: 8,
   PROP: 16,
   GHOST: 32,
 } as const;

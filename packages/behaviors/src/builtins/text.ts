@@ -1,4 +1,4 @@
-import { C, makeLabel, type Collider, type Entity, type Label, type Sprite, type TransformIso } from '@tilewright/runtime';
+import { C, makeLabel, type Collider, type Entity, type Label, type Sprite } from '@tilewright/runtime';
 import { behaviorDef, stateOf } from '../framework';
 import { input, setOutput } from '../signals';
 import { pushStep, type PushState } from './puzzle';

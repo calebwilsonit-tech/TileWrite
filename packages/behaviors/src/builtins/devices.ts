@@ -1,26 +1,9 @@
-import { C, emitFx, type Entity, type TransformIso, type SimContext } from '@tilewright/runtime';
+import { C, emitFx, type Entity, type TransformIso } from '@tilewright/runtime';
 import { defineBehavior, stateOf } from '../framework';
 import { input, setOutput } from '../signals';
 import { occupants } from './puzzle';
 
 const transform = (e: Entity): TransformIso => e.require<TransformIso>(C.Transform);
-
-function nearestPlayer(ctx: SimContext, e: Entity, reach: number): Entity | undefined {
-  const t = transform(e);
-  return ctx.world.withTag('player').find((p) => {
-    const pt = p.get<TransformIso>(C.Transform);
-    return !!pt && Math.hypot(pt.x - t.x, pt.y - t.y) <= reach;
-  });
-}
-
-function hint(e: Entity, text: string | null): void {
-  const cur = e.get<{ text: string; color: number }>('label');
-  if (text === null) {
-    if (cur && cur.color === 0xbfe3ff) e.remove('label');
-    return;
-  }
-  if (!cur || cur.text !== text) e.set('label', { text, color: 0xbfe3ff, size: 12, bold: false, italic: false, underline: false, lift: 0.35 });
-}
 
 // ---------- sound source ----------
 
