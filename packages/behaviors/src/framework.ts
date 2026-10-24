@@ -38,7 +38,7 @@ export interface BehaviorDef<S extends object = Record<string, unknown>> {
   /** What it does, in plain English. */
   description: string;
   phase: Phase;
-  /** Made and removed by the engine (echoes); not offered in the inspector's Add menu. */
+  /** Made and removed by the engine (recorded copies); not offered in the inspector's Add menu. */
   hidden?: boolean;
   /** Only carries settings (a custom component): there is nothing to run each tick. */
   dataOnly?: boolean;

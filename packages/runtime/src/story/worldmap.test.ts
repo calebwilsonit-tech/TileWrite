@@ -16,7 +16,7 @@ describe('the world map file', () => {
 });
 
 describe('what the player may travel to', () => {
-  it('opens a place once visited, from the start, with a flag, or with a lit lantern', () => {
+  it('opens a place once visited, from the start, with a flag, or by a rule a plugin brought', () => {
     const vars = { [visitedKey('scenes/cave.scene.json')]: true, lamp: 2 };
     expect(isUnlocked(node('cave'), vars, never)).toBe(true);
     expect(isUnlocked(node('tower'), vars, never)).toBe(false);
@@ -24,7 +24,7 @@ describe('what the player may travel to', () => {
     expect(isUnlocked(node('tower', { unlock: { kind: 'variable', name: 'lamp', atLeast: 3 } }), vars, never)).toBe(false);
     expect(isUnlocked(node('tower', { unlock: { kind: 'variable', name: 'lamp', atLeast: 2 } }), vars, never)).toBe(true);
     expect(isUnlocked(node('tower', { unlock: { kind: 'variable', name: 'flag', atLeast: 1 } }), { flag: true }, never)).toBe(true);
-    expect(isUnlocked(node('tower', { unlock: { kind: 'lantern' } }), {}, (s) => s === 'scenes/tower.scene.json')).toBe(true);
+    expect(isUnlocked(node('tower', { unlock: { kind: 'beacon' } }), {}, (kind, n) => kind === 'beacon' && n.scene === 'scenes/tower.scene.json')).toBe(true);
   });
 
   it('says where the player is, and hides places that are secret until unlocked', () => {

@@ -2,7 +2,7 @@
 
 <!-- Generated from the event registries by packages/behaviors/src/docs.test.ts. Run `UPDATE_DOCS=1 npx vitest run packages/behaviors/src/docs.test.ts` after changing a block. -->
 
-An event sheet is a list of rows, each reading like a sentence: **when** its conditions hold, **do** its actions. Rows can have sub-events that run only while the row holds. Objects are chosen as "the player", "anything tagged ...", or a particular object. See [logic.md](logic.md).
+An event sheet is a list of rows, each reading like a line of instructions: **when** its conditions hold, **do** its actions. Rows can have sub-events that run only while the row holds. Objects are chosen as "the player", "anything tagged ...", or a particular object. See [logic.md](logic.md).
 
 There are 31 conditions and 52 actions.
 

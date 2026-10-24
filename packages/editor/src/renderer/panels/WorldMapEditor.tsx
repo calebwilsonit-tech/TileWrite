@@ -1,15 +1,17 @@
 import { useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
+import { host } from '@tilewright/behaviors';
 import { MAP_HEIGHT, MAP_ICONS, MAP_WIDTH, checkWorldMap, type MapNode, type MapUnlock } from '@tilewright/runtime';
 import { store, useApp } from '../app/store';
 import { addLink, addPlace, hasLink, mapFromScenes, movePlace, neighboursOf, removeLink, removePlace, renamePlaceId, sceneLabel, updatePlace } from '../model/worldmap-edit';
 import { CheckField, NumberField, SelectField, TextField } from './fields';
 
 const GLYPHS: Record<string, string> = { pin: '●', town: '⌂', dungeon: '☠', cave: '◓', forest: '♣', tower: '♜', castle: '♛', camp: '▲', harbor: '⚓' };
-const UNLOCKS: { value: MapUnlock['kind']; label: string }[] = [
+/** The ways a place can unlock: the core's, then those the plugins that are on brought. */
+const unlocks = (): { value: string; label: string }[] => [
   { value: 'visited', label: 'once the player has been there' },
   { value: 'always', label: 'from the start' },
-  { value: 'lantern', label: 'once a lantern post is lit there (they arrive at it)' },
   { value: 'variable', label: 'when a flag or counter is set' },
+  ...[...host.ext.unlockRules.values()].map((r) => ({ value: r.id, label: r.label })),
 ];
 
 type Drag = { id: string; dx: number; dy: number } | { link: string; x: number; y: number } | null;
@@ -161,13 +163,13 @@ export function WorldMapEditor() {
             label="The player can travel here"
             testId="worldmap-unlock"
             value={node.unlock.kind}
-            options={UNLOCKS}
+            options={unlocks()}
             onChange={(k) => put(updatePlace(map, node.id, { unlock: k === 'variable' ? { kind: 'variable', name: '', atLeast: 1 } : ({ kind: k } as MapUnlock) }))}
           />
           {node.unlock.kind === 'variable' && (
             <>
-              <TextField label="Variable" testId="worldmap-var" value={node.unlock.name} onCommit={(v) => put(updatePlace(map, node.id, { unlock: { kind: 'variable', name: v.trim(), atLeast: (node.unlock as { atLeast: number }).atLeast } }))} />
-              <NumberField label="At least" value={node.unlock.atLeast} step={1} onCommit={(v) => put(updatePlace(map, node.id, { unlock: { kind: 'variable', name: (node.unlock as { name: string }).name, atLeast: v } }))} />
+              <TextField label="Variable" testId="worldmap-var" value={(node.unlock as { name?: string }).name ?? ''} onCommit={(v) => put(updatePlace(map, node.id, { unlock: { kind: 'variable', name: v.trim(), atLeast: (node.unlock as { atLeast: number }).atLeast } }))} />
+              <NumberField label="At least" value={(node.unlock as { atLeast?: number }).atLeast ?? 1} step={1} onCommit={(v) => put(updatePlace(map, node.id, { unlock: { kind: 'variable', name: (node.unlock as { name: string }).name, atLeast: v } }))} />
             </>
           )}
           <TextField label="Arrive at (an object's name or x,y; empty = the player start)" value={node.spawn} onCommit={(v) => put(updatePlace(map, node.id, { spawn: v.trim() }))} />

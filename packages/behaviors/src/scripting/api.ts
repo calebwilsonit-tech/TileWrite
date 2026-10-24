@@ -148,7 +148,7 @@ export interface ScriptGame {
 export interface ScriptDef {
   /** Shown in the Add menu. Defaults to the file's name. */
   name?: string;
-  /** One sentence about what it does. */
+  /** One line about what it does. */
   description?: string;
   /** Settings shown in the Inspector. `{ speed: 90 }` is a number setting called "speed" starting at 90. */
   settings?: Record<string, ScriptValue | ScriptSettingSpec>;

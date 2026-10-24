@@ -52,7 +52,7 @@ export const WIDGET_KINDS = [...BUILTIN_WIDGETS, 'counter', 'bar', 'text'] as co
 export type WidgetKind = (typeof WIDGET_KINDS)[number];
 export const WIDGET_NAMES: Record<WidgetKind, string> = {
   hearts: 'Hearts',
-  lightbar: 'Lantern light bar',
+  lightbar: 'Light bar',
   slots: 'Quick slots',
   bosses: 'Boss health bars',
   toasts: 'Messages',

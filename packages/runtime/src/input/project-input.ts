@@ -6,7 +6,7 @@ import { activeActionLabels, activeInputMap } from './keyboard';
 
 /**
  * The game's own controls, kept in `assets/input.json`: which keys and buttons the built-in actions start with, and
- * extra actions the game makes up ("dash", "lantern") that event rows, scripts and the Controls screen can use.
+ * extra actions the game makes up ("dash", "torch") that event rows, scripts and the Controls screen can use.
  * Players can still change any of it in the game's Settings -> Controls.
  */
 

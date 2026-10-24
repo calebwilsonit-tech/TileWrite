@@ -59,7 +59,7 @@ export interface ImporterDef {
   label: string;
   /** Lower-case, with the dot: ".tmx". */
   extensions: string[];
-  /** Turn the file into project files; return a sentence saying what was made. */
+  /** Turn the file into project files; return a line saying what was made. */
   import(name: string, bytes: Uint8Array, host: EditorHost): Promise<string> | string;
 }
 
@@ -104,6 +104,8 @@ export interface PluginApi {
   physicsModifier(def: X.PhysicsModifierDef): void;
   /** Add a group plates and zones can react to ("crates", "helpers"). */
   whoFilter(def: X.WhoFilterDef): void;
+  /** Add a way a place on the world map can unlock ("a checkpoint is lit there"). */
+  unlockRule(def: X.UnlockRuleDef): void;
   /** Give scripts a method (me.damage, game.startDialogue...) that this plugin implements. */
   scriptMethod(def: X.ScriptMethodDef): void;
   /** Add a kind of block (a tile with its own colours and rules). */
@@ -189,6 +191,7 @@ const emptyExtensions = (): Extensions => ({
   physicsModifiers: new Map(),
   collisionLayers: new Map(),
   whoFilters: new Map(),
+  unlockRules: new Map(),
   scriptMethods: new Map(),
   blockTypes: new Map(),
   widgets: new Map(),
@@ -456,6 +459,9 @@ export class PluginHost {
       whoFilter(def) {
         host.add(rec, id, 'whoFilters', def.id, def);
         addWhoFilter(def.id, def.label, host.watched(id, `the group "${def.label}"`, def.match.bind(def)));
+      },
+      unlockRule(def) {
+        host.add(rec, id, 'unlockRules', def.id, def);
       },
       scriptMethod(def) {
         host.add(rec, id, 'scriptMethods', def.id, { ...def, run: host.watched(id, `the script method "${def.id}"`, def.run.bind(def)) });

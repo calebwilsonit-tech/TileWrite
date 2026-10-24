@@ -78,7 +78,7 @@ export const portal = defineBehavior<Portal>({
   id: 'portal',
   name: 'Scene Portal',
   category: 'Story',
-  description: 'A doorway: when the player steps into it they are taken to another scene (or another spot in this one), appearing at the named object there. Flags, items and lanterns come along.',
+  description: 'A doorway: when the player steps into it they are taken to another scene (or another spot in this one), appearing at the named object there. Flags, items and checkpoints come along.',
   phase: 'actuator',
   defaults: { scene: '', spawn: '' },
   fields: [

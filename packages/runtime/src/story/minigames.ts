@@ -14,7 +14,7 @@ const common = {
   name: z.string().min(1),
   /** Heading on the screen ('' = the name). */
   title: z.string().default(''),
-  /** What the player has to do ('' = a standard sentence for the kind). */
+  /** What the player has to do ('' = a standard line for the kind). */
   instructions: z.string().default(''),
   /** Set to true when the player wins ('' = none). */
   winVariable: z.string().default(''),

@@ -766,7 +766,7 @@ Adds automatically: `collider`.
 
 Id: `portal`. Each update it reacts to signals (runs last).
 
-A doorway: when the player steps into it they are taken to another scene (or another spot in this one), appearing at the named object there. Flags, items and lanterns come along.
+A doorway: when the player steps into it they are taken to another scene (or another spot in this one), appearing at the named object there. Flags, items and checkpoints come along.
 
 | Setting | Key | Kind | Starts as | Choices and notes |
 | --- | --- | --- | --- | --- |

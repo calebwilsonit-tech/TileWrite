@@ -48,7 +48,7 @@ export interface Assets {
   tileset?: TileSet;
 }
 
-/** A lantern post the player lit or rested at: where death sends them. */
+/** A checkpoint: a place the player rested at, where death sends them. */
 export interface Checkpoint {
   /** Scene file the post is in. */
   scene: string;

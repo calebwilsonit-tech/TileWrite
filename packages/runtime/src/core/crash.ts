@@ -7,7 +7,7 @@ import { SystemError } from './profiler';
  * technical detail, and a snapshot of the state around it so the cause can be found.
  */
 export interface CrashReport {
-  /** One sentence a designer can read. */
+  /** One line a designer can read. */
   headline: string;
   /** The error message itself. */
   message: string;

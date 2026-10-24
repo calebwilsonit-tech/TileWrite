@@ -72,11 +72,18 @@ export function activePackIds(): string[] {
   return host.active();
 }
 
-/** The packs a project made before phase 2 plays with: the action-adventure ones. Turn-based play, control schemes and simulation helpers are new and opt-in. */
-export const LEGACY_PACKS: readonly string[] = ['combat', 'inventory', 'story', 'ai', 'lighting', 'storytender'];
+let legacy: readonly string[] = [];
 
-/** The packs a project file asks for (a file with no list is a project from before packs: the action-adventure set). */
-export const packsOfProject = (project: { packs?: readonly string[] | undefined }): readonly string[] => project.packs ?? LEGACY_PACKS;
+/** Say which plugins a project file with no list of plugins uses (a project from before plugins existed). The set that ships with the editor does this. */
+export function setLegacyPacks(ids: readonly string[]): void {
+  legacy = [...ids];
+}
+
+/** The plugins a project made before plugins existed plays with. */
+export const legacyPacks = (): readonly string[] => legacy;
+
+/** The packs a project file asks for (a file with no list is a project from before plugins existed). */
+export const packsOfProject = (project: { packs?: readonly string[] | undefined }): readonly string[] => project.packs ?? legacy;
 
 /**
  * Turn exactly these packs on (and everything else off). `undefined` means "all the engine's own packs", which is what a project made

@@ -6,7 +6,7 @@ import { C, type TransformIso } from '../scene/components';
 import { applyTableEdits } from '../data/tables';
 
 /**
- * Save games: what to keep (flags and inventory, where the player is, the last lantern, and the state of
+ * Save games: what to keep (flags and inventory, where the player is, the last checkpoint, and the state of
  * objects tagged "persistent"), a versioned format with migrations, several slots plus an autosave, and
  * recovery from damaged files (the previous save is kept as a backup).
  */
@@ -98,7 +98,7 @@ export function serializeGame(sim: Simulation, meta: { stamp: string; label?: st
 
 /**
  * Put a save into a game whose scene (`save.scene`) has just been loaded: flags and inventory, the last
- * lantern, the player, and persistent objects (their saved state, or gone if they were gone).
+ * checkpoint, the player, and persistent objects (their saved state, or gone if they were gone).
  */
 export function applySave(sim: Simulation, save: SaveData): void {
   const r = sim.runtime;

@@ -76,7 +76,7 @@ export function playerControllerSystem({ world, input, runtime, compat }: SimCon
   }
 }
 
-/** Turn one tick of actions into movement; the player uses live input, echoes use their recording. */
+/** Turn one tick of actions into movement; the player uses live input, replays use their recording. */
 export function driveBody(cfg: PlayerController, b: Body, t: TransformIso, input: InputState, view: 0 | 1 | 2 | 3 = 0, gravity: GravityDir = DOWN): void {
   const v = input.vector('move_left', 'move_right', 'move_up', 'move_down');
   const frame = gravityFrame(gravity);

@@ -11,7 +11,7 @@ import {
   type ProjectData,
   type SceneData,
 } from '@tilewright/runtime';
-import { LEGACY_PACKS, attachBehavior, newAction, newCondition, newRow, setActivePacks } from '@tilewright/behaviors';
+import { attachBehavior, newAction, newCondition, newRow, setActivePacks } from '@tilewright/behaviors';
 
 export interface Template {
   id: string;
@@ -65,7 +65,7 @@ function baseProject(name: string, packs?: string[]): ProjectData {
     autotile: [],
     scenes: [MAIN_SCENE_PATH],
     startScene: MAIN_SCENE_PATH,
-    packs: packs ?? [...LEGACY_PACKS],
+    packs: packs ?? [],
   };
 }
 

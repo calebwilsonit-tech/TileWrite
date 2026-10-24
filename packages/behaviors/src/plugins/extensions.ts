@@ -1,4 +1,4 @@
-import type { EntityData, ProjectData, SceneData, SimContext, UiScreen, UiNode, System, SystemMode, Entity } from '@tilewright/runtime';
+import type { MapNode, VariableValue, EntityData, ProjectData, SceneData, SimContext, UiScreen, UiNode, System, SystemMode, Entity } from '@tilewright/runtime';
 import type { BehaviorDef } from '../framework';
 import type { ActionDef, ConditionDef } from '../events/sheet';
 
@@ -88,6 +88,18 @@ export interface BlockTypeDef {
   /** What the game's rules read: any facts ("friction": 0.1). */
   custom?: Record<string, string | number | boolean>;
   tags?: string[];
+}
+
+/** A way a place on the world map can unlock, brought by a plugin ("a checkpoint is lit there"). */
+export interface UnlockRuleDef {
+  /** The name saved in the map file. */
+  id: string;
+  /** In the map editor's list of ways to unlock a place. */
+  label: string;
+  /** Is the place unlocked? */
+  met(vars: Record<string, VariableValue>, node: MapNode): boolean;
+  /** Where the player appears when they travel to the place by this rule (a place in a scene), when it is not the scene's start. */
+  arrival?(vars: Record<string, VariableValue>, node: MapNode): { id: string; scene: string; x: number; y: number; h: number; name: string } | null;
 }
 
 // ---------- the interface framework ----------
@@ -189,7 +201,7 @@ export interface PlaybotStrategyDef {
   label: string;
   /** The words the Playbot panel shows next to the button. */
   help?: string;
-  /** Plays toward a goal; returns a report sentence. `game` is the playbot's game, `bot` its bot. */
+  /** Plays toward a goal; returns a report line. `game` is the playbot's game, `bot` its bot. */
   play(game: unknown, bot: unknown): string;
 }
 
@@ -212,7 +224,7 @@ export interface AssistantToolDef {
   input: Record<string, unknown>;
   /** `read` runs at once; `change` is shown to the person as a card to approve, like every other change. */
   kind: 'read' | 'change';
-  /** What the change would do, in a sentence, before it is approved. */
+  /** What the change would do, in a line, before it is approved. */
   preview?(input: Record<string, unknown>): string;
   run(input: Record<string, unknown>): Promise<string> | string;
 }
@@ -239,6 +251,7 @@ export interface Extensions {
   physicsModifiers: Map<string, PhysicsModifierDef & OwnedBy>;
   collisionLayers: Map<string, CollisionLayerDef & OwnedBy>;
   whoFilters: Map<string, WhoFilterDef & OwnedBy>;
+  unlockRules: Map<string, UnlockRuleDef & OwnedBy>;
   scriptMethods: Map<string, ScriptMethodDef & OwnedBy>;
   blockTypes: Map<string, BlockTypeDef & OwnedBy>;
   widgets: Map<string, WidgetDef & OwnedBy>;

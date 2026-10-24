@@ -1,4 +1,4 @@
-import { host, setActivePacks, type PluginDefinition } from '@tilewright/plugin-sdk';
+import { host, setActivePacks, setLegacyPacks, type PluginDefinition } from '@tilewright/plugin-sdk';
 import { aiPlugin } from '@tilewright/plugin-ai';
 import { combatPlugin } from '@tilewright/plugin-combat';
 import { controlsPlugin } from '@tilewright/plugin-controls';
@@ -30,6 +30,8 @@ export function registerBundledPlugins(): void {
 }
 
 registerBundledPlugins();
+// a project file with no list of plugins was made when these were the engine's built-in parts: it keeps playing with them
+setLegacyPacks(['combat', 'inventory', 'story', 'ai', 'lighting', 'storytender']);
 // until a project says which plugins it uses, every bundled plugin is on (a project made before plugins existed plays as it always did)
 setActivePacks(undefined);
 

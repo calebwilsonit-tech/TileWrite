@@ -34,6 +34,7 @@ import {
   setUiBridge,
 } from '@tilewright/plugin-sdk';
 import { healthOf } from '@tilewright/plugin-combat';
+import { host as plugins } from '@tilewright/plugin-sdk';
 import { litPosts, type LitPost } from '@tilewright/plugin-storytender';
 import { confirmDialogue, selectChoice } from '@tilewright/plugin-story';
 import { useItem } from '@tilewright/plugin-inventory';
@@ -543,16 +544,15 @@ export class GameUi {
     const sim = this.host.sim;
     const map = sim.assets.worldMap;
     if (!map) return [];
-    const posts = litPosts(sim.runtime.vars);
-    const lit = (scene: string): boolean => posts.some((p) => p.scene === scene);
-    return map.nodes.map((node) => ({ node, state: placeState(node, sim.runtime.vars, sim.runtime.scene, lit) })).filter((p) => p.state === 'open' || p.state === 'here');
+    const custom = (kind: string, node: import('@tilewright/runtime').MapNode): boolean => plugins.ext.unlockRules.get(kind)?.met(sim.runtime.vars, node) ?? false;
+    return map.nodes.map((node) => ({ node, state: placeState(node, sim.runtime.vars, sim.runtime.scene, custom) })).filter((p) => p.state === 'open' || p.state === 'here');
   }
 
   private travelToPlace(node: import('@tilewright/runtime').MapNode): void {
     const sim = this.host.sim;
     this.closeMenu();
     // a place that unlocks with a lantern: arrive at its lit lantern
-    const post = node.unlock.kind === 'lantern' ? litPosts(sim.runtime.vars).find((p) => p.scene === node.scene) : undefined;
+    const post = plugins.ext.unlockRules.get(node.unlock.kind)?.arrival?.(sim.runtime.vars, node);
     if (post) this.host.travelTo(post);
     else this.host.travelToScene(node.scene, node.spawn);
   }
@@ -572,9 +572,8 @@ export class GameUi {
       parent.appendChild(e);
       return e;
     };
-    const posts = litPosts(sim.runtime.vars);
-    const lit = (scene: string): boolean => posts.some((p) => p.scene === scene);
-    const state = new Map(map.nodes.map((n) => [n.id, placeState(n, sim.runtime.vars, sim.runtime.scene, lit)]));
+    const custom = (kind: string, node: import('@tilewright/runtime').MapNode): boolean => plugins.ext.unlockRules.get(kind)?.met(sim.runtime.vars, node) ?? false;
+    const state = new Map(map.nodes.map((n) => [n.id, placeState(n, sim.runtime.vars, sim.runtime.scene, custom)]));
     const shown = (id: string): boolean => (state.get(id) ?? 'hidden') !== 'hidden';
     const byId = new Map(map.nodes.map((n) => [n.id, n]));
     for (const l of map.links) {

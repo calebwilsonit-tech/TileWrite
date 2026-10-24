@@ -917,7 +917,7 @@ export function describeAction(a: EventAction, n?: Names): string {
   return def ? def.describe(a.params, n) : `(unknown action "${a.type}")`;
 }
 
-/** "When A and B, then X and Y" as a sentence. */
+/** "When A and B, then X and Y" as a line of text. */
 export function describeRow(row: EventRow, n?: Names): string {
   const conds = row.conditions.filter((c) => c.type !== 'always' || row.conditions.length === 1);
   const joiner = row.mode === 'any' ? ' or ' : ' and ';

@@ -16,15 +16,15 @@ export const MAP_HEIGHT = 600;
 export const MAP_ICONS = ['pin', 'town', 'dungeon', 'cave', 'forest', 'tower', 'castle', 'camp', 'harbor'] as const;
 export type MapIcon = (typeof MAP_ICONS)[number];
 
-export const MapUnlockSchema = z.discriminatedUnion('kind', [
+export const MapUnlockSchema = z.union([
   /** Once the player has been there. */
   z.object({ kind: z.literal('visited') }),
   /** From the start. */
   z.object({ kind: z.literal('always') }),
   /** When a flag or counter reaches a number. */
   z.object({ kind: z.literal('variable'), name: z.string().default(''), atLeast: z.number().default(1) }),
-  /** When the player has lit a lantern post there (they arrive at it). */
-  z.object({ kind: z.literal('lantern') }),
+  /** A rule a plugin brings (for example "a checkpoint is lit there"). The plugin decides; the rule keeps its name so saved maps stay readable. */
+  z.looseObject({ kind: z.string().min(1) }),
 ]);
 export type MapUnlock = z.infer<typeof MapUnlockSchema>;
 
@@ -77,27 +77,23 @@ export type MapPlaceState =
   /** The player can travel there. */
   | 'open';
 
-/** Whether a place's unlock rule is met. `lit(scene)` says whether a lantern post is lit in that scene. */
-export function isUnlocked(node: MapNode, vars: Record<string, VariableValue>, lit: (scene: string) => boolean): boolean {
+/** Whether a place's unlock rule is met. `custom(kind, node)` answers for the rules plugins brought (it is asked only for those). */
+export function isUnlocked(node: MapNode, vars: Record<string, VariableValue>, custom: (kind: string, node: MapNode) => boolean = () => false): boolean {
   const u = node.unlock;
-  switch (u.kind) {
-    case 'always':
-      return true;
-    case 'visited':
-      return hasVisited(vars, node.scene);
-    case 'lantern':
-      return lit(node.scene);
-    case 'variable': {
-      const v = vars[u.name];
-      const n = typeof v === 'number' ? v : v === true ? 1 : Number(v);
-      return Number.isFinite(n) && n >= u.atLeast;
-    }
+  if (u.kind === 'always') return true;
+  if (u.kind === 'visited') return hasVisited(vars, node.scene);
+  if (u.kind === 'variable') {
+    const rule = u as { name?: string; atLeast?: number };
+    const v = vars[rule.name ?? ''];
+    const n = typeof v === 'number' ? v : v === true ? 1 : Number(v);
+    return Number.isFinite(n) && n >= (rule.atLeast ?? 1);
   }
+  return custom(u.kind, node);
 }
 
-export function placeState(node: MapNode, vars: Record<string, VariableValue>, currentScene: string, lit: (scene: string) => boolean): MapPlaceState {
+export function placeState(node: MapNode, vars: Record<string, VariableValue>, currentScene: string, custom: (kind: string, node: MapNode) => boolean = () => false): MapPlaceState {
   if (node.scene !== '' && node.scene === currentScene) return 'here';
-  if (isUnlocked(node, vars, lit)) return 'open';
+  if (isUnlocked(node, vars, custom)) return 'open';
   return node.hidden ? 'hidden' : 'locked';
 }
 
@@ -129,7 +125,7 @@ export function checkWorldMap(m: WorldMapData, scenes: readonly string[]): strin
     ids.add(n.id);
     if (n.scene === '') out.push(`The place "${n.label}" is not linked to a scene, so the player cannot travel there.`);
     else if (!scenes.includes(n.scene)) out.push(`The place "${n.label}" leads to the scene "${n.scene}", which is not part of this project.`);
-    if (n.unlock.kind === 'variable' && n.unlock.name === '') out.push(`The place "${n.label}" unlocks with a variable but none is named.`);
+    if (n.unlock.kind === 'variable' && (n.unlock as { name?: string }).name === '') out.push(`The place "${n.label}" unlocks with a variable but none is named.`);
   }
   const sceneCount = new Map<string, number>();
   for (const n of m.nodes) if (n.scene) sceneCount.set(n.scene, (sceneCount.get(n.scene) ?? 0) + 1);

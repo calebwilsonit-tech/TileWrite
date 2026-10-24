@@ -47,7 +47,7 @@ export class GameRunner {
   private raf = 0;
   private last = 0;
   private running = false;
-  /** Snapshot supplier; swap it to feed recorded input (echoes, playbot). */
+  /** Snapshot supplier; swap it to feed recorded input (replays, playbot). */
   inputSource: () => ActionSnapshot;
 
   constructor(private readonly o: RunnerOptions) {

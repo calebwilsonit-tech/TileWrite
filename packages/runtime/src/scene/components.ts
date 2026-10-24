@@ -61,7 +61,7 @@ export interface Attach {
   along?: number;
 }
 
-/** A line of text drawn above an object (signs, sentence stones, text blocks). */
+/** A line of text drawn above an object (signs, puzzle stones, text blocks). */
 export const LABEL = 'label';
 
 export interface Label {

@@ -18,6 +18,16 @@ const COMPOSITION_ROOTS = new Set(['packages/editor/src/bundled.ts', 'packages/p
 /** Words that belong to one game and so to its plugin. */
 const FORBIDDEN = ['storytender', 'echo', 'lantern', 'sentence', 'dough', 'quill', 'mnemosynth', 'critic', 'spoiler'];
 
+/** A word of the reference game at the start of a word (echo, echoes, Echo) or inside a camelCase name (isEcho, litLantern). Plain words that merely contain the letters (Choices) do not count. */
+function findGameWord(line: string): string | null {
+  const lower = FORBIDDEN.join('|');
+  const upper = FORBIDDEN.map((w) => w[0]!.toUpperCase() + w.slice(1)).join('|');
+  const caps = FORBIDDEN.map((w) => w.toUpperCase()).join('|');
+  const start = new RegExp('\\b(?:' + lower + ')', 'i').exec(line);
+  const camel = new RegExp('(?<=[a-z0-9_])(?:' + upper + '|' + caps + ')').exec(line);
+  return start?.[0] ?? camel?.[0] ?? null;
+}
+
 function sources(dir: string, out: string[] = []): string[] {
   if (!fs.existsSync(dir)) return out;
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -51,14 +61,13 @@ describe('the core is neutral', () => {
   });
 
   it('never mentions the words of the reference game', () => {
-    const re = new RegExp(`(${FORBIDDEN.join('|')})`, 'i');
     const bad: string[] = [];
     for (const f of coreFiles) {
       if (isTest(f)) continue;
       const lines = fs.readFileSync(path.join(root, f), 'utf8').split(/\r?\n/);
       lines.forEach((line, i) => {
-        const m = re.exec(line);
-        if (m) bad.push(`${f}:${i + 1} ${m[1]}`);
+        const m = findGameWord(line);
+        if (m) bad.push(`${f}:${i + 1} ${m}`);
       });
     }
     expect(bad).toEqual([]);

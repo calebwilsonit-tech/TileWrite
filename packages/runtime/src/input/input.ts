@@ -1,6 +1,6 @@
 /**
  * Input works with ACTIONS ("move_left", "interact"), never raw keys, so rebinding, gamepads,
- * recordings (echoes) and the playbot all share one path.
+ * recordings and the playbot all share one path.
  *
  * Raw device state is a map of binding id -> value 0..1, e.g. "key:KeyW", "pad:button0",
  * "pad:axis0-", "mouse:0". An InputMap says which bindings drive which action.
