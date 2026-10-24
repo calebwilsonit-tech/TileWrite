@@ -33,6 +33,10 @@ export interface EditorHost {
   writeFile(path: string, text: string): Promise<void>;
   /** Read a file of the project (relative path). Needs the `project.read` permission. */
   readFile(path: string): Promise<string>;
+  /** The clipboard's text, and putting text on it. Needs the `clipboard` permission. */
+  clipboard: { read(): Promise<string>; write(text: string): Promise<void> };
+  /** Run another program on this computer (the person is asked each time). Needs the `programs` permission, which is off by default. */
+  runProgram(command: string, args: string[]): Promise<{ code: number; stdout: string; stderr: string }>;
 }
 
 /** A panel a plugin adds to the editor. Plain DOM, so a plugin needs no UI framework. */
@@ -292,6 +296,48 @@ export class PluginHost {
     return grants(this.permissionsOf(id).granted, wanted);
   }
 
+  /**
+   * The editor as one plugin sees it: the same functions, but each checks the permission the plugin was given. A plugin that did
+   * not ask for `project.write` cannot write; one that asked and was refused cannot either. (The engine's own plugins have what they ask for.)
+   */
+  editorHostFor(id: string): EditorHost {
+    const raw = (): EditorHost => {
+      if (!this.editorHost) throw new PluginError('The editor is not ready yet.');
+      return this.editorHost;
+    };
+    const name = (): string => this.known.get(id)?.manifest.name ?? id;
+    return {
+      notify: (kind, text) => this.editorHost?.notify(kind, `${name()}: ${text}`),
+      project: () => {
+        const p = this.editorHost?.project() ?? null;
+        return p && this.allowed(id, 'project.read') ? p : p ? { name: p.name, dir: '' } : null;
+      },
+      entities: () => (this.allowed(id, 'project.read') ? (this.editorHost?.entities() ?? []) : []),
+      readFile: async (path) => {
+        this.need(id, 'project.read', 'read a file of the project');
+        return raw().readFile(path);
+      },
+      writeFile: async (path, text) => {
+        this.need(id, 'project.write', 'write a file of the project');
+        return raw().writeFile(path, text);
+      },
+      clipboard: {
+        read: async () => {
+          this.need(id, 'clipboard', 'read the clipboard');
+          return raw().clipboard.read();
+        },
+        write: async (text) => {
+          this.need(id, 'clipboard', 'write to the clipboard');
+          return raw().clipboard.write(text);
+        },
+      },
+      runProgram: async (command, args) => {
+        this.need(id, 'programs', 'run another program');
+        return raw().runProgram(command, args);
+      },
+    };
+  }
+
   private need(id: string, wanted: string, what: string): void {
     if (!this.allowed(id, wanted)) throw new PluginError(`The plugin "${this.known.get(id)?.manifest.name ?? id}" tried to ${what}, but it was not allowed to (it needs the "${wanted}" permission).`);
   }
@@ -532,13 +578,16 @@ export class PluginHost {
         host.add(rec, id, 'screenRoles', def.id, def);
       },
       panel(def) {
-        host.editor.panels.set(def.id, { ...def, mount: host.guarded(id, `the panel "${def.title}"`, def.mount.bind(def), undefined), plugin: id });
+        const mount = host.guarded(id, `the panel "${def.title}"`, def.mount.bind(def), undefined);
+        host.editor.panels.set(def.id, { ...def, mount: (el) => mount(el, host.editorHostFor(id)), plugin: id });
       },
       tool(def) {
-        host.editor.tools.set(def.id, { ...def, onCell: host.guarded(id, `the tool "${def.label}"`, def.onCell.bind(def), undefined), plugin: id });
+        const onCell = host.guarded(id, `the tool "${def.label}"`, def.onCell.bind(def), undefined);
+        host.editor.tools.set(def.id, { ...def, onCell: (cell, _h, ev) => onCell(cell, host.editorHostFor(id), ev), plugin: id });
       },
       importer(def) {
-        host.editor.importers.set(def.id, { ...def, plugin: id });
+        const run = def.import.bind(def);
+        host.editor.importers.set(def.id, { ...def, import: (name, bytes) => run(name, bytes, host.editorHostFor(id)), plugin: id });
       },
       exporter(def) {
         host.add(rec, id, 'exporters', def.id, def);

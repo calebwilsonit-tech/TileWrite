@@ -42,6 +42,19 @@ export interface TilewrightApi {
     remove(file: string): Promise<void>;
     list(dir: string): Promise<{ name: string; dir: boolean }[]>;
   };
+  plugins: {
+    /** The folder installed plugins live in: <store>/<id>/<version>/. */
+    store(): Promise<string>;
+    list(): Promise<{ id: string; version: string; dir: string }[]>;
+    installFolder(dir: string): Promise<{ id: string; version: string; dir: string }>;
+    installBundle(text: string): Promise<{ id: string; version: string; dir: string }>;
+    fetch(address: string): Promise<string>;
+    remove(id: string, version?: string): Promise<void>;
+    watch(dir: string): Promise<void>;
+    unwatch(dir: string): Promise<void>;
+    runProgram(pluginName: string, command: string, args: string[]): Promise<{ code: number; stdout: string; stderr: string }>;
+    onChanged(fn: (dir: string) => void): () => void;
+  };
   settings: {
     get(): Promise<Record<string, unknown>>;
     set(s: Record<string, unknown>): Promise<void>;

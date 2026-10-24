@@ -23,6 +23,22 @@ contextBridge.exposeInMainWorld('tilewright', {
     remove: (file: string) => invoke<void>('fs:remove', file),
     list: (dir: string) => invoke<{ name: string; dir: boolean }[]>('fs:list', dir),
   },
+  plugins: {
+    store: () => invoke<string>('plugins:store'),
+    list: () => invoke('plugins:list'),
+    installFolder: (dir: string) => invoke('plugins:install-folder', dir),
+    installBundle: (text: string) => invoke('plugins:install-bundle', text),
+    fetch: (address: string) => invoke<string>('plugins:fetch', address),
+    remove: (id: string, version?: string) => invoke<void>('plugins:remove', id, version),
+    watch: (dir: string) => invoke<void>('plugins:watch', dir),
+    unwatch: (dir: string) => invoke<void>('plugins:unwatch', dir),
+    runProgram: (pluginName: string, command: string, args: string[]) => invoke('plugins:run-program', pluginName, command, args),
+    onChanged: (fn: (dir: string) => void) => {
+      const l = (_e: unknown, dir: string): void => fn(dir);
+      ipcRenderer.on('plugins:changed', l);
+      return () => ipcRenderer.removeListener('plugins:changed', l);
+    },
+  },
   settings: {
     get: () => invoke<Record<string, unknown>>('settings:get'),
     set: (s: Record<string, unknown>) => invoke<void>('settings:set', s),

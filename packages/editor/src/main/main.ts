@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { registerAssistant } from './assistant';
 import { registerExport } from './export';
 import { registerSamples } from './samples';
+import { registerPlugins } from './plugins';
 import { registerPreview } from './preview';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -54,6 +55,7 @@ function registerIpc(): void {
   registerAssistant();
   registerExport({ resolveInside, distDir: path.join(here, '..') });
   registerSamples({ resolveInside, distDir: path.join(here, '..') });
+  registerPlugins({ allow, storeDir: process.env.TILEWRIGHT_PLUGINS ?? path.join(app.getPath('userData'), 'plugins'), testMode: TEST_DIR !== undefined });
   registerPreview({ resolveInside, distDir: path.join(here, '..'), testMode: TEST_DIR !== undefined });
   // the library folder may always be used by the editor
   allow(libraryDir());

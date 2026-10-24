@@ -178,9 +178,41 @@ describe('the host', () => {
     expect(host.permissionsOf('t-own').granted).toEqual(['project.read']);
   });
 
+  it('shows a plugin the editor only as far as its permissions go', async () => {
+    const wrote: string[] = [];
+    host.editorHost = {
+      notify: () => undefined,
+      project: () => ({ name: 'P', dir: '/p' }),
+      entities: () => [{ id: 'e1', name: 'A', tags: [], components: {} }],
+      writeFile: async (p) => void wrote.push(p),
+      readFile: async () => 'text',
+      clipboard: { read: async () => 'clip', write: async () => undefined },
+      runProgram: async () => ({ code: 0, stdout: 'ran', stderr: '' }),
+    };
+    host.register(plugin({ id: 't-view', permissions: ['project.read'] }));
+    const seen = host.editorHostFor('t-view');
+    // nothing is granted yet (it is not one of the engine's own plugins)
+    expect(seen.project()).toEqual({ name: 'P', dir: '' });
+    expect(seen.entities()).toEqual([]);
+    await expect(seen.readFile('a.txt')).rejects.toThrow(/project.read/);
+    host.grant('t-view', ['project.read']);
+    expect(seen.project()).toEqual({ name: 'P', dir: '/p' });
+    expect(seen.entities()).toHaveLength(1);
+    await expect(seen.readFile('a.txt')).resolves.toBe('text');
+    await expect(seen.writeFile('a.txt', 'x')).rejects.toThrow(/project.write/);
+    await expect(seen.clipboard.read()).rejects.toThrow(/clipboard/);
+    await expect(seen.runProgram('calc', [])).rejects.toThrow(/programs/);
+    host.grant('t-view', ['project.read', 'project.write', 'clipboard', 'programs']);
+    await seen.writeFile('a.txt', 'x');
+    expect(wrote).toEqual(['a.txt']);
+    await expect(seen.clipboard.read()).resolves.toBe('clip');
+    await expect(seen.runProgram('calc', [])).resolves.toMatchObject({ stdout: 'ran' });
+    host.editorHost = null;
+  });
+
   it('turns a plugin off, with a message, when its editor parts crash; the editor is not taken down', () => {
     const told: string[] = [];
-    host.editorHost = { notify: (_k, t) => told.push(t), project: () => null, entities: () => [], writeFile: async () => undefined, readFile: async () => '' };
+    host.editorHost = { notify: (_k, t) => told.push(t), project: () => null, entities: () => [], writeFile: async () => undefined, readFile: async () => '', clipboard: { read: async () => '', write: async () => undefined }, runProgram: async () => ({ code: 0, stdout: '', stderr: '' }) };
     host.inEditor = true;
     host.register(
       plugin(
