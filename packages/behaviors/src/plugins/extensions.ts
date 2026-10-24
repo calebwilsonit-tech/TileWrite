@@ -1,4 +1,4 @@
-import type { MapNode, VariableValue, EntityData, ProjectData, SceneData, SimContext, UiScreen, UiNode, System, SystemMode, Entity } from '@tilewright/runtime';
+import type { EventRow, MapNode, RegionData, TileMap, VariableValue, WireData, EntityData, ProjectData, SceneData, SimContext, UiScreen, UiNode, System, SystemMode, Entity } from '@tilewright/runtime';
 import type { BehaviorDef } from '../framework';
 import type { ActionDef, ConditionDef } from '../events/sheet';
 
@@ -190,10 +190,20 @@ export interface ProblemDef {
   y?: number;
 }
 
+/** What a check can look at: the open scene's objects, its map, regions, wires and event rows. */
+export interface ValidationScene {
+  entities: readonly EntityData[];
+  map: TileMap;
+  regions: readonly RegionData[];
+  wires: readonly WireData[];
+  events: readonly EventRow[];
+  getEntity(id: string): EntityData | undefined;
+}
+
 /** Looks at a scene and says what is wrong with it. Runs with the editor's Problems panel and before export. */
 export interface ValidatorDef {
   id: string;
-  check(scene: SceneData): ProblemDef[];
+  check(scene: ValidationScene): ProblemDef[];
 }
 
 export interface PlaybotStrategyDef {

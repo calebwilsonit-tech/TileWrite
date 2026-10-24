@@ -1,5 +1,5 @@
 import '../../bundled';
-import { EMPTY_TILE, FLAG, SLOPE_RISE, findPath, groundHeightAt, reachableCells, textBridgeCells } from '@tilewright/runtime';
+import { EMPTY_TILE, FLAG, SLOPE_RISE, groundHeightAt, reachableCells, textBridgeCells } from '@tilewright/runtime';
 import { highSide, lowSide, meetsTop } from '../tools/algorithms';
 import type { EditorDoc } from './doc';
 import type { ProblemFix } from './logic-fix';
@@ -13,9 +13,8 @@ import {
   getBehavior,
   knownPackOfBehavior,
   listPacks,
-  parsePoints,
+  host,
 } from '@tilewright/behaviors';
-import { checkMachine, checkTree, type BehaviorTree, type StateMachine } from '@tilewright/behaviors';
 
 export interface Problem {
   id: string;
@@ -109,27 +108,6 @@ export function validateScene(doc: EditorDoc, sprites?: ReadonlySet<string>, pre
     }
   }
 
-  // state machines: states and arrows that cannot work
-  for (const e of doc.entities) {
-    const m = e.components.stateMachine as StateMachine | undefined;
-    if (!m) continue;
-    const t = e.components.transform as T | undefined;
-    for (const text of checkMachine(m, (b) => e.components[b] !== undefined)) {
-      out.push({ id: `machine-${e.id}-${out.length}`, severity: 'warning', message: `The state machine of "${e.name}": ${text}`, target: t ? pos('entity', e.id, t) : undefined });
-    }
-  }
-
-  // behaviour trees: nodes and branches that cannot work
-  for (const e of doc.entities) {
-    const tr = e.components.behaviorTree as BehaviorTree | undefined;
-    if (!tr) continue;
-    const t = e.components.transform as T | undefined;
-    for (const text of checkTree(tr, (b) => e.components[b] !== undefined)) {
-      out.push({ id: `tree-${e.id}-${out.length}`, severity: 'warning', message: `The behaviour tree of "${e.name}": ${text}`, target: t ? pos('entity', e.id, t) : undefined });
-    }
-    if (e.components.stateMachine !== undefined) out.push({ id: `tree-machine-${e.id}`, severity: 'warning', message: `"${e.name}" has both a Behaviour Tree and a State Machine, which would fight over which behaviours are switched on. Use one of them.`, target: t ? pos('entity', e.id, t) : undefined });
-  }
-
   // behaviours that need something the object does not have
   for (const e of doc.entities) {
     const t = e.components.transform as T | undefined;
@@ -152,51 +130,6 @@ export function validateScene(doc: EditorDoc, sprites?: ReadonlySet<string>, pre
       }
     }
   }
-  // story-puzzle and echo settings that cannot work
-  for (const e of doc.entities) {
-    const t = e.components.transform as T | undefined;
-    const stone = e.components.sentenceStone as { words?: string } | undefined;
-    if (stone && (stone.words ?? '').split(',').filter((w) => w.trim()).length < 2) {
-      out.push({ id: `stone-words-${e.id}`, severity: 'warning', message: `The sentence stone "${e.name}" has fewer than two swappable words, so there is nothing for the player to swap. Type words separated by commas.`, target: t ? pos('entity', e.id, t) : undefined });
-    }
-    const rec = e.components.echoRecorder as { capacity?: number; capacityVariable?: string } | undefined;
-    if (rec && (rec.capacity ?? 0) <= 0 && !rec.capacityVariable) {
-      out.push({ id: `echo-capacity-${e.id}`, severity: 'warning', message: `"${e.name}" can hold 0 echoes and has no variable to add more, so the Echo button will do nothing.`, target: t ? pos('entity', e.id, t) : undefined });
-    }
-  }
-
-  // guards, patrols and bosses
-  for (const e of doc.entities) {
-    const t = e.components.transform as T | undefined;
-    const target = t ? pos('entity', e.id, t) : undefined;
-    const pat = e.components.patrol as { points?: string } | undefined;
-    if (pat) {
-      const pts = parsePoints(pat.points ?? '');
-      if (pts.length < 2) {
-        out.push({ id: `patrol-short-${e.id}`, severity: 'warning', message: `"${e.name}" has the Patrol behaviour but fewer than two route points, so it will stand still. Select it and use the Patrol path tool to click its route.`, target });
-      } else {
-        for (let i = 0; i < pts.length; i++) {
-          const a = pts[i]!;
-          const b = pts[(i + 1) % pts.length]!;
-          if (doc.map.inBounds(Math.floor(a.x), Math.floor(a.y)) === false) {
-            out.push({ id: `patrol-out-${e.id}-${i}`, severity: 'warning', message: `Patrol point ${i + 1} of "${e.name}" is outside the map.`, target });
-          } else if (i + 1 < pts.length && findPath(doc.map, a, b, { maxNodes: 6000 }) === null) {
-            out.push({ id: `patrol-blocked-${e.id}-${i}`, severity: 'warning', message: `"${e.name}" cannot walk from patrol point ${i + 1} to point ${i + 2}: walls, pits, water or cliffs are in the way.`, target });
-          }
-        }
-      }
-    }
-    if (e.components.bossPhases && (e.components.bossPhases as { onlyInRoom?: boolean }).onlyInRoom && t) {
-      const room = doc.regions.find((r) => r.bossActive && t.x >= r.x && t.x < r.x + r.w && t.y >= r.y && t.y < r.y + r.h);
-      if (!room) {
-        out.push({ id: `boss-room-${e.id}`, severity: 'warning', message: `"${e.name}" only fights while the player is in its room, but it is not inside a Region marked "Bosses here only act while the player is inside". Draw a Region around it and tick that box (or turn off "Only fights while the player is in its room").`, target });
-      }
-    }
-    const h = e.components.health as { max?: number } | undefined;
-    if (e.components.damageOnTouch && !h && e.tags.includes('enemy')) {
-      out.push({ id: `enemy-nohealth-${e.id}`, severity: 'warning', message: `"${e.name}" hurts on touch but has no Health, so it cannot be defeated.`, target });
-    }
-  }
   // switches and gates that are not connected to anything
   const sheetText = JSON.stringify(doc.events);
   for (const e of doc.entities) {
@@ -204,7 +137,7 @@ export function validateScene(doc: EditorDoc, sprites?: ReadonlySet<string>, pre
     const target = t ? pos('entity', e.id, t) : undefined;
     const talks = (id: string): boolean => sheetText.includes(`id:${id}`) || sheetText.includes(`name:${e.name}`);
     const sends = doc.wires.some((w) => w.from.entity === e.id) || talks(e.id);
-    const kinds: [string, string][] = [['pressurePlate', 'pressure plate'], ['lever', 'lever'], ['lightSensor', 'light sensor'], ['triggerZone', 'trigger zone'], ['timer', 'timer']];
+    const kinds: [string, string][] = [['pressurePlate', 'pressure plate'], ['lever', 'lever'], ['triggerZone', 'trigger zone'], ['timer', 'timer']];
     for (const [id, label] of kinds) {
       if (e.components[id] !== undefined && !sends) {
         out.push({ id: `unused-${e.id}-${id}`, severity: 'warning', message: `The ${label} "${e.name}" is not connected to anything, so using it does nothing. Use the Wire tool to connect it to a gate or another object (or use it in an event row).`, target });
@@ -382,6 +315,14 @@ export function validateScene(doc: EditorDoc, sprites?: ReadonlySet<string>, pre
     }
   }
 
+  // checks the plugins that are on bring
+  for (const v of host.ext.validators.values()) {
+    for (const p of v.check(doc)) {
+      const owner = p.entity ? doc.getEntity(p.entity) : undefined;
+      const at = owner ? (owner.components.transform as T | undefined) : p.x !== undefined && p.y !== undefined ? { x: p.x, y: p.y, h: 0 } : undefined;
+      out.push({ id: p.id, severity: p.severity, message: p.message, ...(at ? { target: p.entity ? pos('entity', p.entity, at) : ({ kind: 'cell', x: at.x, y: at.y } as Problem['target']) } : {}) });
+    }
+  }
   return out;
 }
 
