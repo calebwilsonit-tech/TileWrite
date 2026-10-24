@@ -736,6 +736,8 @@ export class PlaySession {
         this.inputMap.bindings = { ...effectiveBindings(this.settings, this.defaults), ...POINTER_BINDINGS };
       },
       captureNext: () => this.source.captureNext(),
+      // with the pause button as a Quick Action (a compatibility flag), the project's own rule opens Pause, not the game
+      pauseKeyOpensPause: () => !this.sim.compat.pauseAction,
       restart: () => {
         const cp = this.sim.runtime.checkpoint;
         void this.enterScene(this.scenePath, cp && cp.scene === this.scenePath ? { at: cp } : {});

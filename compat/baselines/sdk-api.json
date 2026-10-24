@@ -603,6 +603,7 @@
     "parseUiDoc",
     "parseVersion",
     "pasteCel",
+    "pauseButtonRow",
     "physicsModifiers",
     "physicsSystem",
     "pickShape",

@@ -7,6 +7,7 @@ import {
   checkSheet,
   conditionDef,
   describeRow,
+  host,
   newAction,
   newCondition,
   newRow,
@@ -102,7 +103,11 @@ export function ParamEditor({ spec, value, onChange, testId, facts, inLoop }: { 
     case 'sound':
       return <SoundField testId={testId} label={spec.label} value={String(value ?? '')} onCommit={onChange} />;
     case 'screen': {
-      const screens = store.uiDoc.screens.map((s) => ({ value: s.name, label: s.name }));
+      const screens = [
+        ...store.uiDoc.screens.map((s) => ({ value: s.name, label: s.name })),
+        // the screen that plays a part, whichever it is (a project's own, or the plugin's)
+        ...[...host.ext.screenRoles.values()].map((r) => ({ value: `role:${r.id}`, label: `The screen used as ${r.label}` })),
+      ];
       const v = String(value ?? '');
       if (v && !screens.some((s) => s.value === v)) screens.push({ value: v, label: `${v} (missing)` });
       return <SelectField<string> testId={testId} label={spec.label} value={v} options={[{ value: '', label: screens.length ? '(choose a screen)' : '(no screens yet - make one in the UI designer)' }, ...screens]} onChange={onChange} />;

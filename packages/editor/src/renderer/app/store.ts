@@ -35,7 +35,7 @@ import {
   type OpenProject,
   type ProjectFs,
 } from '../project/io';
-import { DEFAULT_TILESET, emptyUiDoc, type UiDoc, defaultUiLayout, type CustomBehaviorData, type CustomComponentData, type EventDef, type TableData, emptyProjectInput, groupOf, newScene, tilesetFromList, type AutotileRuleData, type ProjectData, type ProjectInput, type UiLayout, type MinigameData, type SkinData, type WorldMapData, type TileDefData } from '@tilewright/runtime';
+import { DEFAULT_TILESET, emptyUiDoc, type UiDoc, defaultUiLayout, type CustomBehaviorData, type CustomComponentData, type EventDef, type TableData, emptyProjectInput, groupOf, newScene, pauseButtonRow, compatOf, tilesetFromList, type AutotileRuleData, type ProjectData, type ProjectInput, type UiLayout, type MinigameData, type SkinData, type WorldMapData, type TileDefData } from '@tilewright/runtime';
 
 /** Everything the Story panel edits, as it is at one moment (the parts are replaced, never changed in place). */
 interface StorySnapshot {
@@ -592,7 +592,8 @@ class AppStore {
     if (!p) return;
     await this.guard('Adding the scene', async () => {
       const path = scenePathFor(name, p.project.scenes);
-      const scene = newScene(name.trim() || 'Scene', 32, 32);
+      // a project that has the pause button as a Quick Action starts every scene with it
+      const scene = newScene(name.trim() || 'Scene', 32, 32, 1, compatOf(p.project).pauseAction ? [pauseButtonRow()] : []);
       await saveScene(realFs, p.dir, path, scene);
       const project = { ...p.project, scenes: [...p.project.scenes, path] };
       await saveProject(realFs, p.dir, project);

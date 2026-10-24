@@ -15,6 +15,10 @@ test('Phase 3: the pause menu is a designer screen you can customize, compare, r
   };
   await createProjectViaUi(page, 'Menus', 'empty');
   await page.evaluate(() => window.__store!.updateProjectSettings({ packs: ['inventory'] })); // (the inventory button comes with that plugin)
+  // the pause button is a Quick Action every new scene starts with, so it can be seen and changed
+  await page.locator('.dv-tab').getByText('Events', { exact: true }).click();
+  await expect(page.getByText('the "pause" button is pressed').first()).toBeVisible();
+  await expect(page.getByText('open the pause screen').first()).toBeVisible();
   await page.getByTestId('btn-ws-ui').click();
 
   // nothing of its own: the plugin's screens are played as they come

@@ -51,9 +51,11 @@ const note = (sim: Simulation, by: string, result: string): void => {
 };
 
 /** Offer Back to the open screens. Returns the name of the one that took it, or '' when none did. */
-export function backFromScreens(sim: Simulation): string {
+export function backFromScreens(sim: Simulation, fresh: ReadonlySet<string> = new Set()): string {
   const r = sim.runtime;
   for (const s of offerOrder(sim)) {
+    // a screen that opened on this very press (a Quick Action did it) is not also sent the press as Back
+    if (fresh.has(s.name)) continue;
     const a = backAction(s);
     if (a.kind === 'pass') continue;
     switch (a.kind) {
@@ -89,12 +91,22 @@ export function backFromScreens(sim: Simulation): string {
  */
 export function routeInput(h: RouterHost): void {
   const sim = h.sim;
-  const ui = sim.uiInput;
   const r = sim.runtime;
   const busy = Boolean(r.dialogue || r.cutscene || r.minigame);
+  const fresh = new Set(r.ui.stack.filter((n) => !r.ui.seen.includes(n)));
+  try {
+    route(h, busy, fresh);
+  } finally {
+    r.ui.seen = [...r.ui.stack];
+  }
+}
 
+function route(h: RouterHost, busy: boolean, fresh: ReadonlySet<string>): void {
+  const sim = h.sim;
+  const ui = sim.uiInput;
+  const r = sim.runtime;
   if (!busy && ui.pressed('pause')) {
-    const by = backFromScreens(sim);
+    const by = backFromScreens(sim, fresh);
     if (by !== '') ui.consume('pause');
   }
   sync(sim);

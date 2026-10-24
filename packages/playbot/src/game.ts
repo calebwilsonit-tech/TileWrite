@@ -109,7 +109,7 @@ export class Game {
   step(actions: Record<string, number> = {}): void {
     this.sim.step(actions);
     // the game's interface takes its share of the buttons, as it does in Play (Back, and the keys that open Pause)
-    routeInput({ sim: this.sim });
+    routeInput({ sim: this.sim, pauseKeyOpensPause: !this.sim.compat.pauseAction });
     const travel = this.sim.runtime.travel;
     if (travel?.fresh) {
       // a new run: the same scene again, nothing carried over

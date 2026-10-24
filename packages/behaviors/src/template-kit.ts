@@ -1,5 +1,5 @@
 /** Small builders for the starter projects (templates): a player, a crate, a thing with some behaviours, a walled room, and the project file that names the plugins it needs. Plugins use them for the templates they add. */
-import { CURRENT_SCHEMA_VERSION, DEFAULT_TILESET, TileMap, tileMapToRows, type EntityData, type ProjectData, type SceneData } from '@tilewright/runtime';
+import { CURRENT_SCHEMA_VERSION, DEFAULT_TILESET, TileMap, pauseButtonRow, tileMapToRows, type EntityData, type ProjectData, type SceneData } from '@tilewright/runtime';
 import { attachBehavior } from './framework';
 import { setActivePacks } from './packs';
 
@@ -52,7 +52,7 @@ export function baseProject(name: string, packs?: string[]): ProjectData {
 }
 
 export function sceneFrom(map: TileMap, entities: EntityData[]): SceneData {
-  return { schemaVersion: CURRENT_SCHEMA_VERSION, name: 'Main', map: tileMapToRows(map), entities, regions: [], wires: [], variables: [], events: [], graphs: [] };
+  return { schemaVersion: CURRENT_SCHEMA_VERSION, name: 'Main', map: tileMapToRows(map), entities, regions: [], wires: [], variables: [], events: [pauseButtonRow()], graphs: [] };
 }
 
 // ---------- genre starters (Phase 2) ----------

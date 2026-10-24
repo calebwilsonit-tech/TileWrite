@@ -714,7 +714,7 @@ export const ACTIONS: ActionDef[] = [
       { key: 'op', label: 'Do', type: 'select', default: 'open', options: [{ value: 'open', label: 'open' }, { value: 'close', label: 'close' }, { value: 'toggle', label: 'open or close' }, { value: 'back', label: 'go back one screen' }, { value: 'closeAll', label: 'close every screen' }] },
       { key: 'screen', label: 'Screen', type: 'screen', default: '' },
     ],
-    describe: (p) => (str(p, 'op') === 'back' ? 'go back one screen' : str(p, 'op') === 'closeAll' ? 'close every screen' : `${str(p, 'op') || 'open'} the screen "${str(p, 'screen')}"`),
+    describe: (p) => (str(p, 'op') === 'back' ? 'go back one screen' : str(p, 'op') === 'closeAll' ? 'close every screen' : `${str(p, 'op') || 'open'} ${str(p, 'screen').startsWith('role:') ? `the ${str(p, 'screen').slice(5)} screen` : `the screen "${str(p, 'screen')}"`}`),
     run(ctx, p) {
       const host = { runtime: ctx.runtime, assets: ctx.assets };
       const screen = filled(ctx, p, 'screen');

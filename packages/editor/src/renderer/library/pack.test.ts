@@ -131,7 +131,7 @@ describe('whole interface screens', () => {
     expect(renamed.uiScreens.map((s) => [s.name, s.id])).toEqual([['Pause', 'pause'], ['Pause 2', 'pause 2']]);
     expect(renamed.renamed).toEqual(['UI screen Pause -> Pause 2']);
     expect(applyImport(p, mine, 'skip').uiScreens).toHaveLength(1);
-    const replaced = applyImport({ ...p, uiScreens: [{ ...screen('Pause', 'other'), dim: 0.5 }] }, mine, 'replace');
+    const replaced = applyImport({ ...p, uiScreens: [{ ...(screen('Pause', 'other') as object), dim: 0.5 } as never] }, mine, 'replace');
     expect(replaced.uiScreens).toHaveLength(1);
     expect(replaced.uiScreens[0]).toMatchObject({ id: 'pause', dim: 0.5 });
   });

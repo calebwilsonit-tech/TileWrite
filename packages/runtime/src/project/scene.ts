@@ -12,6 +12,7 @@ import {
   SceneSchema,
   describeSchemaError,
   type EntityData,
+  type EventRow,
   type ProjectData,
   type SceneData,
   type TileMapRows,
@@ -63,8 +64,25 @@ export function tileMapFromRows(d: TileMapRows): TileMap {
   return map;
 }
 
-/** An empty scene filled with one tile at height 0. */
-export function newScene(name: string, width = 32, height = 32, tile = 1): SceneData {
+/** The Quick Action every new scene starts with: when the pause button is pressed, open the screen that plays the Pause part. */
+export function pauseButtonRow(): EventRow {
+  return {
+    id: 'pause-button',
+    enabled: true,
+    comment: 'The pause button opens the Pause screen. Change or delete this row to do something else with it.',
+    mode: 'all',
+    once: false,
+    forEach: '',
+    breakpoint: false,
+    repeat: 1,
+    conditions: [{ type: 'action', params: { name: 'pause', mode: 'pressed' }, negate: false }],
+    actions: [{ type: 'uiScreen', params: { op: 'open', screen: 'role:pause' } }],
+    children: [],
+  };
+}
+
+/** An empty scene filled with one tile at height 0. Pass the rows it starts with (see `pauseButtonRow`). */
+export function newScene(name: string, width = 32, height = 32, tile = 1, events: EventRow[] = []): SceneData {
   const map = new TileMap(width, height);
   map.fill(tile, 0);
   return {
@@ -75,7 +93,7 @@ export function newScene(name: string, width = 32, height = 32, tile = 1): Scene
     regions: [],
     wires: [],
     variables: [],
-    events: [],
+    events,
     graphs: [],
   };
 }

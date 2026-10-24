@@ -76,6 +76,8 @@ export interface SceneRuntime {
     blocking: boolean;
     /** Who handled the last press of Back, for the screens overlay and the tests. */
     last: { tick: number; action: string; by: string; result: string } | null;
+    /** The screens that were open when the interface last took its share of the buttons, so a screen opened since (by a Quick Action, on this very press) is not also sent that press as Back. */
+    seen: string[];
   };
   /** Which way gravity pulls in this scene (objects can have their own). */
   gravity: GravityDir;
@@ -219,7 +221,7 @@ export function newSceneRuntime(): SceneRuntime {
     wires: [],
     sheet: [],
     graphs: [],
-    ui: { stack: [], tabs: {}, modal: false, blocking: false, last: null },
+    ui: { stack: [], tabs: {}, modal: false, blocking: false, last: null, seen: [] },
     gravity: '-z',
     blockRules: { enabled: false, limit: 200 },
     blockEdits: 0,

@@ -1,8 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { InputMap, Simulation, UiDocSchema, newWidget, openScreen, openStartScreens, DEFAULT_INPUT_MAP, type UiNode, type UiScreen } from '@tilewright/runtime';
+import { InputMap, Simulation, UiDocSchema, newWidget, openScreen, openStartScreens, pauseButtonRow, physicsSystem, DEFAULT_INPUT_MAP, type UiNode, type UiScreen } from '@tilewright/runtime';
 import { backAction, routeInput, type RouterHost } from './router';
+import { addStandardSystems } from '../index';
 
 /**
  * Phase 3, step 1: the custom-screen bug. With the player's own screens, one press of Back used to be handled twice
@@ -234,5 +235,48 @@ describe('what Back means on a screen', () => {
     expect(backAction(screen('Hud', { back: 'close' }))).toEqual({ kind: 'close' });
     expect(backAction(screen('X', { back: 'screen', backTo: 'Y' }))).toEqual({ kind: 'goto', to: 'Y' });
     expect(backAction(screen('X', { back: 'screen' }))).toEqual({ kind: 'previous' });
+  });
+});
+
+describe('the pause button as a Quick Action (the pauseAction flag)', () => {
+  /** A game where the pause button is the project's own rule, as in every new scene. */
+  function ruled(rule = true): ReturnType<typeof game> {
+    const g = game([screen('Hud', { opensOnStart: true }), screen('Pause', { modal: true })]);
+    addStandardSystems(g.sim, physicsSystem);
+    g.sim.compat.pauseAction = true;
+    g.host.pauseKeyOpensPause = false;
+    if (rule) g.sim.runtime.sheet = [pauseButtonRow()];
+    openStartScreens(g.sim);
+    idle(g);
+    return g;
+  }
+
+  it('the row opens Pause once, and the next press closes it: the press that opened it is not also Back', () => {
+    const g = ruled();
+    g.press('pause');
+    expect(g.stack()).toEqual(['Hud', 'Pause']);
+    idle(g);
+    expect(g.stack()).toEqual(['Hud', 'Pause']);
+    g.press('pause');
+    expect(g.stack()).toEqual(['Hud']);
+    idle(g, 4);
+    expect(g.stack()).toEqual(['Hud']);
+  });
+
+  it('with the row deleted the button does nothing by itself, but Back still closes what is open', () => {
+    const g = ruled(false);
+    g.press('pause');
+    expect(g.stack()).toEqual(['Hud']);
+    openScreen(g.sim, 'Pause');
+    idle(g);
+    g.press('pause');
+    expect(g.stack()).toEqual(['Hud']);
+  });
+
+  it('the older projects keep the older rule: no flag, no row, the button opens Pause by itself', () => {
+    const g = game([screen('Pause', { modal: true })]);
+    idle(g);
+    g.press('pause');
+    expect(g.stack()).toEqual(['Pause']);
   });
 });
