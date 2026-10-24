@@ -13,7 +13,7 @@ import {
   type EventRow,
   type SimContext,
 } from '@tilewright/runtime';
-import { addStandardSystems, attachBehavior } from '@tilewright/behaviors';
+import { PluginHost, PluginTrust, addStandardSystems, host, attachBehavior, loadPackage, readPluginPackage, type PluginDefinition } from '@tilewright/behaviors';
 
 /** Helpers for tests that build a small scene and run it through the same systems the game uses. */
 
@@ -109,4 +109,41 @@ export function ctxOf(r: Rig): SimContext {
     tick: r.sim.tick,
     compat: r.sim.compat,
   };
+}
+// ---------- testing plugins ----------
+
+/**
+ * Turn plugins on for a test (on the host the game systems of a rig read) and take them away again with off().
+ * `editor: true` also installs their editor parts.
+ *
+ *   const t = usePlugin(myPlugin);
+ *   const r = rig(scene);           // a small game with the plugin on
+ *   r.run(60);
+ *   expect(t.contents().behaviors).toEqual(['spinner']);
+ *   t.off();
+ */
+export function usePlugin(plugin: PluginDefinition | PluginDefinition[], opts: { editor?: boolean } = {}): { host: PluginHost; contents(id?: string): NonNullable<ReturnType<PluginHost['contentsOf']>>; off(): void } {
+  const h = host; // the one the game systems of a rig read
+  if (opts.editor) h.inEditor = true;
+  const list = Array.isArray(plugin) ? plugin : [plugin];
+  for (const p of list) h.register(p);
+  for (const p of list) h.install(p.manifest.id);
+  return {
+    host: h,
+    contents: (id = list[0]!.manifest.id) => h.contentsOf(id)!,
+    off: () => {
+      for (const p of [...list].reverse()) h.forget(p.manifest.id);
+    },
+  };
+}
+
+/** A plugin the way it comes in a folder (`plugin.json` and its code), given as the text of its files, for testing how a packaged plugin loads. */
+export async function pluginFromFiles(files: Record<string, string>): Promise<PluginDefinition> {
+  const read = await readPluginPackage({ readText: async (p) => files[p] ?? '', exists: async (p) => p in files });
+  if (!read.ok) throw new Error(read.problems.join(' '));
+  const trust = new PluginTrust();
+  trust.approve(read.pkg.manifest.id, read.pkg.hash);
+  const out = await loadPackage(read.pkg, trust, await import('./index'));
+  if (out.state !== 'loaded') throw new Error(out.state === 'refused' ? out.problems.join(' ') : 'not approved');
+  return out.definition;
 }

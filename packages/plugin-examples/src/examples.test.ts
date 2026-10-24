@@ -68,3 +68,31 @@ describe('the example plugins', () => {
     expect(t[0]!.build('Arena').scene.entities.length).toBe(1);
   });
 });
+
+describe('the test harness', () => {
+  it('runs a plugin in a small game and takes it away again', async () => {
+    const { usePlugin, rig, flatScene, thing, pluginFromFiles, C } = await import('@tilewright/plugin-sdk/testing');
+    const { behaviorExample } = await import('./index');
+    const t = usePlugin(behaviorExample);
+    const { scene } = flatScene();
+    scene.entities.push(thing('s', 'Spinner', 5.5, 5.5, { exampleSpinner: { speed: 4 } }));
+    const r = rig(scene);
+    const seen = new Set<number>();
+    for (let i = 0; i < 60; i++) {
+      r.run(1);
+      seen.add((r.get('s').get(C.Transform) as { facing: number }).facing);
+    }
+    expect(seen.size).toBeGreaterThan(2); // it turns
+    expect(t.contents().behaviors).toEqual(['exampleSpinner']);
+    t.off();
+    expect(t.host.isInstalled('example-behavior')).toBe(false);
+
+    const loaded = await pluginFromFiles({
+      'plugin.json': JSON.stringify({ id: 'packed', name: 'Packed', version: '1.0.0', entry: { runtime: 'p.cjs' } }),
+      'p.cjs': "const sdk = require('@tilewright/plugin-sdk'); module.exports.default = sdk.definePlugin({ id: 'packed', name: 'Packed', version: '1.0.0' }, { install(api) { api.inputAction('packed_go', { label: 'Go', bindings: ['key:KeyG'] }); } });",
+    });
+    const p = usePlugin(loaded);
+    expect(Object.keys(p.host.inputActions())).toContain('packed_go');
+    p.off();
+  });
+});

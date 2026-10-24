@@ -1,0 +1,11 @@
+{
+  "name": "create-tilewright-plugin",
+  "version": "1.0.0",
+  "description": "Makes a new Tilewright plugin: npm create tilewright-plugin my-plugin",
+  "type": "module",
+  "bin": { "create-tilewright-plugin": "./bin.mjs" },
+  "main": "./src/scaffold.ts",
+  "types": "./src/scaffold.ts",
+  "files": ["bin.mjs", "src"],
+  "dependencies": {}
+}
