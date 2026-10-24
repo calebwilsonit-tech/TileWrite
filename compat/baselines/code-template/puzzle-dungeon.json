@@ -1,0 +1,284 @@
+{
+  "loadProblems": [],
+  "check": [],
+  "project": {
+    "schemaVersion": 1,
+    "packs": "combat,inventory,story,ai,lighting,storytender",
+    "roundTrip": true
+  },
+  "scenes": {
+    "scenes/main.scene.json": {
+      "entities": 1,
+      "map": "2f71af201280584f",
+      "loadProblems": [],
+      "roundTrip": true,
+      "keys": {
+        "checkpoints": [
+          {
+            "tick": 0,
+            "player": {
+              "x": 5.5,
+              "y": 8.5,
+              "h": 0
+            },
+            "entities": 1,
+            "world": "6c53bab423dbb7be",
+            "vars": "0e6bf79c0b086ece",
+            "screen": ""
+          },
+          {
+            "tick": 60,
+            "player": {
+              "x": 5.5,
+              "y": 8.5,
+              "h": 0
+            },
+            "entities": 1,
+            "world": "6c53bab423dbb7be",
+            "vars": "0e6bf79c0b086ece",
+            "screen": ""
+          },
+          {
+            "tick": 120,
+            "player": {
+              "x": 8.328,
+              "y": 7.086,
+              "h": 0
+            },
+            "entities": 1,
+            "world": "d533ef104e187561",
+            "vars": "0e6bf79c0b086ece",
+            "screen": ""
+          },
+          {
+            "tick": 180,
+            "player": {
+              "x": 8.328,
+              "y": 9.914,
+              "h": 0
+            },
+            "entities": 1,
+            "world": "249a68a1c04d71cb",
+            "vars": "0e6bf79c0b086ece",
+            "screen": ""
+          },
+          {
+            "tick": 240,
+            "player": {
+              "x": 5.5,
+              "y": 8.5,
+              "h": 0
+            },
+            "entities": 1,
+            "world": "6c53bab423dbb7be",
+            "vars": "0e6bf79c0b086ece",
+            "screen": ""
+          },
+          {
+            "tick": 300,
+            "player": {
+              "x": 8.517,
+              "y": 5.483,
+              "h": 1.567
+            },
+            "entities": 1,
+            "world": "8c668a3b2744c669",
+            "vars": "0e6bf79c0b086ece",
+            "screen": ""
+          },
+          {
+            "tick": 360,
+            "player": {
+              "x": 9.696,
+              "y": 6.897,
+              "h": 0
+            },
+            "entities": 1,
+            "world": "d6e5b945db90c136",
+            "vars": "0e6bf79c0b086ece",
+            "screen": ""
+          },
+          {
+            "tick": 420,
+            "player": {
+              "x": 8.564,
+              "y": 8.029,
+              "h": 0
+            },
+            "entities": 1,
+            "world": "c39becf42f0bf139",
+            "vars": "0e6bf79c0b086ece",
+            "screen": ""
+          },
+          {
+            "tick": 480,
+            "player": {
+              "x": 7.527,
+              "y": 9.066,
+              "h": 0
+            },
+            "entities": 1,
+            "world": "348e62295524aa5c",
+            "vars": "0e6bf79c0b086ece",
+            "screen": ""
+          },
+          {
+            "tick": 540,
+            "player": {
+              "x": 6.584,
+              "y": 8.123,
+              "h": 0
+            },
+            "entities": 1,
+            "world": "5897c8dbdf0a77bc",
+            "vars": "0e6bf79c0b086ece",
+            "screen": ""
+          },
+          {
+            "tick": 600,
+            "player": {
+              "x": 4.699,
+              "y": 6.237,
+              "h": 0
+            },
+            "entities": 1,
+            "world": "3a10f750bae460c7",
+            "vars": "0e6bf79c0b086ece",
+            "screen": ""
+          },
+          {
+            "tick": 640,
+            "player": {
+              "x": 4.699,
+              "y": 6.237,
+              "h": 0
+            },
+            "entities": 1,
+            "world": "3a10f750bae460c7",
+            "vars": "0e6bf79c0b086ece",
+            "screen": ""
+          }
+        ],
+        "error": ""
+      },
+      "mouse": {
+        "checkpoints": [
+          {
+            "tick": 0,
+            "player": {
+              "x": 5.5,
+              "y": 8.5,
+              "h": 0
+            },
+            "entities": 1,
+            "world": "6c53bab423dbb7be",
+            "vars": "0e6bf79c0b086ece",
+            "screen": ""
+          },
+          {
+            "tick": 30,
+            "player": {
+              "x": 5.5,
+              "y": 8.5,
+              "h": 0
+            },
+            "entities": 1,
+            "world": "6c53bab423dbb7be",
+            "vars": "0e6bf79c0b086ece",
+            "screen": ""
+          },
+          {
+            "tick": 126,
+            "player": {
+              "x": 5.5,
+              "y": 8.5,
+              "h": 0
+            },
+            "entities": 1,
+            "world": "6c53bab423dbb7be",
+            "vars": "0e6bf79c0b086ece",
+            "screen": ""
+          },
+          {
+            "tick": 222,
+            "player": {
+              "x": 5.5,
+              "y": 8.5,
+              "h": 0
+            },
+            "entities": 1,
+            "world": "6c53bab423dbb7be",
+            "vars": "0e6bf79c0b086ece",
+            "screen": ""
+          },
+          {
+            "tick": 318,
+            "player": {
+              "x": 5.5,
+              "y": 8.5,
+              "h": 0
+            },
+            "entities": 1,
+            "world": "6c53bab423dbb7be",
+            "vars": "0e6bf79c0b086ece",
+            "screen": ""
+          },
+          {
+            "tick": 414,
+            "player": {
+              "x": 5.5,
+              "y": 8.5,
+              "h": 0
+            },
+            "entities": 1,
+            "world": "6c53bab423dbb7be",
+            "vars": "0e6bf79c0b086ece",
+            "screen": ""
+          },
+          {
+            "tick": 510,
+            "player": {
+              "x": 5.5,
+              "y": 8.5,
+              "h": 0
+            },
+            "entities": 1,
+            "world": "6c53bab423dbb7be",
+            "vars": "0e6bf79c0b086ece",
+            "screen": ""
+          },
+          {
+            "tick": 640,
+            "player": {
+              "x": 5.5,
+              "y": 8.5,
+              "h": 0
+            },
+            "entities": 1,
+            "world": "6c53bab423dbb7be",
+            "vars": "0e6bf79c0b086ece",
+            "screen": ""
+          }
+        ],
+        "error": ""
+      },
+      "saveRoundTrip": "ok"
+    }
+  },
+  "scenarios": {},
+  "scripts": {
+    "typecheck": {},
+    "compile": {},
+    "logs": []
+  },
+  "savedGames": {},
+  "playthroughs": {},
+  "exported": {
+    "files": {
+      "project.json": "5df47d700931b9cd",
+      "scenes/main.scene.json": "c891d2d7962642b4"
+    },
+    "manifest": "fe3d6746ad7ccdd3",
+    "settingsProblems": []
+  }
+}

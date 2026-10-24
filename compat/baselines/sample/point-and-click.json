@@ -1,0 +1,287 @@
+{
+  "loadProblems": [],
+  "check": [],
+  "project": {
+    "schemaVersion": 1,
+    "packs": "controls,story,inventory",
+    "roundTrip": true
+  },
+  "scenes": {
+    "scenes/main.scene.json": {
+      "entities": 6,
+      "map": "aaa01a94f231f561",
+      "loadProblems": [],
+      "roundTrip": true,
+      "keys": {
+        "checkpoints": [
+          {
+            "tick": 0,
+            "player": {
+              "x": 4.5,
+              "y": 7.5,
+              "h": 0
+            },
+            "entities": 6,
+            "world": "3a1b07ce870eebcc",
+            "vars": "0b837d3d47eba142",
+            "screen": "Verbs"
+          },
+          {
+            "tick": 60,
+            "player": {
+              "x": 4.5,
+              "y": 7.5,
+              "h": 0
+            },
+            "entities": 6,
+            "world": "3a1b07ce870eebcc",
+            "vars": "951d187927f70637",
+            "screen": "Verbs"
+          },
+          {
+            "tick": 120,
+            "player": {
+              "x": 4.5,
+              "y": 7.5,
+              "h": 0
+            },
+            "entities": 6,
+            "world": "3a1b07ce870eebcc",
+            "vars": "951d187927f70637",
+            "screen": "Verbs"
+          },
+          {
+            "tick": 180,
+            "player": {
+              "x": 4.5,
+              "y": 7.5,
+              "h": 0
+            },
+            "entities": 6,
+            "world": "3a1b07ce870eebcc",
+            "vars": "951d187927f70637",
+            "screen": "Verbs"
+          },
+          {
+            "tick": 240,
+            "player": {
+              "x": 4.5,
+              "y": 7.5,
+              "h": 0
+            },
+            "entities": 6,
+            "world": "3a1b07ce870eebcc",
+            "vars": "951d187927f70637",
+            "screen": "Verbs"
+          },
+          {
+            "tick": 300,
+            "player": {
+              "x": 4.5,
+              "y": 7.5,
+              "h": 0
+            },
+            "entities": 6,
+            "world": "3a1b07ce870eebcc",
+            "vars": "951d187927f70637",
+            "screen": "Verbs"
+          },
+          {
+            "tick": 360,
+            "player": {
+              "x": 4.5,
+              "y": 7.5,
+              "h": 0
+            },
+            "entities": 6,
+            "world": "3a1b07ce870eebcc",
+            "vars": "951d187927f70637",
+            "screen": "Verbs"
+          },
+          {
+            "tick": 420,
+            "player": {
+              "x": 4.5,
+              "y": 7.5,
+              "h": 0
+            },
+            "entities": 6,
+            "world": "3a1b07ce870eebcc",
+            "vars": "951d187927f70637",
+            "screen": "Verbs"
+          },
+          {
+            "tick": 480,
+            "player": {
+              "x": 4.5,
+              "y": 7.5,
+              "h": 0
+            },
+            "entities": 6,
+            "world": "3a1b07ce870eebcc",
+            "vars": "951d187927f70637",
+            "screen": "Verbs"
+          },
+          {
+            "tick": 540,
+            "player": {
+              "x": 4.5,
+              "y": 7.5,
+              "h": 0
+            },
+            "entities": 6,
+            "world": "3a1b07ce870eebcc",
+            "vars": "951d187927f70637",
+            "screen": "Verbs"
+          },
+          {
+            "tick": 600,
+            "player": {
+              "x": 4.5,
+              "y": 7.5,
+              "h": 0
+            },
+            "entities": 6,
+            "world": "3a1b07ce870eebcc",
+            "vars": "951d187927f70637",
+            "screen": "Verbs"
+          },
+          {
+            "tick": 640,
+            "player": {
+              "x": 4.5,
+              "y": 7.5,
+              "h": 0
+            },
+            "entities": 6,
+            "world": "3a1b07ce870eebcc",
+            "vars": "951d187927f70637",
+            "screen": "Verbs"
+          }
+        ],
+        "error": ""
+      },
+      "mouse": {
+        "checkpoints": [
+          {
+            "tick": 0,
+            "player": {
+              "x": 4.5,
+              "y": 7.5,
+              "h": 0
+            },
+            "entities": 6,
+            "world": "3a1b07ce870eebcc",
+            "vars": "0b837d3d47eba142",
+            "screen": "Verbs"
+          },
+          {
+            "tick": 30,
+            "player": {
+              "x": 4.5,
+              "y": 7.5,
+              "h": 0
+            },
+            "entities": 6,
+            "world": "3a1b07ce870eebcc",
+            "vars": "951d187927f70637",
+            "screen": "Verbs"
+          },
+          {
+            "tick": 126,
+            "player": {
+              "x": 6.367,
+              "y": 7.5,
+              "h": 0
+            },
+            "entities": 6,
+            "world": "545967c315c9d75a",
+            "vars": "951d187927f70637",
+            "screen": "Verbs"
+          },
+          {
+            "tick": 222,
+            "player": {
+              "x": 4.593,
+              "y": 9.401,
+              "h": 0
+            },
+            "entities": 6,
+            "world": "8534f1ae12e2e0cd",
+            "vars": "951d187927f70637",
+            "screen": "Verbs"
+          },
+          {
+            "tick": 318,
+            "player": {
+              "x": 2.569,
+              "y": 7.563,
+              "h": 0
+            },
+            "entities": 6,
+            "world": "a793812a28815fa8",
+            "vars": "951d187927f70637",
+            "screen": "Verbs"
+          },
+          {
+            "tick": 414,
+            "player": {
+              "x": 4.437,
+              "y": 5.567,
+              "h": 0
+            },
+            "entities": 6,
+            "world": "324fc42609d0a708",
+            "vars": "951d187927f70637",
+            "screen": "Verbs"
+          },
+          {
+            "tick": 510,
+            "player": {
+              "x": 7.426,
+              "y": 10.381,
+              "h": 0
+            },
+            "entities": 6,
+            "world": "a6d2ad380a84ddfd",
+            "vars": "951d187927f70637",
+            "screen": "Verbs"
+          },
+          {
+            "tick": 640,
+            "player": {
+              "x": 4.256,
+              "y": 7.235,
+              "h": 0
+            },
+            "entities": 6,
+            "world": "c54aa3be9ff1971a",
+            "vars": "951d187927f70637",
+            "screen": "Verbs"
+          }
+        ],
+        "error": ""
+      },
+      "saveRoundTrip": "ok"
+    }
+  },
+  "scenarios": {},
+  "scripts": {
+    "typecheck": {},
+    "compile": {},
+    "logs": []
+  },
+  "savedGames": {},
+  "playthroughs": {},
+  "exported": {
+    "files": {
+      "assets/dialogues/Cat.dialogue.json": "2bc6e694baedbf49",
+      "assets/items.json": "a954442727bc6fc3",
+      "assets/screens.json": "5802272797f45657",
+      "project.json": "698e3df7434328c4",
+      "scenes/main.scene.json": "420071c465de3268"
+    },
+    "manifest": "b37da684cbcc9dcd",
+    "settingsProblems": []
+  }
+}

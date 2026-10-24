@@ -1,0 +1,400 @@
+{
+  "loadProblems": [],
+  "check": [
+    "warning: The tile \"Meadow grass\" is covered by the sprite \"grass\", which is not in this project, so it is drawn as a flat colour.",
+    "warning: The tile \"grass edge-E\" is covered by the sprite \"grass_edge-E\", which is not in this project, so it is drawn as a flat colour.",
+    "warning: The tile \"grass edge-E+inner-NW\" is covered by the sprite \"grass_edge-E_inner-NW\", which is not in this project, so it is drawn as a flat colour.",
+    "warning: The tile \"grass edge-E+inner-SW\" is covered by the sprite \"grass_edge-E_inner-SW\", which is not in this project, so it is drawn as a flat colour.",
+    "warning: The tile \"grass edge-E+inner-SW-NW\" is covered by the sprite \"grass_edge-E_inner-SW-NW\", which is not in this project, so it is drawn as a flat colour.",
+    "warning: The tile \"grass edge-ES\" is covered by the sprite \"grass_edge-ES\", which is not in this project, so it is drawn as a flat colour.",
+    "warning: The tile \"grass edge-ES+inner-NW\" is covered by the sprite \"grass_edge-ES_inner-NW\", which is not in this project, so it is drawn as a flat colour.",
+    "warning: The tile \"grass edge-ESW\" is covered by the sprite \"grass_edge-ESW\", which is not in this project, so it is drawn as a flat colour.",
+    "warning: The tile \"grass edge-EW\" is covered by the sprite \"grass_edge-EW\", which is not in this project, so it is drawn as a flat colour.",
+    "warning: The tile \"grass edge-N\" is covered by the sprite \"grass_edge-N\", which is not in this project, so it is drawn as a flat colour.",
+    "warning: The tile \"grass edge-N+inner-SE\" is covered by the sprite \"grass_edge-N_inner-SE\", which is not in this project, so it is drawn as a flat colour.",
+    "warning: The tile \"grass edge-N+inner-SE-SW\" is covered by the sprite \"grass_edge-N_inner-SE-SW\", which is not in this project, so it is drawn as a flat colour.",
+    "warning: The tile \"grass edge-N+inner-SW\" is covered by the sprite \"grass_edge-N_inner-SW\", which is not in this project, so it is drawn as a flat colour.",
+    "warning: The tile \"grass edge-NE\" is covered by the sprite \"grass_edge-NE\", which is not in this project, so it is drawn as a flat colour.",
+    "warning: The tile \"grass edge-NE+inner-SW\" is covered by the sprite \"grass_edge-NE_inner-SW\", which is not in this project, so it is drawn as a flat colour.",
+    "warning: The tile \"grass edge-NES\" is covered by the sprite \"grass_edge-NES\", which is not in this project, so it is drawn as a flat colour.",
+    "warning: The tile \"grass edge-NESW\" is covered by the sprite \"grass_edge-NESW\", which is not in this project, so it is drawn as a flat colour.",
+    "warning: The tile \"grass edge-NEW\" is covered by the sprite \"grass_edge-NEW\", which is not in this project, so it is drawn as a flat colour.",
+    "warning: The tile \"grass edge-NS\" is covered by the sprite \"grass_edge-NS\", which is not in this project, so it is drawn as a flat colour.",
+    "warning: The tile \"grass edge-NSW\" is covered by the sprite \"grass_edge-NSW\", which is not in this project, so it is drawn as a flat colour.",
+    "warning: The tile \"grass edge-NW\" is covered by the sprite \"grass_edge-NW\", which is not in this project, so it is drawn as a flat colour.",
+    "warning: The tile \"grass edge-NW+inner-SE\" is covered by the sprite \"grass_edge-NW_inner-SE\", which is not in this project, so it is drawn as a flat colour.",
+    "warning: The tile \"grass edge-S\" is covered by the sprite \"grass_edge-S\", which is not in this project, so it is drawn as a flat colour.",
+    "warning: The tile \"grass edge-S+inner-NE\" is covered by the sprite \"grass_edge-S_inner-NE\", which is not in this project, so it is drawn as a flat colour.",
+    "warning: The tile \"grass edge-S+inner-NE-NW\" is covered by the sprite \"grass_edge-S_inner-NE-NW\", which is not in this project, so it is drawn as a flat colour.",
+    "warning: The tile \"grass edge-S+inner-NW\" is covered by the sprite \"grass_edge-S_inner-NW\", which is not in this project, so it is drawn as a flat colour.",
+    "warning: The tile \"grass edge-SW\" is covered by the sprite \"grass_edge-SW\", which is not in this project, so it is drawn as a flat colour.",
+    "warning: The tile \"grass edge-SW+inner-NE\" is covered by the sprite \"grass_edge-SW_inner-NE\", which is not in this project, so it is drawn as a flat colour.",
+    "warning: The tile \"grass edge-W\" is covered by the sprite \"grass_edge-W\", which is not in this project, so it is drawn as a flat colour.",
+    "warning: The tile \"grass edge-W+inner-NE\" is covered by the sprite \"grass_edge-W_inner-NE\", which is not in this project, so it is drawn as a flat colour.",
+    "warning: The tile \"grass edge-W+inner-NE-SE\" is covered by the sprite \"grass_edge-W_inner-NE-SE\", which is not in this project, so it is drawn as a flat colour.",
+    "warning: The tile \"grass edge-W+inner-SE\" is covered by the sprite \"grass_edge-W_inner-SE\", which is not in this project, so it is drawn as a flat colour.",
+    "warning: The tile \"grass inner-NE\" is covered by the sprite \"grass_inner-NE\", which is not in this project, so it is drawn as a flat colour.",
+    "warning: The tile \"grass inner-NE-NW\" is covered by the sprite \"grass_inner-NE-NW\", which is not in this project, so it is drawn as a flat colour.",
+    "warning: The tile \"grass inner-NE-SE\" is covered by the sprite \"grass_inner-NE-SE\", which is not in this project, so it is drawn as a flat colour.",
+    "warning: The tile \"grass inner-NE-SE-NW\" is covered by the sprite \"grass_inner-NE-SE-NW\", which is not in this project, so it is drawn as a flat colour.",
+    "warning: The tile \"grass inner-NE-SE-SW\" is covered by the sprite \"grass_inner-NE-SE-SW\", which is not in this project, so it is drawn as a flat colour.",
+    "warning: The tile \"grass inner-NE-SE-SW-NW\" is covered by the sprite \"grass_inner-NE-SE-SW-NW\", which is not in this project, so it is drawn as a flat colour.",
+    "warning: The tile \"grass inner-NE-SW\" is covered by the sprite \"grass_inner-NE-SW\", which is not in this project, so it is drawn as a flat colour.",
+    "warning: The tile \"grass inner-NE-SW-NW\" is covered by the sprite \"grass_inner-NE-SW-NW\", which is not in this project, so it is drawn as a flat colour.",
+    "warning: The tile \"grass inner-NW\" is covered by the sprite \"grass_inner-NW\", which is not in this project, so it is drawn as a flat colour.",
+    "warning: The tile \"grass inner-SE\" is covered by the sprite \"grass_inner-SE\", which is not in this project, so it is drawn as a flat colour.",
+    "warning: The tile \"grass inner-SE-NW\" is covered by the sprite \"grass_inner-SE-NW\", which is not in this project, so it is drawn as a flat colour.",
+    "warning: The tile \"grass inner-SE-SW\" is covered by the sprite \"grass_inner-SE-SW\", which is not in this project, so it is drawn as a flat colour.",
+    "warning: The tile \"grass inner-SE-SW-NW\" is covered by the sprite \"grass_inner-SE-SW-NW\", which is not in this project, so it is drawn as a flat colour.",
+    "warning: The tile \"grass inner-SW\" is covered by the sprite \"grass_inner-SW\", which is not in this project, so it is drawn as a flat colour.",
+    "warning: The tile \"grass inner-SW-NW\" is covered by the sprite \"grass_inner-SW-NW\", which is not in this project, so it is drawn as a flat colour.",
+    "warning: scenes/main.scene.json: \"guitar\" uses the picture \"guitar\", which is not in this project.",
+    "warning: scenes/main.scene.json: \"guitar\" uses the sprite \"guitar\", which is not in this project (it was deleted or renamed). It is drawn as a plain shape until you pick a sprite again.",
+    "warning: scenes/main.scene.json: \"oak\" uses the sprite \"oak\", which is not in this project (it was deleted or renamed). It is drawn as a plain shape until you pick a sprite again.",
+    "warning: scenes/main.scene.json: \"oak\" uses the sprite \"oak\", which is not in this project (it was deleted or renamed). It is drawn as a plain shape until you pick a sprite again.",
+    "warning: scenes/main.scene.json: \"oak\" uses the sprite \"oak\", which is not in this project (it was deleted or renamed). It is drawn as a plain shape until you pick a sprite again.",
+    "warning: scenes/main.scene.json: \"oak\" uses the sprite \"oak\", which is not in this project (it was deleted or renamed). It is drawn as a plain shape until you pick a sprite again.",
+    "warning: scenes/main.scene.json: \"oak\" uses the sprite \"oak\", which is not in this project (it was deleted or renamed). It is drawn as a plain shape until you pick a sprite again.",
+    "warning: scenes/main.scene.json: \"oak\" uses the sprite \"oak\", which is not in this project (it was deleted or renamed). It is drawn as a plain shape until you pick a sprite again.",
+    "warning: scenes/main.scene.json: \"oak\" uses the sprite \"oak\", which is not in this project (it was deleted or renamed). It is drawn as a plain shape until you pick a sprite again.",
+    "warning: scenes/main.scene.json: \"oak\" uses the sprite \"oak\", which is not in this project (it was deleted or renamed). It is drawn as a plain shape until you pick a sprite again.",
+    "warning: scenes/main.scene.json: \"oak\" uses the sprite \"oak\", which is not in this project (it was deleted or renamed). It is drawn as a plain shape until you pick a sprite again.",
+    "warning: scenes/main.scene.json: \"oak\" uses the sprite \"oak\", which is not in this project (it was deleted or renamed). It is drawn as a plain shape until you pick a sprite again.",
+    "warning: scenes/main.scene.json: \"window\" uses the picture \"window\", which is not in this project.",
+    "warning: scenes/main.scene.json: \"window\" uses the picture \"window_right\", which is not in this project.",
+    "warning: scenes/main.scene.json: \"window\" uses the sprite \"window\", which is not in this project (it was deleted or renamed). It is drawn as a plain shape until you pick a sprite again."
+  ],
+  "project": {
+    "schemaVersion": 1,
+    "packs": "combat,inventory,story,ai,lighting,storytender",
+    "roundTrip": true
+  },
+  "scenes": {
+    "scenes/main.scene.json": {
+      "entities": 13,
+      "map": "63f37484e5f8e536",
+      "loadProblems": [],
+      "roundTrip": true,
+      "keys": {
+        "checkpoints": [
+          {
+            "tick": 0,
+            "player": {
+              "x": 16.5,
+              "y": 16.5,
+              "h": 0
+            },
+            "entities": 13,
+            "world": "b667bd7023906377",
+            "vars": "0e6bf79c0b086ece",
+            "screen": ""
+          },
+          {
+            "tick": 60,
+            "player": {
+              "x": 16.5,
+              "y": 16.5,
+              "h": 0
+            },
+            "entities": 13,
+            "world": "b667bd7023906377",
+            "vars": "0e6bf79c0b086ece",
+            "screen": ""
+          },
+          {
+            "tick": 120,
+            "player": {
+              "x": 19.328,
+              "y": 15.086,
+              "h": 0
+            },
+            "entities": 13,
+            "world": "edcce262a4c1d928",
+            "vars": "0e6bf79c0b086ece",
+            "screen": ""
+          },
+          {
+            "tick": 180,
+            "player": {
+              "x": 19.328,
+              "y": 17.914,
+              "h": 0
+            },
+            "entities": 13,
+            "world": "4504762ced647237",
+            "vars": "0e6bf79c0b086ece",
+            "screen": ""
+          },
+          {
+            "tick": 240,
+            "player": {
+              "x": 16.5,
+              "y": 16.5,
+              "h": 0
+            },
+            "entities": 13,
+            "world": "b667bd7023906377",
+            "vars": "0e6bf79c0b086ece",
+            "screen": ""
+          },
+          {
+            "tick": 300,
+            "player": {
+              "x": 19.517,
+              "y": 13.483,
+              "h": 1.567
+            },
+            "entities": 13,
+            "world": "d3ee6c328410f6be",
+            "vars": "0e6bf79c0b086ece",
+            "screen": ""
+          },
+          {
+            "tick": 360,
+            "player": {
+              "x": 20.931,
+              "y": 14.897,
+              "h": 0
+            },
+            "entities": 13,
+            "world": "34aaba664c160c0f",
+            "vars": "0e6bf79c0b086ece",
+            "screen": ""
+          },
+          {
+            "tick": 420,
+            "player": {
+              "x": 19.8,
+              "y": 16.029,
+              "h": 0
+            },
+            "entities": 13,
+            "world": "463c582018d39e7e",
+            "vars": "0e6bf79c0b086ece",
+            "screen": ""
+          },
+          {
+            "tick": 480,
+            "player": {
+              "x": 18.763,
+              "y": 17.066,
+              "h": 0
+            },
+            "entities": 13,
+            "world": "c54ac864fdf55b7b",
+            "vars": "0e6bf79c0b086ece",
+            "screen": ""
+          },
+          {
+            "tick": 540,
+            "player": {
+              "x": 17.82,
+              "y": 16.123,
+              "h": 0
+            },
+            "entities": 13,
+            "world": "2dee9af7db5742a2",
+            "vars": "0e6bf79c0b086ece",
+            "screen": ""
+          },
+          {
+            "tick": 600,
+            "player": {
+              "x": 15.934,
+              "y": 14.237,
+              "h": 0
+            },
+            "entities": 13,
+            "world": "b86ed5fa7b52af98",
+            "vars": "0e6bf79c0b086ece",
+            "screen": ""
+          },
+          {
+            "tick": 640,
+            "player": {
+              "x": 15.934,
+              "y": 14.237,
+              "h": 0
+            },
+            "entities": 13,
+            "world": "b86ed5fa7b52af98",
+            "vars": "0e6bf79c0b086ece",
+            "screen": ""
+          }
+        ],
+        "error": ""
+      },
+      "mouse": {
+        "checkpoints": [
+          {
+            "tick": 0,
+            "player": {
+              "x": 16.5,
+              "y": 16.5,
+              "h": 0
+            },
+            "entities": 13,
+            "world": "b667bd7023906377",
+            "vars": "0e6bf79c0b086ece",
+            "screen": ""
+          },
+          {
+            "tick": 30,
+            "player": {
+              "x": 16.5,
+              "y": 16.5,
+              "h": 0
+            },
+            "entities": 13,
+            "world": "b667bd7023906377",
+            "vars": "0e6bf79c0b086ece",
+            "screen": ""
+          },
+          {
+            "tick": 126,
+            "player": {
+              "x": 16.5,
+              "y": 16.5,
+              "h": 0
+            },
+            "entities": 13,
+            "world": "b667bd7023906377",
+            "vars": "0e6bf79c0b086ece",
+            "screen": ""
+          },
+          {
+            "tick": 222,
+            "player": {
+              "x": 16.5,
+              "y": 16.5,
+              "h": 0
+            },
+            "entities": 13,
+            "world": "b667bd7023906377",
+            "vars": "0e6bf79c0b086ece",
+            "screen": ""
+          },
+          {
+            "tick": 318,
+            "player": {
+              "x": 16.5,
+              "y": 16.5,
+              "h": 0
+            },
+            "entities": 13,
+            "world": "b667bd7023906377",
+            "vars": "0e6bf79c0b086ece",
+            "screen": ""
+          },
+          {
+            "tick": 414,
+            "player": {
+              "x": 16.5,
+              "y": 16.5,
+              "h": 0
+            },
+            "entities": 13,
+            "world": "b667bd7023906377",
+            "vars": "0e6bf79c0b086ece",
+            "screen": ""
+          },
+          {
+            "tick": 510,
+            "player": {
+              "x": 16.5,
+              "y": 16.5,
+              "h": 0
+            },
+            "entities": 13,
+            "world": "b667bd7023906377",
+            "vars": "0e6bf79c0b086ece",
+            "screen": ""
+          },
+          {
+            "tick": 640,
+            "player": {
+              "x": 16.5,
+              "y": 16.5,
+              "h": 0
+            },
+            "entities": 13,
+            "world": "b667bd7023906377",
+            "vars": "0e6bf79c0b086ece",
+            "screen": ""
+          }
+        ],
+        "error": ""
+      },
+      "saveRoundTrip": "ok"
+    }
+  },
+  "scenarios": {},
+  "scripts": {
+    "typecheck": {},
+    "compile": {},
+    "logs": []
+  },
+  "savedGames": {},
+  "playthroughs": {},
+  "exported": {
+    "files": {
+      "assets/items.json": "0e5e19436438b496",
+      "assets/library-links.json": "a98eaab9e99376df",
+      "assets/sprites/grass_edge-E_inner-NW.sprite.json": "fbd4c1347112b226",
+      "assets/sprites/grass_edge-E_inner-SW-NW.sprite.json": "d69daa1802431d47",
+      "assets/sprites/grass_edge-E_inner-SW.sprite.json": "04e590e981cefef3",
+      "assets/sprites/grass_edge-E.sprite.json": "cf2bec87bb1f9231",
+      "assets/sprites/grass_edge-ES_inner-NW.sprite.json": "bbea2de67e104c02",
+      "assets/sprites/grass_edge-ES.sprite.json": "8ffda0ca85bbd69e",
+      "assets/sprites/grass_edge-ESW.sprite.json": "27b91ef1fc0d458e",
+      "assets/sprites/grass_edge-EW.sprite.json": "e0c17d48a471c1c2",
+      "assets/sprites/grass_edge-N_inner-SE-SW.sprite.json": "af4353eb4ff13471",
+      "assets/sprites/grass_edge-N_inner-SE.sprite.json": "9ff7cc5b4ae02b55",
+      "assets/sprites/grass_edge-N_inner-SW.sprite.json": "81e44fbffe1b3d44",
+      "assets/sprites/grass_edge-N.sprite.json": "43354adeeb97d960",
+      "assets/sprites/grass_edge-NE_inner-SW.sprite.json": "373ae8a7b7ad1a30",
+      "assets/sprites/grass_edge-NE.sprite.json": "588af4f4aa578e78",
+      "assets/sprites/grass_edge-NES.sprite.json": "f57c10bda4266d00",
+      "assets/sprites/grass_edge-NESW.sprite.json": "68ceb1de4b1f4ac5",
+      "assets/sprites/grass_edge-NEW.sprite.json": "6d9f064a8f926503",
+      "assets/sprites/grass_edge-NS.sprite.json": "6010f41e777f33e4",
+      "assets/sprites/grass_edge-NSW.sprite.json": "94480fae2ea1450c",
+      "assets/sprites/grass_edge-NW_inner-SE.sprite.json": "e3f8b5b4ee5991e1",
+      "assets/sprites/grass_edge-NW.sprite.json": "a39f7d3d6a9492a0",
+      "assets/sprites/grass_edge-S_inner-NE-NW.sprite.json": "bf1f2e1575bf4730",
+      "assets/sprites/grass_edge-S_inner-NE.sprite.json": "b20b12d3253f508b",
+      "assets/sprites/grass_edge-S_inner-NW.sprite.json": "18fa4d71d043abaf",
+      "assets/sprites/grass_edge-S.sprite.json": "dca4d10ed55de7ce",
+      "assets/sprites/grass_edge-SW_inner-NE.sprite.json": "7225219310ed1c3b",
+      "assets/sprites/grass_edge-SW.sprite.json": "a3f79d71be4afb26",
+      "assets/sprites/grass_edge-W_inner-NE-SE.sprite.json": "66a88710ec800760",
+      "assets/sprites/grass_edge-W_inner-NE.sprite.json": "654d6d977cca948a",
+      "assets/sprites/grass_edge-W_inner-SE.sprite.json": "5a81f0d6e4cbc6fb",
+      "assets/sprites/grass_edge-W.sprite.json": "ac57f31a65ae530d",
+      "assets/sprites/grass_inner-NE-NW.sprite.json": "2b6467c40ebc9eb6",
+      "assets/sprites/grass_inner-NE-SE-NW.sprite.json": "c9ff624999373a3c",
+      "assets/sprites/grass_inner-NE-SE-SW-NW.sprite.json": "a4e491a37e3f7350",
+      "assets/sprites/grass_inner-NE-SE-SW.sprite.json": "dc0c53b31792de74",
+      "assets/sprites/grass_inner-NE-SE.sprite.json": "6759ffeda1cbdc48",
+      "assets/sprites/grass_inner-NE-SW-NW.sprite.json": "44c852d7f50ef923",
+      "assets/sprites/grass_inner-NE-SW.sprite.json": "9518e68a1d4a55ff",
+      "assets/sprites/grass_inner-NE.sprite.json": "cac16662711b7dab",
+      "assets/sprites/grass_inner-NW.sprite.json": "fa8227139aa96ecb",
+      "assets/sprites/grass_inner-SE-NW.sprite.json": "dc74277d6132b361",
+      "assets/sprites/grass_inner-SE-SW-NW.sprite.json": "fe664020f1024e7e",
+      "assets/sprites/grass_inner-SE-SW.sprite.json": "270f8f10d72f3962",
+      "assets/sprites/grass_inner-SE.sprite.json": "3b12e8a4487ae3a3",
+      "assets/sprites/grass_inner-SW-NW.sprite.json": "af6d6f152f644eda",
+      "assets/sprites/grass_inner-SW.sprite.json": "e2ced0776475d1e9",
+      "assets/sprites/grass.sprite.json": "8ac2c8bea7058138",
+      "assets/sprites/guitar.sprite.json": "e5e6a930a49c41cd",
+      "assets/sprites/oak.sprite.json": "0a3a3e90415b5e28",
+      "assets/sprites/window_right.sprite.json": "2df692d8affc45f5",
+      "assets/sprites/window.sprite.json": "5ceb73a1047e8854",
+      "project.json": "75e3dec7a2c1319a",
+      "scenes/main.scene.json": "8b9c3d85a874c291"
+    },
+    "manifest": "ea08e3508af1d816",
+    "settingsProblems": []
+  }
+}

@@ -21,6 +21,8 @@ jobs:
       - run: npm run typecheck
       - run: npm run lint
       - run: npm test
+      - name: Compatibility corpus (nothing made before may break)
+        run: npm run compat
       - name: E2E (Linux needs a virtual display)
         if: runner.os == 'Linux'
         run: xvfb-run --auto-servernum npm run test:e2e

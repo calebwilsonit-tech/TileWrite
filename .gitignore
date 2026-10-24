@@ -9,3 +9,9 @@ screenshots/
 .DS_Store
 *.log
 .env
+
+# The owner's own projects and what is recorded about them stay on the owner's computer (see compat/README.md)
+compat/projects/*
+!compat/projects/README.md
+compat/baselines/owner/
+e2e/compat-screens.spec.ts-snapshots/owner-*
