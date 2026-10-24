@@ -7,6 +7,7 @@ export * from './light';
 
 export const lightingPlugin = definePlugin(manifest, {
   install(api) {
+    api.assistantNote("Lighting: the light behaviour gives off light and walls cast shadows; the condition 'a spot is lit' and the action 'add a light' use it.");
     api.behaviors(light);
     api.conditions(...conditions);
     api.actions(...actions);

@@ -10,6 +10,7 @@ export * from './inventory';
 
 export const inventoryPlugin = definePlugin(manifest, {
   install(api) {
+    api.assistantNote("Inventory: items the player carries (pickup), the inventory screen and four quick slots.");
     for (const e of events) api.event(e);
     api.behaviors(pickup);
     api.conditions(...conditions);

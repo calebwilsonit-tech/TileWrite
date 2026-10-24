@@ -245,7 +245,7 @@ function writeWorldMap(input: Record<string, unknown>): Proposal {
     return {
       tool: 'write_world_map',
       title: 'Remove the world map',
-      lines: ['The game goes back to the plain list of lit lanterns for M.'],
+      lines: ['The game goes back to the plain list of checkpoints for M.'],
       async apply() {
         store.asStoryStep(label, () => void store.removeWorldMap());
         await store.flushStory();

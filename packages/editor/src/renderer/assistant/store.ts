@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { DEFAULT_SETTINGS, buildContext, cleanSettings, type AssistantSettings, type Mode, type Usage, NO_USAGE } from '@tilewright/assistant';
+import { host } from '@tilewright/behaviors';
 import { store } from '../app/store';
 import { api, type AssistantEvent, type AssistantStatus, type AssistantToolCall } from '../project/api';
 import { ToolProblem, prepareAction, readNotes, runReadTool, sceneProblems, type Proposal } from './editor-tools';
@@ -157,7 +158,7 @@ class AssistantStore {
       problems: doc ? sceneProblems(doc).length : 0,
       notes: await readNotes(),
     });
-    const r = await api().assistant.send({ text: trimmed, mode, context, settings: this.state.settings });
+    const r = await api().assistant.send({ text: trimmed, mode, context, settings: this.state.settings, notes: host.assistantNotes() });
     if (!r.started) this.set({ busy: false });
   }
 

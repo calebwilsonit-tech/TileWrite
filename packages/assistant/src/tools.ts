@@ -390,7 +390,7 @@ export const TOOLS: ToolSpec[] = [
   {
     name: 'write_world_map',
     kind: 'act',
-    description: 'Create or replace the world map the player opens with M (places joined by paths) or remove it. Each place has an id, a label, a scene file (as project_overview lists scenes), x (0-1000) and y (0-600) on the board, an icon (pin, town, dungeon, cave, forest, tower, castle, camp, harbor), unlock ({"kind":"visited"} default, "always", {"kind":"variable","name":...,"atLeast":1} or "lantern") and optionally spawn (an object name or "x,y") and hidden. Paths join two place ids.',
+    description: 'Create or replace the world map the player opens with M (places joined by paths) or remove it. Each place has an id, a label, a scene file (as project_overview lists scenes), x (0-1000) and y (0-600) on the board, an icon (pin, town, dungeon, cave, forest, tower, castle, camp, harbor), unlock ({"kind":"visited"} default, "always", {"kind":"variable","name":...,"atLeast":1} or a rule a plugin brought, such as the kinds the plugin notes name) and optionally spawn (an object name or "x,y") and hidden. Paths join two place ids.',
     schema: z.object({
       remove: z.boolean().optional().describe('True removes the map (nothing else is needed).'),
       title: z.string().optional(),
@@ -403,7 +403,7 @@ export const TOOLS: ToolSpec[] = [
             x: z.number().min(0).max(1000).optional(),
             y: z.number().min(0).max(600).optional(),
             icon: z.enum(['pin', 'town', 'dungeon', 'cave', 'forest', 'tower', 'castle', 'camp', 'harbor']).optional(),
-            unlock: z.union([z.object({ kind: z.literal('visited') }), z.object({ kind: z.literal('always') }), z.object({ kind: z.literal('lantern') }), z.object({ kind: z.literal('variable'), name: z.string(), atLeast: z.number().optional() })]).optional(),
+            unlock: z.union([z.object({ kind: z.literal('visited') }), z.object({ kind: z.literal('always') }), z.looseObject({ kind: z.string() }), z.object({ kind: z.literal('variable'), name: z.string(), atLeast: z.number().optional() })]).optional(),
             spawn: z.string().optional(),
             hidden: z.boolean().optional(),
           }),
@@ -458,7 +458,7 @@ export const TOOLS: ToolSpec[] = [
   {
     name: 'write_controls',
     kind: 'act',
-    description: 'Change the keys and buttons a new player starts with (assets/input.json; players can still rebind them in Settings). overrides maps a built-in action (move_left, move_right, move_up, move_down, run, interact, attack, jump, dodge, echo, pause, inventory, map, quick_1..quick_4) to its bindings and replaces that action\'s list. actions, when given, is the whole list of the game\'s own actions {id: lower_case_name, label, bindings}; event rows ("a button is pressed", type the action name) and scripts (input.pressed("name")) can use them. Bindings look like "key:KeyF", "key:Space", "key:ArrowUp", "mouse:0" or "pad:button0".',
+    description: 'Change the keys and buttons a new player starts with (assets/input.json; players can still rebind them in Settings). overrides maps a built-in action (move_left, move_right, move_up, move_down, run, interact, jump, pause, and the buttons the plugins that are on add: list_packs says which) to its bindings and replaces that action\'s list. actions, when given, is the whole list of the game\'s own actions {id: lower_case_name, label, bindings}; event rows ("a button is pressed", type the action name) and scripts (input.pressed("name")) can use them. Bindings look like "key:KeyF", "key:Space", "key:ArrowUp", "mouse:0" or "pad:button0".',
     schema: z.object({
       overrides: z.record(z.string(), z.array(z.string())).optional(),
       resetOverrides: z.boolean().optional().describe('True first forgets every built-in change.'),

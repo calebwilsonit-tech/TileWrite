@@ -13,7 +13,7 @@ const ROWS: Row[] = [
   { key: 'walls', label: 'Walls', note: 'tiles marked as walls (brick by default; change it in Autotiling)' },
   { key: 'objects', label: 'Objects', note: 'player, crates, props; hiding or locking this hides or locks decoration and lights too' },
   { key: 'decoration', label: 'Decoration', note: 'flowers, rugs, rocks, bushes: things with the decoration tag' },
-  { key: 'lightsLayer', label: 'Lights', note: 'lanterns and anything else that shines' },
+  { key: 'lightsLayer', label: 'Lights', note: 'lamps and anything else that shines' },
   { key: 'regions', label: 'Regions', note: 'rooms: camera, music, darkness' },
 ];
 

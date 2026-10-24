@@ -11,7 +11,7 @@ const MODE_HINTS: Record<Mode, string> = {
   chat: 'Ask anything about your project.',
   explain: 'Claude explains what you paste or describe, without changing anything.',
   fix: 'Describe an error; Claude finds the cause and proposes a fix.',
-  build: 'Describe what you want, for example "a room where two echoes must hold two plates at once".',
+  build: 'Describe what you want, for example "a room where two helpers must hold two plates at once".',
   review: 'Claude reviews the open scene and runs the checks.',
 };
 

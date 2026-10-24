@@ -50,7 +50,7 @@ export interface TilewrightApi {
     status(): Promise<AssistantStatus>;
     setKey(key: string): Promise<AssistantStatus>;
     clearKey(): Promise<AssistantStatus>;
-    send(args: { text: string; mode: string; context: string; settings: unknown }): Promise<{ started: boolean; reason?: string }>;
+    send(args: { text: string; mode: string; context: string; settings: unknown; notes?: readonly string[] }): Promise<{ started: boolean; reason?: string }>;
     retry(settings: unknown): Promise<{ started: boolean; reason?: string }>;
     cancel(): Promise<void>;
     reset(): Promise<void>;

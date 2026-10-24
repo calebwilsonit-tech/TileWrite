@@ -225,7 +225,7 @@ test('M13: build the Last Storytender slice with the editor only, check it, let 
   await page.getByTestId(`add-action-${rowId}`).selectOption('setVisible');
   await page.getByTestId(`param-${rowId}-a1-who`).selectOption(`id:${sealId}`);
   await page.getByTestId(`param-${rowId}-a1-visible`).selectOption('hidden');
-  await expect(page.getByTestId(`sentence-${rowId}`)).toContainText('accepted');
+  await expect(page.getByTestId(`row-text-${rowId}`)).toContainText('accepted');
   await expect(page.getByTestId('event-problems')).toHaveCount(0);
   await page.screenshot({ path: shot('m13-hub-built.png') });
   await page.keyboard.press('Control+s');

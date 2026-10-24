@@ -10,6 +10,7 @@ export * from './director';
 
 export const storyPlugin = definePlugin(manifest, {
   install(api) {
+    api.assistantNote("Story: npcTalk (characters that talk), cutsceneTrigger, minigameStation (lets the player play a minigame), and the world map button.");
     for (const e of events) api.event(e);
     api.behaviors(npcTalk, cutsceneTrigger, minigameStation);
     api.conditions(...conditions);

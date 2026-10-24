@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { C, Simulation, TableSchema, loadScene, physicsSystem, pointerSnapshot, cameraSnapshot, type TransformIso } from '@tilewright/runtime';
 import { TEMPLATES, templateById } from './templates';
 import { addStandardSystems, packsOfProject, setActivePacks } from '@tilewright/behaviors';
-import { currentUnit } from '@tilewright/plugin-turns';
 
 function start(id: string): { sim: Simulation; ids: Map<string, ReturnType<typeof loadScene> extends Map<string, infer E> ? E : never>; built: ReturnType<ReturnType<typeof templateById>['build']> } {
   const built = templateById(id).build('T');
@@ -26,8 +25,8 @@ describe('the genre starters', () => {
   it('tactics: a battle starts by itself, blue goes first, and a click walks a soldier', () => {
     const { sim, ids } = start('tactics');
     for (let i = 0; i < 4; i++) sim.step({});
-    const ctx = { world: sim.world, events: sim.events, runtime: sim.runtime, input: sim.input, uiInput: sim.uiInput, modal: sim.modal, rng: sim.rng, tweens: sim.tweens, assets: sim.assets, map: sim.map, dt: 1 / 60, tick: sim.tick, compat: sim.compat };
-    expect(currentUnit(ctx)?.name).toBe('Knight');
+    const turns = sim.runtime.turns;
+    expect(turns.active ? sim.world.get(turns.order[turns.index] ?? -1)?.name : undefined).toBe('Knight');
     const knight = ids.get('e1')!;
     const camera = { x: 0, y: 200, zoom: 1, w: 1280, h: 720 };
     const act = (cell: { x: number; y: number }, buttons = { primary: true }) => sim.step({ ...cameraSnapshot(camera), ...pointerSnapshot(cell, buttons) });

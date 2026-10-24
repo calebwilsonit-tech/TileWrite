@@ -1,6 +1,6 @@
 import type Anthropic from '@anthropic-ai/sdk';
 import { NO_USAGE, addUsage, estimateCost, usageOf, type AssistantSettings, type Usage } from './models';
-import { SYSTEM_PROMPT } from './prompt';
+import { systemPromptWith } from './prompt';
 import { checkToolInput, getTool, toolDefinitions, type ToolKind } from './tools';
 
 /** What we send for one model call (the shape of a Messages API request, without the SDK's types). */
@@ -100,6 +100,8 @@ export class Conversation {
       client: ModelClient;
       runTool: RunTool;
       settings(): AssistantSettings;
+      /** What the plugins that are on tell the assistant (their behaviours, blocks and rules). */
+      notes?(): readonly string[];
     },
   ) {}
 
@@ -141,7 +143,7 @@ export class Conversation {
         max_tokens: MAX_TOKENS,
         thinking: { type: 'adaptive', display: 'summarized' },
         output_config: { effort: settings.effort },
-        system: SYSTEM_PROMPT,
+        system: systemPromptWith(this.deps.notes?.() ?? []),
         tools: toolDefinitions(),
         cache_control: { type: 'ephemeral' },
         messages: [...this.messages],

@@ -52,7 +52,7 @@ export const SCRIPT_TEMPLATES: ScriptTemplate[] = [
 // Press Ctrl+Space for suggestions: every function of the game is described as you type.
 export default defineScript({
   name: ${JSON.stringify(name)},
-  description: 'What this script does, in one sentence.',
+  description: 'What this script does, in one line.',
   // Settings appear in the Inspector. A number, true/false or text; or { value, label, min, max }.
   settings: { speed: 1 },
   start(me, game) {

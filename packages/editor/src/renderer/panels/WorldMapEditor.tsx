@@ -111,7 +111,7 @@ export function WorldMapEditor() {
           className="small"
           data-testid="worldmap-remove"
           onClick={() => {
-            if (window.confirm('Remove the world map? The M key goes back to the list of lit lanterns.')) void store.removeWorldMap();
+            if (window.confirm('Remove the world map? The M key goes back to the plain list of places.')) void store.removeWorldMap();
           }}
         >
           Remove the map

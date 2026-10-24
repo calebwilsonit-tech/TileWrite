@@ -198,7 +198,7 @@ function RowCard({ row, path, update, facts, inLoop, names, newId }: { row: Even
     <div className={`event-row${row.enabled ? '' : ' off'}`} data-testid={`row-${row.id}`} style={{ marginLeft: path.length > 1 ? 18 : 0 }}>
       <div className="event-head">
         <input type="checkbox" aria-label="Row is active" checked={row.enabled} onChange={(e) => mutate('Toggle event row', (r) => (r.enabled = e.target.checked))} />
-        <p className="sentence" data-testid={`sentence-${row.id}`}>
+        <p className="row-text" data-testid={`row-text-${row.id}`}>
           {describeRow(row, names)}
         </p>
         <span className="row-tools">
@@ -323,7 +323,7 @@ export function RowsEditor({ rows, onChange, newId }: { rows: EventRow[]; onChan
   );
 }
 
-/** The scene's event sheet: rows that read like sentences, plus the scene's variables. */
+/** The scene's event sheet: rows that read like plain English, plus the scene's variables. */
 export function EventsPanel() {
   useApp((s) => s.docVersion);
   const doc = store.doc;
@@ -361,7 +361,7 @@ export function EventsPanel() {
           Convert to code
         </button>
       </div>
-      {doc.events.length === 0 && <p className="hint">An event row reads like a sentence: “When the player is inside the door area, show a message.” Add a row, then pick what it waits for and what it does.</p>}
+      {doc.events.length === 0 && <p className="hint">An event row reads like a line of instructions: “When the player is inside the door area, show a message.” Add a row, then pick what it waits for and what it does.</p>}
       {doc.events.map((row, i) => (
         <RowCard key={row.id} row={row} path={[i]} update={update} facts={facts} inLoop={false} names={names} newId={() => doc.newId('ev')} />
       ))}

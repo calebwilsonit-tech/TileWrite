@@ -46,7 +46,7 @@ function button(label: string, testId: string, onClick: () => void): HTMLButtonE
   return b;
 }
 
-/** The friendly crash screen: what happened in a sentence, where the report was saved, Copy and Quit. */
+/** The friendly crash screen: what happened in a line, where the report was saved, Copy and Quit. */
 async function showCrash(headline: string, report: string): Promise<void> {
   if (crashed) return;
   crashed = true;

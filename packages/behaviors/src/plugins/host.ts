@@ -135,6 +135,8 @@ export interface PluginApi {
   fileReader(def: X.FileReaderDef): void;
   assistantTool(def: X.AssistantToolDef): void;
   imageProvider(def: X.ImageProviderDef): void;
+  /** Tell the assistant, in a line or two, what this plugin adds and when to use it. */
+  assistantNote(text: string): void;
 
   // --- between plugins, and with the person ---
   /** Offer something to other plugins that depend on this one, by name. */
@@ -215,6 +217,7 @@ const emptyExtensions = (): Extensions => ({
   fileReaders: new Map(),
   assistantTools: new Map(),
   imageProviders: new Map(),
+  assistantNotes: new Map(),
 });
 
 export type HostChange = { kind: 'installed' | 'removed' | 'failed' | 'granted'; plugin: string };
@@ -365,6 +368,11 @@ export class PluginHost {
   /** What a plugin that is on offered by name (the editor and the game host take the screens a plugin draws this way). */
   provided<T = unknown>(pluginId: string, name: string): T | undefined {
     return this.installed.get(pluginId)?.provided.get(name) as T | undefined;
+  }
+
+  /** What the plugins that are on tell the assistant. */
+  assistantNotes(): string[] {
+    return [...this.ext.assistantNotes.values()].map((n) => n.text);
   }
 
   /** Every fixed text the plugins that are on show to the player. */
@@ -560,6 +568,9 @@ export class PluginHost {
       },
       imageProvider(def) {
         host.add(rec, id, 'imageProviders', def.id, def);
+      },
+      assistantNote(text) {
+        host.add(rec, id, 'assistantNotes', `${id}:${rec.added.filter((a) => a.kind === 'assistantNotes').length}`, { id: `${id}:${rec.added.length}`, text });
       },
       provide(name, value) {
         rec.provided.set(name, value);

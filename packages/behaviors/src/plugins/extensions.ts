@@ -278,6 +278,12 @@ export interface AssistantToolDef {
   run(input: Record<string, unknown>): Promise<string> | string;
 }
 
+/** A line the assistant is told about what a plugin adds. */
+export interface AssistantNoteDef {
+  id: string;
+  text: string;
+}
+
 export interface ImageProviderDef {
   id: string;
   label: string;
@@ -318,6 +324,7 @@ export interface Extensions {
   fileReaders: Map<string, FileReaderDef & OwnedBy>;
   assistantTools: Map<string, AssistantToolDef & OwnedBy>;
   imageProviders: Map<string, ImageProviderDef & OwnedBy>;
+  assistantNotes: Map<string, AssistantNoteDef & OwnedBy>;
 }
 
 export type ExtensionKind = keyof Extensions;

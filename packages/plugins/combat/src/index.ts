@@ -13,6 +13,7 @@ export * from './projectile';
 
 export const combatPlugin = definePlugin(manifest, {
   install(api) {
+    api.assistantNote("Combat: health on objects, damage on touch, melee and ranged attacks (rangedAttack makes an enemy shoot), dodging, projectiles; the buttons attack and dodge.");
     for (const e of events) api.event(e);
     api.behaviors(health, damageOnTouch, meleeAttack, rangedAttack, dodge, projectile);
     api.conditions(...conditions);

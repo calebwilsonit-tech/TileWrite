@@ -27,9 +27,9 @@ import { placeAtSpawn } from '@tilewright/behaviors';
 
 export interface GameSetup {
   scene: SceneData;
-  /** Path of the scene file (lanterns and saves remember it). */
+  /** Path of the scene file (checkpoints and saves remember it). */
   scenePath?: string;
-  /** Every scene of the game, by path. With this, portals, lanterns and "go to" actions change scene as they do in play. */
+  /** Every scene of the game, by path. With this, portals, checkpoints and "go to" actions change scene as they do in play. */
   scenes?: ReadonlyMap<string, SceneData>;
   prefabs?: PrefabMap;
   items?: readonly ItemData[];
@@ -143,7 +143,7 @@ export class Game {
     this.enterScene(t.scene, { spawn: t.spawn, ...(at ? { at } : {}) });
   }
 
-  /** Change scene the way the game does: the world is replaced, what the player carries (items, flags, lit lanterns, health) stays. */
+  /** Change scene the way the game does: the world is replaced, what the player carries (items, flags, checkpoints, health) stays. */
   enterScene(path: string, opts: { spawn?: string; at?: { x: number; y: number; h?: number }; fresh?: boolean } = {}): boolean {
     const scene = this.scenes?.get(path) ?? (path === this.scenePath || !this.scenes ? this.first : undefined);
     if (!scene) {

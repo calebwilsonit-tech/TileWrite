@@ -82,7 +82,9 @@ export function registerAssistant(): void {
       sender.send('assistant:tool-call', { callId: call.id, name: call.name, kind: call.kind, input: call.input });
     });
 
-  const conversation = new Conversation({ client, runTool, settings: () => settings });
+  /** What the plugins that are on tell the assistant (sent along with every message). */
+  let notes: readonly string[] = [];
+  const conversation = new Conversation({ client, runTool, settings: () => settings, notes: () => notes });
 
   async function status(): Promise<{ hasKey: boolean; canStoreKey: boolean; customEndpoint: boolean; busy: boolean; started: boolean }> {
     return { hasKey: (await readKey()) !== null, canStoreKey: safeStorage.isEncryptionAvailable(), customEndpoint: BASE_URL !== undefined, busy, started: conversation.started };
@@ -136,8 +138,9 @@ export function registerAssistant(): void {
     return status();
   });
 
-  ipcMain.handle('assistant:send', (e, args: { text: string; mode: Mode; context: string; settings: unknown }) => {
+  ipcMain.handle('assistant:send', (e, args: { text: string; mode: Mode; context: string; settings: unknown; notes?: unknown }) => {
     sender = e.sender;
+    notes = Array.isArray(args.notes) ? args.notes.filter((n): n is string => typeof n === 'string').map((n) => n.slice(0, 1500)).slice(0, 40) : [];
     settings = cleanSettings(args.settings);
     const text = userTurnText(args.mode, String(args.text ?? ''));
     return turn((signal) => conversation.send(text, { context: String(args.context ?? ''), signal, hooks }));

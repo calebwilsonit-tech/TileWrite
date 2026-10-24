@@ -11,7 +11,7 @@ export interface TutorialContext {
 export interface TutorialStep {
   id: string;
   title: string;
-  /** Plain English, a few sentences. */
+  /** Plain English, a few short lines. */
   text: string;
   /** Things on screen to point at (their data-testid). */
   highlight?: string[];

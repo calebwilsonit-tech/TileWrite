@@ -1117,7 +1117,7 @@ button.small {
   align-items: flex-start;
 }
 
-.event-head .sentence {
+.event-head .row-text {
   flex: 1;
   margin: 0;
   font-weight: 600;

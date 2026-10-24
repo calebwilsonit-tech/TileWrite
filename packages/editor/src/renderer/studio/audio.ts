@@ -39,7 +39,7 @@ export async function listSounds(fs: AssetFs, dir: string): Promise<SoundFile[]>
   }
 }
 
-/** Read every sound file into the engine. Problems (a file that will not play) come back as plain sentences. */
+/** Read every sound file into the engine. Problems (a file that will not play) come back as plain words. */
 export async function loadSounds(fs: AssetFs, dir: string, engine: AudioEngine): Promise<string[]> {
   const problems: string[] = [];
   for (const s of await listSounds(fs, dir)) {

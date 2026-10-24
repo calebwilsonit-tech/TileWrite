@@ -1,7 +1,19 @@
 import { useEffect, useRef } from 'react';
+import { host } from '@tilewright/behaviors';
+import { bindingLabel } from '@tilewright/runtime';
 import { useApp, store } from '../app/store';
 import { viewportRef } from '../app/commands';
 import { ViewportController } from '../viewport/controller';
+
+/** The keys of the buttons the plugins that are on added (", J attacks, Q dodges"). */
+function pluginKeys(): string {
+  return Object.values(host.inputActions())
+    .map((a) => {
+      const key = a.bindings.find((b) => b.startsWith('key:'));
+      return key ? `, ${bindingLabel(key)} ${a.label.toLowerCase()}` : '';
+    })
+    .join('');
+}
 
 export function ViewportPanel() {
   const host = useRef<HTMLDivElement>(null);
@@ -42,7 +54,7 @@ export function ViewportPanel() {
       )}
       {mode === 'play' && !logicHit && (
         <div className="play-badge" data-testid="play-badge">
-          {paused ? 'Paused' : 'Playing'}: WASD / arrows move, Shift runs, Space jumps, E interacts, R records an echo, J attacks, Q dodges, P pauses. Esc stops.
+          {paused ? 'Paused' : 'Playing'}: WASD / arrows move, Shift runs, Space jumps, E interacts{pluginKeys()}, P pauses. Esc stops.
         </div>
       )}
     </div>

@@ -119,7 +119,7 @@ test('M5: build a plate-and-gate puzzle with wires and an event row, entirely in
   const vname = page.getByTestId(`param-${rowId}-a0-name`);
   await vname.fill('solved');
   await vname.press('Enter');
-  await expect(page.getByTestId(`sentence-${rowId}`)).toHaveText('When "Gate" sends the signal "isOpen" on, set solved to 1.');
+  await expect(page.getByTestId(`row-text-${rowId}`)).toHaveText('When "Gate" sends the signal "isOpen" on, set solved to 1.');
   await expect(page.getByTestId('event-problems')).toHaveCount(0);
   await page.screenshot({ path: shot('m5-events.png') });
 

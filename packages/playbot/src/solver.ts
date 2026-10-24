@@ -135,7 +135,7 @@ export function solvePuzzles(setup: GameSetup, opts: SolveOptions = {}): SolveRe
         return { ok: false, carried: false, game, bot };
       }
     }
-    // a door takes a moment to open and an echo a moment to arrive: if the way is shut, wait a little and try again
+    // a door takes a moment to open and a helper a moment to arrive: if the way is shut, wait a little and try again
     let r = bot.walkToEntity(goal, { maxSeconds: opts.walkSeconds ?? 40 });
     for (let again = 0; again < 4 && !r.ok && r.kind !== 'died'; again++) {
       bot.wait(1.5);
@@ -173,7 +173,7 @@ export function solvePuzzles(setup: GameSetup, opts: SolveOptions = {}): SolveRe
       }
       for (let i = 0; i < macros.length; i++) {
         if (plan.includes(i)) continue;
-        // an echo and a stand on the same plate are the same idea twice
+        // a copy of yourself and a stand on the same plate are the same idea twice
         const next = [...plan, i];
         if (dead.has(next.join(','))) continue;
         const found = walk(next);

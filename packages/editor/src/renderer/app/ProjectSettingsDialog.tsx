@@ -101,7 +101,7 @@ export function ProjectSettingsDialog() {
             {nameProblem && <p className="hint">{nameProblem}</p>}
             <SelectField<string> label="Scene the game starts in" testId="ps-start" value={start} options={project.project.scenes.map((s) => ({ value: s, label: s.replace(/^.*\//, '').replace('.scene.json', '') }))} onChange={setStart} />
             <CheckField label="Show a title screen first (New game, Continue, Load game, Settings, Quit)" testId="ps-title-enabled" value={titleOn} onChange={setTitleOn} />
-            {titleOn && <TextField label="Line under the title" testId="ps-subtitle" value={subtitle} onCommit={setSubtitle} placeholder="A tale of lanterns" />}
+            {titleOn && <TextField label="Line under the title" testId="ps-subtitle" value={subtitle} onCommit={setSubtitle} placeholder="A tale of the old road" />}
             <p className="hint">The title screen shows when you press Play with no scene or spot chosen, and in the exported game. Continue appears once the player has a save.</p>
             <div className="row end">
               {saved && <span data-testid="ps-saved">Saved.</span>}
@@ -141,7 +141,7 @@ export function ProjectSettingsDialog() {
               </tbody>
             </table>
             <h3>Your own actions</h3>
-            <p className="hint">Make up actions such as &ldquo;dash&rdquo; or &ldquo;lantern&rdquo;. Event rows use them with the &ldquo;A button is pressed&rdquo; condition (type the action name), and scripts read them with <code>input.pressed(&quot;dash&quot;)</code>. They appear in the game&rsquo;s Controls screen.</p>
+            <p className="hint">Make up actions such as &ldquo;dash&rdquo; or &ldquo;torch&rdquo;. Event rows use them with the &ldquo;A button is pressed&rdquo; condition (type the action name), and scripts read them with <code>input.pressed(&quot;dash&quot;)</code>. They appear in the game&rsquo;s Controls screen.</p>
             {input.actions.map((c) => (
               <div className="row" key={c.id} data-testid={`ctl-custom-${c.id}`}>
                 <code>{c.id}</code>

@@ -11,6 +11,7 @@ export * from './tree';
 
 export const aiPlugin = definePlugin(manifest, {
   install(api) {
+    api.assistantNote("AI: vision, chase and patrol; bossPhases turn an enemy into a boss; characters can think with a behaviorTree behaviour (a tree of sequence/selector/parallel/inverter/succeeder/repeat/cooldown nodes with condition and action leaves) or a stateMachine.");
     for (const e of events) api.event(e);
     api.behaviors(vision, chase, patrol, bossPhases, behaviorTree, stateMachine);
   },

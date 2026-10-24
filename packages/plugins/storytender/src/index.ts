@@ -14,6 +14,7 @@ export * from './checkpoint';
 
 export const storytenderPlugin = definePlugin(manifest, {
   install(api) {
+    api.assistantNote("The Last Storytender mechanics: echoes (echoRecorder records the player and replays the recording as a helper; the button echo), sentence stones and text blocks (words that are walls or bridges), lantern posts (checkpoint behaviour; the world map unlock kind \"lantern\" means once a lantern post is lit there), lightResource makes the player's lantern a fuel meter, things that grow in the light.");
     for (const e of events) api.event(e);
     api.behaviors(echoRecorder, echoReplay, lightResource, lightSensor, growing, checkpoint, sentenceStone, textBlock);
     api.conditions(...conditions);
