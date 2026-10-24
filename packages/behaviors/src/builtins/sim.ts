@@ -10,7 +10,7 @@ import {
   type VariableValue,
 } from '@tilewright/runtime';
 import { behaviorDef, stateOf } from '../framework';
-import { newNav, steerTo, type NavState } from './ai';
+import { newNav, steerTo, type NavState } from '../nav';
 import { healthOf } from './combat';
 import { spawnPrefabAt } from './world';
 

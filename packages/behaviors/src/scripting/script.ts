@@ -19,7 +19,7 @@ import { actionDef, conditionDef, resolveRef } from '../events/sheet';
 import { defineBehavior, getBehavior, behaviorList, stateOf, undefineBehavior, type BehaviorDef, type FieldSpec, type Phase, type SignalSpec } from '../framework';
 import { damage, heal } from '../builtins/combat';
 import { blockAtCell, breakBlock, placeBlock } from '../builtins/blocks';
-import { newNav, steerTo, type NavState } from '../builtins/ai';
+import { newNav, steerTo, type NavState } from '../nav';
 import { input as signalInput, output as signalOutput, setOutput } from '../signals';
 import { spawnPrefabAt } from '../builtins/world';
 import { beginDialogue, playCutscene } from '../story/director';

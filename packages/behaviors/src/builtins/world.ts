@@ -1,11 +1,8 @@
 import {
   C,
-  addItem,
-  autoSlot,
   emitFx,
   expandEntities,
   instantiateEntity,
-  surfaceAt,
   type Body,
   type Collider,
   type Entity,
@@ -15,8 +12,6 @@ import {
 } from '@tilewright/runtime';
 import { defineBehavior, stateOf } from '../framework';
 import { input, setOutput } from '../signals';
-import { matchesWho, WHO_OPTIONS, type Who } from './puzzle';
-import { damage, isHurtBy, type Hurts } from './combat';
 
 const collider = (e: Entity): Collider | undefined => e.get<Collider>(C.Collider);
 const sprite = (e: Entity): Sprite | undefined => e.get<Sprite>(C.Sprite);
@@ -117,56 +112,6 @@ function instantiate(ctx: SimContext, data: Parameters<typeof instantiateEntity>
   if (c) c.inside = [];
   return entity;
 }
-
-// ---------- pickup ----------
-
-export interface Pickup {
-  who: Who;
-  /** Variable to add to when picked up (created if missing). */
-  variable: string;
-  amount: number;
-  /** Text to show when picked up. */
-  message: string;
-  /** Item (from your items list) to put in the inventory (optional). */
-  item: string;
-}
-
-export const pickup = defineBehavior<Pickup>({
-  id: 'pickup',
-  name: 'Pickup',
-  category: 'World',
-  description: 'Disappears when the player touches it and adds to a counter (coins, keys, gems...).',
-  phase: 'actuator',
-  defaults: { who: 'player', variable: 'coins', amount: 1, message: '', item: '' },
-  fields: [
-    { key: 'who', label: 'Picked up by', type: 'select', options: WHO_OPTIONS },
-    { key: 'variable', label: 'Counter to add to', type: 'text' },
-    { key: 'amount', label: 'Amount', type: 'number', min: -999, max: 999, step: 1 },
-    { key: 'message', label: 'Message to show', type: 'text' },
-    { key: 'item', label: 'Item to add to the inventory (optional)', type: 'text', help: 'The id of an item from the Items panel. Leave the counter empty if you only want the item.' },
-  ],
-  inputs: [],
-  outputs: [],
-  requires: { collider: { w: 0.8, d: 0.8, height: 0.8, solid: false, trigger: true, layer: 1, mask: 65535, enabled: true, inside: [] } },
-  update(ctx, e, s) {
-    const c = collider(e);
-    if (!c) return;
-    const hit = c.inside.map((id) => ctx.world.get(id)).find((o) => o && matchesWho(o, s.who));
-    if (!hit) return;
-    if (s.variable) {
-      const cur = ctx.runtime.vars[s.variable];
-      ctx.runtime.vars[s.variable] = (typeof cur === 'number' ? cur : 0) + s.amount;
-    }
-    if (s.item) {
-      const got = addItem(ctx.runtime.vars, s.item, Math.max(1, s.amount), ctx.assets.items.get(s.item));
-      if (got > 0) autoSlot(ctx.runtime.vars, s.item);
-      ctx.events.emit('item-given', { item: s.item, amount: got });
-    }
-    if (s.message) ctx.events.emit('message', { text: ctx.assets.strings.t(s.message) });
-    ctx.events.emit('pickup', { entity: e.id, by: hit.id, variable: s.variable, amount: s.amount });
-    ctx.world.destroy(e);
-  },
-});
 
 // ---------- moving platform ----------
 
@@ -286,110 +231,6 @@ export const fallingFloor = defineBehavior<FallingFloor>({
       }
     }
     setOutput(e, 'fallen', st.phase === 'gone');
-  },
-});
-
-// ---------- projectile ----------
-
-export interface Projectile {
-  /** How fast it climbs (+) or sinks (-) in levels per second while it flies (shots aimed at a target on another level). */
-  dirZ?: number;
-  /** Damage dealt to what it hits (0 = it only flies and announces the hit). */
-  damage: number;
-  hurts: Hurts;
-  knockback: number;
-  speed: number;
-  /** Seconds before it disappears. */
-  lifetime: number;
-  /** Direction in cells per tick is taken from the object's facing unless set here. */
-  useFacing: boolean;
-  dirX: number;
-  dirY: number;
-}
-
-const FACING_DIRS: [number, number][] = [[1, -1], [1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1]];
-
-export const projectile = defineBehavior<Projectile>({
-  id: 'projectile',
-  timing: 'realtime',
-  name: 'Projectile',
-  category: 'World',
-  description: 'Flies in a straight line and disappears when it hits a wall or a solid object (or runs out of time), announcing the hit.',
-  phase: 'control',
-  defaults: { speed: 8, lifetime: 3, useFacing: true, dirX: 1, dirY: 0, damage: 0, hurts: 'player', knockback: 5 },
-  fields: [
-    { key: 'speed', label: 'Speed (cells per second)', type: 'number', min: 0.5, max: 40, step: 0.5 },
-    { key: 'lifetime', label: 'Seconds before it vanishes', type: 'number', min: 0.1, max: 60, step: 0.1 },
-    { key: 'useFacing', label: 'Fly the way the object faces', type: 'boolean' },
-    { key: 'dirX', label: 'Direction X', type: 'number', min: -1, max: 1, step: 0.1 },
-    { key: 'dirY', label: 'Direction Y', type: 'number', min: -1, max: 1, step: 0.1 },
-    { key: 'damage', label: 'Damage to what it hits (0 = none)', type: 'number', min: 0, max: 99, step: 1 },
-    {
-      key: 'hurts',
-      label: 'Hurts',
-      type: 'select',
-      options: [
-        { value: 'player', label: 'The player' },
-        { value: 'enemies', label: 'Enemies' },
-        { value: 'anything', label: 'Anything with Health' },
-      ],
-    },
-    { key: 'knockback', label: 'Knockback (cells per second)', type: 'number', min: 0, max: 20, step: 0.5 },
-  ],
-  inputs: [],
-  outputs: [],
-  requires: {},
-  update(ctx, e, s) {
-    const t = transform(e);
-    const st = stateOf<{ age: number; owner: number | null }>(e, 'projectile', () => ({ age: 0, owner: null }));
-    st.age += ctx.dt;
-    if (st.age >= s.lifetime) {
-      ctx.world.destroy(e);
-      return;
-    }
-    let [dx, dy] = s.useFacing ? FACING_DIRS[((t.facing % 8) + 8) % 8]! : [s.dirX, s.dirY];
-    const len = Math.hypot(dx, dy) || 1;
-    dx /= len;
-    dy /= len;
-    const nx = t.x + dx * s.speed * ctx.dt;
-    const ny = t.y + dy * s.speed * ctx.dt;
-    if (s.dirZ) t.h += s.dirZ * ctx.dt;
-    const map = ctx.map;
-    if (map) {
-      const surf = surfaceAt(map, nx, ny, t.h, { stepUp: 0.6, bodyHeight: 0.5 });
-      if (surf.kind === 'void' || surf.kind === 'solid' || (surf.kind !== 'pit' && surf.z - t.h > 0.6)) {
-        ctx.events.emit('projectile-hit', { entity: e.id, other: null });
-        ctx.world.destroy(e);
-        return;
-      }
-    }
-    if (s.damage > 0) {
-      // what it can hurt stops it: the target takes the damage and the shot is spent
-      for (const o of ctx.world.query('health', C.Transform)) {
-        if (o === e || o.id === st.owner || !isHurtBy(o, s.hurts)) continue;
-        const ot = transform(o);
-        if (Math.abs(ot.h - t.h) > 1.2) continue;
-        const r = 0.25 + (o.get<{ radius: number }>(C.Body)?.radius ?? 0.3);
-        if (Math.hypot(ot.x - nx, ot.y - ny) <= r && damage(ctx, o, s.damage, { source: e, knockback: s.knockback })) {
-          ctx.events.emit('projectile-hit', { entity: e.id, other: o.id });
-          ctx.world.destroy(e);
-          return;
-        }
-      }
-    }
-    for (const o of ctx.world.query(C.Transform, C.Collider)) {
-      if (o === e) continue;
-      const oc = collider(o)!;
-      if (!oc.solid || !oc.enabled) continue;
-      const ot = transform(o);
-      if (Math.abs(nx - ot.x) < oc.w / 2 && Math.abs(ny - ot.y) < oc.d / 2 && t.h < ot.h + oc.height && t.h + 0.5 > ot.h) {
-        ctx.events.emit('projectile-hit', { entity: e.id, other: o.id });
-        ctx.world.destroy(e);
-        return;
-      }
-    }
-    t.x = nx;
-    t.y = ny;
   },
 });
 

@@ -16,7 +16,7 @@ import {
 } from '@tilewright/runtime';
 import { behaviorDef, stateOf } from '../framework';
 import { beginDialogue } from '../story/director';
-import { newNav, steerTo, type NavState } from './ai';
+import { newNav, steerTo, type NavState } from '../nav';
 import { damage, healthOf } from './combat';
 import { commandAttack, commandMove, currentUnit, endTurn, moveRange, takerOf, unitsOf } from './turns';
 import { spawnPrefabAt } from './world';

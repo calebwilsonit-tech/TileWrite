@@ -20,7 +20,7 @@ import {
   type SimContext,
   type TransformIso,
 } from '@tilewright/runtime';
-import { newNav, steerTo, type NavState } from '../builtins/ai';
+import { newNav, steerTo, type NavState } from '../nav';
 import { resolveRef } from '../events/sheet';
 
 /** What conversations can read and change in a running game. */

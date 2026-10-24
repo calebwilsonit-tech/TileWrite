@@ -2,7 +2,8 @@ import { C, emitFx, facingOfGridDir, type Body, type Cell2, type Entity, type Si
 import { defineBehavior, stateOf } from '../framework';
 import { input } from '../signals';
 import { aiFlags, healthOf } from './combat';
-import { newNav, steerTo, type NavState, type VisionState } from './ai';
+import { newNav, steerTo, type NavState } from '../nav';
+import type { VisionState } from './ai';
 
 /**
  * Behaviour trees for enemies, bosses and anything that makes decisions. A tree is asked what to do many times a second:
