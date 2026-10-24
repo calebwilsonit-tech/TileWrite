@@ -1,31 +1,11 @@
-import { C, makeLabel, type Collider, type Entity, type Label, type SimContext, type Sprite, type TransformIso } from '@tilewright/runtime';
+import { C, makeLabel, type Collider, type Entity, type Label, type Sprite, type TransformIso } from '@tilewright/runtime';
 import { behaviorDef, stateOf } from '../framework';
 import { input, setOutput } from '../signals';
 import { pushStep, type PushState } from './puzzle';
+import { interactedBy } from './interact';
 
 const collider = (e: Entity): Collider | undefined => e.get<Collider>(C.Collider);
 const sprite = (e: Entity): Sprite | undefined => e.get<Sprite>(C.Sprite);
-const transform = (e: Entity): TransformIso => e.require<TransformIso>(C.Transform);
-
-/** True when the player just pressed interact and this is the nearest object of its kind within reach. */
-export function interactedBy(ctx: SimContext, e: Entity, reach: number, behaviourId: string): boolean {
-  if (!ctx.input.pressed('interact')) return false;
-  let best: Entity | undefined;
-  let bestD = Infinity;
-  for (const p of ctx.world.withTag('player')) {
-    const pt = p.get<TransformIso>(C.Transform);
-    if (!pt) continue;
-    for (const o of ctx.world.query(behaviourId, C.Transform)) {
-      const ot = transform(o);
-      const d = Math.hypot(pt.x - ot.x, pt.y - ot.y);
-      if (d <= reach && (d < bestD || (d === bestD && best !== undefined && o.id < best.id))) {
-        best = o;
-        bestD = d;
-      }
-    }
-  }
-  return best === e;
-}
 
 function setLabel(e: Entity, label: Label): void {
   const cur = e.get<Label>('label');

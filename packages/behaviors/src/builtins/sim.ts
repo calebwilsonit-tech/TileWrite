@@ -11,6 +11,7 @@ import {
 } from '@tilewright/runtime';
 import { behaviorDef, stateOf } from '../framework';
 import { newNav, steerTo, type NavState } from '../nav';
+import { markDirty } from './blocks';
 import { healthOf } from './combat';
 import { spawnPrefabAt } from './world';
 
@@ -553,11 +554,3 @@ export const automaton = behaviorDef<Automaton>({
     if (changes.length > 0) ctx.events.emit('tiles-changed', { count: changes.length });
   },
 });
-
-/** Tell the game host that a map cell changed, so it can be drawn again. */
-export function markDirty(ctx: SimContext, x: number, y: number): void {
-  let list = ctx.runtime.scratch.get('dirtyCells') as { x: number; y: number }[] | undefined;
-  if (!list) ctx.runtime.scratch.set('dirtyCells', (list = []));
-  if (list.length < 20000) list.push({ x, y });
-}
-

@@ -28,7 +28,7 @@ import {
   type Simulation,
 } from '@tilewright/runtime';
 import { healthOf } from '../builtins/combat';
-import { litPosts, type LitPost } from '../builtins/story';
+import { litPosts, type LitPost } from '../builtins/checkpoint';
 import { contextOf } from '../story/context';
 import { confirmDialogue, selectChoice } from '../story/director';
 import { useItem } from '../story/inventory';

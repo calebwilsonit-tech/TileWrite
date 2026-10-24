@@ -1,6 +1,6 @@
 import { echoRecorder, echoReplay } from '../builtins/echo';
-import { growing, lightResource, lightSensor } from '../builtins/light';
-import { checkpoint } from '../builtins/story';
+import { growing, lightResource, lightSensor } from '../builtins/fuel';
+import { checkpoint } from '../builtins/checkpoint';
 import { sentenceStone, textBlock } from '../builtins/text';
 import { takeActions, takeConditions } from '../events/sheet';
 import type { BehaviorDef } from '../framework';

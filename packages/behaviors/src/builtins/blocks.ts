@@ -11,7 +11,6 @@ import {
   type StackBlock,
   type TransformIso,
 } from '@tilewright/runtime';
-import { markDirty } from './sim';
 
 /**
  * Putting blocks into the world and taking them out while the game runs (a builder, a digging game, a puzzle where the player
@@ -56,6 +55,13 @@ function allowed(ctx: SimContext): BlockResult | null {
 }
 
 const cellBox = (x: number, y: number, z: number): Aabb => ({ x0: x, x1: x + 1, y0: y, y1: y + 1, z0: z, z1: z + 1 });
+
+/** Tell the game host that a map cell changed, so it can be drawn again. */
+export function markDirty(ctx: SimContext, x: number, y: number): void {
+  let list = ctx.runtime.scratch.get('dirtyCells') as { x: number; y: number }[] | undefined;
+  if (!list) ctx.runtime.scratch.set('dirtyCells', (list = []));
+  if (list.length < 20000) list.push({ x, y });
+}
 
 /** Is any body standing where a block would go? */
 function bodyIn(ctx: SimContext, box: Aabb): boolean {
