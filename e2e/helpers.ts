@@ -45,6 +45,10 @@ export async function createProjectViaUi(page: Page, name: string, template: str
   await page.getByTestId('btn-create-project').click();
   await page.getByTestId('editor-shell').waitFor();
   await page.waitForFunction(() => window.__viewport !== undefined && window.__viewport.doc !== null);
+  // the older starters (a room, a dungeon) were made when every project had the action-adventure parts; these tests build on them
+  if (['empty-iso', 'starter-room', 'puzzle-dungeon'].includes(template)) {
+    await page.evaluate(() => window.__store!.updateProjectSettings({ packs: ['combat', 'inventory', 'story', 'ai', 'lighting', 'storytender'] }));
+  }
   await page.waitForTimeout(400);
 }
 

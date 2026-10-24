@@ -90,6 +90,22 @@ export const turnTaker = behaviorDef<TurnTaker>({
   update: () => undefined,
 });
 
+/**
+ * How high a unit stands when walking onto (x, y). The older physics looks at the cell under the middle of the unit. With block
+ * physics the unit is a box: it must stand on the highest block it overlaps, or it would be inside the hill it is walking up
+ * and be pushed back out of it, standing still for ever.
+ */
+function standingHeight(ctx: SimContext, e: Entity, x: number, y: number): number {
+  const map = ctx.map;
+  if (!map) return 0;
+  const middle = groundHeightAt(map, x, y);
+  if (!ctx.compat.blockPhysics) return middle;
+  const r = e.get<{ radius: number }>(C.Body)?.radius ?? 0.3;
+  let h = middle;
+  for (const [dx, dy] of [[-r, -r], [r, -r], [-r, r], [r, r]] as const) h = Math.max(h, groundHeightAt(map, x + dx, y + dy));
+  return h;
+}
+
 export const gridMover = behaviorDef<GridMover>({
   id: 'gridMover',
   name: 'Grid Mover',
@@ -117,7 +133,7 @@ export const gridMover = behaviorDef<GridMover>({
     const dist = Math.hypot(dx, dy);
     const step = s.speed * ctx.dt;
     if (dist <= step) {
-      teleportBody(ctx, e, goal.x, goal.y, ctx.map ? groundHeightAt(ctx.map, goal.x, goal.y) : 0);
+      teleportBody(ctx, e, goal.x, goal.y, standingHeight(ctx, e, goal.x, goal.y));
       st.i++;
       if (st.i >= st.path.length) {
         e.remove('state:gridMove');
@@ -126,7 +142,7 @@ export const gridMover = behaviorDef<GridMover>({
     } else {
       const nx = t.x + (dx / dist) * step;
       const ny = t.y + (dy / dist) * step;
-      teleportBody(ctx, e, nx, ny, ctx.map ? groundHeightAt(ctx.map, nx, ny) : 0);
+      teleportBody(ctx, e, nx, ny, standingHeight(ctx, e, nx, ny));
     }
   },
 });
