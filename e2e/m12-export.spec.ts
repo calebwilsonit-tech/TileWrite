@@ -2,7 +2,7 @@ import { _electron as electron, expect, test, type Page } from '@playwright/test
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { createProjectViaUi, launchEditor, shot } from './helpers';
+import { createProjectViaUi, launchEditor, shot, ui } from './helpers';
 
 const SPINNER_BAD = `export default defineScript({
   name: 'Spinner',
@@ -140,11 +140,11 @@ test('M12: export a game from the editor, run it with no editor, see its script 
 
   // the pause menu's video settings: a game in its own window can go full screen (the editor's Play cannot offer that)
   await g.page.evaluate(() => (window as unknown as { __game: { session: { ui: { openMenu(): void } } } }).__game.session.ui.openMenu()); // (the real pause key is exercised by the story test)
-  await g.page.getByTestId('tw-row-settings').click();
-  await expect(g.page.getByTestId('tw-row-set-zoom')).toBeVisible();
-  await g.page.getByTestId('tw-row-set-fullscreen').click();
+  await ui(g.page, 'Settings').click();
+  await expect(ui(g.page, 'Camera zoom slider')).toBeVisible();
+  await ui(g.page, 'Full screen tick box').click();
   await expect.poll(() => g.app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]!.isFullScreen())).toBe(true);
-  await g.page.getByTestId('tw-row-set-fullscreen').click();
+  await ui(g.page, 'Full screen tick box').click();
   await expect.poll(() => g.app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]!.isFullScreen())).toBe(false);
   await g.page.evaluate(() => (window as unknown as { __game: { session: { ui: { closeMenu(): void } } } }).__game.session.ui.closeMenu());
 

@@ -4,9 +4,11 @@ import { events } from './events';
 import { actions, conditions } from './blocks';
 import { quickSlotSystem } from './inventory';
 import { pickup } from './pickup';
+import { quickSlotsWidget } from './hud';
 
 export * from './pickup';
 export * from './inventory';
+export * from './hud';
 
 export const inventoryPlugin = definePlugin(manifest, {
   install(api) {
@@ -21,5 +23,6 @@ export const inventoryPlugin = definePlugin(manifest, {
     api.inputAction('quick_3', { label: 'Quick slot 3', bindings: ['key:Digit3'] });
     api.inputAction('quick_4', { label: 'Quick slot 4', bindings: ['key:Digit4'] });
     api.system('quick-slots', quickSlotSystem, 'player', 'after-player');
+    api.widget(quickSlotsWidget);
   },
 });

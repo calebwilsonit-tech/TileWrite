@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { launchEditor } from './helpers';
+import { launchEditor, ui } from './helpers';
 
 type Snapshot = Record<string, number>;
 async function play(page: Page, snapshot: Snapshot, ticks: number): Promise<void> {
@@ -30,23 +30,22 @@ test('M14: camera zoom and the frame-rate corner are in Settings and apply at on
   expect(await zoom()).toBe(1);
 
   await play(page, { pause: 1 }, 1);
-  await page.getByTestId('tw-row-settings').click();
-  await expect(page.getByTestId('tw-row-set-fullscreen')).toHaveCount(0); // the editor's own window is never switched
-  await expect(page.getByTestId('tw-row-set-zoom')).toContainText('100%');
-  await page.getByTestId('tw-row-set-zoom').click();
-  await expect(page.getByTestId('tw-row-set-zoom')).toContainText('125%');
-  expect(await zoom()).toBe(1.25);
-  await page.getByTestId('tw-row-set-zoom').click();
-  expect(await zoom()).toBe(1.5);
-  await page.getByTestId('tw-row-set-zoom').click(); // wraps round to the far view
-  await expect(page.getByTestId('tw-row-set-zoom')).toContainText('75%');
-  expect(await zoom()).toBe(0.75);
+  await ui(page, 'Settings').click();
+  await expect(ui(page, 'Full screen tick box')).toBeHidden(); // the editor's own window is never switched
+  const zoomSlider = ui(page, 'Camera zoom slider').locator('input');
+  await expect(zoomSlider).toHaveValue('1');
+  await zoomSlider.fill('1.25');
+  await expect.poll(zoom).toBe(1.25);
+  await zoomSlider.fill('1.5');
+  await expect.poll(zoom).toBe(1.5);
+  await zoomSlider.fill('0.75'); // the far view
+  await expect.poll(zoom).toBe(0.75);
 
   await expect(page.getByTestId('tw-fps')).toBeHidden();
-  await page.getByTestId('tw-row-set-fps').click();
+  await ui(page, 'Show frame rate tick box').click();
   await expect(page.getByTestId('tw-fps')).toBeVisible();
   await expect(page.getByTestId('tw-fps')).toContainText('fps', { timeout: 5000 });
-  await page.getByTestId('tw-row-set-fps').click();
+  await ui(page, 'Show frame rate tick box').click();
   await expect(page.getByTestId('tw-fps')).toBeHidden();
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('tilewright.settings')!).cameraZoom)).toBe(0.75); // remembered
   expect(errors).toEqual([]);

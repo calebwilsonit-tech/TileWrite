@@ -22,7 +22,7 @@ import {
   type TileSet,
   type UiDoc,
 } from '@tilewright/runtime';
-import { addStandardSystems, contextOf, resolveRef, routeInput } from '@tilewright/behaviors';
+import { addStandardSystems, contextOf, resolveRef, routeInput, withPluginScreens } from '@tilewright/behaviors';
 import { placeAtSpawn } from '@tilewright/behaviors';
 
 export interface GameSetup {
@@ -74,7 +74,7 @@ export class Game {
     for (const m of setup.minigames ?? []) this.sim.assets.minigames.set(m.name, m);
     for (const t of setup.tables ?? []) this.sim.assets.tables.set(t.name, t);
     this.sim.assets.worldMap = setup.worldMap ?? null;
-    if (setup.ui) this.sim.assets.ui = setup.ui;
+    this.sim.assets.ui = withPluginScreens(setup.ui ?? this.sim.assets.ui);
     this.tileset = setup.tileset;
     for (const [k, v] of setup.sprites ?? []) this.sim.assets.sprites.set(k, v);
     this.problems = loadScene(this.sim, setup.scene, { prefabs: setup.prefabs, tileset: setup.tileset, scene: setup.scenePath ?? '' }).problems;
@@ -109,7 +109,7 @@ export class Game {
   step(actions: Record<string, number> = {}): void {
     this.sim.step(actions);
     // the game's interface takes its share of the buttons, as it does in Play (Back, and the keys that open Pause)
-    routeInput({ sim: this.sim, builtinOpen: () => false, openMenu: () => undefined });
+    routeInput({ sim: this.sim });
     const travel = this.sim.runtime.travel;
     if (travel?.fresh) {
       // a new run: the same scene again, nothing carried over

@@ -1,4 +1,5 @@
-import { addItem, autoSlot, itemCount, num, str, type ActionDef, type ConditionDef } from '@tilewright/plugin-sdk';
+import { QUICK_SLOTS, addItem, autoSlot, filled, itemCount, num, quickSlots, str, type ActionDef, type ConditionDef } from '@tilewright/plugin-sdk';
+import { useItem } from './inventory';
 
 export const conditions: ConditionDef[] = [
   {
@@ -12,6 +13,31 @@ export const conditions: ConditionDef[] = [
 ];
 
 export const actions: ActionDef[] = [
+  {
+    id: 'useItem',
+    label: 'Use an item',
+    category: 'Story',
+    params: [{ key: 'item', label: 'Item (id)', type: 'text', default: '' }],
+    describe: (p) => `use "${str(p, 'item') || '(item)'}"`,
+    run: (ctx, p) => void useItem(ctx, filled(ctx, p, 'item')),
+  },
+  {
+    id: 'quickSlot',
+    label: 'Move an item to another quick slot',
+    category: 'Story',
+    params: [{ key: 'item', label: 'Item (id)', type: 'text', default: '' }, { key: 'step', label: 'Slots to move (1 or -1)', type: 'text', default: '1' }],
+    describe: (p) => `move "${str(p, 'item') || '(item)'}" ${str(p, 'step') === '-1' ? 'to the slot before' : 'to the next slot'}`,
+    run(ctx, p) {
+      const id = filled(ctx, p, 'item');
+      const vars = ctx.runtime.vars;
+      const step = Number(filled(ctx, p, 'step')) || 0;
+      const at = quickSlots(vars).indexOf(id);
+      // none, then each slot in turn
+      const next = ((at + step + 1 + QUICK_SLOTS + 1) % (QUICK_SLOTS + 1)) - 1;
+      for (let i = 1; i <= QUICK_SLOTS; i++) if (vars[`slot:${i}`] === id) vars[`slot:${i}`] = '';
+      if (next >= 0) vars[`slot:${next + 1}`] = id;
+    },
+  },
   {
     id: 'giveItem',
     label: 'Give the player an item',

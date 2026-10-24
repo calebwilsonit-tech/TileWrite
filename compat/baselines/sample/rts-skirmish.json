@@ -99,31 +99,31 @@
             "entities": 14,
             "world": "5e834e1cb84f0655",
             "vars": "d672b0065e0a6738",
-            "screen": "HUD"
+            "screen": "HUD>Inventory (modal)"
           },
           {
             "tick": 600,
             "player": null,
             "entities": 14,
             "world": "5e834e1cb84f0655",
-            "vars": "27e20ec840cfe6b6",
-            "screen": "HUD"
+            "vars": "d672b0065e0a6738",
+            "screen": "HUD>Inventory (modal)"
           },
           {
             "tick": 660,
             "player": null,
             "entities": 14,
             "world": "5e834e1cb84f0655",
-            "vars": "27e20ec840cfe6b6",
-            "screen": "HUD"
+            "vars": "d672b0065e0a6738",
+            "screen": "HUD>Inventory (modal)"
           },
           {
             "tick": 660,
             "player": null,
             "entities": 14,
             "world": "5e834e1cb84f0655",
-            "vars": "27e20ec840cfe6b6",
-            "screen": "HUD"
+            "vars": "d672b0065e0a6738",
+            "screen": "HUD>Inventory (modal)"
           }
         ],
         "error": ""

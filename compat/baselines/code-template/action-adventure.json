@@ -113,62 +113,62 @@
           {
             "tick": 480,
             "player": {
-              "x": 9.894,
-              "y": 11.934,
+              "x": 8.951,
+              "y": 12.877,
               "h": 0
             },
             "entities": 4,
-            "world": "ceb1eab7ae66a15e",
+            "world": "4f1dd4cb1b73a37b",
             "vars": "0e6bf79c0b086ece",
             "screen": ""
           },
           {
             "tick": 540,
             "player": {
-              "x": 10.648,
-              "y": 11.18,
+              "x": 9.706,
+              "y": 12.123,
               "h": 0
             },
             "entities": 4,
-            "world": "4c15dc6f7a7d84f1",
+            "world": "804b6907bd4a2daa",
             "vars": "0e6bf79c0b086ece",
-            "screen": ""
+            "screen": "Inventory (modal)"
           },
           {
             "tick": 600,
             "player": {
-              "x": 7.82,
-              "y": 8.352,
+              "x": 9.706,
+              "y": 12.123,
               "h": 0
             },
             "entities": 4,
-            "world": "1a84635eda699118",
+            "world": "804b6907bd4a2daa",
             "vars": "0e6bf79c0b086ece",
-            "screen": ""
+            "screen": "Inventory (modal)"
           },
           {
             "tick": 660,
             "player": {
-              "x": 7.82,
-              "y": 8.352,
+              "x": 9.706,
+              "y": 12.123,
               "h": 0
             },
             "entities": 4,
-            "world": "1a84635eda699118",
+            "world": "804b6907bd4a2daa",
             "vars": "0e6bf79c0b086ece",
-            "screen": ""
+            "screen": "Inventory (modal)"
           },
           {
             "tick": 660,
             "player": {
-              "x": 7.82,
-              "y": 8.352,
+              "x": 9.706,
+              "y": 12.123,
               "h": 0
             },
             "entities": 4,
-            "world": "1a84635eda699118",
+            "world": "804b6907bd4a2daa",
             "vars": "0e6bf79c0b086ece",
-            "screen": ""
+            "screen": "Inventory (modal)"
           }
         ],
         "error": ""

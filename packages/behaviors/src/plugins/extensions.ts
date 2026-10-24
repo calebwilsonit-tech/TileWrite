@@ -1,4 +1,4 @@
-import type { Simulation, EventRow, MapNode, RegionData, TileMap, VariableValue, WireData, EntityData, ProjectData, SceneData, SimContext, UiScreen, UiNode, System, SystemMode, Entity } from '@tilewright/runtime';
+import type { Simulation, UiLayout, EventRow, MapNode, RegionData, TileMap, VariableValue, WireData, EntityData, ProjectData, SceneData, SimContext, UiScreen, UiNode, System, SystemMode, Entity } from '@tilewright/runtime';
 import type { BehaviorDef } from '../framework';
 import type { ActionDef, ConditionDef } from '../events/sheet';
 
@@ -112,8 +112,19 @@ export interface WidgetDef {
   label: string;
   /** Starting values of a new one (size, text, anything a UiNode has). */
   defaults?: Partial<UiNode>;
-  /** Fill in the element for this widget on every frame; return a function to clean up. Plain DOM. */
-  render(el: HTMLElement, node: UiNode, values: Record<string, string | number | boolean>): void | (() => void);
+  /** Style rules for the elements `render` makes. Added once to the page while the widget is in use. */
+  css?: string;
+  /**
+   * Fill in the element for this widget on every frame; return a function to clean up. Plain DOM. `ctx` is what the game
+   * lets a widget see (the running game) and ask for (`request` announces an event, like a button's action would).
+   */
+  render(el: HTMLElement, node: UiNode, values: Record<string, string | number | boolean>, ctx?: WidgetContext): void | (() => void);
+}
+
+export interface WidgetContext {
+  sim: Simulation;
+  /** Ask the game for something: "travel-place-request", "save-request"... (the events the screens' actions announce). */
+  request(event: string, data?: Record<string, unknown>): void;
 }
 
 /** A screen a plugin brings with it (a title, a pause menu, a settings page). The project can Customize it into its own copy. */
@@ -122,6 +133,11 @@ export interface ScreenDef {
   id: string;
   /** The screen itself (widgets, bindings, actions). */
   screen: UiScreen;
+  /**
+   * For a screen that depends on the project (the heads-up display follows the project's interface layout): the screen to use
+   * for this project. When it is there, it is used instead of `screen`; `screen` is what the plugin offers for a new copy.
+   */
+  build?(project: { layout: UiLayout | null }): UiScreen;
   /** The role it plays unless the project says otherwise ("title", "pause", "settings", ...). */
   role?: string;
   /** Bump this when the screen changes, so projects that customized an older one can compare. */
@@ -138,6 +154,25 @@ export interface ListSourceDef {
   label: string;
   /** The rows now. `id` is unique among them; `scope` is what the row's widgets can read (`{place.name}`...). */
   rows(sim: Simulation, argument: string): { id: string; scope: Record<string, VariableValue> }[];
+}
+
+/**
+ * An entry a plugin adds to a menu another plugin's screen lists: the Pause menu has a list called "menu:pause", and an entry
+ * with `menu: 'pause'` becomes a row in it that opens a screen. (The screen decides how the rows look.)
+ */
+export interface MenuEntryDef {
+  id: string;
+  /** Which list: "pause" for the Pause menu. */
+  menu: string;
+  label: string;
+  /** Opens the screen that plays this role ("map", "travel"...). */
+  opens: string;
+  /** Second text on the right of the row ("3 lit"). */
+  detail?(sim: Simulation): string;
+  /** Only while this is true. Default: always. */
+  show?(sim: Simulation): boolean;
+  /** Smaller numbers come first. Default 50. */
+  order?: number;
 }
 
 /** What a screen can be used as ("Title", "Pause", ...), so Back, the pause key and Continue know which one to open. */
@@ -327,6 +362,7 @@ export interface Extensions {
   screens: Map<string, ScreenDef & OwnedBy>;
   screenRoles: Map<string, ScreenRoleDef & OwnedBy>;
   listSources: Map<string, ListSourceDef & OwnedBy>;
+  menuEntries: Map<string, MenuEntryDef & OwnedBy>;
   inspectors: Map<string, InspectorDef & OwnedBy>;
   exporters: Map<string, ExporterDef & OwnedBy>;
   exportTargets: Map<string, ExportTargetDef & OwnedBy>;

@@ -6,11 +6,15 @@ import { checkpoint, litPosts } from './checkpoint';
 import { echoRecorder, echoReplay } from './echo';
 import { growing, lightResource, lightSensor } from './fuel';
 import { sentenceStone, textBlock } from './text';
+import { lightBarWidget } from './hud';
+import { TRAVEL_WORDS, litPostsSource, travelMenuEntry, travelScreen, travelToPost } from './travel';
 
 export * from './echo';
 export * from './text';
 export * from './fuel';
 export * from './checkpoint';
+export * from './travel';
+export * from './hud';
 
 export const storytenderPlugin = definePlugin(manifest, {
   install(api) {
@@ -27,6 +31,14 @@ export const storytenderPlugin = definePlugin(manifest, {
       met: (vars, node) => litPosts(vars).some((p) => p.scene === node.scene),
       arrival: (vars, node) => litPosts(vars).find((p) => p.scene === node.scene) ?? null,
     });
+    // the screen that lists the lit posts, its rows, the entry in the Pause menu and the button that travels
+    api.screenRole({ id: 'travel', label: 'Travel', help: 'Lists the places the player can travel to; the map button opens it when the project has no world map.' });
+    api.screen({ id: 'travel', screen: travelScreen(), role: 'travel', revision: 1 });
+    api.listSource(litPostsSource);
+    api.action(travelToPost);
+    api.menuEntry(travelMenuEntry);
+    api.strings(() => TRAVEL_WORDS);
+    api.widget(lightBarWidget);
     api.inputAction('echo', { label: 'Record an echo', bindings: ['key:KeyR', 'pad:button4'] });
   },
 });

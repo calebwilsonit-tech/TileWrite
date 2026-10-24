@@ -7,10 +7,12 @@ import type { Entity } from '@tilewright/plugin-sdk';
 import { damage, damageOnTouch, dodge, heal, health, meleeAttack } from './combat';
 import { projectile } from './projectile';
 import { rangedAttack } from './ranged';
+import { bossBarsWidget, heartsWidget } from './hud';
 
 export * from './combat';
 export * from './ranged';
 export * from './projectile';
+export * from './hud';
 
 export const combatPlugin = definePlugin(manifest, {
   templates,
@@ -22,6 +24,8 @@ export const combatPlugin = definePlugin(manifest, {
     api.actions(...actions);
     api.inputAction('attack', { label: 'Attack', bindings: ['key:KeyJ', 'mouse:0', 'pad:button2'] });
     api.inputAction('dodge', { label: 'Dodge', bindings: ['key:KeyQ', 'pad:button3'] });
+    api.widget(heartsWidget);
+    api.widget(bossBarsWidget);
     api.scriptMethod({ id: 'damage', run: (ctx, self, [target, amount]) => (target ? damage(ctx, target as Entity, Number(amount), { source: self }) : false) });
     api.scriptMethod({ id: 'heal', run: (ctx, _self, [target, amount]) => void (target && heal(ctx, target as Entity, Number(amount))) });
   },

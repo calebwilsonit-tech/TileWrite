@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
-import { clickCell, createProjectViaUi, launchEditor, pickTool, shot } from './helpers';
+import { clickCell, createProjectViaUi, launchEditor, pickTool, screenLayer, shot, ui } from './helpers';
 
 type Snapshot = Record<string, number>;
 const GRID_PLUS_X: Snapshot = { move_right: 1, move_down: 1 };
@@ -55,7 +55,7 @@ const state = (page: Page) =>
       difficulty: s.runtime.difficulty,
       dialogue: s.runtime.dialogue?.view ?? null,
       cutscene: s.runtime.cutscene?.name ?? null,
-      menuOpen: s.runtime.menuOpen,
+      menuOpen: s.runtime.ui.modal,
     };
   });
 
@@ -220,33 +220,33 @@ test('M8: build a small story (items, a conversation, a cutscene, a lantern, a p
 
   // ---- the pause menu: inventory, save, settings, remapping ----
   await play(page, { pause: 1 }, 1);
-  await expect(page.getByTestId('tw-menu')).toBeVisible();
+  await expect(screenLayer(page, 'Pause')).toBeVisible();
   expect((await state(page)).menuOpen).toBe(true);
-  await page.getByTestId('tw-row-inventory').click();
-  await expect(page.getByTestId('tw-row-item-key')).toContainText('Brass key');
-  await expect(page.getByTestId('tw-row-item-bread')).toContainText('Bread');
+  await ui(page, 'Inventory').click();
+  await expect(ui(page, 'Item', 'key')).toContainText('Brass key');
+  await expect(ui(page, 'Item', 'bread')).toContainText('Bread');
   await page.screenshot({ path: shot('m8-menu.png') });
   await play(page, {}, 1);
   await play(page, { pause: 1 }, 1); // back to the first screen
-  await page.getByTestId('tw-row-save').click();
-  await page.getByTestId('tw-row-slot-slot1').click();
+  await ui(page, 'Save game').click();
+  await ui(page, 'Slot', 'slot1').click();
   await expect.poll(() => fs.existsSync(path.join(projectDir, 'saves', 'slot1.save.json'))).toBe(true);
   await play(page, {}, 1);
   await play(page, { pause: 1 }, 1);
-  await page.getByTestId('tw-row-settings').click();
-  await page.getByTestId('tw-row-set-difficulty').click(); // normal -> hard
+  await ui(page, 'Settings').click();
+  await ui(page, 'Difficulty choice').locator('select').selectOption('hard'); // normal -> hard
   expect((await state(page)).difficulty).toBe('hard');
-  await page.getByTestId('tw-row-set-controls').click();
-  await page.getByTestId('tw-row-bind-attack').click();
-  await expect(page.getByTestId('tw-row-bind-attack')).toContainText('press a key');
+  await ui(page, 'Controls').click();
+  await ui(page, 'Control', 'attack').click();
+  await expect(ui(page, 'Control', 'attack')).toContainText('press a key');
   await page.keyboard.press('KeyF');
-  await expect(page.getByTestId('tw-row-bind-attack')).toContainText('F');
+  await expect(ui(page, 'Control', 'attack')).toContainText('F');
   expect(await page.evaluate(() => window.__play!.session.inputMap.bindings.attack![0])).toBe('key:KeyF');
   for (let i = 0; i < 2; i++) {
     await play(page, {}, 1); // controls -> settings -> the first screen
     await play(page, { pause: 1 }, 1);
   }
-  await page.getByTestId('tw-row-resume').click();
+  await ui(page, 'Resume').click();
   expect((await state(page)).menuOpen).toBe(false);
 
   // ---- through the portal into the cave: everything comes along ----
@@ -266,8 +266,8 @@ test('M8: build a small story (items, a conversation, a cutscene, a lantern, a p
 
   // ---- fast travel back to the lantern ----
   await play(page, { map: 1 }, 1);
-  await expect(page.getByTestId('tw-menu')).toContainText('Travel to a lit lantern');
-  await page.locator('[data-testid^="tw-row-post-"]').first().click();
+  await expect(screenLayer(page, 'Travel')).toContainText('Travel to a lit lantern');
+  await ui(page, 'Post').first().click();
   await page.waitForFunction(() => window.__play!.sim.runtime.scene === 'scenes/main.scene.json');
   await play(page, {}, 3);
   st = await state(page);
@@ -276,9 +276,9 @@ test('M8: build a small story (items, a conversation, a cutscene, a lantern, a p
 
   // ---- load the slot saved at the keeper ----
   await play(page, { pause: 1 }, 1);
-  await page.getByTestId('tw-row-load').click();
-  await page.getByTestId('tw-row-slot-slot1').click();
-  await page.waitForFunction(() => !window.__play!.sim.runtime.menuOpen);
+  await ui(page, 'Load game').click();
+  await ui(page, 'Slot', 'slot1').click();
+  await page.waitForFunction(() => !window.__play!.sim.runtime.ui.modal);
   await play(page, {}, 3);
   st = await state(page);
   expect(st.scene).toBe('scenes/main.scene.json');

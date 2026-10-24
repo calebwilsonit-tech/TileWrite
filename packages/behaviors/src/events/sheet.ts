@@ -120,6 +120,12 @@ export const COMPARISONS = [
 export const num = (p: Record<string, unknown>, k: string, d = 0): number => (typeof p[k] === 'number' ? (p[k] as number) : Number(p[k] ?? d) || d);
 export const str = (p: Record<string, unknown>, k: string): string => String(p[k] ?? '');
 
+/** A text setting with `{name}` filled in from the variables in view (a button in a list reads its row: `{save.slot}`). */
+export const filled = (ctx: SimContext, p: Record<string, unknown>, k: string): string => {
+  const text = str(p, k);
+  return text.includes('{') ? fillValues(text, { vars: ctx.runtime.vars, tables: ctx.assets.tables, world: ctx.world }) : text;
+};
+
 export function compare(a: VariableValue | undefined, op: string, b: VariableValue): boolean {
   const numeric = typeof a === 'number' && typeof b === 'number';
   const left = numeric ? (a as number) : String(a ?? (typeof b === 'number' ? 0 : ''));
@@ -674,7 +680,7 @@ export const ACTIONS: ActionDef[] = [
     category: 'Story',
     params: [{ key: 'slot', label: 'Save slot (autosave, slot1, slot2, slot3; empty = autosave)', type: 'text', default: '' }],
     describe: (p) => (str(p, 'slot') && str(p, 'slot') !== 'autosave' ? `save the game to "${str(p, 'slot')}"` : 'save the game'),
-    run: (ctx, p) => void ctx.events.emit('save-request', { slot: str(p, 'slot') || 'autosave' }),
+    run: (ctx, p) => void ctx.events.emit('save-request', { slot: filled(ctx, p, 'slot') || 'autosave' }),
   },
   {
     id: 'restartArea',
@@ -690,7 +696,7 @@ export const ACTIONS: ActionDef[] = [
     category: 'Story',
     params: [{ key: 'place', label: 'Place (its id on the world map)', type: 'text', default: '' }],
     describe: (p) => `travel to the place "${str(p, 'place')}"`,
-    run: (ctx, p) => void ctx.events.emit('travel-place-request', { place: str(p, 'place') }),
+    run: (ctx, p) => void ctx.events.emit('travel-place-request', { place: filled(ctx, p, 'place') }),
   },
   {
     id: 'resetControls',
@@ -711,11 +717,12 @@ export const ACTIONS: ActionDef[] = [
     describe: (p) => (str(p, 'op') === 'back' ? 'go back one screen' : str(p, 'op') === 'closeAll' ? 'close every screen' : `${str(p, 'op') || 'open'} the screen "${str(p, 'screen')}"`),
     run(ctx, p) {
       const host = { runtime: ctx.runtime, assets: ctx.assets };
+      const screen = filled(ctx, p, 'screen');
       switch (str(p, 'op')) {
         case 'close':
-          return closeScreen(host, str(p, 'screen'));
+          return closeScreen(host, screen);
         case 'toggle':
-          return toggleScreen(host, str(p, 'screen'));
+          return toggleScreen(host, screen);
         case 'back':
           return backScreen(host);
         case 'closeAll':
@@ -724,7 +731,7 @@ export const ACTIONS: ActionDef[] = [
           ctx.runtime.ui.blocking = false;
           return;
         default:
-          if (!openScreen(host, str(p, 'screen'))) ctx.events.emit('problem', { text: `The screen "${str(p, 'screen')}" does not exist.` });
+          if (!openScreen(host, screen)) ctx.events.emit('problem', { text: `The screen "${screen}" does not exist.` });
       }
     },
   },
@@ -734,7 +741,7 @@ export const ACTIONS: ActionDef[] = [
     category: 'Story',
     params: [{ key: 'slot', label: 'Save slot (autosave, slot1..3, or latest)', type: 'text', default: 'autosave' }],
     describe: (p) => `load the saved game "${str(p, 'slot') || 'autosave'}"`,
-    run: (ctx, p) => void ctx.events.emit('load-request', { slot: str(p, 'slot') || 'autosave' }),
+    run: (ctx, p) => void ctx.events.emit('load-request', { slot: filled(ctx, p, 'slot') || 'autosave' }),
   },
   {
     id: 'quitGame',

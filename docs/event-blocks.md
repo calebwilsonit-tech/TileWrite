@@ -4,7 +4,7 @@
 
 An event sheet is a list of rows, each reading like a line of instructions: **when** its conditions hold, **do** its actions. Rows can have sub-events that run only while the row holds. Objects are chosen as "the player", "anything tagged ...", or a particular object. See [logic.md](logic.md).
 
-There are 31 conditions and 55 actions.
+There are 31 conditions and 58 actions.
 
 ## Conditions
 
@@ -529,6 +529,23 @@ Id: `quitGame`.
 
 No parameters.
 
+#### Use an item
+
+Id: `useItem`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Item (id) | `item` | text | (empty) |  |
+
+#### Move an item to another quick slot
+
+Id: `quickSlot`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Item (id) | `item` | text | (empty) |  |
+| Slots to move (1 or -1) | `step` | text | "1" |  |
+
 #### Give the player an item
 
 Id: `giveItem`.
@@ -570,6 +587,19 @@ Id: `playCutscene`.
 | Parameter | Key | Kind | Starts as | Choices and notes |
 | --- | --- | --- | --- | --- |
 | Cutscene (name) | `cutscene` | text | (empty) |  |
+
+#### Travel to a lit lantern post
+
+Id: `travelToPost`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Scene file of the post | `scene` | text | (empty) |  |
+| Post (object id) | `id` | text | (empty) |  |
+| Post name | `name` | text | (empty) |  |
+| x | `x` | text | "0" |  |
+| y | `y` | text | "0" |  |
+| height | `h` | text | "0" |  |
 
 ### Interface
 

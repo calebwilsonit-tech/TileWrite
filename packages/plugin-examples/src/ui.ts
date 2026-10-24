@@ -57,3 +57,11 @@ export const listSourceExample: PluginDefinition = definePlugin(manifestOf('list
           .map((k) => ({ id: k.slice(6), scope: { 'badge.name': k.slice(6) } })),
     }),
 });
+
+// ---------- a row in another screen's menu ----------
+export const menuEntryExample: PluginDefinition = definePlugin(manifestOf('menu', 'Example: a menu entry', 'Adds "Journal" to the Pause menu. It opens the screen that plays the "journal" role.'), {
+  install(api) {
+    api.screenRole({ id: 'journal', label: 'Journal', help: 'Opened from the Pause menu.' });
+    api.menuEntry({ id: 'example-journal', menu: 'pause', label: 'Journal', opens: 'journal', order: 30, detail: (sim) => `${Object.keys(sim.runtime.vars).filter((k) => k.startsWith('note:')).length} notes` });
+  },
+});

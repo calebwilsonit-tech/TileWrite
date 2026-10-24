@@ -1,4 +1,4 @@
-import { _electron as electron, expect, type ElectronApplication, type Page } from '@playwright/test';
+import { _electron as electron, expect, type ElectronApplication, type Locator, type Page } from '@playwright/test';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -90,3 +90,12 @@ export async function cellInfo(page: Page, x: number, y: number): Promise<{ tile
     [x, y],
   );
 }
+
+/** A widget of the game's screens by its name; `row` picks one repeat of a list (a save slot, an item, a control). */
+export const ui = (page: Page, name: string, row?: string): Locator => page.locator(`[data-testid="tw-ui-${name}"]${row ? `[data-row-id="${row}"]` : ''}`);
+
+/** The layer of a screen that is open, by the screen's name. */
+export const screenLayer = (page: Page, name: string): Locator => page.getByTestId(`tw-screen-${name}`);
+
+/** Is a screen that freezes the game open? */
+export const gameFrozen = (page: Page): Promise<boolean> => page.evaluate(() => window.__play!.sim.runtime.ui.modal);

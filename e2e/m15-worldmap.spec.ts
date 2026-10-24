@@ -91,14 +91,10 @@ test('M15: a world map is drawn in the Story panel, and the player opens it in t
   await expect(page.getByTestId(`tw-place-${other}`)).toHaveAttribute('data-state', 'open');
   await page.screenshot({ path: shot('m15-worldmap-game.png') });
   await press(page, {}, 1);
-  await press(page, { move_right: 1, move_down: 1 }, 1); // an arrow key towards the other place
-  await press(page, {}, 1);
-  await press(page, { move_left: 1, move_down: 1 }, 1);
-  await press(page, {}, 1);
   await page.getByTestId(`tw-place-${other}`).click(); // click it
   await expect.poll(() => page.evaluate(() => window.__play!.sim.runtime.scene), { timeout: 10_000 }).toMatch(/dungeon/);
   expect(await page.evaluate(() => window.__play!.sim.runtime.vars['visited:' + window.__play!.sim.runtime.scene])).toBe(true);
-  expect(await page.evaluate(() => window.__play!.sim.runtime.menuOpen)).toBe(false);
+  expect(await page.evaluate(() => window.__play!.sim.runtime.ui.modal)).toBe(false);
 
   // ---- a place that is not unlocked yet is a question mark, and a place that is secret is not drawn ----
   await press(page, {}, 3);

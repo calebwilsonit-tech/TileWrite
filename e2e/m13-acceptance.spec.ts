@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { cellInfo, cellXY, clickCell, createProjectViaUi, dragCells, launchEditor, pickTool, shot } from './helpers';
+import { cellInfo, cellXY, clickCell, createProjectViaUi, dragCells, launchEditor, pickTool, screenLayer, shot, ui } from './helpers';
 import { newSliceGame, nodeFs, playSlice } from './slice-bot';
 import { newPlaythrough, replayPlaythrough } from '@tilewright/playbot';
 import { serializeGame } from '@tilewright/runtime';
@@ -432,7 +432,7 @@ test('M13: build the Last Storytender slice with the editor only, check it, let 
         accepted: v.accepted,
         lit: Object.keys(v).filter((k) => k.startsWith('lit:')),
         sealSolid: seal ? (seal.get<{ enabled: boolean }>('collider')?.enabled ?? null) : null,
-        menuOpen: s.runtime.menuOpen,
+        menuOpen: s.runtime.ui.modal,
         hp: p.get<{ hp: number; dead: boolean }>('state:health')?.hp ?? null,
         checkpoint: s.runtime.checkpoint,
         dialogue: s.runtime.dialogue?.view ?? null,
@@ -485,31 +485,31 @@ test('M13: build the Last Storytender slice with the editor only, check it, let 
 
   // pause menu: Restart and Travel are there; save, remap a button, load
   await play(page, { pause: 1 }, 1);
-  await expect(page.getByTestId('tw-menu')).toBeVisible();
-  await expect(page.getByTestId('tw-row-restart')).toBeVisible();
-  await expect(page.getByTestId('tw-row-travel')).toBeVisible();
-  await page.getByTestId('tw-row-save').click();
-  await page.getByTestId('tw-row-slot-slot1').click();
+  await expect(screenLayer(page, 'Pause')).toBeVisible();
+  await expect(ui(page, 'Restart this area')).toBeVisible();
+  await expect(ui(page, 'Entry', 'travel')).toBeVisible();
+  await ui(page, 'Save game').click();
+  await ui(page, 'Slot', 'slot1').click();
   await expect.poll(() => fs.existsSync(path.join(projectDir, 'saves', 'slot1.save.json'))).toBe(true);
   await play(page, {}, 1);
   await play(page, { pause: 1 }, 1);
-  await page.getByTestId('tw-row-settings').click();
-  await page.getByTestId('tw-row-set-controls').click();
-  await page.getByTestId('tw-row-bind-attack').click();
+  await ui(page, 'Settings').click();
+  await ui(page, 'Controls').click();
+  await ui(page, 'Control', 'attack').click();
   await page.keyboard.press('KeyF');
-  await expect(page.getByTestId('tw-row-bind-attack')).toContainText('F');
+  await expect(ui(page, 'Control', 'attack')).toContainText('F');
   expect(await page.evaluate(() => window.__play!.session.inputMap.bindings.attack![0])).toBe('key:KeyF');
   await page.screenshot({ path: shot('m13-remap.png') });
   for (let i = 0; i < 2; i++) {
     await play(page, {}, 1);
     await play(page, { pause: 1 }, 1);
   }
-  await page.getByTestId('tw-row-resume').click();
+  await ui(page, 'Resume').click();
   await play(page, GRID_MINUS_Y, 40); // wander off ...
   await play(page, { pause: 1 }, 1);
-  await page.getByTestId('tw-row-load').click(); // ... and load the save: back where it was, flag still set
-  await page.getByTestId('tw-row-slot-slot1').click();
-  await page.waitForFunction(() => !window.__play!.sim.runtime.menuOpen);
+  await ui(page, 'Load game').click(); // ... and load the save: back where it was, flag still set
+  await ui(page, 'Slot', 'slot1').click();
+  await page.waitForFunction(() => !window.__play!.sim.runtime.ui.modal);
   await play(page, {}, 3);
   const loaded = await state();
   expect(Math.hypot(loaded.x - st.x, loaded.y - st.y)).toBeLessThan(0.3);
@@ -540,8 +540,8 @@ test('M13: build the Last Storytender slice with the editor only, check it, let 
   expect(Math.hypot(st.x - 25.5, st.y - 12.5)).toBeLessThan(2.5); // back at the lantern
   await play(page, GRID_PLUS_Y, 40);
   await play(page, { pause: 1 }, 1);
-  await expect(page.getByTestId('tw-row-travel')).toContainText('1 lit');
-  await page.getByTestId('tw-row-restart').click();
+  await expect(ui(page, 'Entry', 'travel')).toContainText('1 lit');
+  await ui(page, 'Restart this area').click();
   await play(page, {}, 5);
   st = await state();
   expect(Math.hypot(st.x - 25.5, st.y - 12.5)).toBeLessThan(2.5);

@@ -67,7 +67,7 @@ export const UI_ANCHOR_NAMES: Record<UiAnchor, string> = {
   fill: 'fill the whole parent',
 };
 
-const Css = z.string().max(40);
+const Css = z.string().max(80);
 
 /** How a widget looks. Every field is optional: what is missing comes from the theme (or from the normal look of the state). */
 export const UiStyleSchema = z.object({
@@ -81,6 +81,14 @@ export const UiStyleSchema = z.object({
   align: z.enum(['left', 'center', 'right']).optional(),
   opacity: z.number().min(0).max(1).optional(),
   shadow: z.boolean().optional(),
+  /** The contents scroll when they do not fit (with a height set by `maxH`, or a fixed one). */
+  scroll: z.boolean().optional(),
+  /** The most the widget may grow to, as a percentage of its parent's height (10 to 100). */
+  maxH: z.number().min(10).max(100).optional(),
+  /** Everything in the widget is drawn this much bigger or smaller (0.5 to 3). */
+  scale: z.number().min(0.5).max(3).optional(),
+  /** The size setting of the game's theme (Story, Interface) scales it as well. */
+  themeScale: z.boolean().optional(),
 });
 export type UiStyle = z.infer<typeof UiStyleSchema>;
 
@@ -149,6 +157,10 @@ export const UiNodeSchema = z.object({
   on: z.object({ click: Actions, hover: Actions, change: Actions }).prefault({}),
   focus: UiFocusSchema.prefault({}),
   tooltip: z.string().default(''),
+  /** A second text for a widget with a name and a value: the control a key binding is for ("Jump"). Words, with {name} filled in. */
+  label: z.string().optional(),
+  /** For list, grid and hand: the words shown when there are no rows ("You are carrying nothing."). */
+  empty: z.string().optional(),
   /** The UI prefab this is an instance of (type instance). */
   prefab: z.string().default(''),
   /** Settings of an instance that differ from the prefab: widget name -> field -> value. */

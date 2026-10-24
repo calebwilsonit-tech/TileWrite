@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
-import { createProjectViaUi, launchEditor, shot } from './helpers';
+import { createProjectViaUi, gameFrozen, launchEditor, screenLayer, shot, ui } from './helpers';
 
 const tab = (page: Page, name: string) => page.locator('.dv-tab').getByText(name, { exact: true });
 
@@ -91,43 +91,45 @@ test('M15: project settings turn on a title screen (New game, Continue); control
   // ---- play: the title screen comes first ----
   await page.getByTestId('btn-play').click();
   await page.waitForFunction(() => window.__play !== undefined);
-  await expect(page.getByTestId('tw-game-title')).toHaveText('Front Door');
-  await expect(page.locator('.tw-subtitle i, .tw-subtitle span').first()).toHaveText('quiet');
-  expect(await page.evaluate(() => window.__play!.sim.runtime.menuOpen)).toBe(true);
-  await expect(page.getByTestId('tw-row-continue')).toHaveCount(0); // nothing saved yet
+  await expect(ui(page, 'Game title')).toHaveText('Front Door');
+  await expect(ui(page, 'Subtitle').locator('i')).toHaveText('quiet');
+  expect(await gameFrozen(page)).toBe(true);
+  await expect(ui(page, 'Continue')).toBeHidden(); // nothing saved yet
   await page.screenshot({ path: shot('m15-title-screen.png') });
   // the pause key cannot dismiss the front door
   await press(page, { pause: 1 }, 1);
-  await expect(page.getByTestId('tw-game-title')).toBeVisible();
-  await page.getByTestId('tw-row-new-game').click();
-  await expect(page.getByTestId('tw-menu')).toHaveCount(0);
-  expect(await page.evaluate(() => window.__play!.sim.runtime.menuOpen)).toBe(false);
+  await expect(ui(page, 'Game title')).toBeVisible();
+  await ui(page, 'New game').click();
+  await expect(screenLayer(page, 'Title')).toHaveCount(0);
+  expect(await gameFrozen(page)).toBe(false);
 
   // the theme and layout reached the game
-  const ui = await page.evaluate(() => {
+  const look = await page.evaluate(() => {
     const root = document.querySelector('[data-testid="tw-ui"]') as HTMLElement;
     const hearts = document.querySelector('[data-testid="tw-hearts"]') as HTMLElement;
-    return { accent: root.style.getPropertyValue('--tw-accent'), font: root.style.getPropertyValue('--tw-font'), right: hearts.style.right, bottom: hearts.style.bottom, parent: hearts.parentElement === root };
+    // the hearts are pinned: the wrapper the HUD screen puts them in carries the position
+    const pin = hearts.parentElement as HTMLElement;
+    return { accent: root.style.getPropertyValue('--tw-accent'), font: root.style.getPropertyValue('--tw-font'), right: pin.style.right, bottom: pin.style.bottom, parent: pin.closest('[data-testid="tw-screen-HUD"]') !== null };
   });
-  expect(ui.accent).toBe('#00ff88');
-  expect(ui.font).toContain('Consolas');
-  expect(ui.parent).toBe(true);
-  expect(ui.right).not.toBe('');
-  expect(ui.bottom).not.toBe('');
+  expect(look.accent).toBe('#00ff88');
+  expect(look.font).toContain('Consolas');
+  expect(look.parent).toBe(true);
+  expect(look.right).not.toBe('');
+  expect(look.bottom).not.toBe('');
   await page.evaluate(() => (window.__play!.sim.runtime.vars['coins'] = 7));
   await press(page, {}, 2);
-  await expect(page.getByTestId('tw-widget-counter1')).toContainText('Coins');
-  await expect(page.getByTestId('tw-widget-counter1')).toContainText('7');
+  await expect(page.getByTestId('tw-ui-counter1')).toContainText('Coins');
+  await expect(page.getByTestId('tw-ui-counter1')).toContainText('7');
 
   // the game's own controls: the new action, the changed key
   const bindings = await page.evaluate(() => window.__play!.session.inputMap.bindings);
   expect(bindings.dash).toEqual(['key:KeyZ']);
   expect(bindings.interact?.[0]).toBe('key:KeyF');
   await press(page, { pause: 1 }, 1);
-  await page.getByTestId('tw-row-settings').click();
-  await page.getByTestId('tw-row-set-controls').click();
-  await expect(page.getByTestId('tw-row-bind-dash')).toContainText('Quick dash');
-  await expect(page.getByTestId('tw-row-bind-dash')).toContainText('Z');
+  await ui(page, 'Settings').click();
+  await ui(page, 'Controls').click();
+  await expect(ui(page, 'Control', 'dash')).toContainText('Quick dash');
+  await expect(ui(page, 'Control', 'dash')).toContainText('Z');
   await page.screenshot({ path: shot('m15-controls-screen.png') });
 
   // save to a slot, leave, play again: Continue is offered and loads the save
@@ -136,14 +138,14 @@ test('M15: project settings turn on a title screen (New game, Continue); control
   await press(page, {}, 1);
   await press(page, { pause: 1 }, 1);
   await press(page, {}, 1);
-  await page.getByTestId('tw-row-save').click();
-  await page.getByTestId('tw-row-slot-slot1').click();
+  await ui(page, 'Save game').click();
+  await ui(page, 'Slot', 'slot1').click();
   await page.getByTestId('btn-stop').click();
   await page.getByTestId('btn-play').click();
   await page.waitForFunction(() => window.__play !== undefined);
-  await expect(page.getByTestId('tw-row-continue')).toBeVisible();
-  await page.getByTestId('tw-row-continue').click();
-  await expect(page.getByTestId('tw-menu')).toHaveCount(0);
+  await expect(ui(page, 'Continue')).toBeVisible();
+  await ui(page, 'Continue').click();
+  await expect(screenLayer(page, 'Title')).toHaveCount(0);
   await expect.poll(() => page.evaluate(() => window.__play!.sim.runtime.vars['coins'])).toBe(7);
   expect(errors).toEqual([]);
   await app.close();

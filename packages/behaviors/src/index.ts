@@ -12,6 +12,7 @@ export * from './custom';
 export * from './docs';
 export * from './ui/screens-logic';
 export * from './ui/defaults';
+export * as screenKit from './ui/kit';
 export * from './ui/world-ui';
 export * from './signals';
 export * from './player-controller';

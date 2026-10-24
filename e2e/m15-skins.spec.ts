@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { launchEditor, shot } from './helpers';
+import { launchEditor, shot, ui } from './helpers';
 
 const tab = (page: Page, name: string) => page.locator('.dv-tab').getByText(name, { exact: true });
 
@@ -49,22 +49,20 @@ test('M15: a skin made in the Story panel is offered in Settings -> Appearance a
   const original = await playerColor(page);
 
   await press(page, { pause: 1 }, 1);
-  await page.getByTestId('tw-row-settings').click();
-  await expect(page.getByTestId('tw-row-set-skin')).toContainText('Original');
-  await page.getByTestId('tw-row-set-skin').click();
-  await expect(page.getByTestId('tw-row-set-skin')).toContainText('Crimson');
+  await ui(page, 'Settings').click();
+  const looks = ui(page, 'Appearance choice').locator('select');
+  await expect(looks.locator('option:checked')).toHaveText('Original');
+  await expect(looks.locator('option')).toHaveText(['Original', 'Crimson']); // Golden is locked: not on offer
+  await looks.selectOption({ label: 'Crimson' });
   expect(await playerColor(page)).toBe(0xcc2222);
-  await page.getByTestId('tw-row-set-skin').click(); // Golden is locked: it wraps back to the original look
-  await expect(page.getByTestId('tw-row-set-skin')).toContainText('Original');
+  await looks.selectOption({ label: 'Original' });
   expect(await playerColor(page)).toBe(original);
 
   // unlock it by setting the flag; now it is on offer
   await page.evaluate(() => (window.__play!.sim.runtime.vars['won'] = true));
-  await press(page, { pause: 1 }, 1);
-  await press(page, { pause: 1 }, 1);
-  await page.getByTestId('tw-row-set-skin').click();
-  await page.getByTestId('tw-row-set-skin').click();
-  await expect(page.getByTestId('tw-row-set-skin')).toContainText('Golden');
+  await expect(looks.locator('option')).toHaveText(['Original', 'Crimson', 'Golden']);
+  await looks.selectOption({ label: 'Golden' });
+  await expect(looks.locator('option:checked')).toHaveText('Golden');
   expect(errors).toEqual([]);
   await app.close();
 });

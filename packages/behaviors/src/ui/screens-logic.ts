@@ -39,6 +39,8 @@ export interface UiBridge {
   refreshSaves?(): void;
   /** The controls the Controls screen lists (the list source "controls"): action id and its name. */
   controls?(): { action: string; label: string }[];
+  /** The game's name and the line under it, while the title screen is up (null otherwise). */
+  title?(): { text: string; subtitle: string } | null;
   /** Words for what the host can do, so a screen can hide what it cannot ("fullscreen", "quit"). */
   can?(what: string): boolean;
   /** The languages, appearances and so on a settings choice offers: name -> [value, shown name] pairs. */
@@ -102,7 +104,11 @@ export interface ViewNode {
   /** Choice lists and tabs: the choice now, and all the choices. */
   choice: string;
   options: string[];
+  /** What each choice is called when it is shown (the same as `options` unless the choices come from the game). */
+  optionLabels: string[];
   tooltip: string;
+  /** The second text (a key binding's control name), filled in. */
+  label: string;
   /** The table row behind a repeat (for dragging cells onto each other). */
   row?: { table: string; id: string };
   children: ViewNode[];
@@ -144,6 +150,33 @@ interface Row {
   table?: string;
 }
 
+function itemDetail(sim: Simulation, id: string): string {
+  const def = sim.assets.items.get(id);
+  const slot = quickSlots(sim.runtime.vars).indexOf(id);
+  const t = sim.assets.strings;
+  return [t.t(def?.description ?? ''), def?.use ? t.t('press E to use') : '', slot >= 0 ? t.fmt(t.t('slot {n}'), { n: slot + 1 }) : ''].filter(Boolean).join(' - ');
+}
+
+/** What the screens may ask about the host, as values in view (`{host.quit}`, `{game.title}`) while a screen is worked out. */
+export function hostScope(sim: Simulation): Record<string, VariableValue> {
+  const b = uiBridge(sim);
+  const saves = (b?.saves?.() ?? []).filter((s) => s.exists && !s.damaged).sort((a, c) => c.savedAt.localeCompare(a.savedAt));
+  const title = b?.title?.() ?? null;
+  return {
+    'host.quit': b?.can?.('quit') ? 1 : 0,
+    'host.fullscreen': b?.can?.('fullscreen') ? 1 : 0,
+    'host.skins': b?.choices?.('skin').length ?? 0,
+    'host.languages': b?.choices?.('language').length ?? 0,
+    'host.hasSave': saves.length > 0 ? 1 : 0,
+    'host.latestSave': saves[0]?.label ?? '',
+    'host.titleOpen': title ? 1 : 0,
+    'game.title': title?.text ?? '',
+    'game.subtitle': title?.subtitle ?? '',
+    'map.title': sim.assets.strings.t(sim.assets.worldMap?.title || 'Map'),
+    ...Object.fromEntries([...host.ext.widgets.keys()].map((id) => [`part.${id}`, 1])),
+  };
+}
+
 /** The repeats of a list, grid, hand or turn bar: one per row of its source. */
 export function rowsOf(sim: Simulation, node: UiNode): Row[] {
   const src = node.type === 'turnOrder' && node.source === '' ? 'turns' : node.source;
@@ -161,7 +194,7 @@ export function rowsOf(sim: Simulation, node: UiNode): Row[] {
     return Array.from({ length: n }, (_, i) => ({ id: String(i + 1), scope: { slot: i + 1, index: i + 1 } }));
   }
   if (src === 'items') {
-    return carried(sim.runtime.vars).map(([id, count], i) => ({ id, scope: { 'item.id': id, 'item.name': sim.assets.strings.t(sim.assets.items.get(id)?.name ?? id), 'item.count': count, 'item.description': sim.assets.strings.t(sim.assets.items.get(id)?.description ?? ''), 'item.usable': sim.assets.items.get(id)?.use ? 1 : 0, 'item.slot': quickSlots(sim.runtime.vars).indexOf(id) + 1, 'item.color': sim.assets.items.get(id)?.color ?? 0, index: i + 1 } }));
+    return carried(sim.runtime.vars).map(([id, count], i) => ({ id, scope: { 'item.detail': itemDetail(sim, id), 'item.id': id, 'item.name': sim.assets.strings.t(sim.assets.items.get(id)?.name ?? id), 'item.count': count, 'item.description': sim.assets.strings.t(sim.assets.items.get(id)?.description ?? ''), 'item.usable': sim.assets.items.get(id)?.use ? 1 : 0, 'item.slot': quickSlots(sim.runtime.vars).indexOf(id) + 1, 'item.color': sim.assets.items.get(id)?.color ?? 0, index: i + 1 } }));
   }
   if (src === 'turns') {
     const t = sim.runtime.turns;
@@ -199,10 +232,17 @@ export function rowsOf(sim: Simulation, node: UiNode): Row[] {
     return map.nodes
       .map((node) => ({ node, state: placeState(node, sim.runtime.vars, sim.runtime.scene, custom) }))
       .filter((p) => p.state === 'open' || p.state === 'here')
-      .map((p, i) => ({ id: p.node.id, scope: { 'place.id': p.node.id, 'place.name': p.node.label, 'place.scene': p.node.scene, 'place.here': p.state === 'here' ? 1 : 0, 'place.x': p.node.x, 'place.y': p.node.y, index: i + 1 } }));
+      .map((p, i) => ({ id: p.node.id, scope: { 'place.id': p.node.id, 'place.name': p.node.label, 'place.scene': p.node.scene, 'place.here': p.state === 'here' ? 1 : 0, 'place.hint': p.state === 'here' ? sim.assets.strings.t('you are here') : '', 'place.x': p.node.x, 'place.y': p.node.y, index: i + 1 } }));
   }
   if (src === 'quickslots') {
     return quickSlots(sim.runtime.vars).map((id, i) => ({ id: String(i + 1), scope: { 'slot.number': i + 1, 'slot.item': id, 'slot.name': id ? sim.assets.strings.t(sim.assets.items.get(id)?.name ?? id) : '', 'slot.count': id ? Number(sim.runtime.vars[`item:${id}`] ?? 0) : 0, 'slot.color': id ? (sim.assets.items.get(id)?.color ?? 0) : 0, index: i + 1 } }));
+  }
+  if (src.startsWith('menu:')) {
+    const menu = src.slice(5);
+    return [...host.ext.menuEntries.values()]
+      .filter((e) => e.menu === menu && (e.show?.(sim) ?? true))
+      .sort((a, b) => (a.order ?? 50) - (b.order ?? 50) || a.id.localeCompare(b.id))
+      .map((e, i) => ({ id: e.id, scope: { 'entry.id': e.id, 'entry.label': sim.assets.strings.t(e.label), 'entry.detail': e.detail ? sim.assets.strings.t(e.detail(sim)) : '', 'entry.opens': `role:${e.opens}`, index: i + 1 } }));
   }
   if (src.startsWith('choices:')) {
     return (uiBridge(sim)?.choices?.(src.slice(8)) ?? []).map((c, i) => ({ id: c.value, scope: { 'choice.value': c.value, 'choice.label': c.label, index: i + 1 } }));
@@ -250,7 +290,9 @@ function resolveNode(sim: Simulation, raw: UiNode, key: string, scope: Record<st
       fraction: 0,
       choice: '',
       options,
+      optionLabels: options,
       tooltip: node.tooltip ? fillValues(strings.t(node.tooltip), src) : '',
+      label: node.label ? fillValues(strings.t(node.label), src) : '',
       children: [],
     };
     if (node.type === 'bar' || node.type === 'slider') {
@@ -261,8 +303,13 @@ function resolveNode(sim: Simulation, raw: UiNode, key: string, scope: Record<st
       const v = node.value ? readTarget(sim, node.value) : undefined;
       out.value = v === true || (typeof v === 'number' && v !== 0) || v === 'true' || v === 'on' ? 1 : 0;
     } else if (node.type === 'dropdown') {
+      if (node.source.startsWith('choices:')) {
+        const list = uiBridge(sim)?.choices?.(node.source.slice(8)) ?? [];
+        out.options = list.map((c) => c.value);
+        out.optionLabels = list.map((c) => strings.t(c.label));
+      }
       const v = node.value ? readTarget(sim, node.value) : undefined;
-      out.choice = v === undefined ? (options[0] ?? '') : String(v);
+      out.choice = v === undefined ? (out.options[0] ?? '') : String(v);
     } else if (node.type === 'tabs') {
       const chosen = sim.runtime.ui.tabs[key] ?? options[0] ?? '';
       out.choice = options.includes(chosen) ? chosen : (options[0] ?? '');
@@ -272,7 +319,8 @@ function resolveNode(sim: Simulation, raw: UiNode, key: string, scope: Record<st
       const template = node.template ? instanceStub(`${node.id}.t`, node.template) : (node.children[0] ?? (node.type === 'turnOrder' ? TURN_CHIP : undefined));
       if (template) {
         const rows = rowsOf(sim, node);
-        out.children = rows.map((r) => {
+        if (rows.length === 0 && node.empty) out.children = [resolveNode(sim, { ...instanceStub(`${node.id}.empty`, ''), type: 'text', name: 'Empty', text: node.empty, wMode: 'auto', hMode: 'auto' }, `${key}#empty`, scope, depth + 1, visible)];
+        else out.children = rows.map((r) => {
           const child = template;
           const vn = resolveNode(sim, child, `${key}#${r.id}`, { ...scope, ...r.scope }, depth + 1, visible);
           if (r.table) vn.row = { table: r.table, id: r.id };
@@ -310,7 +358,7 @@ function instanceStub(id: string, prefab: string): UiNode {
 
 /** What a screen shows right now. */
 export function resolveScreen(sim: Simulation, screen: UiScreen): ViewNode {
-  return resolveNode(sim, screen.root, screen.root.id, {}, 0);
+  return resolveNode(sim, screen.root, screen.root.id, hostScope(sim), 0);
 }
 
 /** Every open screen, bottom first. */
@@ -421,7 +469,7 @@ export function activateWidget(sim: Simulation, n: ViewNode): void {
       run(sim, n, 'change');
       break;
     case 'keybind':
-      uiBridge(sim)?.rebind?.(n.node.text);
+      uiBridge(sim)?.rebind?.(n.text);
       break;
     case 'dropdown': {
       const i = n.options.indexOf(n.choice);
@@ -432,6 +480,13 @@ export function activateWidget(sim: Simulation, n: ViewNode): void {
       break;
   }
   run(sim, n, 'click');
+}
+
+/** Left or right on a widget with Change actions (a row of settings, an item's quick slot): they run with `{delta}` set to -1 or 1. */
+export function adjustWidget(sim: Simulation, n: ViewNode, delta: -1 | 1): boolean {
+  if (!n.visible || !n.enabled || n.node.on.change.length === 0 || n.node.type === 'slider') return false;
+  withScope(sim, { ...n.scope, delta }, () => runActionList(contextOf(sim), n.node.on.change as never));
+  return true;
 }
 
 export function setSlider(sim: Simulation, n: ViewNode, value: number): void {

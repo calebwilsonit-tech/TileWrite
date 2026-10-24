@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
-import { launchEditor, root } from './helpers';
+import { launchEditor, root, screenLayer, ui } from './helpers';
 
 const tab = (page: Page, name: string) => page.locator('.dv-tab').getByText(name, { exact: true });
 
@@ -79,16 +79,16 @@ test('M14: add a language, translate a conversation and the menus, see them in t
     if (await page.evaluate(() => window.__play!.sim.runtime.dialogue === null)) break;
   }
   await play(page, { pause: 1 }, 1);
-  await expect(page.getByTestId('tw-row-resume')).toContainText('Reprendre');
-  await page.getByTestId('tw-row-settings').click();
-  await expect(page.getByTestId('tw-menu').locator('h2')).toHaveText('Réglages');
-  await expect(page.getByTestId('tw-row-set-language')).toContainText('Français');
+  await expect(ui(page, 'Resume')).toContainText('Reprendre');
+  await ui(page, 'Settings').click();
+  await expect(screenLayer(page, 'Settings')).toContainText('Réglages');
+  await expect(ui(page, 'Language choice').locator('option:checked')).toHaveText('Français');
   await page.screenshot({ path: path.join(root, 'screenshots', 'm14-translations-menu.png') });
-  await page.getByTestId('tw-row-set-language').click(); // Français -> the original text
-  await expect(page.getByTestId('tw-menu').locator('h2')).toHaveText('Settings');
-  await expect(page.getByTestId('tw-row-set-language')).toContainText('Default');
-  await page.getByTestId('tw-row-set-language').click(); // and back
-  await expect(page.getByTestId('tw-menu').locator('h2')).toHaveText('Réglages');
+  await ui(page, 'Language choice').locator('select').selectOption({ label: 'Default' }); // Français -> the original text
+  await expect(screenLayer(page, 'Settings')).toContainText('Settings');
+  await expect(ui(page, 'Language choice').locator('option:checked')).toHaveText('Default');
+  await ui(page, 'Language choice').locator('select').selectOption({ label: 'Français' }); // and back
+  await expect(screenLayer(page, 'Settings')).toContainText('Réglages');
   expect(errors).toEqual([]);
   await app.close();
 });

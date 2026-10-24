@@ -137,7 +137,7 @@
             "entities": 2,
             "world": "e57ab89c9abfdee1",
             "vars": "951d187927f70637",
-            "screen": ""
+            "screen": "Inventory (modal)"
           },
           {
             "tick": 600,
@@ -149,7 +149,7 @@
             "entities": 2,
             "world": "e57ab89c9abfdee1",
             "vars": "951d187927f70637",
-            "screen": ""
+            "screen": "Inventory (modal)"
           },
           {
             "tick": 660,
@@ -161,7 +161,7 @@
             "entities": 2,
             "world": "e57ab89c9abfdee1",
             "vars": "951d187927f70637",
-            "screen": ""
+            "screen": "Inventory (modal)"
           },
           {
             "tick": 660,
@@ -173,7 +173,7 @@
             "entities": 2,
             "world": "e57ab89c9abfdee1",
             "vars": "951d187927f70637",
-            "screen": ""
+            "screen": "Inventory (modal)"
           }
         ],
         "error": ""

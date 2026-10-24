@@ -137,7 +137,7 @@
             "entities": 6,
             "world": "3a1b07ce870eebcc",
             "vars": "951d187927f70637",
-            "screen": "Verbs"
+            "screen": "Verbs>Inventory (modal)"
           },
           {
             "tick": 600,
@@ -149,7 +149,7 @@
             "entities": 6,
             "world": "3a1b07ce870eebcc",
             "vars": "951d187927f70637",
-            "screen": "Verbs"
+            "screen": "Verbs>Inventory (modal)"
           },
           {
             "tick": 660,
@@ -161,7 +161,7 @@
             "entities": 6,
             "world": "3a1b07ce870eebcc",
             "vars": "951d187927f70637",
-            "screen": "Verbs"
+            "screen": "Verbs>Inventory (modal)"
           },
           {
             "tick": 660,
@@ -173,7 +173,7 @@
             "entities": 6,
             "world": "3a1b07ce870eebcc",
             "vars": "951d187927f70637",
-            "screen": "Verbs"
+            "screen": "Verbs>Inventory (modal)"
           }
         ],
         "error": ""

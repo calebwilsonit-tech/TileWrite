@@ -1,4 +1,4 @@
-import { RESERVED_SCREENS, closeScreen, openScreen, screenBlocksInput, screenNamed, screenPauses, sync, type Simulation, type UiScreen } from '@tilewright/runtime';
+import { closeScreen, openRole, roleOfScreen, openScreen, screenBlocksInput, screenNamed, screenPauses, sync, type Simulation, type UiScreen } from '@tilewright/runtime';
 
 /**
  * One place decides what a press of Back (the pause button: Esc, the pad's Start or B) does, for every screen the game
@@ -8,15 +8,9 @@ import { RESERVED_SCREENS, closeScreen, openScreen, screenBlocksInput, screenNam
  * This has no drawing in it (it is plain data and functions), so the game, the playbot and the tests run the same code.
  */
 
-export type BuiltinMenu = 'main' | 'inventory' | 'map' | 'travel';
-
 /** What the game's own interface offers the router. */
 export interface RouterHost {
   sim: Simulation;
-  /** The older fixed menus (built-in pause, title, inventory) are showing; they read the buttons themselves. */
-  builtinOpen(): boolean;
-  /** Open one of the fixed menus (used when no screen made in the designer replaces it). */
-  openMenu(menu: BuiltinMenu): void;
   /** Does the pause button open the Pause screen by itself? (A project can instead use its own rule: see the `pauseKey` compatibility flag.) */
   pauseKeyOpensPause?: boolean;
 }
@@ -36,8 +30,8 @@ export function backAction(s: UiScreen): BackAction {
     case 'nothing':
       return { kind: 'swallow' };
     default:
-      if (s.name === RESERVED_SCREENS.pause) return { kind: 'close' };
-      if (s.name === RESERVED_SCREENS.title) return { kind: 'swallow' };
+      if (roleOfScreen(s) === 'pause') return { kind: 'close' };
+      if (roleOfScreen(s) === 'title') return { kind: 'swallow' };
       return screenBlocksInput(s) ? { kind: 'previous' } : { kind: 'pass' };
   }
 }
@@ -90,14 +84,13 @@ export function backFromScreens(sim: Simulation): string {
 
 /**
  * Run the screens' part of one tick's buttons: Back on the screens, then the game's own keys (pause, inventory, map)
- * when no screen has the buttons. Returns `'builtin'` when a fixed menu is showing and should read the buttons
- * itself, `'done'` otherwise.
+ * when no screen has the buttons. Each key opens the screen that plays its role (Pause, Inventory, World map), which is
+ * the project's own or the one a plugin ships; with no such screen the key does nothing.
  */
-export function routeInput(h: RouterHost): 'builtin' | 'done' {
+export function routeInput(h: RouterHost): void {
   const sim = h.sim;
   const ui = sim.uiInput;
   const r = sim.runtime;
-  if (h.builtinOpen()) return 'builtin';
   const busy = Boolean(r.dialogue || r.cutscene || r.minigame);
 
   if (!busy && ui.pressed('pause')) {
@@ -106,23 +99,20 @@ export function routeInput(h: RouterHost): 'builtin' | 'done' {
   }
   sync(sim);
   // a screen that blocks input has the buttons: nothing else reacts, not even to a press it did not use
-  if (r.ui.blocking || busy) return 'done';
+  if (r.ui.blocking || busy) return;
 
   if (ui.pressed('pause') && h.pauseKeyOpensPause !== false) {
     ui.consume('pause');
-    if (openScreen(sim, RESERVED_SCREENS.pause)) note(sim, RESERVED_SCREENS.pause, 'opened "Pause"');
-    else {
-      h.openMenu('main');
-      note(sim, 'game', 'opened the built-in pause menu');
-    }
+    if (openRole(sim, 'pause')) note(sim, r.ui.stack[r.ui.stack.length - 1] ?? 'Pause', 'opened the Pause screen');
+    else note(sim, 'game', 'there is no Pause screen to open');
   } else if (ui.pressed('inventory')) {
     ui.consume('inventory');
-    h.openMenu('inventory');
+    openRole(sim, 'inventory');
   } else if (ui.pressed('map')) {
     ui.consume('map');
-    h.openMenu(sim.assets.worldMap && sim.assets.worldMap.nodes.length > 0 ? 'map' : 'travel');
+    // the world map when the project has one, otherwise the screen a plugin offers for travelling
+    if (!(sim.assets.worldMap && sim.assets.worldMap.nodes.length > 0 && openRole(sim, 'map'))) openRole(sim, 'travel');
   }
-  return h.builtinOpen() ? 'builtin' : 'done';
 }
 
 /** What Back does on a screen, in words (for the screens overlay and the designer). */

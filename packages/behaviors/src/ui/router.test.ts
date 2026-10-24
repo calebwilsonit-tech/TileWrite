@@ -32,7 +32,7 @@ function game(screens: UiScreen[]): { sim: Simulation; host: RouterHost; opened:
   const sim = new Simulation(1);
   sim.assets.ui = UiDocSchema.parse({ screens });
   const opened: string[] = [];
-  const host: RouterHost = { sim, builtinOpen: () => false, openMenu: (m) => opened.push(m) };
+  const host: RouterHost = { sim };
   return {
     sim,
     host,
@@ -70,7 +70,7 @@ describe('Back on the screens you made', () => {
     const doc = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../../../samples/ui-showcase/assets/screens.json'), 'utf8')) as unknown;
     const sim = new Simulation(1);
     sim.assets.ui = UiDocSchema.parse(doc);
-    const host: RouterHost = { sim, builtinOpen: () => false, openMenu: () => undefined };
+    const host: RouterHost = { sim };
     const step = (...a: string[]): void => {
       sim.step(Object.fromEntries(a.map((x) => [x, 1])));
       routeInput(host);

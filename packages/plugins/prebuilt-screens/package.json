@@ -9,9 +9,7 @@
   "dependencies": {
     "@tilewright/plugin-sdk": "*",
     "@tilewright/plugin-combat": "*",
-    "@tilewright/plugin-inventory": "*",
-    "@tilewright/plugin-story": "*",
-    "@tilewright/plugin-storytender": "*"
+    "@tilewright/plugin-story": "*"
   },
   "exports": {
     ".": "./src/index.ts"

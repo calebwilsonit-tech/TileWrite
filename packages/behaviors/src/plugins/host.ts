@@ -121,6 +121,8 @@ export interface PluginApi {
   screenRole(def: X.ScreenRoleDef): void;
   /** Rows for lists and grids in screens ("saves", "party members"...). */
   listSource(def: X.ListSourceDef): void;
+  /** A row in another screen's menu (the Pause menu's "menu:pause" list). */
+  menuEntry(def: X.MenuEntryDef): void;
 
   // --- the editor ---
   panel(def: EditorPanelDef): void;
@@ -214,6 +216,7 @@ const emptyExtensions = (): Extensions => ({
   screens: new Map(),
   screenRoles: new Map(),
   listSources: new Map(),
+  menuEntries: new Map(),
   inspectors: new Map(),
   exporters: new Map(),
   exportTargets: new Map(),
@@ -584,6 +587,9 @@ export class PluginHost {
       },
       screenRole(def) {
         host.add(rec, id, 'screenRoles', def.id, def);
+      },
+      menuEntry(def) {
+        host.add(rec, id, 'menuEntries', `${def.menu}:${def.id}`, def);
       },
       listSource(def) {
         host.add(rec, id, 'listSources', def.id, { ...def, rows: host.watched(id, `the list "${def.label}"`, def.rows.bind(def)) });

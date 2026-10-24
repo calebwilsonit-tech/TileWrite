@@ -53,7 +53,7 @@ import {
   cameraDirection,
   gravityFrame,
 } from '@tilewright/runtime';
-import { POINTER_BINDINGS, type CompatFlags } from '@tilewright/runtime';
+import { POINTER_BINDINGS, closeScreen, type CompatFlags } from '@tilewright/runtime';
 import { drawArrow, drawBox, drawCone, drawContact, drawFootprint, drawLightRadius, drawPath, drawWire, shapesOf, wireShapes } from './debug-draw';
 import { assetFs } from '../project/assetFs';
 import { joinPath } from '../project/api';
@@ -175,7 +175,7 @@ export class PlaySession {
     for (const m of o.minigames ?? []) sim.assets.minigames.set(m.name, m);
     sim.assets.worldMap = o.worldMap ?? null;
     for (const t of o.tables ?? []) sim.assets.tables.set(t.name, t);
-    sim.assets.ui = withPluginScreens(o.uiDoc ?? sim.assets.ui);
+    sim.assets.ui = withPluginScreens(o.uiDoc ?? sim.assets.ui, { layout: o.layout ?? null });
     this.saves = new SaveManager(
       {
         read: (p) => assetFs.read(p),
@@ -225,6 +225,8 @@ export class PlaySession {
       const post = host.ext.unlockRules.get(node.unlock.kind)?.arrival?.(sim.runtime.vars, node);
       if (post) this.hostObj.travelTo(post);
       else this.hostObj.travelToScene(node.scene, node.spawn);
+      // travelling ends the menus that led to it
+      for (const role of ['map', 'pause', 'title']) closeScreen(sim, `role:${role}`);
     });
     sim.events.on('travel-post-request', (e) => this.hostObj.travelTo({ scene: String(e.scene ?? ''), id: String(e.id ?? ''), name: String(e.name ?? ''), x: Number(e.x), y: Number(e.y), h: Number(e.h ?? 0) }));
     for (const e of host.ext.events.values()) if (e.autosave) sim.events.on(e.id, () => void this.saveTo('autosave'));
@@ -371,7 +373,7 @@ export class PlaySession {
     }
     if (live?.skins) this.skinsNow = live.skins;
     if (live?.layout) this.ui.setLayout(live.layout);
-    if (live?.uiDoc) sim.assets.ui = withPluginScreens(live.uiDoc);
+    if (live?.uiDoc) sim.assets.ui = withPluginScreens(live.uiDoc, { layout: this.o.layout ?? null });
     if (live?.input) this.useInput(live.input);
     this.applySkinToPlayer();
     return 'Reloaded the game with your changes.';
@@ -716,6 +718,8 @@ export class PlaySession {
       actionLabels: () => this.labels,
       changeSettings: (patch) => {
         this.setSettings({ ...this.settings, ...patch });
+        this.sim.runtime.difficulty = this.settings.difficulty;
+        if (patch.fullscreen !== undefined) this.o.setFullscreen?.(patch.fullscreen);
         this.applyFeelSettings();
         this.applyVolumes();
         this.applyLanguage();

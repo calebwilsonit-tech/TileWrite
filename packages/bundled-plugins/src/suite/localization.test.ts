@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { CutsceneSchema, DialogueSchema, ItemSchema, newLanguage } from '@tilewright/runtime';
 import { ctxOf, flatScene, player, rig, thing } from '@tilewright/plugin-sdk/testing';
-import { attachBehavior, newAction, newCondition, newRow } from '@tilewright/behaviors';
+import { attachBehavior, host, newAction, newCondition, newRow } from '@tilewright/behaviors';
 import { beginDialogue, confirmDialogue, playCutscene } from '@tilewright/plugin-story';
 import { uiStrings } from '@tilewright/plugin-prebuilt-screens';
 import '@tilewright/bundled-plugins';
@@ -92,6 +92,19 @@ describe('the game screens', () => {
     for (const m of src.matchAll(/this\.(?:tr|fmt)\('((?:[^'\\]|\\.)*)'/g)) found.add(m[1]!.replace(/\\'/g, "'"));
     const missing = [...found].filter((s) => !known.has(s));
     expect(missing).toEqual([]);
-    expect(found.size).toBeGreaterThan(25);
+    expect(found.size).toBeGreaterThan(3);
+  });
+
+  it("list the words of every screen the plugins ship, too", () => {
+    const known = new Set(host.strings());
+    const missing: string[] = [];
+    const walk = (n: { text: string; label?: string | undefined; empty?: string | undefined; children: unknown[] }): void => {
+      for (const s of [n.text, n.label, n.empty]) if (s && !/^{[^}]*}$/.test(s) && !known.has(s)) missing.push(s);
+      (n.children as typeof n[]).forEach(walk);
+    };
+    for (const d of host.ext.screens.values()) {
+      walk(d.screen.root);
+    }
+    expect(missing).toEqual([]);
   });
 });

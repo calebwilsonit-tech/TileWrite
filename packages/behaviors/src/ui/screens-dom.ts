@@ -1,6 +1,7 @@
-import { pictureOf, readPointer, type Simulation, type TransformIso, type UiNode, type UiStyle } from '@tilewright/runtime';
+import { parseRichText, pictureOf, readPointer, type Simulation, type TransformIso, type UiNode, type UiStyle } from '@tilewright/runtime';
 import {
   activateWidget,
+  adjustWidget,
   explicitNeighbour,
   focusables,
   hover,
@@ -50,6 +51,25 @@ export const SCREENS_CSS = `
 .tw-w .keyhint { margin-left: auto; padding-left: 12px; opacity: 0.85; }
 `;
 
+/** Words with inline formatting ([b], [i], [u], [s], [color=...]) as spans; text with none is set as plain text. Never parsed as HTML. */
+function setRichText(target: HTMLElement, text: string): void {
+  if (!text.includes('[')) {
+    target.textContent = text;
+    return;
+  }
+  target.replaceChildren(
+    ...parseRichText(text).map((s) => {
+      if (!s.bold && !s.italic && !s.underline && !s.strike && !s.color) return document.createTextNode(s.text);
+      const span = document.createElement(s.italic ? 'i' : 'span');
+      span.textContent = s.text;
+      if (s.bold) span.style.fontWeight = 'bold';
+      if (s.underline || s.strike) span.style.textDecoration = [s.underline ? 'underline' : '', s.strike ? 'line-through' : ''].filter(Boolean).join(' ');
+      if (s.color) span.style.color = s.color;
+      return span;
+    }),
+  );
+}
+
 type StyleKey = 'hover' | 'pressed' | 'disabled' | 'focus';
 
 function cssOf(s: UiStyle): Record<string, string> {
@@ -65,6 +85,10 @@ function cssOf(s: UiStyle): Record<string, string> {
   if (s.align !== undefined) out['text-align'] = s.align;
   if (s.opacity !== undefined) out.opacity = String(s.opacity);
   if (s.shadow) out['box-shadow'] = '0 3px 10px #0008';
+  if (s.scroll) out.overflow = 'auto';
+  if (s.maxH !== undefined) out['max-height'] = `${s.maxH}%`;
+  if (s.themeScale) out.zoom = `calc(${s.scale ?? 1} * var(--tw-scale, 1))`;
+  else if (s.scale !== undefined && s.scale !== 1) out.zoom = String(s.scale);
   return out;
 }
 
@@ -138,7 +162,8 @@ interface Live {
   /** Child elements go in here (the element itself, or a body inside it). */
   body: HTMLElement;
   parentKey: string | null;
-  shown: boolean;
+  /** Whether the element was last drawn as shown (null: not yet drawn, so the first frame decides). */
+  shown: boolean | null;
   hovering: boolean;
   pressing: boolean;
   applied: string[];
@@ -191,6 +216,20 @@ export class UiScreens {
     this.root.appendChild(this.worldRoot);
     parent.appendChild(this.root);
     this.root.appendChild(this.tooltip);
+  }
+
+  private readonly widgetCss = new Set<string>();
+  private widgetStyle: HTMLStyleElement | null = null;
+
+  /** Add a plugin widget's style rules to the page, once. */
+  private useWidgetCss(css: string | undefined): void {
+    if (!css || this.widgetCss.has(css)) return;
+    this.widgetCss.add(css);
+    if (!this.widgetStyle) {
+      this.widgetStyle = document.createElement('style');
+      this.root.appendChild(this.widgetStyle);
+    }
+    this.widgetStyle.textContent = [...this.widgetCss].join('\n');
   }
 
   /** The widget with this name or id, as the player sees it (for tests that click). */
@@ -330,8 +369,9 @@ export class UiScreens {
     el.setAttribute('data-testid', `tw-ui-${n.name}`);
     el.dataset.name = n.name;
     el.dataset.id = vn.key;
+    if (vn.key.includes('#')) el.dataset.rowId = vn.key.slice(vn.key.lastIndexOf('#') + 1);
     let body: HTMLElement = el;
-    const live: Live = { el, body, parentKey: null, shown: false, hovering: false, pressing: false, applied: [], signature: '' };
+    const live: Live = { el, body, parentKey: null, shown: null, hovering: false, pressing: false, applied: [], signature: '' };
     switch (n.type) {
       case 'text': {
         body = document.createElement('span');
@@ -598,7 +638,10 @@ export class UiScreens {
     const el = live.el;
     switch (n.type) {
       case 'text':
-        if (live.body.textContent !== vn.text) live.body.textContent = vn.text;
+        if (live.body.dataset.text !== vn.text) {
+          live.body.dataset.text = vn.text;
+          setRichText(live.body, vn.text);
+        }
         break;
       case 'button':
         if (el.dataset.text !== vn.text) {
@@ -615,13 +658,13 @@ export class UiScreens {
         break;
       }
       case 'keybind': {
-        const label = uiBridge(this.sim)?.bindingText?.(n.text) ?? '';
-        const sig = `${n.text}|${label}|${this.capturingKey === vn.key}`;
+        const label = uiBridge(this.sim)?.bindingText?.(vn.text) ?? '';
+        const sig = `${vn.text}|${vn.label}|${label}|${this.capturingKey === vn.key}`;
         if (el.dataset.text !== sig) {
           el.dataset.text = sig;
           el.replaceChildren();
           const name = document.createElement('span');
-          name.textContent = vn.text || n.text;
+          name.textContent = vn.label || vn.text;
           const hint = document.createElement('span');
           hint.className = 'keyhint';
           hint.textContent = this.capturingKey === vn.key && label === (el.dataset.was ?? label) ? 'press a key…' : label;
@@ -641,10 +684,10 @@ export class UiScreens {
       }
       case 'dropdown': {
         const sel = el.querySelector('select')!;
-        const sig = vn.options.join('|');
+        const sig = `${vn.options.join('|')}|${vn.optionLabels.join('|')}`;
         if (sel.dataset.sig !== sig) {
           sel.dataset.sig = sig;
-          sel.replaceChildren(...vn.options.map((o) => Object.assign(document.createElement('option'), { value: o, textContent: o })));
+          sel.replaceChildren(...vn.options.map((o, i) => Object.assign(document.createElement('option'), { value: o, textContent: vn.optionLabels[i] ?? o })));
         }
         if (sel.value !== vn.choice) sel.value = vn.choice;
         break;
@@ -695,12 +738,13 @@ export class UiScreens {
         // a kind of widget a plugin added: it fills the element in every frame, from the values the game has
         const def = host.ext.widgets.get(n.source);
         if (!def) {
-          el.textContent = `(the plugin widget "${n.source}" is not available)`;
+          el.textContent = this.design ? `(the plugin widget "${n.source}" is not available)` : '';
           break;
         }
+        this.useWidgetCss(def.css);
         const values: Record<string, string | number | boolean> = { ...this.sim.runtime.vars, 'time.seconds': this.sim.tick / 60 } as Record<string, string | number | boolean>;
         this.widgetCleanups.get(el)?.();
-        const stop = def.render(el, n, values);
+        const stop = def.render(el, n, values, { sim: this.sim, request: (event, data) => void this.sim.events.emit(event, data ?? {}) });
         if (typeof stop === 'function') this.widgetCleanups.set(el, stop);
         break;
       }
@@ -734,6 +778,7 @@ export class UiScreens {
         cur = named;
         break;
       }
+      if ((dir === 'left' || dir === 'right') && adjustWidget(this.sim, cur, dir === 'left' ? -1 : 1)) break;
       if (cur.node.type === 'slider' && (dir === 'left' || dir === 'right')) {
         setSlider(this.sim, cur, cur.value + (dir === 'left' ? -1 : 1) * cur.node.step);
         break;
