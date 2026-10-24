@@ -147,7 +147,19 @@
             "screen": "HUD>Title (modal)"
           },
           {
-            "tick": 640,
+            "tick": 660,
+            "player": {
+              "x": 16.5,
+              "y": 16.5,
+              "h": 0
+            },
+            "entities": 3,
+            "world": "84affb58511eac09",
+            "vars": "8fbaf52e37c5c1fa",
+            "screen": "HUD>Title (modal)"
+          },
+          {
+            "tick": 660,
             "player": {
               "x": 16.5,
               "y": 16.5,

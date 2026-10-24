@@ -147,7 +147,19 @@
             "screen": "HUD"
           },
           {
-            "tick": 640,
+            "tick": 660,
+            "player": {
+              "x": 29.5,
+              "y": 9.5,
+              "h": 0
+            },
+            "entities": 6,
+            "world": "69d78346a4a57800",
+            "vars": "1d39073d7a7df007",
+            "screen": "HUD"
+          },
+          {
+            "tick": 660,
             "player": {
               "x": 29.5,
               "y": 9.5,

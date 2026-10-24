@@ -35,6 +35,7 @@ export * from './story/director';
 export * from './story/inventory';
 export * from './story/context';
 export * from './ui/game-ui';
+export * from './ui/router';
 export * from './ui/screens-dom';
 export * from './scripting/script';
 export * from './scripting/loader';

@@ -76,8 +76,10 @@ export const KEY_SCRIPT: Step[] = [
   { hold: { dodge: 1, move_left: 1 }, ticks: 6 },
   { hold: { move_left: 1 }, ticks: 40 },
   { hold: { pause: 1 }, ticks: 2 },
-  { hold: {}, ticks: 30 },
+  { hold: {}, ticks: 10 },
+  { hold: { move_right: 1 }, ticks: 20 }, // walks only if nothing is paused
   { hold: { pause: 1 }, ticks: 2 },
+  { hold: { move_right: 1 }, ticks: 20 }, // and now the game goes on
   { hold: {}, ticks: 20 },
   { hold: { inventory: 1 }, ticks: 2 },
   { hold: {}, ticks: 20 },

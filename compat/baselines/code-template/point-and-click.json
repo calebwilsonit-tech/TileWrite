@@ -147,7 +147,19 @@
             "screen": ""
           },
           {
-            "tick": 640,
+            "tick": 660,
+            "player": {
+              "x": 4.5,
+              "y": 7.5,
+              "h": 0
+            },
+            "entities": 2,
+            "world": "e57ab89c9abfdee1",
+            "vars": "951d187927f70637",
+            "screen": ""
+          },
+          {
+            "tick": 660,
             "player": {
               "x": 4.5,
               "y": 7.5,

@@ -113,48 +113,60 @@
           {
             "tick": 480,
             "player": {
-              "x": 8.079,
-              "y": 16.606,
+              "x": 9.163,
+              "y": 15.475,
               "h": 0
             },
             "entities": 5,
-            "world": "99ad617ff4b849e4",
+            "world": "03f0d9be1a9ad5c5",
             "vars": "0e6bf79c0b086ece",
             "screen": ""
           },
           {
             "tick": 540,
             "player": {
-              "x": 7.136,
-              "y": 15.663,
+              "x": 9.918,
+              "y": 14.72,
               "h": 0
             },
             "entities": 5,
-            "world": "f3aa1c10c7535427",
+            "world": "b4369903dc76b6a1",
             "vars": "0e6bf79c0b086ece",
             "screen": ""
           },
           {
             "tick": 600,
             "player": {
-              "x": 5.251,
-              "y": 13.778,
+              "x": 7.089,
+              "y": 11.892,
               "h": 0
             },
             "entities": 5,
-            "world": "76e06aeb7a16b227",
+            "world": "6761ddbc88dfab1e",
             "vars": "0e6bf79c0b086ece",
             "screen": ""
           },
           {
-            "tick": 640,
+            "tick": 660,
             "player": {
-              "x": 5.251,
-              "y": 13.778,
+              "x": 7.089,
+              "y": 11.892,
               "h": 0
             },
             "entities": 5,
-            "world": "76e06aeb7a16b227",
+            "world": "6761ddbc88dfab1e",
+            "vars": "0e6bf79c0b086ece",
+            "screen": ""
+          },
+          {
+            "tick": 660,
+            "player": {
+              "x": 7.089,
+              "y": 11.892,
+              "h": 0
+            },
+            "entities": 5,
+            "world": "6761ddbc88dfab1e",
             "vars": "0e6bf79c0b086ece",
             "screen": ""
           }
@@ -262,7 +274,7 @@
         ],
         "error": ""
       },
-      "saveRoundTrip": "the player changed: {\"x\":5.2507780199037795,\"y\":13.777638892431785,\"h\":0,\"facing\":6,\"hp\":20} -> {\"x\":5.2507780199037795,\"y\":13.777638892431785,\"h\":0,\"facing\":6,\"hp\":null}"
+      "saveRoundTrip": "the player changed: {\"x\":7.089255650988788,\"y\":11.892020809267638,\"h\":0,\"facing\":6,\"hp\":20} -> {\"x\":7.089255650988788,\"y\":11.892020809267638,\"h\":0,\"facing\":6,\"hp\":null}"
     },
     "scenes/dungeon.scene.json": {
       "entities": 16,
@@ -370,48 +382,60 @@
           {
             "tick": 480,
             "player": {
-              "x": 3.372,
-              "y": 18.72,
+              "x": 4.503,
+              "y": 17.589,
               "h": 0
             },
             "entities": 16,
-            "world": "772ebf0039e31854",
+            "world": "c000f6a22fe11c46",
             "vars": "bf59737e6cd9cc98",
             "screen": ""
           },
           {
             "tick": 540,
             "player": {
-              "x": 2.429,
-              "y": 17.778,
+              "x": 5.258,
+              "y": 16.835,
               "h": 0
             },
             "entities": 16,
-            "world": "1671c1a17ba047f8",
+            "world": "a1b8355a5cc01c59",
             "vars": "bf59737e6cd9cc98",
             "screen": ""
           },
           {
             "tick": 600,
             "player": {
-              "x": 0.544,
-              "y": 15.892,
+              "x": 2.429,
+              "y": 14.006,
               "h": 0
             },
             "entities": 16,
-            "world": "a7e59e639da82e91",
+            "world": "96f8486e9ac7929b",
             "vars": "bf59737e6cd9cc98",
             "screen": ""
           },
           {
-            "tick": 640,
+            "tick": 660,
             "player": {
-              "x": 0.544,
-              "y": 15.892,
+              "x": 2.429,
+              "y": 14.006,
               "h": 0
             },
             "entities": 16,
-            "world": "e6378af9f32049b8",
+            "world": "e3717f2b964a6fa9",
+            "vars": "bf59737e6cd9cc98",
+            "screen": ""
+          },
+          {
+            "tick": 660,
+            "player": {
+              "x": 2.429,
+              "y": 14.006,
+              "h": 0
+            },
+            "entities": 16,
+            "world": "e3717f2b964a6fa9",
             "vars": "bf59737e6cd9cc98",
             "screen": ""
           }
@@ -519,7 +543,7 @@
         ],
         "error": ""
       },
-      "saveRoundTrip": "the player changed: {\"x\":0.5436712387172149,\"y\":15.891888168179628,\"h\":0,\"facing\":6,\"hp\":20} -> {\"x\":0.5436712387172149,\"y\":15.891888168179628,\"h\":0,\"facing\":6,\"hp\":null}"
+      "saveRoundTrip": "the player changed: {\"x\":2.4292893218813427,\"y\":14.006270085015482,\"h\":0,\"facing\":6,\"hp\":20} -> {\"x\":2.4292893218813427,\"y\":14.006270085015482,\"h\":0,\"facing\":6,\"hp\":null}"
     }
   },
   "scenarios": {},

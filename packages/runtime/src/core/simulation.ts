@@ -65,7 +65,16 @@ export interface SceneRuntime {
   /** The scene's logic graphs. */
   graphs: GraphData[];
   /** Interface screens that are open (the last is on top), and the page each tabs widget shows. */
-  ui: { stack: string[]; tabs: Record<string, string>; /** An open screen freezes the game. */ modal: boolean };
+  ui: {
+    stack: string[];
+    tabs: Record<string, string>;
+    /** An open screen freezes the game. */
+    modal: boolean;
+    /** An open screen has the game's buttons (walking, jumping), whether or not the game waits. */
+    blocking: boolean;
+    /** Who handled the last press of Back, for the screens overlay and the tests. */
+    last: { tick: number; action: string; by: string; result: string } | null;
+  };
   /** Rows of data tables the game has changed (an inventory, a deck): saved with the game and put back when it loads. */
   tableEdits: Record<string, TableRow[]>;
   /** Flags, counters, text, and (as `item:<id>`) the inventory. */
@@ -199,7 +208,7 @@ export function newSceneRuntime(): SceneRuntime {
     wires: [],
     sheet: [],
     graphs: [],
-    ui: { stack: [], tabs: {}, modal: false },
+    ui: { stack: [], tabs: {}, modal: false, blocking: false, last: null },
     tableEdits: {},
     vars: {},
     rowState: {},
@@ -272,7 +281,8 @@ export class Simulation {
     // The player's controls: nothing while something else has them, and a button held through the end of that
     // moment (the one that closed a conversation) stays ignored until it is released, so it cannot fire twice.
     let gameplay: ActionSnapshot = {};
-    if (modal !== 'none') {
+    // (a screen that blocks input but lets the game run, such as a shop window, takes the buttons without freezing the world)
+    if (modal !== 'none' || this.runtime.ui.blocking) {
       for (const k of Object.keys(snapshot)) if (!CONTINUOUS.test(k)) this.suppressed.add(k);
     } else {
       for (const k of [...this.suppressed]) if (!(k in snapshot)) this.suppressed.delete(k);

@@ -133,6 +133,8 @@ export interface ViewOptions {
   xray: boolean;
   /** Frame time and what is slow, while playing. */
   profiler: boolean;
+  /** Which interface screens are open and which one handled the last press of Back, while playing. */
+  screens: boolean;
   /** Wires between objects, lit while the game plays. */
   wires: boolean;
   ground: boolean;
@@ -244,7 +246,7 @@ const initial: AppState = {
     zFrom: 0,
     zTo: 3,
   },
-  view: { grid: true, collision: false, collisionLevel: null, heightLabels: false, triggers: false, ai: true, lights: false, depth: false, slice: 0, xray: false, profiler: false, wires: true, ground: true, walls: true, objects: true, decoration: true, lightsLayer: true, regions: true },
+  view: { grid: true, collision: false, collisionLevel: null, heightLabels: false, triggers: false, ai: true, lights: false, depth: false, slice: 0, xray: false, profiler: false, screens: false, wires: true, ground: true, walls: true, objects: true, decoration: true, lightsLayer: true, regions: true },
   locks: { ground: false, walls: false, objects: false, decoration: false, lightsLayer: false, regions: false },
   selection: [],
   selectedRegion: null,

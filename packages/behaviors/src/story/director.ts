@@ -91,7 +91,11 @@ export function dialogueSystem(ctx: SimContext): void {
     if (ui.pressed('move_up')) selectChoice(ctx, -1);
     if (ui.pressed('move_down')) selectChoice(ctx, 1);
   }
-  if (ui.pressed('interact') || ui.pressed('ui_confirm')) confirmDialogue(ctx);
+  if (ui.pressed('interact') || ui.pressed('ui_confirm')) {
+    ui.consume('interact');
+    ui.consume('ui_confirm');
+    confirmDialogue(ctx);
+  }
 }
 
 // ---------- minigames ----------
@@ -154,6 +158,8 @@ export function minigameSystem(ctx: SimContext): void {
     return;
   }
   const ui = ctx.uiInput;
+  const cancel = ui.pressed('pause');
+  if (cancel) ui.consume('pause'); // Back belongs to the minigame; it must not also open Pause when the minigame ends
   const outcome = stepMinigame(
     m,
     st,
@@ -163,7 +169,7 @@ export function minigameSystem(ctx: SimContext): void {
       up: ui.pressed('move_up'),
       down: ui.pressed('move_down'),
       confirm: ui.pressed('interact') || ui.pressed('ui_confirm'),
-      cancel: ui.pressed('pause'),
+      cancel,
     },
     ctx.dt,
     ctx.rng,
@@ -414,6 +420,7 @@ export function cutsceneSystem(ctx: SimContext): void {
     return;
   }
   if (data.skippable && ctx.uiInput.pressed('pause')) {
+    ctx.uiInput.consume('pause');
     skipRest(ctx, cs, data.steps);
   } else {
     stepEffects(ctx, cs);

@@ -11,11 +11,16 @@ A screen is a tree of widgets. **+ New screen** makes one. Under the picture:
 | Setting | Meaning |
 | --- | --- |
 | *The game waits while this screen is open* | menus freeze the world; a heads-up display does not |
+| *The game's own buttons stop, and Back belongs to this screen* | walking and jumping do nothing while it is open. Usually the same as the line above; turn only this one on for a shop window the world keeps moving behind |
+| *When the player presses Back* | what Esc (or the pad's B) does on this screen: **the usual** (close Pause, nothing on Title, go back from any other menu, ignore on a heads-up display), **go back to the screen before**, **close it and anything opened from it**, **go to a screen I choose**, or **nothing** (the screen keeps Back for itself) |
+| *Which screen gets the buttons first* | with several screens open, the higher number first; equal: the one opened last |
 | *Opens when the game starts* | the title screen, or a HUD that is always there |
 | *Darken the game behind it* | 0 to 1 |
 | *When it opens* | appears, fades in, slides up |
 
 Screens named **Title**, **Pause** and **Settings** replace the built-in title screen, pause menu and settings. Any other screen is opened by an action. The **Open or close an interface screen** action (also in Quick actions as *Open a screen*, *Close a screen*, *Go back one screen*) opens it, closes it, goes back to the screen underneath, or closes everything. Several screens can be open at once, the last on top.
+
+**One press, one screen.** The screen that handles a press of Back takes it: nothing under it reacts to the same press, so backing out of the inventory does not also open Pause, and closing Pause leaves it closed. (Before phase 3, Back from a screen you made could land on Pause, a Pause that did not freeze the game could not be closed with Back, and closing a Pause with a heads-up display open opened it again at once.) Switch on **Screens (while playing)** in the Layers panel to see the open screens, what Back does on each, and which one handled the last press.
 
 ## Widgets
 

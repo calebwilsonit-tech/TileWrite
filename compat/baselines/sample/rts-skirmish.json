@@ -105,7 +105,15 @@
             "screen": "HUD"
           },
           {
-            "tick": 640,
+            "tick": 660,
+            "player": null,
+            "entities": 14,
+            "world": "5e834e1cb84f0655",
+            "vars": "27e20ec840cfe6b6",
+            "screen": "HUD"
+          },
+          {
+            "tick": 660,
             "player": null,
             "entities": 14,
             "world": "5e834e1cb84f0655",

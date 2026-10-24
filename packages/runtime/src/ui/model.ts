@@ -163,8 +163,21 @@ export const UiScreenSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1),
   root: UiNodeSchema,
-  /** The game waits (is frozen) while this screen is open. */
+  /**
+   * The older single switch: the game waits and the buttons belong to this screen. `pauses` and `blocksInput` below
+   * say the two halves separately; when they are not set they follow this one (so projects made before they existed play as before).
+   */
   modal: z.boolean().default(false),
+  /** The game waits (is frozen) while this screen is open. Unset: follows `modal`. */
+  pauses: z.boolean().optional(),
+  /** The game's own buttons (walking, jumping) do nothing while this screen is open, and Back belongs to it. Unset: follows `modal`. */
+  blocksInput: z.boolean().optional(),
+  /** What the Back button (Esc, the pad's B) does on this screen. `auto`: close Pause, do nothing on Title, go to the previous screen on any other that blocks input, and let it pass on one that does not. */
+  back: z.enum(['auto', 'previous', 'close', 'screen', 'nothing']).default('auto'),
+  /** For `back: 'screen'`: the screen Back goes to. */
+  backTo: z.string().default(''),
+  /** When several screens are open the one with the higher number is offered the buttons first (equal: the one opened last). */
+  priority: z.number().int().default(0),
   /** How much the game behind it is dimmed (0 to 1). */
   dim: z.number().min(0).max(1).default(0),
   transition: z.enum(['none', 'fade', 'slide']).default('none'),
@@ -175,6 +188,11 @@ export const UiScreenSchema = z.object({
   opensOnStart: z.boolean().default(false),
 });
 export type UiScreen = z.infer<typeof UiScreenSchema>;
+
+/** Does the game wait while this screen is open? */
+export const screenPauses = (s: Pick<UiScreen, 'modal' | 'pauses'>): boolean => s.pauses ?? s.modal;
+/** Do the game's own buttons stop working, and does Back belong to this screen, while it is open? */
+export const screenBlocksInput = (s: Pick<UiScreen, 'modal' | 'blocksInput'>): boolean => s.blocksInput ?? s.modal;
 
 export const UiPrefabSchema = z.object({ name: z.string().regex(/^[A-Za-z][A-Za-z0-9 _-]{0,31}$/, 'Names use letters, numbers, spaces, - and _'), widget: UiNodeSchema });
 export type UiPrefab = z.infer<typeof UiPrefabSchema>;

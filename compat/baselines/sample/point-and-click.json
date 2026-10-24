@@ -147,7 +147,19 @@
             "screen": "Verbs"
           },
           {
-            "tick": 640,
+            "tick": 660,
+            "player": {
+              "x": 4.5,
+              "y": 7.5,
+              "h": 0
+            },
+            "entities": 6,
+            "world": "3a1b07ce870eebcc",
+            "vars": "951d187927f70637",
+            "screen": "Verbs"
+          },
+          {
+            "tick": 660,
             "player": {
               "x": 4.5,
               "y": 7.5,

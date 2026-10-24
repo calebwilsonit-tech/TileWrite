@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import type { UiDoc } from '@tilewright/runtime';
+import { screenBlocksInput, screenPauses, type UiDoc } from '@tilewright/runtime';
 import { flowEdges } from './ui-edit';
 import { designer, useDesigner } from './state';
 
@@ -78,7 +78,7 @@ export function FlowMap({ doc }: { doc: UiDoc }) {
               {s.name}
             </text>
             <text x={s.mapX + W / 2} y={s.mapY + 42} textAnchor="middle" fill="#aab" fontSize={11}>
-              {[s.opensOnStart ? 'opens first' : '', s.modal ? 'pauses the game' : ''].filter(Boolean).join(' · ')}
+              {[s.opensOnStart ? 'opens first' : '', screenPauses(s) ? 'pauses the game' : '', screenBlocksInput(s) && !screenPauses(s) ? 'takes the buttons' : ''].filter(Boolean).join(' · ')}
             </text>
             {s.opensOnStart && <circle cx={s.mapX - 8} cy={s.mapY + H / 2} r={6} fill="#6fe08a" />}
           </g>

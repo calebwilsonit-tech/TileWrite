@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { WIDGET_LABELS, WIDGET_TYPES, findWidget, type UiDoc, type UiNode, type UiScreen, type WidgetType } from '@tilewright/runtime';
+import { WIDGET_LABELS, WIDGET_TYPES, findWidget, screenBlocksInput, screenPauses, type UiDoc, type UiNode, type UiScreen, type WidgetType } from '@tilewright/runtime';
 import { autoFocus } from '@tilewright/behaviors';
 import { store, useApp } from '../app/store';
 import { useStudio } from '../studio/store';
@@ -56,12 +56,58 @@ function ScreenProps({ doc, screenId }: { doc: UiDoc; screenId: string }) {
         }}
       />
       {problem && <p className="hint warn">{problem}</p>}
-      <CheckField testId="ui-screen-modal" label="The game waits while this screen is open (menus)" value={s.modal} onChange={(v) => set((x) => (x.modal = v))} />
+      <CheckField
+        testId="ui-screen-modal"
+        label="The game waits while this screen is open (menus)"
+        value={screenPauses(s)}
+        onChange={(v) =>
+          set((x) => {
+            x.pauses = v;
+            // a screen that only has the older switch keeps both halves together, as it always did
+            if (x.blocksInput === undefined) x.modal = v;
+            else x.modal = v && x.blocksInput;
+          })
+        }
+      />
+      <CheckField
+        testId="ui-screen-blocks"
+        label="The game's own buttons (walking, jumping) stop, and Back belongs to this screen"
+        value={screenBlocksInput(s)}
+        onChange={(v) =>
+          set((x) => {
+            x.blocksInput = v;
+            x.modal = (x.pauses ?? x.modal) && v;
+          })
+        }
+      />
+      <SelectField<string>
+        testId="ui-screen-back"
+        label="When the player presses Back (Esc, the pad's B)"
+        value={s.back}
+        options={[
+          { value: 'auto', label: 'the usual: close Pause, go back from other menus, let a heads-up display ignore it' },
+          { value: 'previous', label: 'go back to the screen before it' },
+          { value: 'close', label: 'close it, and anything opened from it' },
+          { value: 'screen', label: 'go to a screen I choose' },
+          { value: 'nothing', label: 'nothing (the screen keeps Back for itself)' },
+        ]}
+        onChange={(v) => set((x) => (x.back = v as typeof x.back))}
+      />
+      {s.back === 'screen' && (
+        <SelectField<string>
+          testId="ui-screen-back-to"
+          label="Back goes to"
+          value={s.backTo}
+          options={[{ value: '', label: '(choose a screen)' }, ...doc.screens.filter((o) => o.id !== s.id).map((o) => ({ value: o.name, label: o.name }))]}
+          onChange={(v) => set((x) => (x.backTo = v))}
+        />
+      )}
+      <NumberField testId="ui-screen-priority" label="Which screen gets the buttons first when several are open (higher first; same: the one opened last)" min={-99} max={99} step={1} value={s.priority} onCommit={(v) => set((x) => (x.priority = Math.round(v)))} />
       <CheckField testId="ui-screen-start" label="Opens when the game starts (title screen, heads-up display)" value={s.opensOnStart} onChange={(v) => set((x) => (x.opensOnStart = v))} />
       <NumberField testId="ui-screen-dim" label="Darken the game behind it (0 to 1)" min={0} max={1} step={0.1} value={s.dim} onCommit={(v) => set((x) => (x.dim = v))} />
       <SelectField<string> testId="ui-screen-transition" label="When it opens" value={s.transition} options={[{ value: 'none', label: 'appears at once' }, { value: 'fade', label: 'fades in' }, { value: 'slide', label: 'slides up' }]} onChange={(v) => set((x) => (x.transition = v as typeof x.transition))} />
       <p className="hint">
-        Screens named <strong>Title</strong>, <strong>Pause</strong> or <strong>Settings</strong> replace the game's built-in ones.
+        Screens named <strong>Title</strong>, <strong>Pause</strong> or <strong>Settings</strong> replace the game's built-in ones. The pause button opens Pause; a screen's Back setting decides what it does once a screen is open. Turn on <em>Screens</em> in the Play menu to watch which screen handled the last press.
       </p>
     </fieldset>
   );

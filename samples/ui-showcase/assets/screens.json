@@ -452,11 +452,15 @@
         ]
       },
       "modal": true,
+      "back": "auto",
+      "backTo": "",
+      "priority": 0,
       "dim": 0,
       "transition": "none",
       "mapX": 40,
       "mapY": 40,
-      "opensOnStart": true
+      "opensOnStart": true,
+      "pauses": true
     },
     {
       "id": "s9",
@@ -880,11 +884,15 @@
         ]
       },
       "modal": true,
+      "back": "auto",
+      "backTo": "",
+      "priority": 0,
       "dim": 0,
       "transition": "none",
       "mapX": 260,
       "mapY": 40,
-      "opensOnStart": false
+      "opensOnStart": false,
+      "pauses": true
     },
     {
       "id": "s18",
@@ -1266,11 +1274,15 @@
         ]
       },
       "modal": true,
+      "back": "auto",
+      "backTo": "",
+      "priority": 0,
       "dim": 0,
       "transition": "none",
       "mapX": 480,
       "mapY": 40,
-      "opensOnStart": false
+      "opensOnStart": false,
+      "pauses": true
     },
     {
       "id": "s25",
@@ -1550,11 +1562,15 @@
         ]
       },
       "modal": true,
+      "back": "auto",
+      "backTo": "",
+      "priority": 0,
       "dim": 0,
       "transition": "none",
       "mapX": 40,
       "mapY": 170,
-      "opensOnStart": false
+      "opensOnStart": false,
+      "pauses": true
     },
     {
       "id": "s34",
@@ -1838,6 +1854,9 @@
         ]
       },
       "modal": false,
+      "back": "auto",
+      "backTo": "",
+      "priority": 0,
       "dim": 0,
       "transition": "none",
       "mapX": 260,

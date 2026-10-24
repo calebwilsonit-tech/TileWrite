@@ -50,6 +50,7 @@ import {
 } from '@tilewright/runtime';
 import {
   GameUi,
+  describeScreens,
   addStandardSystems,
   beginDialogue,
   beginMinigame,
@@ -95,7 +96,7 @@ export interface PlayOptions {
   onLogicBreak?(text: string): void;
   autoPlay: { cutscene?: string; dialogue?: string; minigame?: string } | null;
   /** Which debugging aids are on right now (read every frame). */
-  flags: () => { ai: boolean; triggers: boolean; lights: boolean; depth: boolean; profiler: boolean; wires?: boolean };
+  flags: () => { ai: boolean; triggers: boolean; lights: boolean; depth: boolean; profiler: boolean; screens?: boolean; wires?: boolean };
   /** Record the buttons pressed, to save as a playthrough. */
   record: boolean;
   /** Switch the window to or from full screen (only a game in its own window can). */
@@ -551,6 +552,7 @@ export class PlaySession {
   private lastStats = 0;
   private fps = 0;
   private profilerEl: HTMLElement | null = null;
+  private screensEl: HTMLElement | null = null;
 
   private drawDebug(): void {
     const flags = this.o.flags();
@@ -591,6 +593,7 @@ export class PlaySession {
     }
     this.debugLayer.visible = flags.ai || flags.triggers || flags.lights || (flags.wires !== false && (sim.runtime.wires.length > 0 || this.nodeCount > 0));
 
+    this.drawScreensOverlay(flags.screens === true);
     // profiler: switched on only while it is shown
     sim.profiler.enabled = flags.profiler;
     this.frames++;
@@ -606,6 +609,22 @@ export class PlaySession {
         this.profilerEl = null;
       }
     }
+  }
+
+  /** The screen stack, as the game sees it: what is open, what Back does on each, and who handled the last press. */
+  private drawScreensOverlay(on: boolean): void {
+    if (!on) {
+      this.screensEl?.remove();
+      this.screensEl = null;
+      return;
+    }
+    if (!this.screensEl) {
+      this.screensEl = document.createElement('div');
+      this.screensEl.setAttribute('data-testid', 'tw-screens-overlay');
+      Object.assign(this.screensEl.style, { position: 'absolute', left: '10px', top: '34px', background: '#0b0c10dd', color: '#9fd0ff', font: '12px/1.4 monospace', padding: '8px 10px', borderRadius: '6px', pointerEvents: 'none', whiteSpace: 'pre', zIndex: '5', maxWidth: '60%' });
+      this.o.uiParent.appendChild(this.screensEl);
+    }
+    this.screensEl.textContent = describeScreens(this.sim);
   }
 
   private showProfile(): void {

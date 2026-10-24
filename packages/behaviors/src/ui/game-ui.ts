@@ -20,12 +20,9 @@ import {
   type GameSettings,
   RESERVED_SCREENS,
   compositeFrame,
-  backScreen,
-  closeScreen,
   openScreen,
   openStartScreens,
   screenNamed,
-  topScreen,
   type InputMapDef,
   type SlotInfo,
   type Simulation,
@@ -36,6 +33,7 @@ import { contextOf } from '../story/context';
 import { confirmDialogue, selectChoice } from '../story/director';
 import { useItem } from '../story/inventory';
 import { MINIGAME_CSS, MINIGAME_STRINGS, MinigameView } from './minigame-ui';
+import { routeInput } from './router';
 import { SCREENS_CSS, UiScreens } from './screens-dom';
 import { setUiBridge } from './screens-logic';
 
@@ -64,6 +62,8 @@ export interface GameUiHost {
   fullscreen?: { get(): boolean; set(on: boolean): void };
   /** A sprite's first picture as an image address, for image widgets. */
   spriteUrl?(name: string): string | null;
+  /** Does the pause button open Pause by itself? False when the project has its own rule for it. Default: yes. */
+  pauseKeyOpensPause?(): boolean;
 }
 
 /**
@@ -505,27 +505,10 @@ export class GameUi {
   private handleInput(): void {
     const sim = this.host.sim;
     const ui = sim.uiInput;
-    // screens from the designer: the pause key opens Pause, or goes back from the screen on top
-    const stack = sim.runtime.ui.stack;
-    if (stack.length > 0 || this.hasScreen(RESERVED_SCREENS.pause)) {
-      if (this.builtinOpen) return;
-      const top = topScreen(sim);
-      if (ui.pressed('pause') && !sim.runtime.dialogue && !sim.runtime.cutscene && !sim.runtime.minigame) {
-        if (top?.modal && this.titleInfo === null) {
-          if (top.name === RESERVED_SCREENS.pause) closeScreen(sim, top.name);
-          else backScreen(sim);
-        } else if (!top?.modal && this.hasScreen(RESERVED_SCREENS.pause)) openScreen(sim, RESERVED_SCREENS.pause);
-        else if (!top?.modal) this.openMenu('main');
-      }
-      if (stack.length > 0 && sim.runtime.ui.modal) return;
-    }
-    if (!this.builtinOpen) {
-      if (sim.runtime.dialogue || sim.runtime.cutscene || sim.runtime.minigame) return;
-      if (ui.pressed('pause')) this.openMenu('main');
-      else if (ui.pressed('inventory')) this.openMenu('inventory');
-      else if (ui.pressed('map')) this.openMenu(sim.assets.worldMap && sim.assets.worldMap.nodes.length > 0 ? 'map' : 'travel');
-      return;
-    }
+    // Back, and the keys that open Pause, the inventory and the map, are decided in one place (see router.ts); a press
+    // that something handled is taken, so nothing below sees it again this tick
+    const routed = routeInput({ sim, builtinOpen: () => this.builtinOpen, openMenu: (m) => this.openMenu(m), pauseKeyOpensPause: this.host.pauseKeyOpensPause?.() ?? true });
+    if (routed === 'done') return;
     if (this.capturing) return; // waiting for a key to bind
     if (this.screen === 'map') {
       const dir = ui.pressed('move_left') ? 'left' : ui.pressed('move_right') ? 'right' : ui.pressed('move_up') ? 'up' : ui.pressed('move_down') ? 'down' : null;
@@ -537,7 +520,10 @@ export class GameUi {
         if (at >= 0) this.focus = at;
       }
       if (ui.pressed('interact')) this.rows[this.focus]?.run?.();
-      if (ui.pressed('pause')) this.back();
+      if (ui.pressed('pause')) {
+        ui.consume('pause');
+        this.back();
+      }
       return;
     }
     if (ui.pressed('move_up')) this.focus = (this.focus - 1 + this.rows.length) % Math.max(1, this.rows.length);
@@ -545,7 +531,10 @@ export class GameUi {
     if (ui.pressed('move_left')) this.rows[this.focus]?.adjust?.(-1);
     if (ui.pressed('move_right')) this.rows[this.focus]?.adjust?.(1);
     if (ui.pressed('interact')) this.rows[this.focus]?.run?.();
-    if (ui.pressed('pause')) this.back();
+    if (ui.pressed('pause')) {
+      ui.consume('pause');
+      this.back();
+    }
   }
 
   /** The places of the world map the player can see and pick (open ones, and the one they are standing in). */

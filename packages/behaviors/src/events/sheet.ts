@@ -865,6 +865,7 @@ export const ACTIONS: ActionDef[] = [
         case 'closeAll':
           ctx.runtime.ui.stack = [];
           ctx.runtime.ui.modal = false;
+          ctx.runtime.ui.blocking = false;
           return;
         default:
           if (!openScreen(host, str(p, 'screen'))) ctx.events.emit('problem', { text: `The screen "${str(p, 'screen')}" does not exist.` });

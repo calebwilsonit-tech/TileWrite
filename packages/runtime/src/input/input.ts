@@ -41,15 +41,30 @@ export class InputMap {
 export class InputState {
   private cur: ActionSnapshot = {};
   private prev: ActionSnapshot = {};
+  private readonly taken = new Set<string>();
 
   /** Call once at the start of every simulation tick. */
   update(snapshot: ActionSnapshot): void {
     this.prev = this.cur;
     this.cur = snapshot;
+    this.taken.clear();
+  }
+
+  /**
+   * Whatever handled this press says so: for the rest of this tick nothing else sees the action as pressed, held or
+   * released, so one Esc cannot close a screen and then also open the next. The next tick starts clean.
+   */
+  consume(action: string): void {
+    this.taken.add(action);
+  }
+
+  /** Has something already handled this action this tick? */
+  consumed(action: string): boolean {
+    return this.taken.has(action);
   }
 
   value(action: string): number {
-    return this.cur[action] ?? 0;
+    return this.taken.has(action) ? 0 : (this.cur[action] ?? 0);
   }
 
   down(action: string): boolean {
@@ -63,7 +78,7 @@ export class InputState {
 
   /** True only on the tick the action went up. */
   released(action: string): boolean {
-    return !this.down(action) && (this.prev[action] ?? 0) > 0;
+    return !this.taken.has(action) && !this.down(action) && (this.prev[action] ?? 0) > 0;
   }
 
   /** -1..1 from a negative/positive action pair. */

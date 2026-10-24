@@ -21,7 +21,7 @@ import {
   type TileSet,
   type UiDoc,
 } from '@tilewright/runtime';
-import { addStandardSystems, contextOf, placeAtSpawn, resolveRef } from '@tilewright/behaviors';
+import { addStandardSystems, contextOf, placeAtSpawn, resolveRef, routeInput } from '@tilewright/behaviors';
 
 export interface GameSetup {
   scene: SceneData;
@@ -103,6 +103,8 @@ export class Game {
 
   step(actions: Record<string, number> = {}): void {
     this.sim.step(actions);
+    // the game's interface takes its share of the buttons, as it does in Play (Back, and the keys that open Pause)
+    routeInput({ sim: this.sim, builtinOpen: () => false, openMenu: () => undefined });
     const travel = this.sim.runtime.travel;
     if (travel?.fresh) {
       // a new run: the same scene again, nothing carried over

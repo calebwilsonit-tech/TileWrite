@@ -161,48 +161,60 @@
           {
             "tick": 480,
             "player": {
-              "x": 18.763,
-              "y": 17.066,
+              "x": 19.894,
+              "y": 15.934,
               "h": 0
             },
             "entities": 1,
-            "world": "489c8ba2eb20953f",
+            "world": "4d9c1691fb536439",
             "vars": "0e6bf79c0b086ece",
             "screen": ""
           },
           {
             "tick": 540,
             "player": {
-              "x": 17.82,
-              "y": 16.123,
+              "x": 20.648,
+              "y": 15.18,
               "h": 0
             },
             "entities": 1,
-            "world": "98e357618fddd2d3",
+            "world": "a68edc7a7a4fc021",
             "vars": "0e6bf79c0b086ece",
             "screen": ""
           },
           {
             "tick": 600,
             "player": {
-              "x": 15.934,
-              "y": 14.237,
+              "x": 17.82,
+              "y": 12.352,
               "h": 0
             },
             "entities": 1,
-            "world": "489d88a2423f2c43",
+            "world": "282b7f9b24cca523",
             "vars": "0e6bf79c0b086ece",
             "screen": ""
           },
           {
-            "tick": 640,
+            "tick": 660,
             "player": {
-              "x": 15.934,
-              "y": 14.237,
+              "x": 17.82,
+              "y": 12.352,
               "h": 0
             },
             "entities": 1,
-            "world": "489d88a2423f2c43",
+            "world": "282b7f9b24cca523",
+            "vars": "0e6bf79c0b086ece",
+            "screen": ""
+          },
+          {
+            "tick": 660,
+            "player": {
+              "x": 17.82,
+              "y": 12.352,
+              "h": 0
+            },
+            "entities": 1,
+            "world": "282b7f9b24cca523",
             "vars": "0e6bf79c0b086ece",
             "screen": ""
           }

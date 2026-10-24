@@ -1,7 +1,7 @@
 import type { Assets, SceneRuntime } from '../core/simulation';
 import { evalValue } from '../data/expr';
 import type { ValueSource } from '../data/values';
-import type { UiScreen } from './model';
+import { screenBlocksInput, screenPauses, type UiScreen } from './model';
 
 /** Which interface screens are open, and the yes/no questions widgets ask ("visible when gold >= 10"). Plain data and plain functions, so the game, the playbot and the tests share them. */
 
@@ -9,8 +9,11 @@ type Host = { runtime: SceneRuntime; assets: Assets };
 
 export const screenNamed = (assets: Assets, name: string): UiScreen | undefined => assets.ui.screens.find((s) => s.name === name || s.id === name);
 
-function sync(h: Host): void {
-  h.runtime.ui.modal = h.runtime.ui.stack.some((n) => screenNamed(h.assets, n)?.modal === true);
+/** Work out from the open screens whether the game waits and whether the game's own buttons are off. */
+export function sync(h: Host): void {
+  const open = h.runtime.ui.stack.map((n) => screenNamed(h.assets, n));
+  h.runtime.ui.modal = open.some((s) => s !== undefined && screenPauses(s));
+  h.runtime.ui.blocking = open.some((s) => s !== undefined && screenBlocksInput(s));
 }
 
 /** Open a screen on top of the others. False when there is no screen by that name. */
@@ -50,7 +53,7 @@ export function openStartScreens(h: Host): void {
   h.runtime.ui.stack = [];
   // a heads-up display goes underneath, and a modal screen (the title) on top, whatever order they were made in
   const start = h.assets.ui.screens.filter((s) => s.opensOnStart);
-  for (const s of [...start.filter((x) => !x.modal), ...start.filter((x) => x.modal)]) h.runtime.ui.stack.push(s.name);
+  for (const s of [...start.filter((x) => !screenBlocksInput(x)), ...start.filter((x) => screenBlocksInput(x))]) h.runtime.ui.stack.push(s.name);
   sync(h);
 }
 

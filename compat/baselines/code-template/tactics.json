@@ -105,7 +105,15 @@
             "screen": ""
           },
           {
-            "tick": 640,
+            "tick": 660,
+            "player": null,
+            "entities": 5,
+            "world": "4936ced004ccd429",
+            "vars": "59d3d313f3cad30a",
+            "screen": ""
+          },
+          {
+            "tick": 660,
             "player": null,
             "entities": 5,
             "world": "4936ced004ccd429",

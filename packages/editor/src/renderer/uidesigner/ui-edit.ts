@@ -53,7 +53,7 @@ export function addScreen(doc: UiDoc, name: string): { doc: UiDoc; id: string } 
   const root = { ...newWidget('panel', rootId, `${name} root`), anchor: 'fill' as UiAnchor, layout: 'free' as const, style: {}, padding: 0 };
   const col = next.screens.length % 3;
   const row = Math.floor(next.screens.length / 3);
-  next.screens.push({ id, name, root, modal: false, dim: 0, transition: 'none', mapX: 40 + col * 220, mapY: 40 + row * 130, opensOnStart: false });
+  next.screens.push({ id, name, root, modal: false, back: 'auto', backTo: '', priority: 0, dim: 0, transition: 'none', mapX: 40 + col * 220, mapY: 40 + row * 130, opensOnStart: false });
   return { doc: next, id };
 }
 
@@ -206,7 +206,7 @@ export function prefabScreen(doc: UiDoc, name: string): UiScreen | null {
   const p = doc.prefabs.find((x) => x.name === name);
   if (!p) return null;
   const root = { ...newWidget('panel', `prefab-root-${name}`, 'Preview'), anchor: 'fill' as UiAnchor, layout: 'free' as const, style: {}, padding: 0, children: [{ ...structuredClone(p.widget), anchor: 'c' as UiAnchor, x: 0, y: 0 }] };
-  return { id: name, name: `(prefab ${name})`, root, modal: false, dim: 0, transition: 'none', mapX: 0, mapY: 0, opensOnStart: false };
+  return { id: name, name: `(prefab ${name})`, root, modal: false, back: 'auto', backTo: '', priority: 0, dim: 0, transition: 'none', mapX: 0, mapY: 0, opensOnStart: false };
 }
 
 /** The screen being designed: the chosen one (the first when none is chosen), or the prefab being edited. */

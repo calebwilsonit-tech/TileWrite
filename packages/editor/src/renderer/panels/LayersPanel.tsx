@@ -130,7 +130,15 @@ export function LayersPanel() {
             <span>Speed meter (while playing)</span>
           </label>
           <small>frames per second, time per step, what is slowest</small>
-        </li>      </ul>
+        </li>
+        <li>
+          <label>
+            <input data-testid="view-screens" type="checkbox" checked={view.screens} onChange={(e) => store.setView({ screens: e.target.checked })} />
+            <span>Screens (while playing)</span>
+          </label>
+          <small>which interface screens are open, what each does with Back, and which one handled the last press</small>
+        </li>
+      </ul>
     </div>
   );
 }
