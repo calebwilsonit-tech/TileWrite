@@ -1,6 +1,6 @@
 import { MINIGAME_CSS, MINIGAME_STRINGS, MinigameView } from './minigame-ui';
 import {
-  ACTION_LABELS,
+  activeActionLabels,
   availableSkins,
   completeLayout,
   defaultUiLayout,
@@ -86,7 +86,7 @@ export const UI_STRINGS: readonly string[] = [
 ];
 
 /** Every fixed text of the game's screens, including the names of the controls. */
-export const uiStrings = (): string[] => [...new Set([...UI_STRINGS, ...Object.values(ACTION_LABELS)])];
+export const uiStrings = (): string[] => [...new Set([...UI_STRINGS, ...Object.values(activeActionLabels())])];
 
 /** What the title screen shows (the game's name and a line under it). */
 export interface TitleInfo {
@@ -918,7 +918,7 @@ export class GameUi {
       case 'controls': {
         title = 'Controls';
         const b = h.bindings();
-        const labels = h.actionLabels?.() ?? ACTION_LABELS;
+        const labels = h.actionLabels?.() ?? activeActionLabels();
         for (const action of Object.keys(labels)) {
           rows.push({
             label: labels[action]!,

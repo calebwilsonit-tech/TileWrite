@@ -12,7 +12,7 @@ import {
   newRow,
   type ParamSpec,
 } from '@tilewright/behaviors';
-import { DEFAULT_INPUT_MAP, type EventRow } from '@tilewright/runtime';
+import { activeInputMap, type EventRow } from '@tilewright/runtime';
 import { store, useApp } from '../app/store';
 import { knownVariables } from '../app/known-variables';
 import { madeVariables } from '../model/story-vars';
@@ -111,7 +111,7 @@ export function ParamEditor({ spec, value, onChange, testId, facts, inLoop }: { 
       // the built-in buttons, and the ones this project made up (Project settings -> Controls)
       const own = store.input.actions.map((c) => ({ value: c.id, label: `${c.label} (${c.id})` }));
       const v = String(value ?? '');
-      const known = [...Object.keys(DEFAULT_INPUT_MAP).map((a) => ({ value: a, label: a })), ...own];
+      const known = [...Object.keys(activeInputMap()).map((a) => ({ value: a, label: a })), ...own];
       if (v && !known.some((k) => k.value === v)) known.push({ value: v, label: `${v} (not a button of this game)` });
       return <SelectField<string> testId={testId} label={spec.label} value={v} options={known} onChange={onChange} />;
     }

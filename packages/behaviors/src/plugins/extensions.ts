@@ -28,7 +28,14 @@ export interface ComponentDef {
 /** An event a plugin announces, so Quick Actions and scripts can list it ("a wave is beaten"). */
 export interface EventDef {
   id: string;
+  /** In the "something happens in the game" picker: "something is hurt". */
   label: string;
+  /** How a row reads, when it differs from the label. */
+  text?: string;
+  /** In the "something happens to an object" picker: "is hurt". Left out when the event is not about one object. */
+  entityLabel?: string;
+  /** How a row about one object reads, when it differs from the entity label. */
+  entityText?: string;
   /** What the event carries, as a short note for the picker. */
   carries?: string;
 }

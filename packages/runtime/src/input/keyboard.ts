@@ -181,7 +181,7 @@ export class DomInputSource {
   }
 }
 
-/** Default bindings used by new projects and the samples (keyboard, mouse and a standard gamepad). */
+/** The default bindings of the buttons every game has (keyboard, mouse and a standard gamepad). Plugins add the buttons of their own kind of game. */
 export const DEFAULT_INPUT_MAP = {
   move_left: ['key:KeyA', 'key:ArrowLeft', 'pad:axis0-', 'pad:button14'],
   move_right: ['key:KeyD', 'key:ArrowRight', 'pad:axis0+', 'pad:button15'],
@@ -189,20 +189,11 @@ export const DEFAULT_INPUT_MAP = {
   move_down: ['key:KeyS', 'key:ArrowDown', 'pad:axis1+', 'pad:button13'],
   run: ['key:ShiftLeft', 'key:ShiftRight', 'pad:button5'],
   interact: ['key:KeyE', 'key:Enter', 'pad:button0'],
-  attack: ['key:KeyJ', 'mouse:0', 'pad:button2'],
   jump: ['key:Space', 'pad:button1'],
-  dodge: ['key:KeyQ', 'pad:button3'],
-  echo: ['key:KeyR', 'pad:button4'],
   pause: ['key:Escape', 'key:KeyP', 'pad:button9'],
-  inventory: ['key:KeyI', 'pad:button8'],
-  map: ['key:KeyM'],
-  quick_1: ['key:Digit1'],
-  quick_2: ['key:Digit2'],
-  quick_3: ['key:Digit3'],
-  quick_4: ['key:Digit4'],
 };
 
-/** The buttons every game has; packs add the others (attack, dodge, echo, quick slots...). */
+/** The buttons every game has; plugins add the others. */
 export const CORE_ACTIONS = ['move_left', 'move_right', 'move_up', 'move_down', 'run', 'interact', 'jump', 'pause'] as const;
 
 /** The bindings and names of the actions a project has: the core ones plus what its packs added. */
@@ -220,7 +211,7 @@ export function baseInput(extra: Record<string, { label: string; bindings: strin
   return { map, labels };
 }
 
-/** Plain-English names for the actions, for the controls screen. */
+/** Plain-English names for the buttons every game has, for the controls screen. */
 export const ACTION_LABELS: Record<string, string> = {
   move_left: 'Move left',
   move_right: 'Move right',
@@ -228,18 +219,26 @@ export const ACTION_LABELS: Record<string, string> = {
   move_down: 'Move down',
   run: 'Run',
   interact: 'Interact / talk / confirm',
-  attack: 'Attack (quill)',
   jump: 'Jump',
-  dodge: 'Dodge',
-  echo: 'Record an echo',
   pause: 'Pause menu',
-  inventory: 'Inventory',
-  map: 'Travel map',
-  quick_1: 'Quick slot 1',
-  quick_2: 'Quick slot 2',
-  quick_3: 'Quick slot 3',
-  quick_4: 'Quick slot 4',
 };
+
+let extraActions: Record<string, { label: string; bindings: string[] }> = {};
+
+/** The buttons the plugins that are on have added (called by the plugin host whenever plugins are turned on or off). */
+export function setExtraInputActions(extra: Record<string, { label: string; bindings: string[] }>): void {
+  extraActions = { ...extra };
+}
+
+/** Every button this game has right now: the core ones and those the plugins added, with the keys a new player starts with. */
+export function activeInputMap(): Record<string, string[]> {
+  return baseInput(extraActions).map;
+}
+
+/** The names of every button this game has right now. */
+export function activeActionLabels(): Record<string, string> {
+  return baseInput(extraActions).labels;
+}
 
 /** A binding id in words: "key:KeyE" -> "E", "pad:button0" -> "Gamepad A". */
 export function bindingLabel(id: string): string {

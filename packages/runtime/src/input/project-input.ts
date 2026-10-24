@@ -2,7 +2,7 @@ import { z } from 'zod';
 import '../project/schema'; // sets up Zod before the schemas below are built
 import { CURRENT_SCHEMA_VERSION } from '../project/schema';
 import type { InputMapDef } from './input';
-import { ACTION_LABELS, DEFAULT_INPUT_MAP } from './keyboard';
+import { activeActionLabels, activeInputMap } from './keyboard';
 
 /**
  * The game's own controls, kept in `assets/input.json`: which keys and buttons the built-in actions start with, and
@@ -33,7 +33,7 @@ export const emptyProjectInput = (): ProjectInput => ProjectInputSchema.parse({}
 export const REQUIRED_ACTIONS = ['move_left', 'move_right', 'move_up', 'move_down', 'interact', 'pause'] as const;
 
 /** The bindings a new player starts with: the built-in ones, this game's changes, then its own actions. */
-export function projectDefaults(p: ProjectInput | null | undefined, base: InputMapDef = DEFAULT_INPUT_MAP): InputMapDef {
+export function projectDefaults(p: ProjectInput | null | undefined, base: InputMapDef = activeInputMap()): InputMapDef {
   const out: InputMapDef = { ...base };
   if (!p) return out;
   for (const [a, list] of Object.entries(p.overrides)) if (a in base) out[a] = [...list];
@@ -42,14 +42,14 @@ export function projectDefaults(p: ProjectInput | null | undefined, base: InputM
 }
 
 /** Plain-English names for every action, the game's own included. */
-export function projectActionLabels(p: ProjectInput | null | undefined, labels: Record<string, string> = ACTION_LABELS): Record<string, string> {
+export function projectActionLabels(p: ProjectInput | null | undefined, labels: Record<string, string> = activeActionLabels()): Record<string, string> {
   const out: Record<string, string> = { ...labels };
   for (const c of p?.actions ?? []) out[c.id] = c.label;
   return out;
 }
 
 /** Mistakes in the controls, in plain English. */
-export function checkProjectInput(p: ProjectInput, base: { map: InputMapDef; labels: Record<string, string> } = { map: DEFAULT_INPUT_MAP, labels: ACTION_LABELS }): string[] {
+export function checkProjectInput(p: ProjectInput, base: { map: InputMapDef; labels: Record<string, string> } = { map: activeInputMap(), labels: activeActionLabels() }): string[] {
   const out: string[] = [];
   const seen = new Set<string>();
   for (const c of p.actions) {

@@ -21,8 +21,8 @@ describe('the game\'s own controls', () => {
 
   it('explain what is wrong in plain English', () => {
     const p = ProjectInputSchema.parse({
-      overrides: { interact: [], ghost: ['key:KeyG'], dodge: ['key:KeyX'] },
-      actions: [{ id: 'jump', label: 'Hop', bindings: [] }, { id: 'lantern', label: 'Lantern', bindings: ['key:KeyX'] }, { id: 'dash', label: 'Dash', bindings: ['key:KeyZ'] }, { id: 'dash', label: 'Dash 2', bindings: ['key:KeyY'] }],
+      overrides: { interact: [], ghost: ['key:KeyG'], run: ['key:KeyX'] },
+      actions: [{ id: 'jump', label: 'Hop', bindings: [] }, { id: 'lamp', label: 'Lamp', bindings: ['key:KeyX'] }, { id: 'dash', label: 'Dash', bindings: ['key:KeyZ'] }, { id: 'dash', label: 'Dash 2', bindings: ['key:KeyY'] }],
     });
     const problems = checkProjectInput(p).join('\n');
     expect(problems).toContain('already one of the built-in actions');

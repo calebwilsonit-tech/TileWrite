@@ -74,7 +74,7 @@ Id: `onEvent`.
 
 | Parameter | Key | Kind | Starts as | Choices and notes |
 | --- | --- | --- | --- | --- |
-| What happens | `name` | select | "pickup" | `pickup`, `pushed`, `landed`, `gravity-changed`, `block-placed`, `block-broken`, `fell`, `floor-fell`, `projectile-hit`, `spawned`, `anim-event`, `damaged`, `died`, `attack`, `dodge`, `noticed`, `lost`, `state-changed`, `boss-phase`, `boss-defeated`, `echo-made`, `sentence-changed`, `text-formatted`, `dialogue-started`, `dialogue-ended`, `minigame-started`, `minigame-ended`, `cutscene-started`, `cutscene-ended`, `lantern-lit`, `rested`, `item-given`, `portal`, `battle-started`, `turn-start`, `turn-end`, `round-start`, `battle-won`, `unit-moved`, `unit-attacked`, `building-placed`, `orders-given`, `click-move`, `hotspot-used`, `path-end`, `wave-started`, `wave-cleared`, `waves-done`, `produced`, `new-day`, `night-start`, `day-start`, `new-season`, `activity-done` |
+| What happens | `name` | select | "pickup" | `pushed`, `landed`, `gravity-changed`, `block-placed`, `block-broken`, `fell`, `floor-fell`, `spawned`, `anim-event`, `portal`, `projectile-hit`, `damaged`, `died`, `attack`, `dodge`, `pickup`, `item-given`, `dialogue-started`, `dialogue-ended`, `minigame-started`, `minigame-ended`, `cutscene-started`, `cutscene-ended`, `noticed`, `lost`, `state-changed`, `boss-phase`, `boss-defeated`, `echo-made`, `sentence-changed`, `text-formatted`, `lantern-lit`, `rested`, `battle-started`, `turn-start`, `turn-end`, `round-start`, `battle-won`, `unit-moved`, `unit-attacked`, `building-placed`, `orders-given`, `click-move`, `hotspot-used`, `path-end`, `wave-started`, `wave-cleared`, `waves-done`, `produced`, `new-day`, `night-start`, `day-start`, `new-season`, `activity-done` |
 
 ### Time
 
@@ -155,7 +155,7 @@ Id: `entityEvent`.
 | Parameter | Key | Kind | Starts as | Choices and notes |
 | --- | --- | --- | --- | --- |
 | Object | `who` | entity | (empty) |  |
-| What happens to it | `name` | select | "died" | `died`, `damaged`, `pickup`, `turn-start`, `turn-end`, `unit-moved`, `landed`, `gravity-changed`, `noticed`, `state-changed`, `hotspot-used`, `boss-defeated` |
+| What happens to it | `name` | select | "died" | `landed`, `gravity-changed`, `damaged`, `died`, `pickup`, `noticed`, `state-changed`, `boss-defeated`, `turn-start`, `turn-end`, `unit-moved`, `hotspot-used` |
 
 #### An object's health compares
 

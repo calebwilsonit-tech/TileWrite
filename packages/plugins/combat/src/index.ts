@@ -1,5 +1,6 @@
 import { definePlugin } from '@tilewright/plugin-sdk';
 import manifest from '../plugin.json';
+import { events } from './events';
 import { actions, conditions } from './blocks';
 import type { Entity } from '@tilewright/plugin-sdk';
 import { damage, damageOnTouch, dodge, heal, health, meleeAttack } from './combat';
@@ -12,6 +13,7 @@ export * from './projectile';
 
 export const combatPlugin = definePlugin(manifest, {
   install(api) {
+    for (const e of events) api.event(e);
     api.behaviors(health, damageOnTouch, meleeAttack, rangedAttack, dodge, projectile);
     api.conditions(...conditions);
     api.actions(...actions);

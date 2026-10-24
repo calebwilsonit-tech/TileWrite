@@ -1,5 +1,6 @@
 import { definePlugin } from '@tilewright/plugin-sdk';
 import manifest from '../plugin.json';
+import { events } from './events';
 import { actions, conditions } from './blocks';
 import { beginDialogue, cutsceneSystem, dialogueSystem, minigameSystem, playCutscene } from './director';
 import { cutsceneTrigger, minigameStation, npcTalk } from './story';
@@ -9,6 +10,7 @@ export * from './director';
 
 export const storyPlugin = definePlugin(manifest, {
   install(api) {
+    for (const e of events) api.event(e);
     api.behaviors(npcTalk, cutsceneTrigger, minigameStation);
     api.conditions(...conditions);
     api.actions(...actions);

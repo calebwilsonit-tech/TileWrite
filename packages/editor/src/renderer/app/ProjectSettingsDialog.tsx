@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { activeInput, listPacks, packContents } from '@tilewright/behaviors';
-import { ACTION_LABELS, COMPAT_FLAGS, COMPAT_NAMES, DEFAULT_INPUT_MAP, DomInputSource, bindingChanges, bindingLabel, checkProjectInput, projectDefaults, rebind, type ProjectInput } from '@tilewright/runtime';
+import { COMPAT_FLAGS, COMPAT_NAMES, DomInputSource, bindingChanges, bindingLabel, checkProjectInput, projectDefaults, rebind, type ProjectInput } from '@tilewright/runtime';
 import { CheckField, SelectField, TextField } from '../panels/fields';
 import { store, useApp } from './store';
 
@@ -59,7 +59,7 @@ export function ProjectSettingsDialog() {
   /** Store a changed set of starting bindings: built-in ones as differences from the standard, your own whole. */
   const commit = (next: Record<string, string[]>): void => {
     const overrides: Record<string, string[]> = {};
-    const standard = bindingChanges(Object.fromEntries(builtin.map((a) => [a, next[a] ?? []])), DEFAULT_INPUT_MAP);
+    const standard = bindingChanges(Object.fromEntries(builtin.map((a) => [a, next[a] ?? []])), base.map);
     for (const [a, list] of Object.entries(standard)) overrides[a] = list;
     store.setProjectInput({ ...input, overrides, actions: input.actions.map((c) => ({ ...c, bindings: next[c.id] ?? c.bindings })) });
   };
@@ -77,7 +77,7 @@ export function ProjectSettingsDialog() {
     const id = fresh.id.trim();
     const label = fresh.label.trim() || id;
     if (!/^[a-z][a-z0-9_]{0,31}$/.test(id)) return store.notify('warn', 'Action names use lower-case letters, numbers and _, and start with a letter (for example "dash").');
-    if (id in ACTION_LABELS || input.actions.some((c) => c.id === id)) return store.notify('warn', `There is already an action called "${id}".`);
+    if (id in base.labels || input.actions.some((c) => c.id === id)) return store.notify('warn', `There is already an action called "${id}".`);
     store.setProjectInput({ ...input, actions: [...input.actions, { id, label, bindings: [] }] });
     setFresh({ id: '', label: '' });
   };
@@ -124,14 +124,14 @@ export function ProjectSettingsDialog() {
               <tbody>
                 {builtin.map((a) => (
                   <tr key={a} data-testid={`ctl-${a}`}>
-                    <td>{ACTION_LABELS[a]}</td>
+                    <td>{base.labels[a]}</td>
                     <td data-testid={`ctl-keys-${a}`}>{(map[a] ?? []).map(bindingLabel).join(', ') || 'not set'}</td>
                     <td>
                       <button className="small" data-testid={`ctl-change-${a}`} onClick={() => change(a)}>
                         {capturing === a ? 'press a key or button...' : 'Change'}
                       </button>
                       {a in input.overrides && (
-                        <button className="small" data-testid={`ctl-reset-${a}`} onClick={() => commit({ ...map, [a]: DEFAULT_INPUT_MAP[a as keyof typeof DEFAULT_INPUT_MAP] })}>
+                        <button className="small" data-testid={`ctl-reset-${a}`} onClick={() => commit({ ...map, [a]: base.map[a] ?? [] })}>
                           Standard
                         </button>
                       )}

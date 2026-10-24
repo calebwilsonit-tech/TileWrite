@@ -1,5 +1,6 @@
 import { definePlugin } from '@tilewright/plugin-sdk';
 import manifest from '../plugin.json';
+import { events } from './events';
 import { actions, conditions } from './blocks';
 import { builder, cameraRig, clickToMove, commandable, gridCursor, hotspot, rtsControl } from './controls';
 
@@ -8,6 +9,7 @@ export * from './controls';
 /** The ways a person can play: point and click, a grid cursor, RTS selection, a free camera, placing buildings. */
 export const controlsPlugin = definePlugin(manifest, {
   install(api) {
+    for (const e of events) api.event(e);
     api.behaviors(clickToMove, hotspot, gridCursor, commandable, rtsControl, cameraRig, builder);
     api.conditions(...conditions);
     api.actions(...actions);

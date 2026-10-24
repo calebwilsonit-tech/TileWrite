@@ -19,6 +19,7 @@ export * from './logic-catalog';
 export * from './builtins/world';
 export * from './builtins/blocks';
 export * from './events/sheet';
+export * from './events/catalog';
 export * from './events/graph';
 export * from './events/graph-convert';
 export * from './builtins/devices';

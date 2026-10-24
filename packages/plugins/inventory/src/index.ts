@@ -1,5 +1,6 @@
 import { definePlugin } from '@tilewright/plugin-sdk';
 import manifest from '../plugin.json';
+import { events } from './events';
 import { actions, conditions } from './blocks';
 import { quickSlotSystem } from './inventory';
 import { pickup } from './pickup';
@@ -9,6 +10,7 @@ export * from './inventory';
 
 export const inventoryPlugin = definePlugin(manifest, {
   install(api) {
+    for (const e of events) api.event(e);
     api.behaviors(pickup);
     api.conditions(...conditions);
     api.actions(...actions);

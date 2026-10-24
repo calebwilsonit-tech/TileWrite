@@ -5,17 +5,17 @@ import { SettingsSchema, bindingChanges, defaultSettings, effectiveBindings, loa
 
 describe('rebinding', () => {
   it('replaces a key but keeps the gamepad button', () => {
-    const b = rebind(DEFAULT_INPUT_MAP, 'attack', 'key:KeyF');
-    expect(b.attack).toEqual(['key:KeyF', 'pad:button2']);
-    const p = rebind(b, 'attack', 'pad:button7');
-    expect(p.attack).toEqual(['pad:button7', 'key:KeyF']);
+    const b = rebind(DEFAULT_INPUT_MAP, 'run', 'key:KeyF');
+    expect(b.run).toEqual(['key:KeyF', 'pad:button5']);
+    const p = rebind(b, 'run', 'pad:button7');
+    expect(p.run).toEqual(['pad:button7', 'key:KeyF']);
   });
 
   it('takes a key away from the action that had it', () => {
-    const b = rebind(DEFAULT_INPUT_MAP, 'dodge', 'key:KeyJ'); // J was Attack
-    expect(b.dodge?.[0]).toBe('key:KeyJ');
-    expect(b.attack).not.toContain('key:KeyJ');
-    expect(b.attack).toContain('mouse:0');
+    const b = rebind(DEFAULT_INPUT_MAP, 'jump', 'key:ShiftLeft'); // Left Shift was Run
+    expect(b.jump?.[0]).toBe('key:ShiftLeft');
+    expect(b.run).not.toContain('key:ShiftLeft');
+    expect(b.run).toContain('key:ShiftRight');
   });
 
   it('works through an InputMap, for keyboard and gamepad alike', () => {
@@ -27,10 +27,10 @@ describe('rebinding', () => {
 
   it('saves only what changed, and warns about actions left with no binding', () => {
     expect(bindingChanges(DEFAULT_INPUT_MAP)).toEqual({});
-    const b = rebind(DEFAULT_INPUT_MAP, 'echo', 'key:KeyG');
-    expect(Object.keys(bindingChanges(b))).toEqual(['echo']);
+    const b = rebind(DEFAULT_INPUT_MAP, 'jump', 'key:KeyG');
+    expect(Object.keys(bindingChanges(b))).toEqual(['jump']);
     expect(unboundActions({ ...DEFAULT_INPUT_MAP, jump: [] }, ['jump', 'interact'])).toEqual(['jump']);
-    expect(effectiveBindings(SettingsSchema.parse({ bindings: { echo: ['key:KeyG'] } })).echo).toEqual(['key:KeyG']);
+    expect(effectiveBindings(SettingsSchema.parse({ bindings: { jump: ['key:KeyG'] } })).jump).toEqual(['key:KeyG']);
   });
 });
 

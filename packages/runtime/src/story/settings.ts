@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import '../project/schema'; // sets up Zod before the schemas below are built
-import { DEFAULT_INPUT_MAP } from '../input/keyboard';
+import { activeInputMap } from '../input/keyboard';
 import type { InputMapDef } from '../input/input';
 
 /** What a player can change about how the game feels and plays; saved on their machine, not in the project. */
@@ -29,7 +29,7 @@ export type GameSettings = z.infer<typeof SettingsSchema>;
 export const defaultSettings = (): GameSettings => SettingsSchema.parse({});
 
 /** The bindings in force: the defaults with the player's changes on top. */
-export function effectiveBindings(s: GameSettings, defaults: InputMapDef = DEFAULT_INPUT_MAP): InputMapDef {
+export function effectiveBindings(s: GameSettings, defaults: InputMapDef = activeInputMap()): InputMapDef {
   return { ...defaults, ...s.bindings };
 }
 
@@ -49,7 +49,7 @@ export function rebind(bindings: InputMapDef, action: string, id: string): Input
 }
 
 /** Only the actions that differ from the defaults (what gets saved). */
-export function bindingChanges(bindings: InputMapDef, defaults: InputMapDef = DEFAULT_INPUT_MAP): Record<string, string[]> {
+export function bindingChanges(bindings: InputMapDef, defaults: InputMapDef = activeInputMap()): Record<string, string[]> {
   const out: Record<string, string[]> = {};
   for (const [a, list] of Object.entries(bindings)) {
     const d = defaults[a as keyof typeof defaults] as string[] | undefined;

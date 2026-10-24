@@ -1,5 +1,6 @@
 import { definePlugin } from '@tilewright/plugin-sdk';
 import manifest from '../plugin.json';
+import { events } from './events';
 import { actions, conditions } from './blocks';
 import { checkpoint } from './checkpoint';
 import { echoRecorder, echoReplay } from './echo';
@@ -13,6 +14,7 @@ export * from './checkpoint';
 
 export const storytenderPlugin = definePlugin(manifest, {
   install(api) {
+    for (const e of events) api.event(e);
     api.behaviors(echoRecorder, echoReplay, lightResource, lightSensor, growing, checkpoint, sentenceStone, textBlock);
     api.conditions(...conditions);
     api.actions(...actions);

@@ -1,4 +1,4 @@
-import { addPhysicsModifier, baseInput, removePhysicsModifiersOf, type Entity, type SimContext, type System, type SystemMode } from '@tilewright/runtime';
+import { addPhysicsModifier, baseInput, removePhysicsModifiersOf, setExtraInputActions, type Entity, type SimContext, type System, type SystemMode } from '@tilewright/runtime';
 import { behaviorList, defineBehavior, getBehavior, reshelveBehavior, undefineBehavior, type BehaviorDef } from '../framework';
 import { registerAction, registerCondition, shelvedAction, shelvedCondition, unregisterAction, unregisterCondition, type ActionDef, type ConditionDef } from '../events/sheet';
 import type { ComponentDef, EventDef, Extensions, ExtensionKind, InputActionDef, OwnedBy } from './extensions';
@@ -6,6 +6,7 @@ import type * as X from './extensions';
 import { ENGINE_VERSION, grants, parseManifest, worksWithEngine, type PluginManifest } from './manifest';
 import { satisfies } from './semver';
 import { addWhoFilter, removeWhoFilter, setGhostLayer } from '../builtins/filters';
+import { addEventEntry, removeEventEntry } from '../events/catalog';
 
 /**
  * The plugin host: everything that turns a plugin into parts of the editor and the game, and takes them away again.
@@ -307,6 +308,7 @@ export class PluginHost {
       this.fail(id, `installing it`, e);
       throw new PluginError(`The plugin "${m.name}" could not be turned on: ${message}`, { cause: e });
     }
+    setExtraInputActions(this.inputActions());
     this.emit({ kind: 'installed', plugin: id });
   }
 
@@ -326,9 +328,11 @@ export class PluginHost {
       (this.ext[kind] as Map<string, unknown>).delete(key);
       if (kind === 'collisionLayers') setGhostLayer(key, null);
       if (kind === 'whoFilters') removeWhoFilter(key);
+      if (kind === 'events') removeEventEntry(key);
     }
     for (const t of ['panels', 'tools', 'importers'] as const) for (const [key, v] of this.editor[t]) if (v.plugin === id) this.editor[t].delete(key);
     this.installed.delete(id);
+    setExtraInputActions(this.inputActions());
     this.emit({ kind: 'removed', plugin: id });
   }
 
@@ -435,6 +439,7 @@ export class PluginHost {
       },
       event(def) {
         host.add(rec, id, 'events', def.id, def);
+        addEventEntry({ id: def.id, label: def.label, ...(def.text ? { text: def.text } : {}), ...(def.entityLabel ? { entityLabel: def.entityLabel } : {}), ...(def.entityText ? { entityText: def.entityText } : {}) });
       },
       system(name, fn, mode = 'gameplay', stage = 'default') {
         rec.systems.push({ name: `${id}:${name}`, fn: host.watched(id, `the system "${name}"`, fn), mode, stage });

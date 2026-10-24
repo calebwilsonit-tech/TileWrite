@@ -2,7 +2,7 @@ import { Container, Graphics } from 'pixi.js';
 import {
   AudioEngine,
   C,
-  DEFAULT_INPUT_MAP,
+  activeInputMap,
   DomInputSource,
   GameRunner,
   InputMap,
@@ -130,7 +130,7 @@ export class PlaySession {
   readonly source = new DomInputSource();
   readonly runner: GameRunner;
   readonly ui: GameUi;
-  readonly inputMap = new InputMap(DEFAULT_INPUT_MAP);
+  readonly inputMap = new InputMap(activeInputMap());
   /** Sounds and music (files in `assets/audio`); silent when there are none. */
   readonly audio = new AudioEngine();
   /** The music asked for by the room the player stands in; '' when the room has none. */
