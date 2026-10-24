@@ -29,7 +29,7 @@ export interface ModelClient {
   stream(call: ModelCall): Promise<Anthropic.Message>;
 }
 
-export type ToolContentBlock = { type: 'text'; text: string } | { type: 'image'; source: { type: 'base64'; media_type: 'image/png'; data: string } };
+export type ToolContentBlock = { type: 'text'; text: string } | { type: 'image'; source: { type: 'base64'; media_type: 'image/png' | 'image/jpeg' | 'image/gif' | 'image/webp'; data: string } };
 
 export interface ToolOutput {
   content: string | ToolContentBlock[];

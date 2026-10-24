@@ -21,7 +21,7 @@ contextBridge.exposeInMainWorld('tilewright', {
     write: (file: string, text: string) => invoke<void>('fs:write', file, text),
     exists: (file: string) => invoke<boolean>('fs:exists', file),
     remove: (file: string) => invoke<void>('fs:remove', file),
-    list: (dir: string) => invoke<{ name: string; dir: boolean }[]>('fs:list', dir),
+    list: (dir: string) => invoke<{ name: string; dir: boolean; size?: number }[]>('fs:list', dir),
   },
   plugins: {
     store: () => invoke<string>('plugins:store'),

@@ -20,7 +20,7 @@ import { UserError, type ProjectFs } from '../project/io';
 
 /** File operations the asset code needs, on top of the basic project ones. */
 export interface AssetFs extends ProjectFs {
-  list(dir: string): Promise<{ name: string; dir: boolean }[]>;
+  list(dir: string): Promise<{ name: string; dir: boolean; size?: number }[]>;
   writeBinary(file: string, bytes: Uint8Array): Promise<void>;
   readBinary(file: string): Promise<Uint8Array>;
 }

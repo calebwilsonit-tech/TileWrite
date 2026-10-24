@@ -40,7 +40,7 @@ export interface TilewrightApi {
     write(file: string, text: string): Promise<void>;
     exists(file: string): Promise<boolean>;
     remove(file: string): Promise<void>;
-    list(dir: string): Promise<{ name: string; dir: boolean }[]>;
+    list(dir: string): Promise<{ name: string; dir: boolean; size?: number }[]>;
   };
   plugins: {
     /** The folder installed plugins live in: <store>/<id>/<version>/. */

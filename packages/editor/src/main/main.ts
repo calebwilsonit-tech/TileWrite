@@ -1,7 +1,9 @@
 import { app, BrowserWindow, dialog, ipcMain } from 'electron';
 import fs from 'node:fs/promises';
+import fsSync from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { PathProblem, resolveInsideAny } from '@tilewright/assistant/src/sandbox';
 import { registerAssistant } from './assistant';
 import { registerExport } from './export';
 import { registerSamples } from './samples';
@@ -25,13 +27,14 @@ function allow(dir: string): string {
   return resolved;
 }
 
+/** The one gate every file the window asks for goes through (see assistant/src/sandbox.ts: links, streams and device names are refused too). */
 function resolveInside(file: string): string {
-  const resolved = path.resolve(file);
-  for (const root of allowedRoots) {
-    const rel = path.relative(root, resolved);
-    if (rel === '' || (!rel.startsWith('..') && !path.isAbsolute(rel))) return resolved;
+  try {
+    return resolveInsideAny(allowedRoots, file, { fs: fsSync });
+  } catch (e) {
+    if (e instanceof PathProblem) throw new Error(e.message);
+    throw e;
   }
-  throw new Error(`Tilewright can only use files inside a project folder you chose. "${file}" is outside.`);
 }
 
 /** The personal asset library lives outside any project, next to the settings (tests point it somewhere temporary). */
@@ -161,8 +164,15 @@ function registerIpc(): void {
     await fs.rm(resolveInside(file), { force: true });
   });
   ipcMain.handle('fs:list', async (_e, dir: string) => {
-    const entries = await fs.readdir(resolveInside(dir), { withFileTypes: true });
-    return entries.map((e) => ({ name: e.name, dir: e.isDirectory() }));
+    const where = resolveInside(dir);
+    const entries = await fs.readdir(where, { withFileTypes: true });
+    return Promise.all(
+      entries.map(async (e) => {
+        if (e.isDirectory()) return { name: e.name, dir: true };
+        const size = await fs.stat(path.join(where, e.name)).then((s) => s.size, () => undefined);
+        return size === undefined ? { name: e.name, dir: false } : { name: e.name, dir: false, size };
+      }),
+    );
   });
 
   ipcMain.handle('settings:get', async () => readJsonFile<Record<string, unknown>>(userFile('settings.json'), {}));

@@ -199,6 +199,30 @@ export const TOOLS: ToolSpec[] = [
   },
 
   {
+    name: 'project_index',
+    kind: 'read',
+    description: 'Every file of the project by kind (scenes, sprites, sounds, pictures, screens, scripts, translations, notes...), so you know what exists and where. Then read any of them with read_project_file.',
+    schema: z.object({}),
+  },
+  {
+    name: 'list_project_files',
+    kind: 'read',
+    description: 'The files and folders directly inside one folder of the project (leave the folder out for the top). Paths are always relative to the project folder.',
+    schema: z.object({ folder: z.string().optional().describe('A folder like "assets/sprites"; empty for the project folder.') }),
+  },
+  {
+    name: 'read_project_file',
+    kind: 'read',
+    description: 'Read one file of the project by its path (from project_index or list_project_files). Text files come back as text; a picture comes back as a picture you can see; a sprite comes back as a description and a picture of its first frame; a file a plugin can read comes back as that plugin explains it. Sounds cannot be heard: you get only the file details (type, length, size) and must not guess how a sound sounds. A path may not leave the project folder.',
+    schema: z.object({ path: z.string().min(1).describe('The path from the project folder, like "assets/screens.json".'), offset: z.number().int().min(0).optional().describe('For a long text file: start reading this many characters in (the reply says when there is more).') }),
+  },
+  {
+    name: 'list_image_providers',
+    kind: 'read',
+    description: 'The ways this editor can make a picture from words (a plugin adds each one), and whether each needs the person to have set up a key. If there are none, you can still draw small pictures yourself with draw_sprite.',
+    schema: z.object({}),
+  },
+  {
     name: 'list_packs',
     kind: 'read',
     description: 'The packs (modules) the game can switch on, which are on now, what each adds (behaviours, event blocks, buttons) and what it needs. A new game has none on: turn-based play, control schemes (click to move, hotspots, grid cursor, box-select units, builder, camera), simulation helpers (producers, calendar, waves, villagers), combat, inventory, story, AI and lighting are all packs. Check this before using a behaviour that is not listed by list_behaviors.',
