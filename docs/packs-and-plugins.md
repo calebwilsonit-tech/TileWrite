@@ -1,5 +1,7 @@
 # Packs and the plugin API
 
+> The plugin platform (manifests, permissions, trust, the sandbox, `npm create tilewright-plugin`, a reference for every extension point) is described in [plugins/README.md](plugins/README.md). This page is about switching plugins on in a project; the older word for a plugin was "pack", and project files still say `packs`.
+
 A **pack** is a group of things a project can switch on: behaviours, event-sheet blocks, systems that run every tick, buttons, and additions to the editor. The engine's own optional parts and the reference game's mechanics are packs, and so is anything a programmer writes against the same plugin API. An empty project switches none on.
 
 ## Switching packs on and off
