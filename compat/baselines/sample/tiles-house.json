@@ -351,7 +351,7 @@
   "exported": {
     "files": {
       "assets/items.json": "0e5e19436438b496",
-      "assets/library-links.json": "a98eaab9e99376df",
+      "assets/library-links.json": "e07ac423e6c61209",
       "assets/sprites/grass_edge-E_inner-NW.sprite.json": "fbd4c1347112b226",
       "assets/sprites/grass_edge-E_inner-SW-NW.sprite.json": "d69daa1802431d47",
       "assets/sprites/grass_edge-E_inner-SW.sprite.json": "04e590e981cefef3",
@@ -403,7 +403,7 @@
       "assets/sprites/oak.sprite.json": "0a3a3e90415b5e28",
       "assets/sprites/window_right.sprite.json": "2df692d8affc45f5",
       "assets/sprites/window.sprite.json": "5ceb73a1047e8854",
-      "project.json": "75e3dec7a2c1319a",
+      "project.json": "a4568daeda25ce15",
       "scenes/main.scene.json": "8b9c3d85a874c291"
     },
     "manifest": "ea08e3508af1d816",

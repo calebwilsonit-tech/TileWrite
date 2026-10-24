@@ -1,6 +1,6 @@
 # The eight genre samples, and a recipe for each genre
 
-The `samples/` folder holds eight small games, one for each kind of game the engine is meant to make. They are not written by hand: each is made by a test (`e2e/p2-<name>.spec.ts`) that starts a project from a template and changes it only with the editor's own controls, plays it, saves it, and then lets the **playbot** finish it with no editor. Run one with `npx playwright test e2e/p2-tactics.spec.ts` (after `npm run build -w @tilewright/editor`); the saved project is rewritten in `samples/`. Open any of them in the editor with **Open Project** to see how it is made, or read the test to see every click.
+The `samples/` folder holds nine small games, one for each kind of game the engine is meant to make (the ninth, `gravity-room`, was added in phase 3). They are not written by hand: each is made by a test (`e2e/p2-<name>.spec.ts`) that starts a project from a template and changes it only with the editor's own controls, plays it, saves it, and then lets the **playbot** finish it with no editor. Run one with `npx playwright test e2e/p2-tactics.spec.ts` (after `npm run build -w @tilewright/editor`); the saved project is rewritten in `samples/`. Open any of them in the editor with **Open Project** to see how it is made, or read the test to see every click.
 
 | Sample | Genre | What it shows | Test |
 | --- | --- | --- | --- |
@@ -11,6 +11,7 @@ The `samples/` folder holds eight small games, one for each kind of game the eng
 | `point-and-click` | adventure | verbs (look, use, talk), hotspots, a conversation, an item, a locked door | `e2e/p2-pointandclick.spec.ts` |
 | `rts-skirmish` | real-time strategy (my choice) | box select, move and attack-move orders, a mine, a barracks that trains from a button, an enemy camp | `e2e/p2-rts.spec.ts` |
 | `ui-showcase` | interface | title, settings with sliders and key remapping, pause, a bound HUD, an inventory grid with drag and drop; mouse, keyboard and gamepad; four picture shapes | `e2e/p2-uishowcase.spec.ts` |
+| `gravity-room` | gravity and blocks | a stone ceiling, an arch with a lintel, a low overhang, invisible blocker cells, stairs and a step, a bridge, and a pillar sticking out of the west wall; keys 1 to 4 turn gravity toward the floor, the west wall, the ceiling and the south wall; the bot walks through every turn and checks that nothing is ever inside a block and that a block fades only when it is between the camera and the player | `e2e/p3-gravity-room.spec.ts` |
 | `tiles-house`, `tiles-from-the-hub` | tiles and props | edge sets, a cliff, animated water, a snow recolour, a tree whose canopy fades, wall attachments, the library, a house built from it, a set and a code pack taken from the hub | `e2e/p2-tiles-showcase.spec.ts` |
 
 Two of them (tactics and colony) are also exported to programs of their own and played with no editor on the computer (`e2e/p2-export-samples.spec.ts`), and the colony with 200 villagers on the move holds 60 frames a second in Play (`e2e/p2-perf.spec.ts`; the logic of 200 villagers takes under 1 ms a step, `packages/behaviors/src/perf.test.ts`).

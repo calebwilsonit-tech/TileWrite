@@ -110,18 +110,20 @@ function hitsSomething(w: Work, box: Aabb): boolean {
   return false;
 }
 
-/** Push a body that ended up inside something out of it (a block was put on it, or gravity turned beside a wall). */
+/**
+ * Push a body that ended up inside something out of it (a block was put on it, or gravity turned beside a wall). It takes the
+ * smallest push that frees it: away from the surface it will stand on first, then the other way along gravity, then sideways.
+ */
 function unstick(w: Work, box: Aabb): Aabb {
   if (!hitsSomething(w, box)) return box;
-  const up = w.frame.up;
-  const tries: [number, number][] = [];
-  // first away from the surface (up), then to either side, in small steps
-  for (let d = 0.05; d <= UNSTICK_MAX; d += 0.05) tries.push([w.gi, d]);
-  for (const a of w.plane) for (let d = 0.05; d <= 1; d += 0.05) tries.push([a, d], [a, -d]);
-  for (const [axis, d] of tries) {
-    const sign = axis === w.gi ? (up[axis] as number) : 1;
-    const moved = shifted(box, axis, d * sign);
-    if (!hitsSomething(w, moved)) return moved;
+  const up = w.frame.up[w.gi] as number;
+  for (let d = 0.05; d <= UNSTICK_MAX + 1e-9; d += 0.05) {
+    const tries: [number, number][] = [[w.gi, d * up], [w.gi, -d * up]];
+    if (d <= 1) for (const a of w.plane) tries.push([a, d], [a, -d]);
+    for (const [axis, delta] of tries) {
+      const moved = shifted(box, axis, delta);
+      if (!hitsSomething(w, moved)) return moved;
+    }
   }
   return box;
 }

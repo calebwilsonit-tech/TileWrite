@@ -107,8 +107,14 @@ export function ParamEditor({ spec, value, onChange, testId, facts, inLoop }: { 
       if (v && !screens.some((s) => s.value === v)) screens.push({ value: v, label: `${v} (missing)` });
       return <SelectField<string> testId={testId} label={spec.label} value={v} options={[{ value: '', label: screens.length ? '(choose a screen)' : '(no screens yet - make one in the UI designer)' }, ...screens]} onChange={onChange} />;
     }
-    case 'action':
-      return <SelectField<string> testId={testId} label={spec.label} value={String(value ?? '')} options={Object.keys(DEFAULT_INPUT_MAP).map((a) => ({ value: a, label: a }))} onChange={onChange} />;
+    case 'action': {
+      // the built-in buttons, and the ones this project made up (Project settings -> Controls)
+      const own = store.input.actions.map((c) => ({ value: c.id, label: `${c.label} (${c.id})` }));
+      const v = String(value ?? '');
+      const known = [...Object.keys(DEFAULT_INPUT_MAP).map((a) => ({ value: a, label: a })), ...own];
+      if (v && !known.some((k) => k.value === v)) known.push({ value: v, label: `${v} (not a button of this game)` });
+      return <SelectField<string> testId={testId} label={spec.label} value={v} options={known} onChange={onChange} />;
+    }
     case 'variable':
       return (
         <label className="field">

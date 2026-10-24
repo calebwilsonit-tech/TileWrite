@@ -1,7 +1,7 @@
 import { expect, type Page } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
-import { C, tilesetFromList, type SceneData, type TransformIso } from '@tilewright/runtime';
+import { C, compatOf, tilesetFromList, type SceneData, type TransformIso } from '@tilewright/runtime';
 import { packsOfProject, setActivePacks, syncCustomBlocks } from '@tilewright/behaviors';
 import { Game, PointerBot } from '@tilewright/playbot';
 import { loadScene, openProject } from '../packages/editor/src/renderer/project/io';
@@ -101,6 +101,7 @@ export async function loadSampleGame(projectDir: string, opts: { seed?: number }
     tables: tables.items,
     ui: ui.doc,
     tileset: tilesetFromList(project.tileset),
+    compat: compatOf(project),
     seed: opts.seed,
   });
   return { game, bot: new PointerBot(game), scenes };

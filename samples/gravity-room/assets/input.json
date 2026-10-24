@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "overrides": {},
+  "actions": [
+    {
+      "id": "gravity_floor",
+      "label": "Gravity: the floor",
+      "bindings": [
+        "key:Digit1"
+      ]
+    },
+    {
+      "id": "gravity_west",
+      "label": "Gravity: the west wall",
+      "bindings": [
+        "key:Digit2"
+      ]
+    },
+    {
+      "id": "gravity_ceiling",
+      "label": "Gravity: the ceiling",
+      "bindings": [
+        "key:Digit3"
+      ]
+    },
+    {
+      "id": "gravity_south",
+      "label": "Gravity: the south wall",
+      "bindings": [
+        "key:Digit4"
+      ]
+    }
+  ]
+}
