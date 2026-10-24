@@ -3,6 +3,7 @@ export const PACKAGE_NAME = '@tilewright/behaviors';
 export * from './framework';
 export * from './packs';
 export * from './plugins/host';
+export * from './plugins/loader';
 export * from './plugins/manifest';
 export * from './plugins/semver';
 export type * from './plugins/extensions';

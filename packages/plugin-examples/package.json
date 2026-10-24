@@ -1,0 +1,12 @@
+{
+  "name": "@tilewright/plugin-examples",
+  "version": "1.0.0",
+  "private": true,
+  "description": "One small working plugin for every thing a plugin can add. Each is also a recipe in docs/plugins",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@tilewright/plugin-sdk": "*"
+  }
+}
