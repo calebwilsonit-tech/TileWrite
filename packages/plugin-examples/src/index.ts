@@ -3,11 +3,13 @@ import { behaviorExample, blockExample, bridgeExample, componentExample, eventsE
 import { gameUiExample, listSourceExample, menuEntryExample, screenExample, stringsExample, widgetExample } from './ui';
 import { exportTargetExample, exporterExample, importerExample, inspectorExample, panelExample, prefabExample, templateExample, toolExample, validatorExample } from './editor';
 import { assistantExample, moveExample, strategyExample } from './tools';
+import { parchmentPlugin } from './parchment';
 
 export * from './game';
 export * from './ui';
 export * from './editor';
 export * from './tools';
+export * from './parchment';
 
 /** One example for each thing a plugin can add: the name is what the plugin API calls it. */
 export const EXAMPLES: { point: string; plugin: PluginDefinition }[] = [
@@ -26,6 +28,7 @@ export const EXAMPLES: { point: string; plugin: PluginDefinition }[] = [
   { point: 'widget', plugin: widgetExample },
   { point: 'screen / screenRole', plugin: screenExample },
   { point: 'listSource', plugin: listSourceExample },
+  { point: 'a re-skin of the screens (the Parchment UI kit)', plugin: parchmentPlugin },
   { point: 'menuEntry', plugin: menuEntryExample },
   { point: 'strings', plugin: stringsExample },
   { point: 'gameUi', plugin: gameUiExample },

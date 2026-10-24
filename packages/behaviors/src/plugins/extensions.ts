@@ -142,6 +142,8 @@ export interface ScreenDef {
   role?: string;
   /** Bump this when the screen changes, so projects that customized an older one can compare. */
   revision: number;
+  /** When several plugins offer a screen for the same role, the one with the highest number plays it (default 0): a plugin that re-skins the game's screens gives its own a higher one. */
+  priority?: number;
 }
 
 /**

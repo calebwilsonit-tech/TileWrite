@@ -1,5 +1,5 @@
 import { roleOfScreen, type UiDoc, type UiLayout, type UiNode, type UiScreen } from '@tilewright/runtime';
-import { offeredScreen, screenHash, host } from '@tilewright/behaviors';
+import { offeredScreen, screenHash, screensByPriority, host } from '@tilewright/behaviors';
 
 /**
  * Screens that come with plugins and a project's copies of them. A project plays with a plugin's screen as it is until it
@@ -12,6 +12,8 @@ export type PluginScreenState =
   | { kind: 'as-offered' }
   /** The project has its own screen (not a copy) playing the role. */
   | { kind: 'replaced'; by: string }
+  /** Another plugin's screen for the same part has a higher priority and is the one played. */
+  | { kind: 'outranked'; by: string }
   /** A copy that has not been changed and matches what the plugin offers now. */
   | { kind: 'copy'; copy: UiScreen }
   /** A copy that has not been changed, and the plugin has a newer screen. */
@@ -37,6 +39,9 @@ export const copyOf = (doc: UiDoc, plugin: string, id: string): UiScreen | undef
 /** Where each screen the plugins offer stands in this project. */
 export function pluginScreenRows(doc: UiDoc, layout: UiLayout | null = null): PluginScreenRow[] {
   const rows: PluginScreenRow[] = [];
+  // when several plugins offer a screen for a part, the one with the highest priority plays it
+  const winner = new Map<string, string>();
+  for (const d of screensByPriority()) if (d.role && !winner.has(d.role)) winner.set(d.role, `${d.plugin}/${d.id}`);
   for (const def of host.ext.screens.values()) {
     const current = offeredScreen(def.plugin, def.id, { layout });
     if (!current) continue;
@@ -49,7 +54,8 @@ export function pluginScreenRows(doc: UiDoc, layout: UiLayout | null = null): Pl
       state = changed ? { kind: outdated ? 'changed-outdated' : 'changed', copy } : { kind: outdated ? 'copy-outdated' : 'copy', copy };
     } else {
       const own = role ? doc.screens.find((s) => roleOfScreen(s) === role) : undefined;
-      state = own ? { kind: 'replaced', by: own.name } : { kind: 'as-offered' };
+      const other = role ? winner.get(role) : undefined;
+      state = own ? { kind: 'replaced', by: own.name } : other && other !== `${def.plugin}/${def.id}` ? { kind: 'outranked', by: other.split('/')[0]! } : { kind: 'as-offered' };
     }
     rows.push({ id: def.id, plugin: def.plugin, name: current.name, role, roleLabel: host.ext.screenRoles.get(role)?.label ?? role, state });
   }

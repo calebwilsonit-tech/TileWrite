@@ -8,6 +8,7 @@ import { customize, diffScreens, pluginScreenRows, removeCopy, revert, type Plug
 const SAYS: Record<PluginScreenRow['state']['kind'], string> = {
   'as-offered': 'In use just as it comes.',
   replaced: 'Your own screen is used instead.',
+  outranked: 'Another plugin’s screen for this part is used instead.',
   copy: 'Your copy, not changed.',
   'copy-outdated': 'Your copy, not changed. The plugin has a newer one.',
   changed: 'Your copy, with your changes.',
@@ -40,6 +41,7 @@ export function PluginScreens({ doc }: { doc: UiDoc }) {
               <div className="hint" data-testid={`ui-plugin-screen-${r.id}-state`}>
                 {SAYS[r.state.kind]}
                 {r.state.kind === 'replaced' && ` “${r.state.by}”.`}
+                {r.state.kind === 'outranked' && ` (the plugin “${r.state.by}”)`}
               </div>
               <div className="row wrap">
                 {!copy && (

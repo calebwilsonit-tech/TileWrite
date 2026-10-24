@@ -31,6 +31,8 @@ export const SCREENS_CSS = `
 .tw-w.flow { position: relative; }
 .tw-w.hit { pointer-events: auto; }
 .tw-w.hidden { display: none !important; }
+/* a panel widget is a plain box: the editor's own .panel rule (a dock panel) must not give it a background, padding or scrollbars */
+.tw-w.panel { height: auto; overflow: visible; padding: 0; background: none; }
 .tw-w.button, .tw-w.clickable { cursor: pointer; }
 .tw-w.button { display: flex; align-items: center; justify-content: center; user-select: none; }
 .tw-w.bar .fill { height: 100%; transition: width 0.12s linear; }

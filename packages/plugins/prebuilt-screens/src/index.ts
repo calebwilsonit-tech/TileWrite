@@ -17,6 +17,8 @@ export const prebuiltScreensPlugin = definePlugin(manifest, {
   install(api) {
     api.provide('gameUi', (parent: HTMLElement, host: GameUiHost) => new GameUi(parent, host));
     api.strings(uiStrings);
+    // what a plugin that re-skins the game's screens starts from
+    api.provide('screens', () => prebuiltScreens().map((s) => s.screen));
     for (const r of ROLES) api.screenRole(r);
     for (const s of prebuiltScreens()) api.screen(s);
     // the heads-up display follows the project's interface layout (Story, Interface)

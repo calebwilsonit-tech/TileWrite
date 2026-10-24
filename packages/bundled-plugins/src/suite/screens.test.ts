@@ -13,6 +13,7 @@ import {
   type UiBridge,
   type ViewNode,
 } from '@tilewright/behaviors';
+import { parchmentPlugin } from '@tilewright/plugin-examples';
 import '@tilewright/bundled-plugins';
 
 /** The game as the screens see it: the project's (empty) designer file plus the screens the plugins ship, and a bridge to a made-up host. */
@@ -389,5 +390,34 @@ describe('the heads-up display', () => {
   it('a project with its own screen for the role keeps it', () => {
     const own = UiDocSchema.parse({ screens: [{ ...defs('pause'), id: 'my-hud', name: 'My HUD', role: 'hud' }] });
     expect(withPluginScreens(own).screens.filter((s) => s.role === 'hud').map((s) => s.name)).toEqual(['My HUD']);
+  });
+});
+
+describe('the Parchment UI kit (a plugin that re-skins the game\u2019s screens)', () => {
+  it('plays the roles it offers with a higher priority, keeps what the screens do, and goes away when turned off', () => {
+    host.register(parchmentPlugin);
+    host.install('example-parchment-ui');
+    try {
+      const doc = withPluginScreens(UiDocSchema.parse({}));
+      const pause = doc.screens.find((s) => s.role === 'pause')!;
+      expect(pause.from?.plugin).toBe('example-parchment-ui');
+      expect(pause.root.children[0]!.style).toMatchObject({ fill: '#e8d9b5', borderWidth: 4 });
+      // the flourish widget sits under the heading
+      expect(pause.root.children[0]!.children.map((c) => c.name).slice(0, 3)).toEqual(['Heading', 'Flourish', 'Resume']);
+      // the screens still work: Resume closes it, and the rows are as before
+      const { sim } = game();
+      sim.assets.ui = doc;
+      open(sim, 'pause');
+      activateWidget(sim, byId(sim, 'resume'));
+      expect(stack(sim)).toEqual([]);
+      // the heads-up display and the travel list are not re-drawn
+      expect(doc.screens.find((s) => s.role === 'hud')!.from?.plugin).toBe('prebuilt-screens');
+      // a project's own screen still wins over a plugin's
+      const own = UiDocSchema.parse({ screens: [{ ...defs('pause'), id: 'mine', name: 'Pause', role: undefined }] });
+      expect(withPluginScreens(own).screens.filter((s) => s.role === 'pause' || s.name === 'Pause')).toHaveLength(1);
+    } finally {
+      host.uninstall('example-parchment-ui');
+    }
+    expect(withPluginScreens(UiDocSchema.parse({})).screens.find((s) => s.role === 'pause')!.from?.plugin).toBe('prebuilt-screens');
   });
 });

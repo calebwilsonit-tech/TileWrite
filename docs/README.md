@@ -6,6 +6,7 @@ Start with the tutorial in the app (the project screen's **Take the tutorial** b
 | --- | --- |
 | Learn what every panel and tool does | [editor.md](editor.md) |
 | Make something specific (a lever door, an echo puzzle, a boss...) | [recipes.md](recipes.md) |
+| Change the pause menu, give the game a look, add to a menu | [recipes/](recipes/README.md) |
 | Look up a behaviour and its settings | [behaviours.md](behaviours.md) (generated from the engine) |
 | Look up an event-sheet condition or action | [event-blocks.md](event-blocks.md) (generated) |
 | Wire things together and write event sheets | [logic.md](logic.md) |
@@ -21,7 +22,8 @@ Start with the tutorial in the app (the project screen's **Take the tutorial** b
 | Buttons, wires, logic nodes and graphs: the three levels of logic, breakpoints | [logic.md](logic.md) |
 | Resources, production chains, day and night, waves, routes, villagers with needs, fire and growth | [simulation-helpers.md](simulation-helpers.md) |
 | Real time, speed-up and turn-based play | [time-and-turns.md](time-and-turns.md) |
-| Packs and the plugin API | [packs-and-plugins.md](packs-and-plugins.md) |
+| Writing a plugin: the guide, every extension point | [plugins/](plugins/README.md) |
+| Packs and the plugin API (older page) | [packs-and-plugins.md](packs-and-plugins.md) |
 | Design screens, menus, HUDs, inventories, shops: the UI designer | [ui-designer.md](ui-designer.md) |
 | Title screen, project settings, controls, HUD layout and theme | [interface-and-controls.md](interface-and-controls.md) |
 | Translate the game, player settings (zoom, full screen, language) | [translations-and-settings.md](translations-and-settings.md) |

@@ -26,6 +26,9 @@ export function offeredScreen(pluginId: string, id: string, project?: ScreenCont
   return { ...structuredClone(screen), role: def.role ?? screen.role, from: { plugin: def.plugin, screen: def.id, revision: def.revision, hash: screenHash(screen) } };
 }
 
+/** What plugins offer, the ones that win a role first (the sort keeps the order the plugins were installed in for equal numbers). */
+export const screensByPriority = (): typeof host.ext.screens extends Map<string, infer T> ? T[] : never => [...host.ext.screens.values()].sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));
+
 /** The screens this module added to a document, so a second call does not add them again. */
 const ADDED = new WeakSet<UiScreen>();
 
@@ -40,7 +43,7 @@ export function withPluginScreens(doc: UiDoc, project?: ScreenContext): UiDoc {
   const have = new Set(doc.screens.map(roleOfScreen).filter(Boolean));
   const names = new Set(doc.screens.flatMap((s) => [s.name, s.id]));
   const added: UiScreen[] = [];
-  for (const def of host.ext.screens.values()) {
+  for (const def of screensByPriority()) {
     const role = def.role ?? def.screen.role;
     if (role ? have.has(role) : false) continue;
     const screen = offeredScreen(def.plugin, def.id, project);
