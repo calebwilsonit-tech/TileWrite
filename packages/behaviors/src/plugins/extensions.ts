@@ -208,13 +208,50 @@ export interface ValidatorDef {
   check(scene: ValidationScene): ProblemDef[];
 }
 
+/** What a playbot strategy or move can see of the open scene. */
+export interface PlaybotScene {
+  entities: readonly EntityData[];
+}
+
+/** What the playbot reports when it has tried something. */
+export interface PlaybotReportLike {
+  ok: boolean;
+  message: string;
+}
+
+/** Something the Playbot panel can try: a button that plays the open scene a certain way ("Fight the guard", "Hold the plates"). */
 export interface PlaybotStrategyDef {
   id: string;
   label: string;
-  /** The words the Playbot panel shows next to the button. */
+  /** The words shown beside the button. */
   help?: string;
-  /** Plays toward a goal; returns a report line. `game` is the playbot's game, `bot` its bot. */
-  play(game: unknown, bot: unknown): string;
+  /** Why it cannot be tried in this scene (said to the person), or null when it can. */
+  unavailable?(scene: PlaybotScene): string | null;
+  /** Play with the playbot's buttons. \`bot\` is the playbot's Bot (see the SDK's definePlaybotStrategy for it typed). */
+  play(bot: unknown, scene: PlaybotScene): PlaybotReportLike;
+}
+
+/**
+ * One kind of step the puzzle solver can combine with the others ("record a copy of yourself onto a plate"). The solver
+ * asks every move what it can do with each object of the scene, tries plans of these steps and keeps the first that works.
+ */
+export interface PlaybotMoveDef {
+  id: string;
+  /** Steps this move can take with \`entity\` (the player is \`player\`), by reference and in words. */
+  offer(entity: EntityData, player: EntityData | undefined): { ref: string; label: string }[];
+  /** Carry out one step with the player's buttons; \`memory\` is shared by the steps of one try. Returns whether it worked. */
+  perform(bot: unknown, game: unknown, ref: string, memory: Record<string, unknown>): boolean;
+}
+
+/** Cells that can be walked over a pit or water because of something a plugin brings (a bridge made of a block of text). */
+export interface BridgeSourceDef {
+  id: string;
+  /** Cells that could become a bridge, for the checks that ask whether the way can be opened at all. */
+  possible(entities: readonly { id: string; components: Record<string, unknown> }[], wires: readonly { to: { entity: string; input: string } }[]): Set<string>;
+  /** Cells that are a bridge right now in a running game. */
+  live?(world: { query(...keys: string[]): Iterable<Entity> }): Set<string>;
+  /** Objects that are not fixed scenery for the checks, because the puzzle changes them. */
+  movable?(entity: { components: Record<string, unknown> }): boolean;
 }
 
 // ---------- the assistant ----------
@@ -276,6 +313,8 @@ export interface Extensions {
   templates: Map<string, TemplateDef & OwnedBy>;
   validators: Map<string, ValidatorDef & OwnedBy>;
   playbotStrategies: Map<string, PlaybotStrategyDef & OwnedBy>;
+  playbotMoves: Map<string, PlaybotMoveDef & OwnedBy>;
+  bridgeSources: Map<string, BridgeSourceDef & OwnedBy>;
   fileReaders: Map<string, FileReaderDef & OwnedBy>;
   assistantTools: Map<string, AssistantToolDef & OwnedBy>;
   imageProviders: Map<string, ImageProviderDef & OwnedBy>;

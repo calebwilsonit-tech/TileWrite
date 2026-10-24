@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { C, UiDocSchema, tileMapToRows, type SceneData, type TransformIso } from '@tilewright/runtime';
 import { newAction, newCondition, newRow, setActivePacks } from '@tilewright/behaviors';
 import { flatScene, thing } from '@tilewright/plugin-sdk/testing';
-import { Game } from './game';
-import { PointerBot } from './pointer-bot';
+import { Game } from '@tilewright/playbot';
+import { PointerBot } from '@tilewright/playbot';
+import { battle, playBattle } from '@tilewright/plugin-turns/playbot';
+import '@tilewright/bundled-plugins/tooling';
 
 setActivePacks(undefined);
 
@@ -28,8 +30,8 @@ describe('playing a battle with clicks', () => {
     const game = new Game({ scene });
     const bot = new PointerBot(game);
     bot.wait(0.2);
-    expect(bot.battle()).toMatchObject({ active: true, unit: 'Knight', team: 'blue' });
-    const r = bot.playBattle({ team: 'blue', maxSeconds: 120 });
+    expect(battle(bot)).toMatchObject({ active: true, unit: 'Knight', team: 'blue' });
+    const r = playBattle(bot, { team: 'blue', maxSeconds: 120 });
     expect(r.ok, r.message).toBe(true);
     expect(r.message).toMatch(/blue side won/);
     expect(r.turns).toBeGreaterThan(1);
@@ -41,7 +43,7 @@ describe('playing a battle with clicks', () => {
     const scene = sceneOf(fs, unit('Knight', 2.5, 2.5, 'blue', { attackDamage: 1 }), unit('Ogre', 3.5, 2.5, 'red', { attackDamage: 9 }), thing('ctl', 'Controls', 0.5, 0.5, { gridCursor: { team: 'blue' } }));
     scene.events = [{ ...newRow('r1'), conditions: [newCondition('start')], actions: [newAction('startBattle')], once: true }];
     const bot = new PointerBot(new Game({ scene }));
-    const r = bot.playBattle({ team: 'blue', maxSeconds: 120 });
+    const r = playBattle(bot, { team: 'blue', maxSeconds: 120 });
     expect(r.ok).toBe(false);
     expect(r.message).toMatch(/red side won/);
   });

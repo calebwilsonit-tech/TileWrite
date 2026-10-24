@@ -1,7 +1,6 @@
-import { C, cameraSnapshot, findPath, pictureOf, pointerSnapshot, type CameraReading, type Cell2, type Entity, type TransformIso } from '@tilewright/runtime';
-import { Bot, formatTime, type PlayReport } from './bot';
+import { cameraSnapshot, pictureOf, pointerSnapshot, type CameraReading, type Cell2 } from '@tilewright/runtime';
+import { Bot } from './bot';
 import { activateWidget, findOnScreens, openScreens, setChoice, setSlider, walkView, type ViewNode } from '@tilewright/behaviors';
-import { attackTargets, currentUnit, moveRange, takerOf, unitsOf } from '@tilewright/plugin-turns';
 
 /**
  * A bot that plays with a mouse, a screen and turns, like a person does: it moves the pointer over cells, clicks, drags a box,
@@ -18,11 +17,6 @@ export interface ClickOptions {
   hold?: number;
   /** Other buttons held during the click (for example { rts_attack_move: 1 } for attack-move). */
   keys?: Record<string, number>;
-}
-
-export interface BattleReport extends PlayReport {
-  rounds: number;
-  turns: number;
 }
 
 export class PointerBot extends Bot {
@@ -112,107 +106,5 @@ export class PointerBot extends Bot {
     return true;
   }
 
-  // ---------- turns ----------
-
-  /** Who is acting in the battle right now. */
-  battle(): { active: boolean; round: number; unit: string; team: string; winner: string; ap: number } {
-    const g = this.game;
-    const t = g.sim.runtime.turns;
-    const u = currentUnit(g.ctx);
-    return { active: t.active, round: t.round, unit: u?.name ?? '', team: u ? takerOf(u).team : '', winner: t.winner, ap: u ? (t.ap[u.id] ?? 0) : 0 };
-  }
-
-  private cellOfUnit(e: { require<T>(k: string): T }): Cell2 {
-    const t = e.require<TransformIso>(C.Transform);
-    return { x: Math.floor(t.x), y: Math.floor(t.y) };
-  }
-
-  /**
-   * Take one of my units' turn by clicking: select it, hit an enemy in reach, or walk toward the nearest enemy, then end the turn.
-   * Returns what it did, in words.
-   */
-  takeTurn(): string {
-    const g = this.game;
-    const me = currentUnit(g.ctx);
-    if (!me) return 'nobody is acting';
-    const cell = this.cellOfUnit(me);
-    const done: string[] = [];
-    for (let guard = 0; guard < 6 && this.battle().active && currentUnit(g.ctx) === me; guard++) {
-      const targets = attackTargets(g.ctx, me);
-      const ap = this.battle().ap;
-      if (targets.length > 0 && ap >= takerOf(me).attackCost) {
-        const foe = targets.sort((a, b) => (healthLeft(a) - healthLeft(b)))[0]!;
-        this.click(this.cellOfUnit(me));
-        this.click(this.cellOfUnit(foe));
-        done.push(`hit ${foe.name}`);
-        this.wait(0.4);
-        continue;
-      }
-      const reach = moveRange(g.ctx, me);
-      const foes = unitsOf(g.ctx).filter((u) => takerOf(u).team !== takerOf(me).team);
-      if (foes.length === 0 || reach.size <= 1) break;
-      const best = this.stepToward(me, foes, reach);
-      if (!best) break;
-      this.click(this.cellOfUnit(me));
-      this.click(best);
-      done.push(`walked to ${best.x},${best.y}`);
-      this.wait(1.2);
-      if (this.cellOfUnit(me).x === cell.x && this.cellOfUnit(me).y === cell.y && done.length > 3) break;
-    }
-    if (this.battle().active && currentUnit(g.ctx) === me) {
-      this.press('end_turn');
-      this.wait(0.4);
-      done.push('ended the turn');
-    }
-    return `${me.name}: ${done.join(', ') || 'waited'}`;
-  }
-
-  /**
-   * Where to walk this turn to get nearer the closest enemy: along the shortest way round walls (not through them), as far as
-   * the action points allow. Null when no cell it can reach is any nearer.
-   */
-  private stepToward(me: Entity, foes: Entity[], reach: ReturnType<typeof moveRange>): Cell2 | null {
-    const map = this.game.sim.map;
-    const here = this.cellOfUnit(me);
-    if (!map) return null;
-    const others = new Set(unitsOf(this.game.ctx).filter((u) => u !== me).map((u) => `${this.cellOfUnit(u).x},${this.cellOfUnit(u).y}`));
-    let route: Cell2[] | null = null;
-    for (const foe of foes) {
-      const goal = this.cellOfUnit(foe);
-      const path = findPath(map, here, goal, { stepUp: 1.01, maxDrop: 3, maxNodes: 40000, blocked: (x, y) => others.has(`${x},${y}`) && !(x === goal.x && y === goal.y) });
-      if (path && (!route || path.length < route.length)) route = path;
-    }
-    if (!route) return null;
-    for (let i = route.length - 2; i >= 0; i--) {
-      const c = { x: Math.floor(route[i]!.x), y: Math.floor(route[i]!.y) };
-      if (reach.has(`${c.x},${c.y}`) && (c.x !== here.x || c.y !== here.y)) return c;
-    }
-    return null;
-  }
-
-  /** Play my side of a battle until it is won, a side loses, or time runs out. Enemies play themselves. */
-  playBattle(opts: { team?: string; maxSeconds?: number } = {}): BattleReport {
-    const team = opts.team ?? 'blue';
-    const start = this.game.sim.tick;
-    const limit = Math.round((opts.maxSeconds ?? 300) * 60);
-    let turns = 0;
-    let rounds = 1;
-    for (let i = 0; i < 90 && !this.battle().active; i++) this.step(); // the battle may be about to start
-    while (this.game.sim.tick - start < limit) {
-      const b = this.battle();
-      if (!b.active) break;
-      rounds = Math.max(rounds, b.round);
-      if (b.team === team && b.unit) {
-        this.takeTurn();
-        turns++;
-      } else this.step();
-    }
-    const b = this.battle();
-    const seconds = (this.game.sim.tick - start) / 60;
-    if (!b.active && b.winner === team) return { ok: true, kind: 'reached', seconds, message: `The ${team} side won after ${rounds} rounds (${turns} turns, ${formatTime(seconds)}).`, rounds, turns };
-    if (!b.active) return { ok: false, kind: 'died', seconds, message: b.winner ? `The ${b.winner} side won.` : 'The battle ended with no winner.', rounds, turns };
-    return { ok: false, kind: 'timeout', seconds, message: `The battle was not finished after ${formatTime(seconds)}.`, rounds, turns };
-  }
 }
 
-const healthLeft = (e: { get<T>(k: string): T | undefined }): number => e.get<{ hp?: number }>('health')?.hp ?? 99;

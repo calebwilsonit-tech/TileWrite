@@ -14,7 +14,7 @@ import {
 } from '@tilewright/runtime';
 import { Game } from './game';
 import type { PushMove } from './push-solver';
-import { healthOf } from '@tilewright/plugin-combat';
+import { isDefeated, liveBridges } from '@tilewright/behaviors';
 
 /** A bot sees the game only through the buttons it presses: no teleporting, no editing the world. */
 
@@ -77,7 +77,8 @@ export class Bot {
     this.step();
   }
 
-  private pos(): { x: number; y: number } {
+  /** Where the player stands. */
+  pos(): { x: number; y: number } {
     return this.game.position;
   }
 
@@ -96,18 +97,9 @@ export class Bot {
     return out;
   }
 
-  /** Cells a text block is bridging right now (it is underlined): walkable even over a pit. */
+  /** Cells that are a bridge right now (something a plugin brought is bridging a pit): walkable even over a pit. */
   private bridges(): Set<string> {
-    const out = new Set<string>();
-    for (const o of this.game.sim.world.query('textBlock', C.Transform)) {
-      if (!(o.get<{ underline?: boolean }>('label')?.underline ?? false)) continue;
-      const t = o.require<TransformIso>(C.Transform);
-      const c = o.get<Collider>(C.Collider);
-      const w = c?.w ?? 2;
-      const d = c?.d ?? 1;
-      for (let x = Math.floor(t.x - w / 2 + 0.05); x <= Math.floor(t.x + w / 2 - 0.05); x++) for (let y = Math.floor(t.y - d / 2 + 0.05); y <= Math.floor(t.y + d / 2 - 0.05); y++) out.add(`${x},${y}`);
-    }
-    return out;
+    return liveBridges(this.game.sim.world);
   }
 
   private plan(goal: { x: number; y: number }): Cell2[] | null {
@@ -147,8 +139,7 @@ export class Bot {
         this.step();
         return done('reached', `Reached ${label} in ${formatTime((this.game.sim.tick - start) / 60)}.`, true);
       }
-      const hp = healthOf(this.game.player);
-      if (hp?.dead) return done('died', `The player was defeated on the way to ${label}.`);
+      if (isDefeated(this.game.player)) return done('died', `The player was defeated on the way to ${label}.`);
       if (this.game.sim.runtime.dialogue || this.game.sim.runtime.cutscene) {
         // a conversation or cutscene took the controls: let it play out by pressing the confirm button
         this.press('interact');
@@ -191,52 +182,6 @@ export class Bot {
       }
     }
     return done('timeout', `Did not reach ${label} within ${formatTime(opts.maxSeconds ?? 60)}.`);
-  }
-
-  /**
-   * Fight something with the quill and the movement buttons: walk up to it, swing when it is close, repeat until it is
-   * defeated or gone. Gives up when the player is defeated or time runs out.
-   */
-  fight(ref: string, opts: WalkOptions = {}): PlayReport {
-    const start = this.game.sim.tick;
-    const maxTicks = Math.round((opts.maxSeconds ?? 90) * 60);
-    const first = this.game.find(ref);
-    const label = opts.label ?? (first ? `"${first.name}"` : ref);
-    const done = (kind: ReportKind, message: string, ok = false): PlayReport => ({ ok, kind, seconds: (this.game.sim.tick - start) / 60, message, at: { ...this.pos() } });
-    if (!first) return done('blocked', `There is nothing matching "${ref}" to fight.`);
-    while (this.game.sim.tick - start < maxTicks) {
-      const target = this.game.find(ref);
-      if (!target || (healthOf(target)?.dead ?? false)) return done('reached', `Defeated ${label} in ${formatTime((this.game.sim.tick - start) / 60)}.`, true);
-      if (healthOf(this.game.player)?.dead) return done('died', `The player was defeated fighting ${label}.`);
-      if (this.game.sim.runtime.dialogue || this.game.sim.runtime.cutscene) {
-        this.press('interact');
-        continue;
-      }
-      const tt = target.require<TransformIso>(C.Transform);
-      const me = this.pos();
-      const dx = tt.x - me.x;
-      const dy = tt.y - me.y;
-      const dist = Math.hypot(dx, dy);
-      if (dist > 4) {
-        // far away: walk round whatever is in the way first
-        const r = this.walkTo({ x: tt.x, y: tt.y }, { arrive: 3, maxSeconds: 4, label });
-        if (!r.ok && r.kind !== 'timeout') return done(r.kind, r.message);
-        continue;
-      }
-      const snap: ActionSnapshot = {};
-      if (dist > 1.3) {
-        // a direction on the map is a pair of screen keys
-        const sx = (dx - dy) / 2;
-        const sy = (dx + dy) / 2;
-        if (sx > 0.25) snap.move_right = 1;
-        if (sx < -0.25) snap.move_left = 1;
-        if (sy > 0.25) snap.move_down = 1;
-        if (sy < -0.25) snap.move_up = 1;
-      }
-      if (dist < 1.9 && (this.game.sim.tick - start) % 24 === 0) snap.attack = 1;
-      this.step(snap);
-    }
-    return done('timeout', `Did not defeat ${label} within ${formatTime(opts.maxSeconds ?? 90)}.`);
   }
 
   /** Walk to an object (by reference) and stop close to it. */
@@ -382,22 +327,6 @@ export class Bot {
       if (!r.ok) return r;
     }
     return { ok: true, kind: 'reached', seconds: this.game.seconds, message: `Pushed the crates into place in ${formatTime(this.game.seconds)}.` };
-  }
-
-  /**
-   * Hold several plates down with echoes: record an echo walking to each plate in turn (all but the last), then
-   * stand on the last plate yourself. Needs an Echo Recorder with room for one echo fewer than there are plates.
-   */
-  holdPlatesWithEchoes(plateRefs: readonly string[]): PlayReport {
-    for (let i = 0; i < plateRefs.length - 1; i++) {
-      this.press('echo'); // start recording
-      const r = this.walkToEntity(plateRefs[i]!, { arrive: 0.12 });
-      if (!r.ok) return r;
-      this.wait(0.2);
-      this.press('echo'); // stop: the echo takes over this plate
-    }
-    const last = this.standOn(plateRefs[plateRefs.length - 1]!, 0.6);
-    return last.ok ? { ...last, message: `Held ${plateRefs.length} plates (${plateRefs.length - 1} with echoes) in ${formatTime(this.game.seconds)}.` } : last;
   }
 
   /**

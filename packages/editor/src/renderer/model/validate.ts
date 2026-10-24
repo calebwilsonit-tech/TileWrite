@@ -1,5 +1,5 @@
 import '../../bundled';
-import { EMPTY_TILE, FLAG, SLOPE_RISE, groundHeightAt, reachableCells, textBridgeCells } from '@tilewright/runtime';
+import { EMPTY_TILE, FLAG, SLOPE_RISE, groundHeightAt, reachableCells } from '@tilewright/runtime';
 import { highSide, lowSide, meetsTop } from '../tools/algorithms';
 import type { EditorDoc } from './doc';
 import type { ProblemFix } from './logic-fix';
@@ -14,6 +14,7 @@ import {
   knownPackOfBehavior,
   listPacks,
   host,
+  possibleBridges,
 } from '@tilewright/behaviors';
 
 export interface Problem {
@@ -293,7 +294,7 @@ export function validateScene(doc: EditorDoc, sprites?: ReadonlySet<string>, pre
   if (players.length > 0) {
     const t = players[0]!.components.transform as T | undefined;
     if (t && map.inBounds(Math.floor(t.x), Math.floor(t.y))) {
-      const reach = reachableCells(map, { x: Math.floor(t.x), y: Math.floor(t.y) }, { bridges: textBridgeCells(doc.entities, doc.wires) });
+      const reach = reachableCells(map, { x: Math.floor(t.x), y: Math.floor(t.y) }, { bridges: possibleBridges(doc.entities, doc.wires) });
       let walkable = 0;
       let island: { x: number; y: number } | null = null;
       for (let y = 0; y < map.height; y++) {

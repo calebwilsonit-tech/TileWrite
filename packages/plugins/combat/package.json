@@ -11,6 +11,7 @@
   },
   "exports": {
     ".": "./src/index.ts",
-    "./editor": "./src/editor.ts"
+    "./editor": "./src/editor.ts",
+    "./playbot": "./src/playbot.ts"
   }
 }

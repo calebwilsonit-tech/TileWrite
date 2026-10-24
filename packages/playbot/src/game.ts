@@ -1,4 +1,3 @@
-import '@tilewright/bundled-plugins';
 import {
   C,
   Simulation,

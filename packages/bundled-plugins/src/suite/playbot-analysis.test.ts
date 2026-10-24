@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { FLAG, tileMapToRows, type SceneData } from '@tilewright/runtime';
 import { flatScene, player, thing } from '@tilewright/plugin-sdk/testing';
-import { analyseLevel, cellKey, fixedCells, goalsOf, prepare, reachCells, walkerOf, solidCells } from './analysis';
-import { analysePushPuzzles, extractPushPuzzle, solvePush } from './push-solver';
+import { analyseLevel, cellKey, fixedCells, goalsOf, prepare, reachCells, walkerOf, solidCells } from '@tilewright/playbot';
+import { analysePushPuzzles, extractPushPuzzle, solvePush } from '@tilewright/playbot';
+import '@tilewright/bundled-plugins/tooling';
 
 function room(w = 16, h = 10) {
   const fs = flatScene(w, h);

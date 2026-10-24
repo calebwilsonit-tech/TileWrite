@@ -11,6 +11,7 @@
     "@tilewright/plugin-combat": "*"
   },
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./playbot": "./src/playbot.ts"
   }
 }

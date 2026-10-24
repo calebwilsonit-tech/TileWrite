@@ -17,10 +17,13 @@
     "@tilewright/plugin-sim": "*",
     "@tilewright/plugin-story": "*",
     "@tilewright/plugin-storytender": "*",
-    "@tilewright/plugin-turns": "*"
+    "@tilewright/plugin-turns": "*",
+    "@tilewright/playbot": "*",
+    "@tilewright/behaviors": "*"
   },
   "exports": {
     ".": "./src/index.ts",
-    "./editor": "./src/editor.ts"
+    "./editor": "./src/editor.ts",
+    "./tooling": "./src/tooling.ts"
   }
 }

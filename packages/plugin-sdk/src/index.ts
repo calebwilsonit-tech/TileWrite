@@ -5,3 +5,6 @@ export type { Checkpoint, LoadResult } from '@tilewright/runtime';
 export { PACKAGE_NAME, newRow as newTableRow } from '@tilewright/runtime';
 export type { EventDef } from '@tilewright/behaviors';
 export { newRow } from '@tilewright/behaviors';
+export { Bot, Game, PointerBot, formatTime } from '@tilewright/playbot';
+export type { GameSetup, PlayReport, ReportKind, WalkOptions } from '@tilewright/playbot';
+export * from './playbot';

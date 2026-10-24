@@ -1,16 +1,15 @@
-import '@tilewright/bundled-plugins';
 import {
   FLAG,
   cellWalkable,
   expandEntities,
   stepAllowed,
-  textBridgeCells,
   tileMapFromRows,
   type EntityData,
   type PrefabMap,
   type SceneData,
   type TileMap,
 } from '@tilewright/runtime';
+import { isMovableByPuzzle, possibleBridges } from '@tilewright/behaviors';
 
 /**
  * Level analysis without running the game: what can the player reach, can a gate be bypassed, is a goal
@@ -102,7 +101,7 @@ export function solidCells(entities: readonly EntityData[], pick: (e: EntityData
 
 /** Fixed scenery (not gates, not crates, not the player's kind): always in the way. */
 export const fixedCells = (entities: readonly EntityData[]): Set<string> =>
-  solidCells(entities, (e) => !isGate(e) && !isCrate(e) && e.components.body === undefined && e.components.textBlock === undefined);
+  solidCells(entities, (e) => !isGate(e) && !isCrate(e) && e.components.body === undefined && !isMovableByPuzzle(e));
 
 const DIRS: [number, number][] = [[0, -1], [1, 0], [0, 1], [-1, 0]];
 
@@ -181,7 +180,7 @@ export function analyseLevel(scene: SceneData, prefabs: PrefabMap = new Map()): 
     }
     return cells;
   };
-  const bridges = textBridgeCells(prep.entities, scene.wires);
+  const bridges = possibleBridges(prep.entities, scene.wires);
   const allOpen = reachCells(prep.map, t, walker, fixed, bridges);
   const allClosed = reachCells(prep.map, t, walker, closedCells(), bridges);
   for (const goal of goalsOf(prep.entities)) {

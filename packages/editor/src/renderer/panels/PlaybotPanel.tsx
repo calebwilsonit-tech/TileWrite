@@ -1,4 +1,5 @@
 import { Bot, extractPushPuzzle, solvePuzzles, solvePush, type PlayReport } from '@tilewright/playbot';
+import { host } from '@tilewright/behaviors';
 import { store, useApp } from '../app/store';
 
 /** The bot that plays the open scene with the same buttons a player has, and the playthroughs it (or you) recorded. */
@@ -78,7 +79,7 @@ export function PlaybotPanel() {
         </button>
         <button
           data-testid="bot-search"
-          title="Tries short plans (record an echo onto a plate, stand on one, flip a lever, push the crates) until one lets the bot reach the goal"
+          title="Tries short plans (stand on a plate, flip a lever, push the crates, and whatever the plugins add) until one lets the bot reach the goal"
           onClick={() => {
             const ref = needGoal();
             const setup = store.headlessSetup();
@@ -97,21 +98,21 @@ export function PlaybotPanel() {
         >
           Search for a solution
         </button>
-        <button
-          data-testid="bot-echo"
-          onClick={() => {
-            const plates = (store.doc?.entities ?? []).filter((e) => e.components.pressurePlate !== undefined);
-            if (plates.length < 2) return store.botSay('warn', 'This needs at least two pressure plates.');
-            if (!store.doc?.entities.some((e) => e.tags.includes('player') && e.components.echoRecorder)) return store.botSay('warn', 'The player has no Echo Recorder behaviour, so there are no echoes to hold the plates.');
-            runBot('Holding the plates with echoes', (bot) => {
-              const r = bot.holdPlatesWithEchoes(plates.map((p) => `id:${p.id}`));
-              bot.wait(1);
-              return r;
-            });
-          }}
-        >
-          Hold the plates with echoes
-        </button>
+        {[...host.ext.playbotStrategies.values()].map((s) => (
+          <button
+            key={s.id}
+            data-testid={`bot-${s.id}`}
+            title={s.help}
+            onClick={() => {
+              const scene = { entities: store.doc?.entities ?? [] };
+              const why = s.unavailable?.(scene) ?? null;
+              if (why) return store.botSay('warn', why);
+              runBot(s.label, (bot) => s.play(bot, scene) as PlayReport);
+            }}
+          >
+            {s.label}
+          </button>
+        ))}
       </div>
 
       <h4>Playthroughs</h4>

@@ -3,16 +3,17 @@ import { Bot, formatTime } from './bot';
 import { Game, type GameSetup } from './game';
 import { expandEntities } from '@tilewright/runtime';
 import { extractPushPuzzle, solvePush } from './push-solver';
+import { host } from '@tilewright/behaviors';
 
 /**
- * A puzzle solver that searches combinations of what a player can do in a room: record an echo onto a plate, stand on a
- * plate, flip a lever, push the crates onto their plates. It tries short plans first (a walk with no help, then one
+ * A puzzle solver that searches combinations of what a player can do in a room: stand on a plate, flip a lever, push the
+ * crates onto their plates, and whatever steps the plugins that are on add. It tries short plans first (a walk with no help, then one
  * thing, then two...), each time playing the plan from the first frame with the player's buttons only, and stops at the
  * first that lets the player reach the goal. Because every try is a real run of the game, whatever it finds works in the
  * game exactly as shown (and an impossible room is reported honestly after the search). Meant for small rooms.
  */
 
-export type MacroKind = 'echo' | 'stand' | 'lever' | 'push';
+export type MacroKind = string;
 
 export interface Macro {
   kind: MacroKind;
@@ -62,14 +63,14 @@ export function candidateMacros(setup: GameSetup): Macro[] {
     return t && pt ? Math.hypot(t.x - pt.x, t.y - pt.y) : 0;
   };
   const out: Macro[] = [];
-  const canEcho = player?.components.echoRecorder !== undefined;
   const byDistance = [...entities].sort((a, b) => dist(a) - dist(b));
   for (const e of byDistance) {
     if (e.components.transform === undefined) continue;
+    // the steps plugins offer for this object come first (a copy of yourself on a plate, before standing on it)
+    for (const move of host.ext.playbotMoves.values()) for (const o of move.offer(e, player)) out.push({ kind: move.id, ref: o.ref, label: o.label });
     const plate = e.components.pressurePlate as { activatedBy?: string } | undefined;
     if (plate) {
       const ref = `id:${sceneIdOf(e)}`;
-      if (canEcho) out.push({ kind: 'echo', ref, label: `record an echo onto "${e.name}"` });
       out.push({ kind: 'stand', ref, label: `stand on "${e.name}"` });
     }
     if (e.components.lever !== undefined) out.push({ kind: 'lever', ref: `id:${sceneIdOf(e)}`, label: `flip "${e.name}"` });
@@ -80,21 +81,11 @@ export function candidateMacros(setup: GameSetup): Macro[] {
   return out;
 }
 
-/** Carry out one step with the player's buttons. Returns whether it worked. `echoSeconds` remembers how long each echo's walk is. */
-function perform(bot: Bot, game: Game, setup: GameSetup, m: Macro, echoSeconds: number[]): boolean {
+/** Carry out one step with the player's buttons. Returns whether it worked. `memory` is shared by the steps of one try. */
+function perform(bot: Bot, game: Game, setup: GameSetup, m: Macro, memory: Record<string, unknown>): boolean {
+  const plugged = host.ext.playbotMoves.get(m.kind);
+  if (plugged) return plugged.perform(bot, game, m.ref, memory);
   switch (m.kind) {
-    case 'echo': {
-      const started = game.seconds;
-      bot.press('echo');
-      const r = bot.walkToEntity(m.ref, { arrive: 0.12, maxSeconds: 30 });
-      if (!r.ok) return false;
-      bot.wait(0.25);
-      bot.press('echo');
-      echoSeconds.push(game.seconds - started);
-      // every echo walks its recording again from the start: wait until they have all arrived
-      bot.wait(Math.max(...echoSeconds) + 0.4);
-      return true;
-    }
     case 'stand':
       return bot.standOn(m.ref, 0.8, { maxSeconds: 30 }).ok;
     case 'lever':
@@ -105,6 +96,8 @@ function perform(bot: Bot, game: Game, setup: GameSetup, m: Macro, echoSeconds: 
       const plan = solvePush(puzzle);
       return plan.solvable && bot.executePushes(plan.moves).ok;
     }
+    default:
+      return false;
   }
 }
 
@@ -135,9 +128,9 @@ export function solvePuzzles(setup: GameSetup, opts: SolveOptions = {}): SolveRe
     plans++;
     const game = new Game(setup);
     const bot = new Bot(game);
-    const echoSeconds: number[] = [];
+    const memory: Record<string, unknown> = {};
     for (let i = 0; i < plan.length; i++) {
-      if (!perform(bot, game, setup, macros[plan[i]!]!, echoSeconds)) {
+      if (!perform(bot, game, setup, macros[plan[i]!]!, memory)) {
         dead.add(plan.slice(0, i + 1).join(','));
         return { ok: false, carried: false, game, bot };
       }
@@ -202,7 +195,7 @@ export function solvePuzzles(setup: GameSetup, opts: SolveOptions = {}): SolveRe
     gaveUp,
     message: gaveUp
       ? `No solution found yet after ${plans} plans (the search stopped at its limit). A bigger room needs a bigger limit, or the puzzle may not be solvable.`
-      : `No way to reach the goal was found with up to ${maxSteps} steps of ${macros.length === 0 ? 'nothing to use in this room' : 'echoes, plates, levers and crates'} (${plans} plans tried). The puzzle may be impossible.`,
+      : `No way to reach the goal was found with up to ${maxSteps} steps of ${macros.length === 0 ? 'nothing to use in this room' : 'moves, plates, levers and crates'} (${plans} plans tried). The puzzle may be impossible.`,
   };
 }
 

@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import path from 'node:path';
 import { clickCell, createProjectViaUi, dragCells, launchEditor, pickTool, shot } from './helpers';
 import { addBehaviors, addObject, loadSampleGame, saveSample, selectObject, setFields, tab, where } from './sample-helpers';
+import { battle, playBattle } from '@tilewright/plugin-turns/playbot';
 
 /**
  * Sample 1 of Phase 2: a tactics battle on a grid with hills. Made from the Tactics starter in the editor with the mouse and
@@ -77,10 +78,10 @@ test('Phase 2 sample: tactics - a third enemy on a second hill, a victory flag, 
 
   const { game, bot } = await loadSampleGame(dir);
   bot.wait(0.3);
-  expect(bot.battle()).toMatchObject({ active: true, team: 'blue' });
+  expect(battle(bot)).toMatchObject({ active: true, team: 'blue' });
   const hillTop = where(game, 'Slinger');
   expect(hillTop.h).toBeGreaterThan(0); // standing on the second hill
-  const r = bot.playBattle({ team: 'blue', maxSeconds: 600 });
+  const r = playBattle(bot, { team: 'blue', maxSeconds: 600 });
   expect(r.ok, r.message).toBe(true);
   expect(game.sim.runtime.vars.victory).toBe(1);
   expect(path.basename(dir)).toBe('tactics');

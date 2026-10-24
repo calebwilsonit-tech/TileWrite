@@ -1,11 +1,6 @@
 {
   "loadProblems": [],
-  "check": [
-    "warning: Controls: \"Digit1\" is used by both \"Quick slot 1\" and \"Gravity: the floor\".",
-    "warning: Controls: \"Digit2\" is used by both \"Quick slot 2\" and \"Gravity: the west wall\".",
-    "warning: Controls: \"Digit3\" is used by both \"Quick slot 3\" and \"Gravity: the ceiling\".",
-    "warning: Controls: \"Digit4\" is used by both \"Quick slot 4\" and \"Gravity: the south wall\"."
-  ],
+  "check": [],
   "project": {
     "schemaVersion": 1,
     "packs": "",

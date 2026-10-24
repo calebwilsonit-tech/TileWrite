@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { createProjectViaUi, launchEditor, shot } from './helpers';
 import { loadSampleGame, saveSample, selectObject, setFields, tab } from './sample-helpers';
+import { battle, playBattle } from '@tilewright/plugin-turns/playbot';
 
 async function setText(page: Page, testId: string, value: string): Promise<void> {
   await page.getByTestId(testId).fill(value);
@@ -159,7 +160,7 @@ test('Phase 2 sample: roguelike - seeded dungeon, loot table, permadeath and a n
   expect(firstSeed).toBeDefined();
   game.sim.runtime.vars.gold = 40; // carried gold must vanish with the run
   for (let i = 0; i < 60 * 900 && Number(game.sim.runtime.vars['run.count'] ?? 0) === 0; i++) {
-    if (bot.battle().active && bot.battle().team === 'blue') bot.press('end_turn');
+    if (battle(bot).active && battle(bot).team === 'blue') bot.press('end_turn');
     else bot.step();
   }
   expect(game.sim.runtime.vars['run.count']).toBe(1);
@@ -171,7 +172,7 @@ test('Phase 2 sample: roguelike - seeded dungeon, loot table, permadeath and a n
   expect(game.sim.world.withTag('red').length).toBe(4);
 
   // ---- then it plays this run properly: hunts the rats room by room until the dungeon is clear ----
-  const r = bot.playBattle({ team: 'blue', maxSeconds: 1500 });
+  const r = playBattle(bot, { team: 'blue', maxSeconds: 1500 });
   expect(r.ok, r.message).toBe(true);
   expect(game.sim.runtime.vars.victory).toBe(1);
   expect(Number(game.sim.runtime.vars.gold ?? 0) + Number(game.sim.runtime.vars.potions ?? 0)).toBeGreaterThanOrEqual(0);

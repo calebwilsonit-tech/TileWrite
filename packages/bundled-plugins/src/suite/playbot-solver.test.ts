@@ -2,10 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { FLAG, tileMapToRows, type SceneData } from '@tilewright/runtime';
 import { attachBehavior } from '@tilewright/behaviors';
 import { flatScene, player, thing } from '@tilewright/plugin-sdk/testing';
-import { Game } from './game';
-import { Bot } from './bot';
-import { PlaythroughSchema, newPlaythrough, replayPlaythrough } from './playthrough';
-import { candidateMacros, solvePuzzles } from './solver';
+import { Game } from '@tilewright/playbot';
+import { Bot } from '@tilewright/playbot';
+import { PlaythroughSchema, newPlaythrough, replayPlaythrough } from '@tilewright/playbot';
+import { candidateMacros, solvePuzzles } from '@tilewright/playbot';
+import '@tilewright/bundled-plugins/tooling';
 
 type FS = ReturnType<typeof flatScene>;
 function sceneOf(fs: FS, ...entities: SceneData['entities']): SceneData {

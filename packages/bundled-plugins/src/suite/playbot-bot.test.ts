@@ -2,10 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { DialogueSchema, FLAG, ItemSchema, newMinigame, tileMapToRows, type MinigameData, type SceneData } from '@tilewright/runtime';
 import { attachBehavior, output } from '@tilewright/behaviors';
 import { flatScene, player, thing } from '@tilewright/plugin-sdk/testing';
-import { Bot, formatTime } from './bot';
-import { Game } from './game';
-import { extractPushPuzzle, solvePush } from './push-solver';
-import { PlaythroughSchema, newPlaythrough, replayPlaythrough } from './playthrough';
+import { Bot, formatTime } from '@tilewright/playbot';
+import { Game } from '@tilewright/playbot';
+import { extractPushPuzzle, solvePush } from '@tilewright/playbot';
+import { PlaythroughSchema, newPlaythrough, replayPlaythrough } from '@tilewright/playbot';
+import { fight } from '@tilewright/plugin-combat/playbot';
+import { holdPlatesWithEchoes } from '@tilewright/plugin-storytender/playbot';
+import '@tilewright/bundled-plugins/tooling';
 
 type FS = ReturnType<typeof flatScene>;
 function sceneOf(fs: FS, ...entities: SceneData['entities']): SceneData {
@@ -172,7 +175,7 @@ describe('puzzles', () => {
     );
     const game = new Game({ scene });
     const bot = new Bot(game);
-    const r = bot.holdPlatesWithEchoes(['id:p1', 'id:p2']);
+    const r = holdPlatesWithEchoes(bot, ['id:p1', 'id:p2']);
     expect(r.ok).toBe(true);
     expect(r.message).toMatch(/^Held 2 plates \(1 with echoes\) in /);
     bot.wait(1.5);
@@ -287,15 +290,15 @@ describe('fighting', () => {
 
   it('walks up to something and defeats it with the quill', () => {
     const game = arena(4);
-    const r = new Bot(game).fight('name:Slime');
+    const r = fight(new Bot(game), 'name:Slime');
     expect(r.ok).toBe(true);
     expect(r.message).toMatch(/^Defeated "Slime" in [\d.]+s\.$/);
     expect(game.find('name:Slime')).toBeUndefined();
   });
 
   it('says plainly when there is nothing to fight, or it takes too long', () => {
-    expect(new Bot(arena(4)).fight('name:Dragon')).toMatchObject({ ok: false, kind: 'blocked', message: 'There is nothing matching "name:Dragon" to fight.' });
-    const r = new Bot(arena(400)).fight('name:Slime', { maxSeconds: 3 });
+    expect(fight(new Bot(arena(4)), 'name:Dragon')).toMatchObject({ ok: false, kind: 'blocked', message: 'There is nothing matching "name:Dragon" to fight.' });
+    const r = fight(new Bot(arena(400)), 'name:Slime', { maxSeconds: 3 });
     expect(r).toMatchObject({ ok: false, kind: 'timeout' });
   });
 });

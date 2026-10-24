@@ -24,9 +24,7 @@ import {
   openScreen,
   openStartScreens,
   screenNamed,
-  type InputMapDef,
   type SlotInfo,
-  type Simulation,
   contextOf,
   routeInput,
   SCREENS_CSS,
@@ -38,7 +36,7 @@ import {
 } from '@tilewright/plugin-sdk';
 import { healthOf } from '@tilewright/plugin-combat';
 import { host as plugins } from '@tilewright/plugin-sdk';
-import { litPosts, type LitPost } from '@tilewright/plugin-storytender';
+import { litPosts } from '@tilewright/plugin-storytender';
 import { confirmDialogue, selectChoice } from '@tilewright/plugin-story';
 import { useItem } from '@tilewright/plugin-inventory';
 

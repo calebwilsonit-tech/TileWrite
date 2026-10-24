@@ -127,6 +127,9 @@ export interface PluginApi {
   template(def: X.TemplateDef): void;
   validator(def: X.ValidatorDef): void;
   playbotStrategy(def: X.PlaybotStrategyDef): void;
+  playbotMove(def: X.PlaybotMoveDef): void;
+  /** Cells that can be walked over a pit or water because of something this plugin brings. */
+  bridgeSource(def: X.BridgeSourceDef): void;
 
   // --- the assistant ---
   fileReader(def: X.FileReaderDef): void;
@@ -207,6 +210,8 @@ const emptyExtensions = (): Extensions => ({
   templates: new Map(),
   validators: new Map(),
   playbotStrategies: new Map(),
+  playbotMoves: new Map(),
+  bridgeSources: new Map(),
   fileReaders: new Map(),
   assistantTools: new Map(),
   imageProviders: new Map(),
@@ -540,6 +545,12 @@ export class PluginHost {
       },
       playbotStrategy(def) {
         host.add(rec, id, 'playbotStrategies', def.id, def);
+      },
+      playbotMove(def) {
+        host.add(rec, id, 'playbotMoves', def.id, def);
+      },
+      bridgeSource(def) {
+        host.add(rec, id, 'bridgeSources', def.id, def);
       },
       fileReader(def) {
         host.add(rec, id, 'fileReaders', def.id, def);

@@ -6,6 +6,8 @@ import { loadScene, openProject } from '../packages/editor/src/renderer/project/
 import { loadAllPrefabs } from '../packages/editor/src/renderer/project/prefabs';
 import { loadCutscenes, loadDialogues, loadItems } from '../packages/editor/src/renderer/project/story';
 import type { AssetFs } from '../packages/editor/src/renderer/studio/assets';
+import { fight } from '@tilewright/plugin-combat/playbot';
+import { holdPlatesWithEchoes } from '@tilewright/plugin-storytender/playbot';
 
 /** The project's files, read straight from disk (what an export would ship), for a bot that plays without the editor. */
 const nodeFs: AssetFs = {
@@ -83,9 +85,9 @@ export async function playSlice(projectDir: string): Promise<SliceRun> {
   if (game.scenePath !== 'scenes/dungeon.scene.json') throw new Error(`The portal did not lead to the dungeon (the game is in "${game.scenePath}").\n${log.join('\n')}`);
 
   // the dungeon: the echo puzzle on the plateau, then the second room
-  did('hold both plates (one with an echo)', bot.holdPlatesWithEchoes(['name:Echo plate A', 'name:Echo plate B']));
+  did('hold both plates (one with an echo)', holdPlatesWithEchoes(bot, ['name:Echo plate A', 'name:Echo plate B']));
   bot.wait(3); // the gate slides open
-  did('clear the guard', bot.fight('name:Guard'));
+  did('clear the guard', fight(bot, 'name:Guard'));
   const puzzle = extractPushPuzzle(scenes.get('scenes/dungeon.scene.json')!, prefabs, { player: game.position }); // from where the player stands now
   if (!puzzle) throw fail('The dungeon has no crate puzzle for the bot to find.');
   const plan = solvePush(puzzle);
@@ -96,7 +98,7 @@ export async function playSlice(projectDir: string): Promise<SliceRun> {
   bot.wait(1);
   did('light the dungeon lantern', bot.interact('name:Dungeon lantern'));
   bot.wait(0.5);
-  did('beat the boss', bot.fight('name:Boss', { maxSeconds: 120 }));
+  did('beat the boss', fight(bot, 'name:Boss', { maxSeconds: 120 }));
   bot.wait(1);
   did('walk out through the exit gate', bot.walkToEntity('tag:goal'));
   return { log, game, bot };

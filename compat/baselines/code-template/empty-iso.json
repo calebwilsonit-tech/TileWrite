@@ -3,7 +3,7 @@
   "check": [],
   "project": {
     "schemaVersion": 1,
-    "packs": "combat,inventory,story,ai,lighting,storytender",
+    "packs": "",
     "roundTrip": true
   },
   "scenes": {
@@ -287,7 +287,7 @@
   "playthroughs": {},
   "exported": {
     "files": {
-      "project.json": "d2c472a5d2983973",
+      "project.json": "7571ec6a70054a04",
       "scenes/main.scene.json": "ecbdc8dc1757af4a"
     },
     "manifest": "2db0394e870a5d04",

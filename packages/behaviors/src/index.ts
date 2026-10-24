@@ -25,6 +25,8 @@ export * from './events/graph-convert';
 export * from './builtins/devices';
 export * from './builtins/interact';
 export * from './nav';
+export * from './bridges';
+export * from './defeat';
 export * from './facing';
 export * from './point';
 export * from './travel';

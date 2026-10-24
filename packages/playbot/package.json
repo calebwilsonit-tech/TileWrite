@@ -8,8 +8,6 @@
   "types": "./src/index.ts",
   "dependencies": {
     "@tilewright/runtime": "*",
-    "@tilewright/behaviors": "*",
-    "@tilewright/bundled-plugins": "*",
-    "@tilewright/plugin-sdk": "*"
+    "@tilewright/behaviors": "*"
   }
 }

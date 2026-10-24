@@ -1,6 +1,11 @@
 {
   "loadProblems": [],
-  "check": [],
+  "check": [
+    "warning: Controls: \"Escape\" is used by both \"Pause menu\" and \"Put the building away\".",
+    "warning: Controls: \"KeyA\" is used by both \"Move left\" and \"Attack-move (hold, then right-click)\".",
+    "warning: Controls: \"KeyE\" is used by both \"Interact / talk / confirm\" and \"Turn the world right\".",
+    "warning: Controls: \"KeyS\" is used by both \"Move down\" and \"Stop the selected units\"."
+  ],
   "project": {
     "schemaVersion": 1,
     "packs": "controls,story,inventory",
