@@ -1,0 +1,57 @@
+# Blocks, solidity and gravity
+
+The world is made of blocks. A body (the player, an enemy, a crate you can push) is a box, and the physics tests that whole box against every solid block it moves into, in every direction. Gravity is a direction, so the floor, a wall or the ceiling can be "down". This page is about the parts you can use; [gravity_diagnosis.md](gravity_diagnosis.md) says what was wrong before and why.
+
+## Turning it on
+
+Block physics is a behaviour that changed after older projects were made, so it sits behind a compatibility flag. **New projects have it on.** An older project plays exactly as it always did until you tick **Project settings -> Compatibility -> Bodies collide with every block...**. The two physics agree on everything the older one did (the older one's whole test list runs against both), and add what it could not do:
+
+- a ceiling stops a jump, and a body cannot walk under an overhang it does not fit under;
+- a body next to a wall is stopped by the wall at any height, not only at the feet;
+- gravity can point down, up, or at any of the four walls.
+
+## What is solid
+
+Every block is solid unless it says it is not. Only that decides it: the tile's look, its layer and whether it counts as a "wall" in the Layers panel make no difference.
+
+| Thing | Solid when |
+| --- | --- |
+| A column of a tile | from far below up to its height |
+| A block in a stack | at its own level (a stack can have gaps: arches, tunnels, balconies) |
+| Stairs and ramps | as a staircase of fine steps, so a body climbs them smoothly |
+| A deck (a bridge) | its one level; there is room under it |
+| A blocker cell | at every level, or only between the levels it names |
+| Water | at every level for a body that cannot wade (a bridge over it is clear above the bridge) |
+| A pit | has no floor |
+| The edge of the map, and a cell with no tile | at every level: the edge of the world is a wall |
+
+To make a tile or one block that bodies pass through (a vine, a picture painted on a wall), set **Solid** off: for a tile in the tile studio (Properties), for one block with the Blocks tool (Not solid).
+
+A body that stands on something low enough steps up onto it (its *step up*, about a third of a level), and follows small drops down (its *step down*). Bigger steps stop it; a jump gets it over.
+
+## Gravity
+
+Gravity pulls toward one of six sides: down (the floor), up (the ceiling), or toward the west, east, north or south wall. The scene has one (Inspector with nothing selected: **Gravity pulls**), and any object can have its own (its Body: **gdir**). While the game runs:
+
+- the Quick Action **Turn gravity** (for the scene, the player, or the object the row is looking at), or a script (`game.setGravity("-x")`), changes it;
+- the condition **Gravity points a way** reads it;
+- the event **gravity turns for something** and **lands** tell your rows when it happened.
+
+When gravity turns for a body, the body keeps the middle it had, forgets how it was moving, and falls toward the new surface. It is never put inside a block; if the turn would leave it inside one, it is pushed out. Its picture turns to match (a drawn sprite is turned so its head points the way "up" is; a plain box is drawn as the box it is).
+
+The controls follow the surface: on a floor or a ceiling the move keys go the same on-screen ways; on a wall, up is up the wall and right runs along it. Jump goes away from the surface it stands on.
+
+Everything that moves a body (control, walking AI, a push) sets the two velocities in the plane the body walks on; the one along gravity is the body's fall, managed by the physics.
+
+## Placing and breaking blocks
+
+In the editor, the **Blocks** tool places and removes blocks one at a time, on the face you point at (see below). While the game runs, a game can place and break blocks too, but only if the scene says so: **Inspector (no selection) -> Blocks while playing**, with a limit on how many edits one run may make. Then:
+
+- Quick Actions **Place a block** and **Break a block**, the condition **There is a block in a place**, and the events **a block is placed / broken**;
+- scripts: `game.setBlock(x, y, z, "stone")`, `game.breakBlock(x, y, z)`, `game.blockAt(x, y, z)`.
+
+A block is refused (with a message in the Problems panel and the Console) when the scene does not allow it, the limit is reached, the place is taken, or a body is standing there. What the game placed and broke is saved with the game and put back when it loads.
+
+## What to look at while you work
+
+Layers panel -> **Gravity (while playing)** draws, for every body, an arrow for the way it is pulled, a dot where it touches what it stands on (green: it stands, red: it does not), the box the physics tests it with, and, for the thing the camera follows, the white line to the camera that decides which walls fade. A wall fades only when that line runs through it.

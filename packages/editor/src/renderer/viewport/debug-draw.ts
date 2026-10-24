@@ -1,6 +1,6 @@
 import type { Graphics } from 'pixi.js';
 import { facingVector } from '@tilewright/behaviors';
-import { gridToScreen, type IsoConfig } from '@tilewright/runtime';
+import { gridToScreen, type Aabb, type IsoConfig } from '@tilewright/runtime';
 import { PALETTE } from './palette';
 
 /** Debug shapes drawn in grid space on a Graphics, shared by the editor's overlay and the running game's. */
@@ -199,4 +199,35 @@ export function drawWire(g: Graphics, w: WireShape, iso: IsoConfig): void {
   const angle = Math.atan2(pb.y - pa.y, pb.x - pa.x);
   const head = 10;
   g.poly([pb.x, pb.y, pb.x - head * Math.cos(angle - 0.45), pb.y - head * Math.sin(angle - 0.45), pb.x - head * Math.cos(angle + 0.45), pb.y - head * Math.sin(angle + 0.45)]).fill({ color, alpha });
+}
+
+/** The corners of a box in grid space, as screen points. */
+function corners(b: Aabb, iso: IsoConfig): { x: number; y: number }[] {
+  const out: { x: number; y: number }[] = [];
+  for (const z of [b.z0, b.z1]) for (const [x, y] of [[b.x0, b.y0], [b.x1, b.y0], [b.x1, b.y1], [b.x0, b.y1]] as const) out.push(gridToScreen(x, y, z, iso));
+  return out;
+}
+
+/** A box's edges (what a body occupies, as the physics sees it). */
+export function drawBox(g: Graphics, b: Aabb, iso: IsoConfig, color: number, alpha = 0.9): void {
+  const c = corners(b, iso);
+  const edges = [[0, 1], [1, 2], [2, 3], [3, 0], [4, 5], [5, 6], [6, 7], [7, 4], [0, 4], [1, 5], [2, 6], [3, 7]] as const;
+  for (const [i, j] of edges) g.moveTo(c[i]!.x, c[i]!.y).lineTo(c[j]!.x, c[j]!.y);
+  g.stroke({ width: 1, color, alpha });
+}
+
+/** An arrow from a point along a direction (in grid space, `len` levels or cells long). */
+export function drawArrow(g: Graphics, from: { x: number; y: number; h: number }, dir: readonly [number, number, number], len: number, iso: IsoConfig, color: number): void {
+  const a = gridToScreen(from.x, from.y, from.h, iso);
+  const b = gridToScreen(from.x + dir[0] * len, from.y + dir[1] * len, from.h + dir[2] * len, iso);
+  g.moveTo(a.x, a.y).lineTo(b.x, b.y).stroke({ width: 2, color, alpha: 0.95 });
+  const ang = Math.atan2(b.y - a.y, b.x - a.x);
+  for (const turn of [2.6, -2.6]) g.moveTo(b.x, b.y).lineTo(b.x + Math.cos(ang + turn) * 8, b.y + Math.sin(ang + turn) * 8);
+  g.stroke({ width: 2, color, alpha: 0.95 });
+}
+
+/** A small mark where a body touches what it stands on. */
+export function drawContact(g: Graphics, at: { x: number; y: number; h: number }, iso: IsoConfig, on: boolean): void {
+  const p = gridToScreen(at.x, at.y, at.h, iso);
+  g.circle(p.x, p.y, on ? 4 : 3).fill({ color: on ? 0x6fe08a : 0xff6b6b, alpha: 0.95 });
 }

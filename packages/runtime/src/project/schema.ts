@@ -35,7 +35,7 @@ export const TileMapRowsSchema = z
           x: z.number().int().min(0),
           y: z.number().int().min(0),
           floor: z.number().int().min(0),
-          blocks: z.array(z.object({ z: z.number().int().min(0).max(254), tile: z.number().int().min(1), faces: z.object({ top: z.number().int().min(1).optional(), n: z.number().int().min(1).optional(), e: z.number().int().min(1).optional(), s: z.number().int().min(1).optional(), w: z.number().int().min(1).optional() }).optional() })),
+          blocks: z.array(z.object({ z: z.number().int().min(0).max(254), tile: z.number().int().min(1), faces: z.object({ top: z.number().int().min(1).optional(), n: z.number().int().min(1).optional(), e: z.number().int().min(1).optional(), s: z.number().int().min(1).optional(), w: z.number().int().min(1).optional() }).optional(), shape: z.enum(['cube', 'stairs', 'ramp']).optional(), rot: z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3)]).optional(), solid: z.boolean().optional() })),
         }),
       )
       .optional(),
@@ -208,6 +208,10 @@ export const SceneSchema = z.object({
   graphs: z.array(GraphSchema).default([]),
   /** The rules that make this scene's map (see procgen/generate.ts); kept as plain data here and checked where it is used. */
   generator: z.record(z.string(), z.unknown()).optional(),
+  /** Which way gravity pulls in this scene (default: down). */
+  gravity: z.enum(['-z', '+z', '-x', '+x', '-y', '+y']).optional(),
+  /** Opt in: the game itself may place and break blocks while it runs (up to `limit` edits a run). */
+  blocks: z.object({ runtime: z.boolean().default(false), limit: z.number().int().min(1).max(100000).default(200) }).optional(),
 });
 export type SceneData = z.infer<typeof SceneSchema>;
 
@@ -229,6 +233,7 @@ export const TileDefSchema = z.object({
   variants: z.array(z.object({ tile: z.number().int().min(1), weight: z.number().min(0).max(100) })).optional(),
   props: z
     .object({
+      solid: z.boolean().optional(),
       walkable: z.boolean().optional(),
       stair: z.boolean().optional(),
       pit: z.boolean().optional(),

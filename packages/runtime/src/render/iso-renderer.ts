@@ -5,6 +5,8 @@ import type { BlockFace, CellStack } from '../tilemap/tilemap';
 import { DEFAULT_ISO, gridToScreen, relToScreen, rotateGrid, screenToCell, screenToGrid, unrotateVec, type Cell, type IsoConfig, type ViewRotation } from '../iso/math';
 import type { LightingModel } from '../lighting/lighting';
 import { ATTACH, C, LABEL, type Attach, type Label, type Sprite, type TransformIso } from '../scene/components';
+import { gravityFrame, spriteBox } from '../physics/gravity';
+import type { Body } from '../physics/physics';
 import { LightingLayer } from './lighting-layer';
 import { ParticleLayer } from './particles';
 import type { SpriteData } from '../sprites/format';
@@ -66,6 +68,8 @@ interface EntityView {
   sheet?: SpriteSheetTextures;
   /** Whether this is a wall or floor attachment seen from the left, the right, or the top (it is rebuilt when that changes). */
   side?: string;
+  /** How far the picture is turned right now (it eases to where gravity says is up). */
+  angle?: number;
 }
 
 interface LabelView {
@@ -596,8 +600,19 @@ export class IsoRenderer {
       const g = new Graphics();
       const own = def(b.tile);
       const faces = { top: def(b.faces?.top ?? b.tile), left: def(b.faces?.[leftFace] ?? b.tile), right: def(b.faces?.[rightFace] ?? b.tile) };
+      if (b.shape === 'stairs' || b.shape === 'ramp') {
+        // a stair or ramp block: the same pictures a stair or ramp column has, one level tall, turned the way it rises
+        const dir = (b.rot ?? 0) + 1;
+        if (b.shape === 'stairs') this.drawStairs(g, dir, 0, own);
+        else this.drawCell(g, slopeCorners(dir), 0, own, faces);
+        add(g, b.z, { id: 0, minX: x, maxX: x + 1, minY: y, maxY: y + 1, minZ: b.z, maxZ: b.z + 1 }, true);
+        continue;
+      }
       // a side that is against another block at the same level is never seen
-      const hidden = (nx: number, ny: number): boolean => map.blockAt(x + nx, y + ny, b.z) !== undefined;
+      const hidden = (nx: number, ny: number): boolean => {
+        const next = map.blockAt(x + nx, y + ny, b.z);
+        return next !== undefined && (next.shape ?? 'cube') === 'cube';
+      };
       const skip = { left: hidden(l.x, l.y), right: hidden(r.x, r.y) };
       this.drawCell(g, flat, -1, own, faces, skip);
       const wall = own.wall === true;
@@ -834,13 +849,33 @@ export class IsoRenderer {
           flip = r.flip;
         } else hiddenFace = true;
       }
-      const view = this.viewFor(e, s, side, flip);
+      // a body that gravity pulls somewhere other than down stands on that face: its box and its picture turn with it
+      const gdir = e.get<Body>(C.Body)?.g;
+      const turned = gdir !== undefined && gdir !== '-z';
+      const frame = turned ? gravityFrame(gdir) : null;
+      const oriented = frame ? spriteBox(frame, { x: t.x, y: t.y, h: t.h }, s.w, s.d, s.height) : null;
+      const sheetBased = s.asset !== undefined && s.asset !== '' && this.sprites.has(s.asset);
+      const look: Sprite = oriented && !sheetBased ? { ...s, w: oriented.x1 - oriented.x0, d: oriented.y1 - oriented.y0, height: oriented.z1 - oriented.z0, noShadow: true } : s;
+      const view = this.viewFor(e, look, side, flip);
       view.gfx.visible = !hiddenFace && s.visible && this.entitiesVisible && !(this.entityHidden?.(e) ?? false);
       view.gfx.alpha = s.alpha ?? 1;
-      const p = gridToScreen(t.x, t.y, t.h, this.iso);
+      const p = oriented && !sheetBased ? gridToScreen((oriented.x0 + oriented.x1) / 2, (oriented.y0 + oriented.y1) / 2, oriented.z0, this.iso) : gridToScreen(t.x, t.y, t.h, this.iso);
       view.gfx.position.set(p.x, p.y);
+      if (sheetBased) {
+        // the picture is turned so its head points the way up is on the screen (up the wall, down from the ceiling)
+        let target = 0;
+        if (frame) {
+          const away = gridToScreen(t.x + frame.up[0], t.y + frame.up[1], t.h + frame.up[2], this.iso);
+          target = Math.atan2(away.x - p.x, -(away.y - p.y));
+        }
+        const have = view.angle ?? 0;
+        let diff = target - have;
+        diff = Math.atan2(Math.sin(diff), Math.cos(diff));
+        view.angle = Math.abs(diff) < 0.01 ? target : have + diff * 0.25;
+        view.gfx.rotation = view.angle;
+      }
       this.syncLabel(e, t, s);
-      const box = rotateBox(boxAt(base + e.id, t.x, t.y, t.h, s.w, s.d, s.height, s.sortOffset), this.iso);
+      const box = rotateBox(oriented ? { id: base + e.id, minX: oriented.x0, maxX: oriented.x1, minY: oriented.y0, maxY: oriented.y1, minZ: oriented.z0, maxZ: oriented.z1, sortOffset: s.sortOffset ?? 0 } : boxAt(base + e.id, t.x, t.y, t.h, s.w, s.d, s.height, s.sortOffset), this.iso);
       boxes.push(box);
       if (e.id === this.focus) focusBox = box;
       if (view.spr2) canopies.push({ v: view, box, id: e.id });
@@ -1108,7 +1143,7 @@ export class IsoRenderer {
 
   private viewFor(e: Entity, s: Sprite, side = '', flip?: boolean): EntityView {
     const sheet = s.asset ? this.sprites.get(s.asset) : undefined;
-    const signature = sheet ? `asset|${s.asset}|${sheet.version}|${s.w}|${s.d}|${s.noShadow ? 1 : 0}|${side}` : `${s.shape}|${s.color}|${s.w}|${s.d}|${s.height}|${this.view}`;
+    const signature = sheet ? `asset|${s.asset}|${sheet.version}|${s.w}|${s.d}|${s.noShadow ? 1 : 0}|${side}` : `${s.shape}|${s.color}|${s.w}|${s.d}|${s.height}|${s.noShadow ? 1 : 0}|${this.view}`;
     let v = this.entityViews.get(e.id);
     if (!v || v.signature !== signature) {
       v?.gfx.destroy({ children: true });
@@ -1171,7 +1206,7 @@ export class IsoRenderer {
     const hx = s.w / 2;
     const hy = s.d / 2;
     // soft contact shadow
-    g.ellipse(0, 0, Math.max(6, s.w * this.iso.tileW * 0.3), Math.max(3, s.d * this.iso.tileH * 0.3)).fill({ color: 0x000000, alpha: 0.28 });
+    if (!s.noShadow) g.ellipse(0, 0, Math.max(6, s.w * this.iso.tileW * 0.3), Math.max(3, s.d * this.iso.tileH * 0.3)).fill({ color: 0x000000, alpha: 0.28 });
     const at: Record<Corner, [number, number]> = { n: [-hx, -hy], e: [hx, -hy], s: [hx, hy], w: [-hx, hy] };
     if (s.shape === 'diamond') {
       const [nx, ny] = pt(-hx, -hy, s.height);

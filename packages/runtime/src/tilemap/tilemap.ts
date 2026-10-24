@@ -32,6 +32,8 @@ export interface TileDef {
 
 /** The properties of a tile, set in the tile studio. They apply wherever the tile is placed, and editing them updates every placed copy. */
 export interface TileProps {
+  /** Can bodies not walk into it? Solid when missing; `false` makes a tile (or block) of it that bodies pass through, such as a vine or a painted-on picture. Only this decides it: not the tile's look, its layer, or whether it counts as a wall. */
+  solid?: boolean;
   /** Nobody can walk on it (water you cannot wade, lava, a wall top). Default: walkable. */
   walkable?: boolean;
   stair?: boolean;
@@ -99,12 +101,36 @@ export interface SlopeInfo {
 /** A face of a block: its top, or one of the four sides (named by where the side faces in the world). */
 export type BlockFace = 'top' | 'n' | 'e' | 's' | 'w';
 
-/** One block of a stack: a cube one level tall, with its own tile and optionally another tile on single faces. */
+/** What a block is shaped like: a whole cube, or a stair or ramp that rises across the cell in the direction `rot` says. */
+export type BlockShape = 'cube' | 'stairs' | 'ramp';
+
+/** Steps in a stair or a ramp; a ramp is smooth to look at, and for walking it is the same stair of small steps. */
+export const SHAPE_STEPS = 4;
+
+/** One block of a stack: a cube one level tall (or a stair or ramp), with its own tile and optionally another tile on single faces. */
 export interface StackBlock {
   /** The level its bottom is on. */
   z: number;
   tile: number;
   faces?: Partial<Record<BlockFace, number>>;
+  /** Cube when missing. */
+  shape?: BlockShape;
+  /** Which way a stair or ramp rises: 0 north (toward lower y), 1 east, 2 south, 3 west. */
+  rot?: 0 | 1 | 2 | 3;
+  /** Can bodies walk into it? Yes when missing; `false` makes a block they pass through (a ladder, a vine, a picture on the wall). */
+  solid?: boolean;
+}
+
+/** A copy of a block with only the fields that are set. */
+export function copyBlock(b: StackBlock): StackBlock {
+  return {
+    z: b.z,
+    tile: b.tile,
+    ...(b.faces && Object.keys(b.faces).length > 0 ? { faces: { ...b.faces } } : {}),
+    ...(b.shape && b.shape !== 'cube' ? { shape: b.shape } : {}),
+    ...(b.shape && b.shape !== 'cube' && b.rot ? { rot: b.rot } : {}),
+    ...(b.solid === false ? { solid: false } : {}),
+  };
 }
 
 /**
@@ -308,21 +334,35 @@ export class TileMap {
   }
 
   /**
-   * Make the cell block-by-block (its column becomes one block per level, in the cell's tile) and return the stack.
-   * Stairs, ramps and decks cannot be split into blocks: this returns null for those.
+   * Make the cell block-by-block (its column becomes one block per level, in the cell's tile) and return the stack. A stair or
+   * ramp on top of the column becomes a shaped block, and a deck becomes the one block it is. Nothing changes in how the cell
+   * looks or plays; it can now be edited block by block.
    */
   toStack(x: number, y: number): CellStack | null {
     if (!this.inBounds(x, y)) return null;
     const i = this.idx(x, y);
     const have = this.stacks.get(i);
     if (have) return have;
-    if (this.slopes[i] !== 0 || this.decks[i] !== 0) return null;
     const tile = this.tiles[i]!;
     const h = this.heights[i]!;
     const blocks: StackBlock[] = [];
     for (let z = 0; z < h; z++) blocks.push({ z, tile });
-    const stack: CellStack = { floor: h === 0 ? tile : 0, blocks };
+    const slope = this.getSlope(x, y);
+    if (slope && tile !== EMPTY_TILE) blocks.push({ z: h, tile, shape: slope.style, rot: (slope.dir - 1) as 0 | 1 | 2 | 3 });
+    const deck = this.decks[i]!;
+    if (deck > 0) {
+      const deckTile = this.deckTiles[i]! || tile;
+      const at = blocks.findIndex((b) => b.z === deck - 1);
+      if (at >= 0) blocks[at] = { z: deck - 1, tile: deckTile };
+      else blocks.push({ z: deck - 1, tile: deckTile });
+      blocks.sort((a, b) => a.z - b.z);
+    }
+    const stack: CellStack = { floor: h === 0 && !slope ? tile : 0, blocks };
     this.stacks.set(i, stack);
+    // the stair and the deck are blocks of the stack now
+    this.slopes[i] = 0;
+    this.decks[i] = 0;
+    this.deckTiles[i] = 0;
     return stack;
   }
 
@@ -337,10 +377,10 @@ export class TileMap {
   }
 
   /** Put a block at a level (replacing the one there). False when the cell cannot take blocks. */
-  setBlock(x: number, y: number, z: number, tile: number, faces?: StackBlock['faces']): boolean {
+  setBlock(x: number, y: number, z: number, tile: number, faces?: StackBlock['faces'], extra?: Pick<StackBlock, 'shape' | 'rot' | 'solid'>): boolean {
     const s = this.toStack(x, y);
     if (!s || z < 0 || z > 254 || tile === EMPTY_TILE) return false;
-    const block: StackBlock = faces && Object.keys(faces).length > 0 ? { z, tile, faces: { ...faces } } : { z, tile };
+    const block: StackBlock = copyBlock({ z, tile, ...(faces ? { faces } : {}), ...(extra ?? {}) });
     const at = s.blocks.findIndex((b) => b.z === z);
     if (at >= 0) s.blocks[at] = block;
     else {
@@ -426,14 +466,14 @@ export class TileMap {
   /** Every stack as plain data (what scene files store). */
   stacksToJSON(): StackData[] {
     const out: StackData[] = [];
-    for (const [i, s] of [...this.stacks.entries()].sort((a, b) => a[0] - b[0])) out.push({ x: i % this.width, y: Math.floor(i / this.width), floor: s.floor, blocks: s.blocks.map((b) => (b.faces ? { z: b.z, tile: b.tile, faces: { ...b.faces } } : { z: b.z, tile: b.tile })) });
+    for (const [i, s] of [...this.stacks.entries()].sort((a, b) => a[0] - b[0])) out.push({ x: i % this.width, y: Math.floor(i / this.width), floor: s.floor, blocks: s.blocks.map(copyBlock) });
     return out;
   }
 
   stacksFromJSON(data: readonly StackData[]): void {
     for (const d of data) {
       if (!this.inBounds(d.x, d.y)) continue;
-      const blocks = d.blocks.map((b) => (b.faces ? { z: b.z, tile: b.tile, faces: { ...b.faces } } : { z: b.z, tile: b.tile })).sort((a, b) => a.z - b.z);
+      const blocks = d.blocks.map(copyBlock).sort((a, b) => a.z - b.z);
       this.stacks.set(this.idx(d.x, d.y), { floor: d.floor, blocks });
       this.syncColumn(d.x, d.y);
     }
@@ -499,7 +539,7 @@ export interface StackData {
   x: number;
   y: number;
   floor: number;
-  blocks: { z: number; tile: number; faces?: Partial<Record<BlockFace, number>> }[];
+  blocks: { z: number; tile: number; faces?: Partial<Record<BlockFace, number>>; shape?: BlockShape; rot?: 0 | 1 | 2 | 3; solid?: boolean }[];
 }
 
 export interface TileMapData {

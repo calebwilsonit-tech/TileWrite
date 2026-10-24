@@ -107,5 +107,6 @@ export function ctxOf(r: Rig): SimContext {
     map: r.sim.map,
     dt: 1 / 60,
     tick: r.sim.tick,
+    compat: r.sim.compat,
   };
 }

@@ -4,6 +4,7 @@ import {
   autoSlot,
   facingOfGridDir,
   findPath,
+  isGravityDir,
   isLit,
   itemCount,
   teleportBody,
@@ -17,6 +18,7 @@ import {
 import { actionDef, conditionDef, resolveRef } from '../events/sheet';
 import { defineBehavior, getBehavior, behaviorList, stateOf, undefineBehavior, type BehaviorDef, type FieldSpec, type Phase, type SignalSpec } from '../framework';
 import { damage, heal } from '../builtins/combat';
+import { blockAtCell, breakBlock, placeBlock } from '../builtins/blocks';
 import { newNav, steerTo, type NavState } from '../builtins/ai';
 import { input as signalInput, output as signalOutput, setOutput } from '../signals';
 import { spawnPrefabAt } from '../builtins/world';
@@ -165,6 +167,14 @@ class EntityView implements ScriptEntity {
   lookAt(target: ScriptEntity | { x: number; y: number }): void {
     this.t.facing = facingOfGridDir(target.x - this.x, target.y - this.y);
   }
+  get gravity(): string {
+    const b = this.entity.get<Body>(C.Body);
+    return b?.g ?? b?.gdir ?? this.ctx.runtime.gravity;
+  }
+  set gravity(dir: string) {
+    const b = this.entity.get<Body>(C.Body);
+    if (b && isGravityDir(dir)) b.gdir = dir;
+  }
   input(name: string): boolean {
     return signalInput(this.entity, name);
   }
@@ -282,6 +292,26 @@ class GameView implements ScriptGame {
   get input(): ScriptGame['input'] {
     const i = this.ctx.input;
     return { pressed: (a) => i.pressed(a), down: (a) => i.down(a), released: (a) => i.released(a) };
+  }
+  get gravity(): string {
+    return this.ctx.runtime.gravity;
+  }
+  set gravity(dir: string) {
+    if (isGravityDir(dir)) this.ctx.runtime.gravity = dir;
+  }
+  setBlock(x: number, y: number, z: number, tile: string, shape = 'cube', rot = 0): boolean {
+    const r = placeBlock(this.ctx, { x: Math.floor(x), y: Math.floor(y), z: Math.floor(z), tile, shape: shape === 'stairs' || shape === 'ramp' ? shape : 'cube', rot: (Math.floor(rot) & 3) as 0 | 1 | 2 | 3 });
+    if (!r.ok) this.hooks.log('warn', r.why);
+    return r.ok;
+  }
+  breakBlock(x: number, y: number, z: number): boolean {
+    const r = breakBlock(this.ctx, Math.floor(x), Math.floor(y), Math.floor(z));
+    if (!r.ok) this.hooks.log('warn', r.why);
+    return r.ok;
+  }
+  blockAt(x: number, y: number, z: number): { tile: string; shape: string; solid: boolean } | undefined {
+    const b = blockAtCell(this.ctx, Math.floor(x), Math.floor(y), Math.floor(z));
+    return b ? { tile: b.name, shape: b.shape ?? 'cube', solid: b.solid !== false } : undefined;
   }
   emit(type: string, data: Record<string, unknown> = {}): void {
     this.ctx.events.emit(type, data);

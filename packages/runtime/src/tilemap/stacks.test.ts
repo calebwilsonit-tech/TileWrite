@@ -63,12 +63,19 @@ describe('blocks', () => {
     expect(m.blockAt(2, 1, 1)!.faces).toEqual({ top: 2 });
   });
 
-  it('cannot be made in stairs or decks, and are cleared when the cell is painted again', () => {
+  it('are made in stairs and decks too (they become blocks of their own shape), and are cleared when the cell is painted again', () => {
     const m = new TileMap(4, 4);
     m.fill(1, 0);
-    m.set(1, 1, 2, 0);
+    m.set(1, 1, 2, 1);
     m.setSlope(1, 1, SLOPE.N, 'stairs');
-    expect(m.setBlock(1, 1, 3, 2)).toBe(false);
+    expect(m.setBlock(1, 1, 3, 2)).toBe(true);
+    const s = m.getStack(1, 1)!;
+    expect(s.blocks.map((b) => [b.z, b.shape ?? 'cube', b.rot ?? 0])).toEqual([[0, 'cube', 0], [1, 'stairs', 0], [3, 'cube', 0]]);
+    expect(m.getSlope(1, 1)).toBeNull(); // the stair is a block now
+    m.set(2, 1, 1, 0);
+    m.setDeck(2, 1, 2, 6);
+    m.setBlock(2, 1, 5, 2);
+    expect(m.getStack(2, 1)!.blocks.find((b) => b.z === 1)!.tile).toBe(6);
     m.setBlock(2, 2, 2, 2);
     expect(m.getStack(2, 2)).toBeDefined();
     m.set(2, 2, 1, 0);

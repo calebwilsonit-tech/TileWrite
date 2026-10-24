@@ -1,4 +1,5 @@
 import { legacyFlags, type CompatFlags } from '../project/compat';
+import type { GravityDir } from '../physics/gravity';
 import { Tweens } from '../anim/tween';
 import type { LightingModel } from '../lighting/lighting';
 import type { EventRow, GraphData, PrefabData, RegionData, VariableValue, WireData } from '../project/schema';
@@ -76,6 +77,13 @@ export interface SceneRuntime {
     /** Who handled the last press of Back, for the screens overlay and the tests. */
     last: { tick: number; action: string; by: string; result: string } | null;
   };
+  /** Which way gravity pulls in this scene (objects can have their own). */
+  gravity: GravityDir;
+  /** May the game place and break blocks while it runs, and how many edits a run may make (see behaviors/builtins/blocks.ts). */
+  blockRules: { enabled: boolean; limit: number };
+  /** How many block edits the game has made, and which cells (by index) they were in, so a save can keep them. */
+  blockEdits: number;
+  editedCells: Set<number>;
   /** Rows of data tables the game has changed (an inventory, a deck): saved with the game and put back when it loads. */
   tableEdits: Record<string, TableRow[]>;
   /** Flags, counters, text, and (as `item:<id>`) the inventory. */
@@ -191,6 +199,8 @@ export interface SimContext {
   profiler?: Profiler;
   /** Ticks completed before this one. */
   tick: number;
+  /** The project's compatibility flags (see project/compat.ts). */
+  compat: CompatFlags;
 }
 
 export type System = (ctx: SimContext) => void;
@@ -210,6 +220,10 @@ export function newSceneRuntime(): SceneRuntime {
     sheet: [],
     graphs: [],
     ui: { stack: [], tabs: {}, modal: false, blocking: false, last: null },
+    gravity: '-z',
+    blockRules: { enabled: false, limit: 200 },
+    blockEdits: 0,
+    editedCells: new Set(),
     tableEdits: {},
     vars: {},
     rowState: {},
@@ -310,6 +324,7 @@ export class Simulation {
       modal,
       dt: TICK_DT,
       tick: this.tick,
+      compat: this.compat,
       profiler: this.profiler,
     };
     this.runtime.view.cells.length = 0; // ground marks are asked for again every tick

@@ -19,6 +19,7 @@ export * from './builtins/puzzle';
 export * from './builtins/nodes';
 export * from './logic-catalog';
 export * from './builtins/world';
+export * from './builtins/blocks';
 export * from './events/sheet';
 export * from './events/graph';
 export * from './events/graph-convert';
@@ -40,6 +41,7 @@ export * from './ui/screens-dom';
 export * from './scripting/script';
 export * from './scripting/loader';
 export * from './scripting/convert';
+export * from './scripting/version';
 export type * from './scripting/api';
 
 import { setActivePacks } from './packs';

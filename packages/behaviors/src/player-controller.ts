@@ -1,9 +1,12 @@
 import {
   C,
   animationSystem,
+  DOWN,
   facingOfScreenDir,
+  gravityFrame,
+  intentToDirection,
   jumpBody,
-  screenIntentToGrid,
+  type GravityDir,
   type InputState,
   type Body,
   type Simulation,
@@ -63,21 +66,34 @@ export const directControl = defineBehavior<PlayerController>({
 });
 
 /** The direct control system: moves every object that has the Direct Control behaviour. */
-export function playerControllerSystem({ world, input, runtime }: SimContext): void {
+export function playerControllerSystem({ world, input, runtime, compat }: SimContext): void {
   if (runtime.clock.mode === 'turns') return; // by turns, units move when the turn system says so
   const view = runtime.view.rotation;
   for (const e of world.query(C.Transform, C.Body, PLAYER_CONTROLLER)) {
-    driveBody(e.require<PlayerController>(PLAYER_CONTROLLER), e.require<Body>(C.Body), e.require<TransformIso>(C.Transform), input, view);
+    const b = e.require<Body>(C.Body);
+    // the older physics only has down; with block physics the body walks on whatever face gravity pulls it to
+    const gravity: GravityDir = compat.blockPhysics ? (b.gdir ?? runtime.gravity ?? DOWN) : DOWN;
+    driveBody(e.require<PlayerController>(PLAYER_CONTROLLER), b, e.require<TransformIso>(C.Transform), input, view, gravity);
   }
 }
 
 /** Turn one tick of actions into movement; the player uses live input, echoes use their recording. */
-export function driveBody(cfg: PlayerController, b: Body, t: TransformIso, input: InputState, view: 0 | 1 | 2 | 3 = 0): void {
+export function driveBody(cfg: PlayerController, b: Body, t: TransformIso, input: InputState, view: 0 | 1 | 2 | 3 = 0, gravity: GravityDir = DOWN): void {
   const v = input.vector('move_left', 'move_right', 'move_up', 'move_down');
-  const g = screenIntentToGrid(v.x, v.y, view);
+  const frame = gravityFrame(gravity);
+  const g = intentToDirection(frame, v.x, v.y, view);
   const speed = cfg.speed * (input.down('run') ? cfg.runMultiplier : 1);
-  b.vx = g.x * speed;
-  b.vy = g.y * speed;
+  // only the two axes of the plane the body walks on: the one along gravity belongs to the fall
+  if (frame.axis === 'z') {
+    b.vx = g.x * speed;
+    b.vy = g.y * speed;
+  } else if (frame.axis === 'x') {
+    b.vy = g.y * speed;
+    b.vz = g.z * speed;
+  } else {
+    b.vx = g.x * speed;
+    b.vz = g.z * speed;
+  }
   if (v.x !== 0 || v.y !== 0) t.facing = facingOfScreenDir(v.x, v.y);
   if (cfg.jumpSpeed > 0 && input.pressed('jump')) jumpBody(b, cfg.jumpSpeed);
 }

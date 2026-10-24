@@ -10,6 +10,11 @@ export const COMPAT_FLAGS = {
     help: 'Off: the older rule, which looks at pictures that overlap and at draw order, and can fade a wall that is not in the way (or keep one that is) when something stands on a wall or a ceiling.',
     since: 3,
   },
+  blockPhysics: {
+    label: 'Bodies collide with every block, in every direction, whichever way gravity points',
+    help: 'Off: the older physics, which only checks the feet against a map of heights (a ceiling does not stop a jump, and gravity can only point down). On: every body whole box is tested against every solid block it moves into, so ceilings, overhangs and walls work, and gravity can point at any of the six sides.',
+    since: 3,
+  },
 } as const;
 
 export type CompatFlag = keyof typeof COMPAT_FLAGS;

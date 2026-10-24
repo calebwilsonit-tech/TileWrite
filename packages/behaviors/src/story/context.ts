@@ -16,5 +16,6 @@ export function contextOf(sim: Simulation): SimContext {
     modal: sim.modal,
     dt: TICK_DT,
     tick: sim.tick,
+    compat: sim.compat,
   };
 }

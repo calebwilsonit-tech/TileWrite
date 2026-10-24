@@ -33,6 +33,10 @@ export const SaveSchema = z.object({
   gone: z.array(z.string()).default([]),
   /** Rows of data tables the game changed (an inventory, a deck), by table name. */
   tables: z.record(z.string(), z.array(z.record(z.string(), z.unknown()))).default({}),
+  /** Cells whose blocks the game placed or broke while it ran, as they are now. */
+  blocks: z.array(z.object({ x: z.number().int().min(0), y: z.number().int().min(0), floor: z.number().int().min(0), blocks: z.array(z.object({ z: z.number().int().min(0).max(254), tile: z.number().int().min(1), faces: z.record(z.string(), z.number()).optional(), shape: z.enum(['cube', 'stairs', 'ramp']).optional(), rot: z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3)]).optional(), solid: z.boolean().optional() })) })).default([]),
+  /** How many block edits the game had made (the limit counts them). */
+  blockEdits: z.number().int().min(0).default(0),
 });
 export type SaveData = z.infer<typeof SaveSchema>;
 
@@ -87,6 +91,8 @@ export function serializeGame(sim: Simulation, meta: { stamp: string; label?: st
     objects,
     gone: gone.filter((id) => persistentOnLoad.has(id)),
     tables: JSON.parse(JSON.stringify(r.tableEdits)),
+    blocks: sim.map ? sim.map.stacksToJSON().filter((s) => r.editedCells.has(s.y * sim.map!.width + s.x)) : [],
+    blockEdits: r.blockEdits,
   });
 }
 
@@ -101,6 +107,14 @@ export function applySave(sim: Simulation, save: SaveData): void {
   r.difficulty = save.difficulty;
   r.tableEdits = structuredClone(save.tables) as typeof r.tableEdits;
   applyTableEdits(sim.assets.tables, r.tableEdits);
+  if (sim.map && save.blocks.length > 0) {
+    sim.map.stacksFromJSON(save.blocks as never);
+    for (const s of save.blocks) r.editedCells.add(s.y * sim.map.width + s.x);
+    r.blockEdits = save.blockEdits;
+    const dirty = (r.scratch.get('dirtyCells') as { x: number; y: number }[] | undefined) ?? [];
+    for (const s of save.blocks) dirty.push({ x: s.x, y: s.y });
+    r.scratch.set('dirtyCells', dirty);
+  }
   for (const id of save.gone) {
     const live = r.ids.get(id);
     if (live !== undefined) sim.world.destroy(live);

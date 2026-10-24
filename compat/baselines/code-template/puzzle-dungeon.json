@@ -89,84 +89,84 @@
           {
             "tick": 360,
             "player": {
-              "x": 9.696,
+              "x": 9.7,
               "y": 6.897,
               "h": 0
             },
             "entities": 1,
-            "world": "d6e5b945db90c136",
+            "world": "5cf0b34c4f282de1",
             "vars": "0e6bf79c0b086ece",
             "screen": ""
           },
           {
             "tick": 420,
             "player": {
-              "x": 8.564,
+              "x": 8.569,
               "y": 8.029,
               "h": 0
             },
             "entities": 1,
-            "world": "c39becf42f0bf139",
+            "world": "63dc53c386c0781d",
             "vars": "0e6bf79c0b086ece",
             "screen": ""
           },
           {
             "tick": 480,
             "player": {
-              "x": 8.658,
+              "x": 8.663,
               "y": 7.934,
               "h": 0
             },
             "entities": 1,
-            "world": "e30c0b6d8213f845",
+            "world": "d3720fb28e348ba6",
             "vars": "0e6bf79c0b086ece",
             "screen": ""
           },
           {
             "tick": 540,
             "player": {
-              "x": 9.413,
+              "x": 9.417,
               "y": 7.18,
               "h": 0
             },
             "entities": 1,
-            "world": "8a877799e3907bbf",
+            "world": "ae87e914f68ce0f3",
             "vars": "0e6bf79c0b086ece",
             "screen": ""
           },
           {
             "tick": 600,
             "player": {
-              "x": 6.584,
-              "y": 5.342,
+              "x": 6.589,
+              "y": 5.3,
               "h": 0
             },
             "entities": 1,
-            "world": "ad80d8fc7d423c8a",
+            "world": "a5817beefb736a75",
             "vars": "0e6bf79c0b086ece",
             "screen": ""
           },
           {
             "tick": 660,
             "player": {
-              "x": 6.584,
-              "y": 5.342,
+              "x": 6.589,
+              "y": 5.3,
               "h": 0
             },
             "entities": 1,
-            "world": "ad80d8fc7d423c8a",
+            "world": "a5817beefb736a75",
             "vars": "0e6bf79c0b086ece",
             "screen": ""
           },
           {
             "tick": 660,
             "player": {
-              "x": 6.584,
-              "y": 5.342,
+              "x": 6.589,
+              "y": 5.3,
               "h": 0
             },
             "entities": 1,
-            "world": "ad80d8fc7d423c8a",
+            "world": "a5817beefb736a75",
             "vars": "0e6bf79c0b086ece",
             "screen": ""
           }
@@ -287,7 +287,7 @@
   "playthroughs": {},
   "exported": {
     "files": {
-      "project.json": "bca8c221d7785a5f",
+      "project.json": "b7be1aba9fb1e176",
       "scenes/main.scene.json": "c891d2d7962642b4"
     },
     "manifest": "fe3d6746ad7ccdd3",

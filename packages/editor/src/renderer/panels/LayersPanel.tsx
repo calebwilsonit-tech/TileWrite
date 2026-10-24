@@ -138,6 +138,13 @@ export function LayersPanel() {
           </label>
           <small>which interface screens are open, what each does with Back, and which one handled the last press</small>
         </li>
+        <li>
+          <label>
+            <input data-testid="view-gravity" type="checkbox" checked={view.gravity} onChange={(e) => store.setView({ gravity: e.target.checked })} />
+            <span>Gravity (while playing)</span>
+          </label>
+          <small>an arrow for which way each body is pulled, where it touches what it stands on, the box it is tested with, and the line to the camera that decides which walls fade</small>
+        </li>
       </ul>
     </div>
   );

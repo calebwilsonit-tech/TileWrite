@@ -173,6 +173,10 @@ export function loadScene(sim: Simulation, scene: SceneData, opts: LoadOptions =
   sim.runtime.rowState = {};
   sim.runtime.regions = structuredClone(scene.regions);
   sim.runtime.lighting = undefined;
+  sim.runtime.gravity = scene.gravity ?? '-z';
+  sim.runtime.blockRules = { enabled: scene.blocks?.runtime ?? false, limit: scene.blocks?.limit ?? 200 };
+  sim.runtime.blockEdits = 0;
+  sim.runtime.editedCells = new Set();
   sim.runtime.scene = opts.scene ?? sim.runtime.scene;
   // the world map remembers where the player has been
   if (sim.runtime.scene !== '') sim.runtime.vars[`visited:${sim.runtime.scene}`] = true;

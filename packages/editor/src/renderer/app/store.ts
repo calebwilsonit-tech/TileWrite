@@ -135,6 +135,8 @@ export interface ViewOptions {
   profiler: boolean;
   /** Which interface screens are open and which one handled the last press of Back, while playing. */
   screens: boolean;
+  /** Gravity's direction, what each body touches, the boxes bodies are tested with and the line of sight that fades walls, while playing. */
+  gravity: boolean;
   /** Wires between objects, lit while the game plays. */
   wires: boolean;
   ground: boolean;
@@ -246,7 +248,7 @@ const initial: AppState = {
     zFrom: 0,
     zTo: 3,
   },
-  view: { grid: true, collision: false, collisionLevel: null, heightLabels: false, triggers: false, ai: true, lights: false, depth: false, slice: 0, xray: false, profiler: false, screens: false, wires: true, ground: true, walls: true, objects: true, decoration: true, lightsLayer: true, regions: true },
+  view: { grid: true, collision: false, collisionLevel: null, heightLabels: false, triggers: false, ai: true, lights: false, depth: false, slice: 0, xray: false, profiler: false, screens: false, gravity: false, wires: true, ground: true, walls: true, objects: true, decoration: true, lightsLayer: true, regions: true },
   locks: { ground: false, walls: false, objects: false, decoration: false, lightsLayer: false, regions: false },
   selection: [],
   selectedRegion: null,

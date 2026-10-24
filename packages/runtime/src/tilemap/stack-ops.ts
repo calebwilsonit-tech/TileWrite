@@ -1,13 +1,11 @@
-import { EMPTY_TILE, type BlockFace, type BlockRun, type CellStack, type StackBlock } from './tilemap';
+import { EMPTY_TILE, copyBlock, type BlockFace, type BlockRun, type CellStack, type StackBlock } from './tilemap';
 
 /**
  * Pure operations on a cell's stack of blocks, so the map, the editor's undo steps and the structure tools all do exactly the
  * same thing. Nothing here changes its input: each returns a new stack.
  */
 
-const cloneBlock = (b: StackBlock): StackBlock => (b.faces ? { z: b.z, tile: b.tile, faces: { ...b.faces } } : { z: b.z, tile: b.tile });
-
-export const cloneStack = (s: CellStack): CellStack => ({ floor: s.floor, blocks: s.blocks.map(cloneBlock) });
+export const cloneStack = (s: CellStack): CellStack => ({ floor: s.floor, blocks: s.blocks.map(copyBlock) });
 
 /** The stack that is the same as a plain column of `height` levels in `tile`. */
 export function columnToStack(tile: number, height: number): CellStack {
@@ -35,10 +33,10 @@ export function stackColumn(stack: CellStack): { tile: number; height: number } 
   return run && run.bottom === 0 ? { tile: run.tile, height: Math.min(255, run.top) } : { tile: stack.floor, height: 0 };
 }
 
-export function stackSetBlock(stack: CellStack, z: number, tile: number, faces?: StackBlock['faces']): CellStack {
+export function stackSetBlock(stack: CellStack, z: number, tile: number, faces?: StackBlock['faces'], extra?: Pick<StackBlock, 'shape' | 'rot' | 'solid'>): CellStack {
   const next = cloneStack(stack);
   if (tile === EMPTY_TILE || z < 0 || z > 254) return next;
-  const block: StackBlock = faces && Object.keys(faces).length > 0 ? { z, tile, faces: { ...faces } } : { z, tile };
+  const block: StackBlock = copyBlock({ z, tile, ...(faces ? { faces } : {}), ...(extra ?? {}) });
   const at = next.blocks.findIndex((b) => b.z === z);
   if (at >= 0) next.blocks[at] = block;
   else {

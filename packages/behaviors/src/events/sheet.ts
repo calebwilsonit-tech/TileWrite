@@ -21,6 +21,12 @@ import {
   fillValues,
   resolveValue,
   teleportBody,
+  GRAVITY_DIRS,
+  GRAVITY_NAMES,
+  isGravityDir,
+  type Body,
+  type BlockShape,
+  type GravityDir,
   type Collider,
   type Entity,
   type EventAction,
@@ -35,6 +41,7 @@ import { input, output, setInput, setOutput } from '../signals';
 import { damage, heal, healthOf } from '../builtins/combat';
 import { beginDialogue, beginMinigame, playCutscene } from '../story/director';
 import { echoEntities } from '../builtins/echo';
+import { blockAtCell, breakBlock, placeBlock, tileByName } from '../builtins/blocks';
 import { effectiveFormat, sentenceWords, TEXT_FORMATS, type SentenceStone, type TextBlock, type TextFormat } from '../builtins/text';
 
 /**
@@ -174,7 +181,43 @@ export interface ActionDef {
 
 const entityParam = (key: string, label: string, def = 'player'): ParamSpec => ({ key, label, type: 'entity', default: def });
 
+const GRAVITY_OPTIONS = GRAVITY_DIRS.map((d) => ({ value: d, label: GRAVITY_NAMES[d] }));
+
 export const CONDITIONS: ConditionDef[] = [
+  {
+    id: 'gravityIs',
+    label: 'Gravity points a way',
+    category: 'World',
+    params: [
+      { key: 'who', label: 'Whose gravity', type: 'select', default: 'scene', options: [{ value: 'scene', label: "the scene's" }, { value: 'player', label: "the player's" }] },
+      { key: 'dir', label: 'Toward', type: 'select', default: '-z', options: GRAVITY_OPTIONS },
+    ],
+    describe: (p) => `gravity (${str(p, 'who') === 'player' ? "the player's" : "the scene's"}) pulls ${GRAVITY_NAMES[str(p, 'dir') as GravityDir] ?? str(p, 'dir')}`,
+    test(ctx, p) {
+      if (str(p, 'who') !== 'player') return ctx.runtime.gravity === str(p, 'dir');
+      const b = ctx.world.withTag('player')[0]?.get<Body>(C.Body);
+      return (b?.g ?? b?.gdir ?? ctx.runtime.gravity) === str(p, 'dir');
+    },
+  },
+  {
+    id: 'blockAt',
+    label: 'There is a block in a place',
+    category: 'World',
+    params: [
+      { key: 'x', label: 'x (cell)', type: 'text', default: '0' },
+      { key: 'y', label: 'y (cell)', type: 'text', default: '0' },
+      { key: 'z', label: 'Level', type: 'text', default: '0' },
+      { key: 'tile', label: 'Of this tile (empty: any)', type: 'text', default: '' },
+    ],
+    describe: (p) => `there is a ${str(p, 'tile') || 'block'} at ${str(p, 'x')}, ${str(p, 'y')}, level ${str(p, 'z')}`,
+    test(ctx, p) {
+      const src = { vars: ctx.runtime.vars, tables: ctx.assets.tables, world: ctx.world };
+      const at = (k: string): number => Math.floor(Number(evalValue(src, str(p, k))) || 0);
+      const b = blockAtCell(ctx, at('x'), at('y'), at('z'));
+      if (!b) return false;
+      return str(p, 'tile') === '' || tileByName(ctx, str(p, 'tile')) === b.tile;
+    },
+  },
   {
     id: 'always',
     label: 'Always',
@@ -414,6 +457,8 @@ export const CONDITIONS: ConditionDef[] = [
           { value: 'turn-start', label: 'starts its turn' },
           { value: 'turn-end', label: 'ends its turn' },
           { value: 'unit-moved', label: 'finishes walking' },
+          { value: 'landed', label: 'lands' },
+          { value: 'gravity-changed', label: 'feels gravity turn' },
           { value: 'noticed', label: 'notices something' },
           { value: 'state-changed', label: 'changes state' },
           { value: 'hotspot-used', label: 'is used (hotspot)' },
@@ -448,6 +493,9 @@ export const CONDITIONS: ConditionDef[] = [
           { value: 'pickup', label: 'something is picked up' },
           { value: 'pushed', label: 'a crate is pushed' },
           { value: 'landed', label: 'something lands' },
+          { value: 'gravity-changed', label: 'gravity turns for something' },
+          { value: 'block-placed', label: 'a block is placed' },
+          { value: 'block-broken', label: 'a block is broken' },
           { value: 'fell', label: 'something falls into a pit' },
           { value: 'floor-fell', label: 'a floor crumbles' },
           { value: 'projectile-hit', label: 'a projectile hits' },
@@ -532,6 +580,9 @@ const COND_EVENT_TEXT: Record<string, string> = {
   pickup: 'something is picked up',
   pushed: 'a crate is pushed',
   landed: 'something lands',
+  'gravity-changed': 'gravity turns for something',
+  'block-placed': 'a block is placed',
+  'block-broken': 'a block is broken',
   fell: 'something falls into a pit',
   'floor-fell': 'a floor crumbles',
   'projectile-hit': 'a projectile hits something',
@@ -571,6 +622,71 @@ function parseValue(raw: string): VariableValue {
 }
 
 export const ACTIONS: ActionDef[] = [
+  {
+    id: 'setGravity',
+    label: 'Turn gravity',
+    category: 'World',
+    params: [
+      { key: 'who', label: 'For', type: 'select', default: 'scene', options: [{ value: 'scene', label: 'the whole scene' }, { value: 'picked', label: 'the object the row is looking at' }, { value: 'player', label: 'the player' }] },
+      { key: 'dir', label: 'Toward', type: 'select', default: '-z', options: GRAVITY_OPTIONS },
+    ],
+    describe: (p) => `turn gravity ${GRAVITY_NAMES[str(p, 'dir') as GravityDir] ?? str(p, 'dir')} for ${str(p, 'who') === 'scene' ? 'the scene' : str(p, 'who') === 'player' ? 'the player' : 'that object'}`,
+    run(ctx, p, row) {
+      const dir = str(p, 'dir');
+      if (!isGravityDir(dir)) return;
+      if (!ctx.compat.blockPhysics) {
+        ctx.events.emit('problem', { text: 'This project plays with the older physics, where gravity only points down. Turn on "Bodies collide with every block" in Project settings -> Compatibility to use gravity in other directions.' });
+        return;
+      }
+      if (str(p, 'who') === 'scene') {
+        ctx.runtime.gravity = dir;
+        return;
+      }
+      const targets = str(p, 'who') === 'player' ? ctx.world.withTag('player') : row.picked ? [row.picked] : [];
+      for (const e of targets) {
+        const b = e.get<Body>(C.Body);
+        if (b) b.gdir = dir;
+      }
+    },
+  },
+  {
+    id: 'placeBlock',
+    label: 'Place a block',
+    category: 'World',
+    params: [
+      { key: 'x', label: 'x (cell)', type: 'text', default: '0' },
+      { key: 'y', label: 'y (cell)', type: 'text', default: '0' },
+      { key: 'z', label: 'Level', type: 'text', default: '0' },
+      { key: 'tile', label: 'Tile (its name)', type: 'text', default: 'stone' },
+      { key: 'shape', label: 'Shape', type: 'select', default: 'cube', options: [{ value: 'cube', label: 'a whole block' }, { value: 'stairs', label: 'stairs' }, { value: 'ramp', label: 'a ramp' }] },
+      { key: 'rot', label: 'Stairs and ramps rise toward', type: 'select', default: '0', options: [{ value: '0', label: 'north (low y)' }, { value: '1', label: 'east (high x)' }, { value: '2', label: 'south (high y)' }, { value: '3', label: 'west (low x)' }] },
+    ],
+    describe: (p) => `place ${str(p, 'shape') === 'cube' ? 'a' : str(p, 'shape')} ${str(p, 'tile')} block at ${str(p, 'x')}, ${str(p, 'y')}, level ${str(p, 'z')}`,
+    run(ctx, p) {
+      const src = { vars: ctx.runtime.vars, tables: ctx.assets.tables, world: ctx.world };
+      const at = (k: string): number => Math.floor(Number(evalValue(src, str(p, k))) || 0);
+      const shape = (['cube', 'stairs', 'ramp'].includes(str(p, 'shape')) ? str(p, 'shape') : 'cube') as BlockShape;
+      const r = placeBlock(ctx, { x: at('x'), y: at('y'), z: at('z'), tile: str(p, 'tile'), shape, rot: (Number(str(p, 'rot')) & 3) as 0 | 1 | 2 | 3 });
+      if (!r.ok) ctx.events.emit('problem', { text: r.why });
+    },
+  },
+  {
+    id: 'breakBlock',
+    label: 'Break a block',
+    category: 'World',
+    params: [
+      { key: 'x', label: 'x (cell)', type: 'text', default: '0' },
+      { key: 'y', label: 'y (cell)', type: 'text', default: '0' },
+      { key: 'z', label: 'Level', type: 'text', default: '0' },
+    ],
+    describe: (p) => `break the block at ${str(p, 'x')}, ${str(p, 'y')}, level ${str(p, 'z')}`,
+    run(ctx, p) {
+      const src = { vars: ctx.runtime.vars, tables: ctx.assets.tables, world: ctx.world };
+      const at = (k: string): number => Math.floor(Number(evalValue(src, str(p, k))) || 0);
+      const r = breakBlock(ctx, at('x'), at('y'), at('z'));
+      if (!r.ok) ctx.events.emit('problem', { text: r.why });
+    },
+  },
   {
     id: 'setVariable',
     label: 'Change a variable',

@@ -1,4 +1,4 @@
-import { FACING_NAMES, type Animator, type EntityData, type RegionData } from '@tilewright/runtime';
+import { FACING_NAMES, GRAVITY_DIRS, GRAVITY_NAMES, type Animator, type EntityData, type GravityDir, type RegionData } from '@tilewright/runtime';
 import { behaviorList } from '@tilewright/behaviors';
 import { applySprite, setLocomotionClips, setPlainClip } from '../studio/apply';
 import { BehaviorsSection } from './BehaviorsSection';
@@ -228,6 +228,14 @@ function SceneInspector() {
         <NumberField testId="scene-h" label="Height" min={4} max={256} value={doc.map.height} onCommit={(v) => resize(doc.map.width, Math.round(v))} />
         <p className="hint">Growing the map adds grass; shrinking keeps the top-left part. Undo brings it back.</p>
       </fieldset>
+      <SelectField<GravityDir>
+        testId="scene-gravity"
+        label="Gravity pulls"
+        value={doc.gravity}
+        options={GRAVITY_DIRS.map((d) => ({ value: d, label: GRAVITY_NAMES[d] }))}
+        onChange={(v) => doc.setGravity(v)}
+      />
+      <p className="hint">{project?.project.compat?.blockPhysics ? 'Any object can have its own gravity (its Body settings). A switch or a rule can turn it while the game runs.' : 'Gravity in any direction needs "Bodies collide with every block" in Project settings -> Compatibility; this project plays with the older physics, where it always points down.'}</p>
       <p className="hint">
         {doc.entities.length} object{doc.entities.length === 1 ? '' : 's'}, {doc.regions.length} region{doc.regions.length === 1 ? '' : 's'}. Project: {project?.project.name}
       </p>

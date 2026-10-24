@@ -47,6 +47,11 @@ import {
   type SpriteData,
   type TileSet,
   type TransformIso,
+  type Body,
+  type IsoConfig,
+  bodyBox,
+  cameraDirection,
+  gravityFrame,
 } from '@tilewright/runtime';
 import {
   GameUi,
@@ -63,7 +68,7 @@ import {
   activeInput,
 } from '@tilewright/behaviors';
 import { POINTER_BINDINGS, type CompatFlags } from '@tilewright/runtime';
-import { drawCone, drawFootprint, drawLightRadius, drawPath, drawWire, shapesOf, wireShapes } from './debug-draw';
+import { drawArrow, drawBox, drawCone, drawContact, drawFootprint, drawLightRadius, drawPath, drawWire, shapesOf, wireShapes } from './debug-draw';
 import { assetFs } from '../project/assetFs';
 import { joinPath } from '../project/api';
 import { loadScene as loadSceneFile } from '../project/io';
@@ -96,7 +101,7 @@ export interface PlayOptions {
   onLogicBreak?(text: string): void;
   autoPlay: { cutscene?: string; dialogue?: string; minigame?: string } | null;
   /** Which debugging aids are on right now (read every frame). */
-  flags: () => { ai: boolean; triggers: boolean; lights: boolean; depth: boolean; profiler: boolean; screens?: boolean; wires?: boolean };
+  flags: () => { ai: boolean; triggers: boolean; lights: boolean; depth: boolean; profiler: boolean; screens?: boolean; gravity?: boolean; wires?: boolean };
   /** Record the buttons pressed, to save as a playthrough. */
   record: boolean;
   /** Switch the window to or from full screen (only a game in its own window can). */
@@ -595,7 +600,8 @@ export class PlaySession {
       };
       for (const w of wireShapes(ends, sim.runtime.wires, [], lit)) drawWire(g, w, iso);
     }
-    this.debugLayer.visible = flags.ai || flags.triggers || flags.lights || (flags.wires !== false && (sim.runtime.wires.length > 0 || this.nodeCount > 0));
+    if (flags.gravity) this.drawGravityDebug(g, iso);
+    this.debugLayer.visible = flags.ai || flags.triggers || flags.lights || flags.gravity === true || (flags.wires !== false && (sim.runtime.wires.length > 0 || this.nodeCount > 0));
 
     this.drawScreensOverlay(flags.screens === true);
     // profiler: switched on only while it is shown
@@ -612,6 +618,23 @@ export class PlaySession {
         this.profilerEl.remove();
         this.profilerEl = null;
       }
+    }
+  }
+
+  /** Gravity: which way each body is pulled, what it touches, its box, and the line of sight to the camera that decides what fades. */
+  private drawGravityDebug(g: Graphics, iso: IsoConfig): void {
+    const { sim } = this;
+    const dir = cameraDirection(iso);
+    for (const e of sim.world.query(C.Transform, C.Body)) {
+      const t = e.require<TransformIso>(C.Transform);
+      const b = e.require<Body>(C.Body);
+      const frame = gravityFrame(b.g ?? b.gdir ?? sim.runtime.gravity);
+      const box = bodyBox(frame, { x: t.x, y: t.y, h: t.h }, b.radius, b.height);
+      drawBox(g, box, iso, b.state === 'ground' ? 0x6fe08a : b.state === 'air' ? 0xffd34a : 0xff6b6b);
+      const mid = { x: (box.x0 + box.x1) / 2, y: (box.y0 + box.y1) / 2, h: (box.z0 + box.z1) / 2 };
+      drawArrow(g, mid, frame.g, 1.2, iso, 0x6aa8ff);
+      drawContact(g, { x: t.x, y: t.y, h: t.h }, iso, b.state === 'ground');
+      if (e.id === this.o.renderer.focus) drawArrow(g, mid, [dir.x, dir.y, dir.z], 3, iso, 0xffffff);
     }
   }
 

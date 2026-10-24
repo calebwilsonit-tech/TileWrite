@@ -17,6 +17,7 @@ import {
   type EntityData,
   type EventRow,
   type GraphData,
+  type GravityDir,
   type RegionData,
   type SceneData,
   type VariableData,
@@ -143,6 +144,8 @@ export class EditorDoc {
   autotile: { tileset: TileSet; rules: readonly AutotileRule[] } | null = null;
   /** The rules that make this scene's map (Generate panel), or null. */
   generator: GeneratorSpec | null = null;
+  /** Which way gravity pulls in this scene ('-z', down, when not set). */
+  gravity: GravityDir = '-z';
   /** Returns false to refuse a change to a cell (a locked layer). */
   cellGuard: ((before: CellData, after: CellData) => boolean) | null = null;
 
@@ -167,6 +170,7 @@ export class EditorDoc {
     doc.prefabs = prefabs;
     const rules = copy.generator ? GeneratorSpecSchema.safeParse(copy.generator) : null;
     doc.generator = rules?.success ? rules.data : null;
+    doc.gravity = copy.gravity ?? '-z';
     return doc;
   }
 
@@ -186,6 +190,24 @@ export class EditorDoc {
       events: this.events,
       graphs: this.graphs,
       ...(this.generator ? { generator: this.generator } : {}),
+      ...(this.gravity !== '-z' ? { gravity: this.gravity } : {}),
+    });
+  }
+
+  /** Which way gravity pulls in this scene (an undo step). */
+  setGravity(dir: GravityDir): void {
+    const before = this.gravity;
+    if (before === dir) return;
+    this.run({
+      label: 'Turn gravity',
+      redo: () => {
+        this.gravity = dir;
+        this.emit({ type: 'events' });
+      },
+      undo: () => {
+        this.gravity = before;
+        this.emit({ type: 'events' });
+      },
     });
   }
 

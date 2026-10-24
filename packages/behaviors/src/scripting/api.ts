@@ -66,6 +66,8 @@ export interface ScriptEntity {
   distanceTo(target: ScriptEntity | { x: number; y: number }): number;
   /** Turn to face a point or another object. */
   lookAt(target: ScriptEntity | { x: number; y: number }): void;
+  /** Which way gravity pulls it: "-z" (down, the floor), "+z" (up, the ceiling), "-x", "+x", "-y" or "+y" (toward a wall). Assign to give it a gravity of its own. */
+  gravity: string;
   /** Is its signal input on? (Signals come from wires.) */
   input(name: string): boolean;
   /** Turn one of its signal outputs on or off (wire it to other objects). */
@@ -124,6 +126,14 @@ export interface ScriptGame {
     down(action: string): boolean;
     released(action: string): boolean;
   };
+  /** Which way gravity pulls in the scene: "-z" (down), "+z" (up), "-x", "+x", "-y" or "+y". Assign to turn it for everything that has no gravity of its own. */
+  gravity: string;
+  /** Put a block in the world (the scene must allow it: Scene -> Blocks while playing). `tile` is a tile's name; `shape` is "cube", "stairs" or "ramp"; `rot` 0 to 3 is the way stairs and ramps rise (north, east, south, west). Returns false (and says why in the Console) if it could not. */
+  setBlock(x: number, y: number, z: number, tile: string, shape?: string, rot?: number): boolean;
+  /** Take a block out of the world. Returns false (and says why in the Console) if it could not. */
+  breakBlock(x: number, y: number, z: number): boolean;
+  /** The block at a place, or undefined when there is none. */
+  blockAt(x: number, y: number, z: number): { tile: string; shape: string; solid: boolean } | undefined;
   /** Announce something that other scripts and event rows can react to ("Something happens in the game"). */
   emit(type: string, data?: Record<string, unknown>): void;
   /** Things of one type that happened during this update (like "damaged", "died", "pickup"). */

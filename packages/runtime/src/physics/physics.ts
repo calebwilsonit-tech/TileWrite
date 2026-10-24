@@ -2,6 +2,11 @@ import type { SimContext } from '../core/simulation';
 import { C, type TransformIso } from '../scene/components';
 import type { Entity, EntityId } from '../scene/world';
 import type { TileMap } from '../tilemap/tilemap';
+import { gravityFrame, type GravityDir } from './gravity';
+import { stepBodies3d } from './physics3d';
+import { GRAVITY, layersMatch } from './common';
+
+export { GRAVITY, layersMatch };
 import {
   DEFAULT_STEP_DOWN,
   DEFAULT_STEP_UP,
@@ -21,7 +26,6 @@ export const LAYER = {
   GHOST: 32,
 } as const;
 
-export const GRAVITY = 36; // levels / s^2
 const MAX_SUBSTEP = 0.2; // cells; keeps fast bodies from tunnelling
 const AIR_STEP_UP = 0.05;
 
@@ -62,6 +66,12 @@ export interface Body {
   blockedTerrain: boolean;
   /** The solid object (crate, moving platform...) this body is standing on, if any. */
   standingOn: EntityId | null;
+  /** Which way gravity pulls this body; missing: the scene's gravity (see gravity.ts). */
+  gdir?: GravityDir;
+  /** The way it was pulled last step (so a change can be noticed). */
+  g?: GravityDir;
+  /** The tick gravity last turned for it (the picture turns over the next half second). */
+  turnedAt?: number;
 }
 
 export interface Collider {
@@ -123,10 +133,13 @@ export function makeCollider(partial: Partial<Collider> = {}): Collider {
   };
 }
 
-/** Give a grounded body an upward kick. */
+/** Give a grounded body a kick away from the surface it stands on (up, on a floor; out from a wall or down from a ceiling when gravity points there). */
 export function jumpBody(b: Body, speed: number): void {
   if (b.state !== 'ground') return;
-  b.vz = speed;
+  const f = gravityFrame(b.g ?? b.gdir);
+  if (f.axis === 'z') b.vz = f.up[2] * speed;
+  else if (f.axis === 'x') b.vx = f.up[0] * speed;
+  else b.vy = f.up[1] * speed;
   b.state = 'air';
 }
 
@@ -151,11 +164,7 @@ export function teleportBody(ctx: SimContext, e: Entity, x: number, y: number, z
   }
 }
 
-function layersMatch(aLayer: number, aMask: number, bLayer: number, bMask: number): boolean {
-  return (aLayer & bMask) !== 0 && (bLayer & aMask) !== 0;
-}
-
-interface SolidRef {
+export interface SolidRef {
   e: Entity;
   t: TransformIso;
   c: Collider;
@@ -171,9 +180,13 @@ export function physicsSystem(ctx: SimContext): void {
   }
 
   if (map) {
-    for (const e of world.query(C.Transform, C.Body)) {
-      if (!e.alive) continue;
-      stepBody(ctx, e, e.require<TransformIso>(C.Transform), e.require<Body>(C.Body), solids, dt);
+    // projects with block physics (new ones) test every body's whole box against every solid block, in every direction, under any gravity
+    if (ctx.compat.blockPhysics) stepBodies3d(ctx, solids);
+    else {
+      for (const e of world.query(C.Transform, C.Body)) {
+        if (!e.alive) continue;
+        stepBody(ctx, e, e.require<TransformIso>(C.Transform), e.require<Body>(C.Body), solids, dt);
+      }
     }
   }
   updateTriggers(ctx);

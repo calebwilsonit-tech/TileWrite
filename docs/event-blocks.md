@@ -4,11 +4,33 @@
 
 An event sheet is a list of rows, each reading like a sentence: **when** its conditions hold, **do** its actions. Rows can have sub-events that run only while the row holds. Objects are chosen as "the player", "anything tagged ...", or a particular object. See [logic.md](logic.md).
 
-There are 29 conditions and 49 actions.
+There are 31 conditions and 52 actions.
 
 ## Conditions
 
 What a row waits for.
+
+### World
+
+#### Gravity points a way
+
+Id: `gravityIs`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Whose gravity | `who` | select | "scene" | `scene`, `player` |
+| Toward | `dir` | select | "-z" | `-z`, `+z`, `-x`, `+x`, `-y`, `+y` |
+
+#### There is a block in a place
+
+Id: `blockAt`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| x (cell) | `x` | text | "0" |  |
+| y (cell) | `y` | text | "0" |  |
+| Level | `z` | text | "0" |  |
+| Of this tile (empty: any) | `tile` | text | (empty) |  |
 
 ### Basics
 
@@ -52,7 +74,7 @@ Id: `onEvent`.
 
 | Parameter | Key | Kind | Starts as | Choices and notes |
 | --- | --- | --- | --- | --- |
-| What happens | `name` | select | "pickup" | `pickup`, `pushed`, `landed`, `fell`, `floor-fell`, `projectile-hit`, `spawned`, `anim-event`, `damaged`, `died`, `attack`, `dodge`, `noticed`, `lost`, `state-changed`, `boss-phase`, `boss-defeated`, `echo-made`, `sentence-changed`, `text-formatted`, `dialogue-started`, `dialogue-ended`, `minigame-started`, `minigame-ended`, `cutscene-started`, `cutscene-ended`, `lantern-lit`, `rested`, `item-given`, `portal`, `battle-started`, `turn-start`, `turn-end`, `round-start`, `battle-won`, `unit-moved`, `unit-attacked`, `building-placed`, `orders-given`, `click-move`, `hotspot-used`, `path-end`, `wave-started`, `wave-cleared`, `waves-done`, `produced`, `new-day`, `night-start`, `day-start`, `new-season`, `activity-done` |
+| What happens | `name` | select | "pickup" | `pickup`, `pushed`, `landed`, `gravity-changed`, `block-placed`, `block-broken`, `fell`, `floor-fell`, `projectile-hit`, `spawned`, `anim-event`, `damaged`, `died`, `attack`, `dodge`, `noticed`, `lost`, `state-changed`, `boss-phase`, `boss-defeated`, `echo-made`, `sentence-changed`, `text-formatted`, `dialogue-started`, `dialogue-ended`, `minigame-started`, `minigame-ended`, `cutscene-started`, `cutscene-ended`, `lantern-lit`, `rested`, `item-given`, `portal`, `battle-started`, `turn-start`, `turn-end`, `round-start`, `battle-won`, `unit-moved`, `unit-attacked`, `building-placed`, `orders-given`, `click-move`, `hotspot-used`, `path-end`, `wave-started`, `wave-cleared`, `waves-done`, `produced`, `new-day`, `night-start`, `day-start`, `new-season`, `activity-done` |
 
 ### Time
 
@@ -143,7 +165,7 @@ Id: `entityEvent`.
 | Parameter | Key | Kind | Starts as | Choices and notes |
 | --- | --- | --- | --- | --- |
 | Object | `who` | entity | (empty) |  |
-| What happens to it | `name` | select | "died" | `died`, `damaged`, `pickup`, `turn-start`, `turn-end`, `unit-moved`, `noticed`, `state-changed`, `hotspot-used`, `boss-defeated` |
+| What happens to it | `name` | select | "died" | `died`, `damaged`, `pickup`, `turn-start`, `turn-end`, `unit-moved`, `landed`, `gravity-changed`, `noticed`, `state-changed`, `hotspot-used`, `boss-defeated` |
 
 ### Story
 
@@ -279,6 +301,40 @@ Id: `waveIs`.
 ## Actions
 
 What a row does.
+
+### World
+
+#### Turn gravity
+
+Id: `setGravity`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| For | `who` | select | "scene" | `scene`, `picked`, `player` |
+| Toward | `dir` | select | "-z" | `-z`, `+z`, `-x`, `+x`, `-y`, `+y` |
+
+#### Place a block
+
+Id: `placeBlock`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| x (cell) | `x` | text | "0" |  |
+| y (cell) | `y` | text | "0" |  |
+| Level | `z` | text | "0" |  |
+| Tile (its name) | `tile` | text | "stone" |  |
+| Shape | `shape` | select | "cube" | `cube`, `stairs`, `ramp` |
+| Stairs and ramps rise toward | `rot` | select | "0" | `0`, `1`, `2`, `3` |
+
+#### Break a block
+
+Id: `breakBlock`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| x (cell) | `x` | text | "0" |  |
+| y (cell) | `y` | text | "0" |  |
+| Level | `z` | text | "0" |  |
 
 ### Variables
 

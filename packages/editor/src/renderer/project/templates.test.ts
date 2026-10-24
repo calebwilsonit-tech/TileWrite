@@ -25,7 +25,7 @@ describe('the genre starters', () => {
   it('tactics: a battle starts by itself, blue goes first, and a click walks a soldier', () => {
     const { sim, ids } = start('tactics');
     for (let i = 0; i < 4; i++) sim.step({});
-    const ctx = { world: sim.world, events: sim.events, runtime: sim.runtime, input: sim.input, uiInput: sim.uiInput, modal: sim.modal, rng: sim.rng, tweens: sim.tweens, assets: sim.assets, map: sim.map, dt: 1 / 60, tick: sim.tick };
+    const ctx = { world: sim.world, events: sim.events, runtime: sim.runtime, input: sim.input, uiInput: sim.uiInput, modal: sim.modal, rng: sim.rng, tweens: sim.tweens, assets: sim.assets, map: sim.map, dt: 1 / 60, tick: sim.tick, compat: sim.compat };
     expect(currentUnit(ctx)?.name).toBe('Knight');
     const knight = ids.get('e1')!;
     const camera = { x: 0, y: 200, zoom: 1, w: 1280, h: 720 };
