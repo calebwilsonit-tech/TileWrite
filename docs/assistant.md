@@ -57,3 +57,26 @@ Rate limits, overload, no internet, a wrong key and an empty account each show a
 ## For developers
 
 Code is in `packages/assistant` (prompt, tool schemas, the conversation loop, model list; no Electron) and `packages/editor/src/main/assistant.ts` (key storage, SDK calls) with the editor side in `packages/editor/src/renderer/assistant/`. The SDK is `@anthropic-ai/sdk`, called only from the main process. Tests mock the API: unit tests script a fake client; `e2e/m11-assistant.spec.ts` runs the real SDK against a local mock server (set `TILEWRIGHT_ASSISTANT_BASE_URL`; the panel says when a custom address is in use). To try the real thing: `$env:ANTHROPIC_API_KEY = 'sk-ant-...'; npm run test:live` (costs a few cents).
+
+## Pictures, files, plans (phase 3)
+
+**Pictures you attach.** The paperclip next to the message box (or a paste, or a drop) adds up to six PNG, JPEG, GIF or WebP pictures, each under about 3.5 MB, to the next message. Claude looks at them with the rest of your question. Anything else is refused with a word.
+
+**Reading the project's files.** `project_index` lists every file by kind (it is also in the first message of a conversation), `list_project_files` lists one folder, and `read_project_file` reads one: text comes back as text, a picture as a picture Claude can see, a sprite as a description with a picture of its first frame, and a file a plugin has a reader for (`api.fileReader`) as that plugin explains it. **Sounds cannot be heard**: Claude gets the file's type, length and size, is told it cannot listen, and is told never to say how a sound sounds. Every path must stay inside the project: `..`, absolute paths, drive letters, network paths, `file:stream` names, device names (`CON`, `NUL`...), encoded dots and links that lead outside are all refused, both when Claude names the path and again in the editor's main process (`packages/assistant/src/sandbox.ts`, 35 tests in `sandbox.test.ts`).
+
+**Making pictures.** `draw_sprite` draws small pixel art (a palette and one text row per row of pixels, up to 128 x 128, with frames for an animation); you see the picture before you approve it. `generate_image` asks a picture provider that a plugin added (`api.imageProvider`; **Project settings, Plugins, Examples, "Example: for the assistant"** adds a mock one that needs no service). It only asks the provider after you say yes, because a provider may charge for it; then both you and Claude see the result, and Claude is told what it made so it can say whether it is right. Providers that need a key keep it in the system keychain (assistant settings, *More settings, Picture providers*), never in a project.
+
+**How much Claude may do alone** (the second drop-down at the top of the tab):
+| Level | What happens |
+| --- | --- |
+| Look only | Claude reads and checks. Every change is refused and Claude is told why. |
+| Ask me for every change | Every change is shown first and waits for your yes (the way it has always been). |
+| Plan first, then do it | Claude must send a plan (a title, steps, anything hard to undo). Nothing changes until you approve it; then it carries on without asking about each step. |
+| Do it, I can undo | Changes go in at once. |
+At the last two levels a copy of the project is taken before the first change of a question, and an **Roll back this whole run** button appears when it finishes: the project goes back to exactly how it was (files changed are restored, files made are removed, the project is opened again). A project too big to copy (over 120 MB) makes Claude ask about each change instead.
+
+**What a question may cost.** *More settings* has the most one question may cost (default $2; 0 for none). The footer shows this conversation's tokens and cost, and what the last question has cost so far against the limit. When the limit is reached Claude stops, the tools it had asked for are answered ("not run"), and you can ask it to carry on.
+
+**Blocks and gravity.** `place_blocks` (boxes of cells, stairs, ramps, removing) and `set_gravity` (which way, and whether the game may place and break blocks while it runs) do what the Blocks tool and the scene settings do, as one undo step each.
+
+**Plugins** add tools with `api.assistantTool` (a tool that only reads runs at once; one that changes things is shown as a card like any other change), readers with `api.fileReader` and picture makers with `api.imageProvider`.

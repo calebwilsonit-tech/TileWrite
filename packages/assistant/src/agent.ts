@@ -1,9 +1,17 @@
 import type Anthropic from '@anthropic-ai/sdk';
-import { NO_USAGE, addUsage, estimateCost, usageOf, type AssistantSettings, type Usage } from './models';
+import { NO_USAGE, addUsage, estimateCost, formatCost, usageOf, type AssistantSettings, type Usage } from './models';
 import { systemPromptWith } from './prompt';
 import { checkToolInput, getTool, toolDefinitions, type ToolKind } from './tools';
 
 /** What we send for one model call (the shape of a Messages API request, without the SDK's types). */
+/** A tool a plugin adds for the assistant. Its input is not checked here (the plugin does that); the name is made so it cannot be mistaken for one of the editor's. */
+export interface ExtraTool {
+  name: string;
+  description: string;
+  input_schema: { type: 'object'; [k: string]: unknown };
+  kind: ToolKind;
+}
+
 export interface ModelRequest {
   model: string;
   max_tokens: number;
@@ -49,11 +57,23 @@ export type RunTool = (call: ToolCallInfo, signal: AbortSignal) => Promise<ToolO
 export interface TurnHooks {
   onText?(delta: string): void;
   onThinking?(delta: string): void;
-  /** After each model call: this conversation's token totals and estimated cost so far. */
-  onUsage?(total: Usage, cost: number): void;
+  /** After each model call: this conversation's token totals and estimated cost so far, and what this run (since the question) has cost. */
+  onUsage?(total: Usage, cost: number, run: { cost: number; tokens: number }): void;
 }
 
-export type StopReason = 'end_turn' | 'refusal' | 'max_tokens' | 'cancelled' | 'step_limit';
+export type StopReason = 'end_turn' | 'refusal' | 'max_tokens' | 'cancelled' | 'step_limit' | 'cost_limit';
+
+/** A picture the person attached to a question. */
+export interface Attachment {
+  name: string;
+  mediaType: 'image/png' | 'image/jpeg' | 'image/gif' | 'image/webp';
+  /** Base64, no prefix. */
+  data: string;
+}
+
+/** Most pictures one question may carry, and the most one may weigh (the API takes 5 MB each). */
+export const MAX_ATTACHMENTS = 6;
+export const MAX_ATTACHMENT_BYTES = 3_500_000;
 
 export interface TurnResult {
   stopReason: StopReason;
@@ -94,6 +114,8 @@ export class Conversation {
   usage: Usage = NO_USAGE;
   cost = 0;
   private fallbackBroken = false;
+  /** What this run (the last question and everything it led to) has used so far. */
+  private runStart = { cost: 0, tokens: 0 };
 
   constructor(
     private readonly deps: {
@@ -102,6 +124,8 @@ export class Conversation {
       settings(): AssistantSettings;
       /** What the plugins that are on tell the assistant (their behaviours, blocks and rules). */
       notes?(): readonly string[];
+      /** The tools those plugins add. */
+      extraTools?(): readonly ExtraTool[];
     },
   ) {}
 
@@ -121,9 +145,14 @@ export class Conversation {
   }
 
   /** Ask a question. `context` (project facts) is added to the first message of a conversation only. */
-  async send(text: string, opts: { context?: string; signal: AbortSignal; hooks?: TurnHooks }): Promise<TurnResult> {
-    const content: Anthropic.TextBlockParam[] = [];
+  async send(text: string, opts: { context?: string; attachments?: readonly Attachment[]; signal: AbortSignal; hooks?: TurnHooks }): Promise<TurnResult> {
+    const content: (Anthropic.TextBlockParam | Anthropic.ImageBlockParam)[] = [];
     if (!this.started && opts.context) content.push({ type: 'text', text: opts.context });
+    // pictures come before the words that talk about them
+    for (const a of (opts.attachments ?? []).slice(0, MAX_ATTACHMENTS)) {
+      content.push({ type: 'text', text: `(Attached picture: ${a.name})` });
+      content.push({ type: 'image', source: { type: 'base64', media_type: a.mediaType, data: a.data } });
+    }
     content.push({ type: 'text', text });
     this.messages.push({ role: 'user', content });
     return this.run(opts.signal, opts.hooks ?? {});
@@ -131,10 +160,25 @@ export class Conversation {
 
   /** Run the last message again (after a network error or rate limit). */
   resume(opts: { signal: AbortSignal; hooks?: TurnHooks }): Promise<TurnResult> {
+    this.resumed = true;
     return this.run(opts.signal, opts.hooks ?? {});
   }
 
+  private resumed = false;
+
+  private get tokens(): number {
+    return this.usage.inputTokens + this.usage.outputTokens + this.usage.cacheWriteTokens + this.usage.cacheReadTokens;
+  }
+
+  /** What the current run has cost so far. */
+  get runUsage(): { cost: number; tokens: number } {
+    return { cost: this.cost - this.runStart.cost, tokens: this.tokens - this.runStart.tokens };
+  }
+
   private async run(signal: AbortSignal, hooks: TurnHooks): Promise<TurnResult> {
+    // a question starts a run; Retry carries on with the one that failed
+    if (this.messages.at(-1)?.role === 'user' && !this.resumed) this.runStart = { cost: this.cost, tokens: this.tokens };
+    this.resumed = false;
     for (let step = 0; step < MAX_STEPS; step++) {
       if (signal.aborted) return { stopReason: 'cancelled', text: '' };
       const settings = this.deps.settings();
@@ -144,7 +188,7 @@ export class Conversation {
         thinking: { type: 'adaptive', display: 'summarized' },
         output_config: { effort: settings.effort },
         system: systemPromptWith(this.deps.notes?.() ?? []),
-        tools: toolDefinitions(),
+        tools: [...toolDefinitions(), ...(this.deps.extraTools?.() ?? []).map((t) => ({ name: t.name, description: t.description, input_schema: t.input_schema, eager_input_streaming: true }))],
         cache_control: { type: 'ephemeral' },
         messages: [...this.messages],
       };
@@ -169,7 +213,7 @@ export class Conversation {
       }
       this.usage = addUsage(this.usage, usageOf(message.usage));
       this.cost = estimateCost(settings.model, this.usage);
-      hooks.onUsage?.(this.usage, this.cost);
+      hooks.onUsage?.(this.usage, this.cost, this.runUsage);
 
       if (message.stop_reason === 'refusal') {
         if (message.content.length > 0) this.messages.push({ role: 'assistant', content: message.content as Anthropic.ContentBlockParam[] });
@@ -180,6 +224,13 @@ export class Conversation {
       this.messages.push({ role: 'assistant', content: message.content as Anthropic.ContentBlockParam[] });
       const calls = message.content.filter((b): b is Anthropic.ToolUseBlock => b.type === 'tool_use');
 
+      const limit = settings.runLimit;
+      const overLimit = limit > 0 && this.runUsage.cost >= limit;
+      if (overLimit && message.stop_reason !== 'pause_turn') {
+        // a reply that asked for tools must be answered before the conversation can go on, so say they were not run
+        if (calls.length > 0) this.messages.push({ role: 'user', content: calls.map((c) => resultBlock(c.id, { isError: true, content: 'The run reached its cost limit, so this was not run.' })) });
+        return { stopReason: 'cost_limit', text: textOf(message.content), notice: `Claude stopped because this question has cost about ${formatCost(this.runUsage.cost)}, which is the limit you set (${formatCost(limit)}). Ask it to carry on, or raise the limit in the settings.` };
+      }
       if (message.stop_reason === 'pause_turn') continue;
       if (calls.length === 0) {
         if (message.stop_reason === 'max_tokens') return { stopReason: 'max_tokens', text: textOf(message.content), notice: 'The reply was cut off because it got too long. Ask Claude to continue, or to do it in smaller steps.' };
@@ -192,10 +243,11 @@ export class Conversation {
         calls.map(async (c): Promise<Anthropic.ToolResultBlockParam> => {
           if (truncated) return resultBlock(c.id, { isError: true, content: 'Your reply was cut off before this tool call was complete, so it was not run. Try again with a smaller step.' });
           if (signal.aborted) return resultBlock(c.id, { isError: true, content: 'The user stopped the conversation before this ran.' });
-          const check = checkToolInput(c.name, c.input);
+          const extra = (this.deps.extraTools?.() ?? []).find((t) => t.name === c.name);
+          const check = extra ? { ok: true as const, value: (c.input && typeof c.input === 'object' ? c.input : {}) as Record<string, unknown> } : checkToolInput(c.name, c.input);
           if (!check.ok) return resultBlock(c.id, { isError: true, content: check.message });
           try {
-            return resultBlock(c.id, await this.deps.runTool({ id: c.id, name: c.name, kind: getTool(c.name)!.kind, input: check.value }, signal));
+            return resultBlock(c.id, await this.deps.runTool({ id: c.id, name: c.name, kind: extra?.kind ?? getTool(c.name)!.kind, input: check.value }, signal));
           } catch (e) {
             return resultBlock(c.id, { isError: true, content: `The tool failed: ${e instanceof Error ? e.message : String(e)}` });
           }

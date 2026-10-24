@@ -38,7 +38,7 @@ test('M11: ask Claude to explain a broken event sheet, fix it with an approved c
   // ---- a deliberately broken event sheet, made with the Events panel ----
   await page.locator('.dv-tab', { hasText: 'Events' }).click();
   await page.getByTestId('add-row').click();
-  const rowId = await page.evaluate(() => window.__store!.doc!.events[0]!.id);
+  const rowId = await page.evaluate(() => window.__store!.doc!.events.at(-1)!.id);
   await page.getByTestId(`add-action-${rowId}`).selectOption('spawn');
   await expect(page.getByTestId('event-problems')).toContainText('no prefab is chosen');
 
@@ -114,7 +114,7 @@ test('M11: ask Claude to explain a broken event sheet, fix it with an approved c
   const card = page.getByTestId('proposal').last();
   await expect(card).toContainText('Change the event sheet');
   await expect(page.getByTestId('proposal-diff')).toContainText('Event sheet');
-  expect(await page.evaluate(() => window.__store!.doc!.events[0]!.actions[0]!.type)).toBe('spawn'); // not applied yet
+  expect(await page.evaluate(() => window.__store!.doc!.events.at(-1)!.actions[0]!.type)).toBe('spawn'); // not applied yet
   await page.screenshot({ path: shot('m11-proposal.png') });
   await page.getByTestId('proposal-apply').click();
   await expect(card).toHaveAttribute('data-status', 'applied');
@@ -123,9 +123,9 @@ test('M11: ask Claude to explain a broken event sheet, fix it with an approved c
   await idle(page);
   expect(toolResults(mock.requests.at(-1)!.body)[0]!.text).toContain('Applied.');
   await page.getByTestId('btn-undo').click(); // one undo step brings the broken sheet back...
-  expect(await page.evaluate(() => window.__store!.doc!.events[0]!.actions[0]!.type)).toBe('spawn');
+  expect(await page.evaluate(() => window.__store!.doc!.events.at(-1)!.actions[0]!.type)).toBe('spawn');
   await page.getByTestId('btn-redo').click();
-  expect(await page.evaluate(() => window.__store!.doc!.events[0]!.actions[0]!.type)).toBe('setVariable');
+  expect(await page.evaluate(() => window.__store!.doc!.events.at(-1)!.actions[0]!.type)).toBe('setVariable');
   await page.locator('.dv-tab', { hasText: 'Events' }).click();
   await expect(page.getByTestId('event-problems')).toHaveCount(0);
 

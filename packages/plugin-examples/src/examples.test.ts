@@ -98,3 +98,17 @@ describe('the test harness', () => {
     p.off();
   });
 });
+
+describe('the mock picture provider', () => {
+  it('makes the same PNG for the same words, a different one for other words, at the size asked', async () => {
+    const { mockArtProvider } = await import('./tools');
+    const { decodePng } = await import('@tilewright/plugin-sdk');
+    const a = await mockArtProvider.generate({ prompt: 'a mossy wall', width: 16, height: 8 });
+    const b = await mockArtProvider.generate({ prompt: 'a mossy wall', width: 16, height: 8 });
+    const c = await mockArtProvider.generate({ prompt: 'a sandy floor', width: 16, height: 8 });
+    expect([...a]).toEqual([...b]);
+    expect([...a]).not.toEqual([...c]);
+    const img = decodePng(a);
+    expect([img.width, img.height]).toEqual([16, 8]);
+  });
+});

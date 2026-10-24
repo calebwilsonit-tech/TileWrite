@@ -47,6 +47,12 @@ contextBridge.exposeInMainWorld('tilewright', {
     status: () => invoke('assistant:status'),
     setKey: (key: string) => invoke('assistant:set-key', key),
     clearKey: () => invoke('assistant:clear-key'),
+    providerKey: {
+      has: (id: string) => invoke<boolean>('assistant:provider-key-has', id),
+      get: (id: string) => invoke<string | null>('assistant:provider-key-get', id),
+      set: (id: string, key: string) => invoke<void>('assistant:provider-key-set', id, key),
+      clear: (id: string) => invoke<void>('assistant:provider-key-clear', id),
+    },
     send: (args: unknown) => invoke('assistant:send', args),
     retry: (settings: unknown) => invoke('assistant:retry', settings),
     cancel: () => invoke<void>('assistant:cancel'),

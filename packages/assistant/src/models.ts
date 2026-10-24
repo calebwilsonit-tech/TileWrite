@@ -35,14 +35,36 @@ export const EFFORT_LABELS: Record<Effort, string> = {
   max: 'Maximum',
 };
 
+/**
+ * How much Claude may do without being asked each time.
+ * - look: it only looks (reads, checks, answers); every change is refused.
+ * - ask: every change is shown first and waits for a yes (the way it has always worked).
+ * - plan: Claude writes a plan first; once the plan is approved it carries on without asking about each step, and the whole run can be rolled back.
+ * - auto: changes are made at once (each can be undone, and the run rolled back).
+ */
+export const PERMISSIONS = ['look', 'ask', 'plan', 'auto'] as const;
+export type Permission = (typeof PERMISSIONS)[number];
+
+export const PERMISSION_LABELS: Record<Permission, { label: string; help: string }> = {
+  look: { label: 'Look only', help: 'Claude can read and check but cannot change anything.' },
+  ask: { label: 'Ask me for every change', help: 'Each change is shown first and waits for your yes.' },
+  plan: { label: 'Plan first, then do it', help: 'Claude writes a plan. When you approve it, it carries on without asking about each step. You can roll the whole run back.' },
+  auto: { label: 'Do it, I can undo', help: 'Changes are made at once. Each can be undone, and the whole run can be rolled back.' },
+};
+
 export interface AssistantSettings {
   model: string;
   effort: Effort;
   /** Let the API re-run a request on another model when the first one declines it. */
   fallback: boolean;
+  permission: Permission;
+  /** Most one run (one question and everything Claude does to answer it) may cost, in US dollars; 0 means no limit. */
+  runLimit: number;
 }
 
-export const DEFAULT_SETTINGS: AssistantSettings = { model: DEFAULT_MODEL, effort: DEFAULT_EFFORT, fallback: true };
+export const DEFAULT_RUN_LIMIT = 2;
+
+export const DEFAULT_SETTINGS: AssistantSettings = { model: DEFAULT_MODEL, effort: DEFAULT_EFFORT, fallback: true, permission: 'ask', runLimit: DEFAULT_RUN_LIMIT };
 
 /** Make whatever was saved (possibly from an older version, possibly hand-edited) into valid settings. */
 export function cleanSettings(raw: unknown): AssistantSettings {
@@ -50,7 +72,9 @@ export function cleanSettings(raw: unknown): AssistantSettings {
   const model = typeof r.model === 'string' && r.model.trim() ? r.model.trim() : DEFAULT_SETTINGS.model;
   const effort = (EFFORTS as readonly unknown[]).includes(r.effort) ? (r.effort as Effort) : DEFAULT_SETTINGS.effort;
   const fallback = typeof r.fallback === 'boolean' ? r.fallback : DEFAULT_SETTINGS.fallback;
-  return { model, effort, fallback };
+  const permission = (PERMISSIONS as readonly unknown[]).includes(r.permission) ? (r.permission as Permission) : DEFAULT_SETTINGS.permission;
+  const runLimit = typeof r.runLimit === 'number' && Number.isFinite(r.runLimit) && r.runLimit >= 0 ? Math.min(1000, r.runLimit) : DEFAULT_SETTINGS.runLimit;
+  return { model, effort, fallback, permission, runLimit };
 }
 
 export interface Usage {

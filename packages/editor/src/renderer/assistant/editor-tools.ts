@@ -23,6 +23,8 @@ import { lineDiff, type ToolOutput } from '@tilewright/assistant';
 import { ToolProblem, fail, json, requireDoc, requireEditing, undoTop, type Proposal } from './tool-core';
 import { prepareStoryAction, runStoryRead } from './story-tools';
 import { runFileRead } from './file-tools';
+import { prepareBlockAction } from './block-tools';
+import { prepareImageAction } from './image-tools';
 import { prepareSystemsAction, runSystemsRead } from './systems-tools';
 import { store } from '../app/store';
 import { viewportRef } from '../app/commands';
@@ -792,10 +794,26 @@ export async function prepareAction(name: string, input: Record<string, unknown>
       return p;
     }
     default: {
-      const story = (await prepareStoryAction(name, input)) ?? prepareSystemsAction(name, input);
+      const story = (await prepareStoryAction(name, input)) ?? prepareSystemsAction(name, input) ?? prepareBlockAction(name, input) ?? (await prepareImageAction(name, input)) ?? preparePlan(name, input);
       return story ?? fail(`"${name}" is not a tool that changes the project.`);
     }
   }
+}
+
+/** The plan Claude asks the person to approve (nothing is changed by approving it; it lets the run carry on, at the permission levels that ask for one). */
+function preparePlan(name: string, input: Record<string, unknown>): Proposal | null {
+  if (name !== 'submit_plan') return null;
+  const steps = input.steps as string[];
+  const risks = (input.risks as string[] | undefined) ?? [];
+  return {
+    tool: 'submit_plan',
+    title: String(input.title),
+    lines: steps.map((s, i) => `${i + 1}. ${s}`),
+    plan: { steps, risks },
+    async apply() {
+      return 'The plan is approved. Carry out its steps.';
+    },
+  };
 }
 
 export { describeAction, describeCondition };

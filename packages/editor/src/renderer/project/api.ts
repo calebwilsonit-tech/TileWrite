@@ -11,7 +11,7 @@ export interface AssistantStatus {
 export type AssistantEvent =
   | { type: 'text'; delta: string }
   | { type: 'thinking'; delta: string }
-  | { type: 'usage'; usage: { inputTokens: number; outputTokens: number; cacheWriteTokens: number; cacheReadTokens: number }; cost: number }
+  | { type: 'usage'; usage: { inputTokens: number; outputTokens: number; cacheWriteTokens: number; cacheReadTokens: number }; cost: number; run: { cost: number; tokens: number } }
   | { type: 'done'; result: { stopReason: string; text: string; notice?: string } }
   | { type: 'error'; message: string; kind: string; retryable: boolean };
 
@@ -63,7 +63,9 @@ export interface TilewrightApi {
     status(): Promise<AssistantStatus>;
     setKey(key: string): Promise<AssistantStatus>;
     clearKey(): Promise<AssistantStatus>;
-    send(args: { text: string; mode: string; context: string; settings: unknown; notes?: readonly string[] }): Promise<{ started: boolean; reason?: string }>;
+    /** Keys for the picture services plugins use, one per provider (kept by the system keychain). */
+    providerKey: { has(id: string): Promise<boolean>; get(id: string): Promise<string | null>; set(id: string, key: string): Promise<void>; clear(id: string): Promise<void> };
+    send(args: { text: string; mode: string; context: string; settings: unknown; notes?: readonly string[]; attachments?: readonly { name: string; mediaType: string; data: string }[]; pluginTools?: readonly unknown[] }): Promise<{ started: boolean; reason?: string }>;
     retry(settings: unknown): Promise<{ started: boolean; reason?: string }>;
     cancel(): Promise<void>;
     reset(): Promise<void>;

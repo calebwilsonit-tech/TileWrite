@@ -1,7 +1,7 @@
 import { app, ipcMain, safeStorage, type WebContents } from 'electron';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { Conversation, cleanSettings, type AssistantSettings, type Mode, type ModelClient, type RunTool, type ToolOutput, type TurnResult, type Usage, userTurnText } from '@tilewright/assistant';
+import { Conversation, MAX_ATTACHMENTS, MAX_ATTACHMENT_BYTES, cleanSettings, type AssistantSettings, type Attachment, type ExtraTool, type Mode, type ModelClient, type RunTool, type ToolOutput, type TurnResult, type Usage, userTurnText } from '@tilewright/assistant';
 import { createModelClient, friendlyError } from '@tilewright/assistant/src/sdk-client';
 
 /**
@@ -42,15 +42,65 @@ async function clearKey(): Promise<void> {
   keyCache = null;
 }
 
+/**
+ * The keys of the picture services plugins use (one per provider id), kept the same way as the assistant's own key: encrypted by
+ * the system keychain in Tilewright's data folder, never in a project, a log or an export.
+ */
+const PROVIDER_KEYS_FILE = (): string => path.join(app.getPath('userData'), 'image-provider-keys.bin');
+
+async function readProviderKeys(): Promise<Record<string, string>> {
+  try {
+    const bytes = await fs.readFile(PROVIDER_KEYS_FILE());
+    return safeStorage.isEncryptionAvailable() ? (JSON.parse(safeStorage.decryptString(bytes)) as Record<string, string>) : {};
+  } catch {
+    return {};
+  }
+}
+
+async function writeProviderKeys(keys: Record<string, string>): Promise<void> {
+  if (!safeStorage.isEncryptionAvailable()) throw new Error('This computer has no secure place to keep the key (no system keychain is available), so Tilewright will not store it. Nothing was saved.');
+  await fs.mkdir(app.getPath('userData'), { recursive: true });
+  await fs.writeFile(PROVIDER_KEYS_FILE(), safeStorage.encryptString(JSON.stringify(keys)));
+}
+
 type Event =
   | { type: 'text'; delta: string }
   | { type: 'thinking'; delta: string }
-  | { type: 'usage'; usage: Usage; cost: number }
+  | { type: 'usage'; usage: Usage; cost: number; run: { cost: number; tokens: number } }
   | { type: 'done'; result: TurnResult }
   | { type: 'error'; message: string; kind: string; retryable: boolean };
 
 interface Pending {
   resolve(out: ToolOutput): void;
+}
+
+/** Pictures from the window: only the picture types the API takes, at most six, none too big. Anything else is dropped. */
+function cleanAttachments(raw: unknown): Attachment[] {
+  if (!Array.isArray(raw)) return [];
+  const out: Attachment[] = [];
+  for (const a of raw) {
+    const r = a as Partial<Attachment> | null;
+    if (!r || typeof r.data !== 'string' || typeof r.name !== 'string') continue;
+    if (!['image/png', 'image/jpeg', 'image/gif', 'image/webp'].includes(String(r.mediaType))) continue;
+    if (!/^[A-Za-z0-9+/]+=*$/.test(r.data) || r.data.length * 0.75 > MAX_ATTACHMENT_BYTES) continue;
+    out.push({ name: r.name.slice(0, 80), mediaType: r.mediaType as Attachment['mediaType'], data: r.data });
+    if (out.length >= MAX_ATTACHMENTS) break;
+  }
+  return out;
+}
+
+/** The tools plugins add: names the API accepts, a description, an object schema; at most 20. */
+function cleanExtraTools(raw: unknown): ExtraTool[] {
+  if (!Array.isArray(raw)) return [];
+  const out: ExtraTool[] = [];
+  for (const t of raw) {
+    const r = t as Partial<ExtraTool> | null;
+    if (!r || typeof r.name !== 'string' || !/^[A-Za-z0-9_-]{1,64}$/.test(r.name) || typeof r.description !== 'string') continue;
+    if (!r.input_schema || typeof r.input_schema !== 'object' || (r.input_schema as { type?: unknown }).type !== 'object') continue;
+    out.push({ name: r.name, description: r.description.slice(0, 1500), input_schema: r.input_schema, kind: r.kind === 'act' ? 'act' : 'read' });
+    if (out.length >= 20) break;
+  }
+  return out;
 }
 
 export function registerAssistant(): void {
@@ -84,7 +134,9 @@ export function registerAssistant(): void {
 
   /** What the plugins that are on tell the assistant (sent along with every message). */
   let notes: readonly string[] = [];
-  const conversation = new Conversation({ client, runTool, settings: () => settings, notes: () => notes });
+  /** The tools those plugins add (sent along too). */
+  let extraTools: readonly ExtraTool[] = [];
+  const conversation = new Conversation({ client, runTool, settings: () => settings, notes: () => notes, extraTools: () => extraTools });
 
   async function status(): Promise<{ hasKey: boolean; canStoreKey: boolean; customEndpoint: boolean; busy: boolean; started: boolean }> {
     return { hasKey: (await readKey()) !== null, canStoreKey: safeStorage.isEncryptionAvailable(), customEndpoint: BASE_URL !== undefined, busy, started: conversation.started };
@@ -120,7 +172,7 @@ export function registerAssistant(): void {
   const hooks = {
     onText: (delta: string) => emit({ type: 'text', delta }),
     onThinking: (delta: string) => emit({ type: 'thinking', delta }),
-    onUsage: (usage: Usage, cost: number) => emit({ type: 'usage', usage, cost }),
+    onUsage: (usage: Usage, cost: number, run: { cost: number; tokens: number }) => emit({ type: 'usage', usage, cost, run }),
   };
 
   ipcMain.handle('assistant:status', () => status());
@@ -132,18 +184,33 @@ export function registerAssistant(): void {
     return status();
   });
 
+  ipcMain.handle('assistant:provider-key-has', async (_e, id: string) => typeof id === 'string' && typeof (await readProviderKeys())[id] === 'string');
+  ipcMain.handle('assistant:provider-key-get', async (_e, id: string) => (typeof id === 'string' ? ((await readProviderKeys())[id] ?? null) : null));
+  ipcMain.handle('assistant:provider-key-set', async (_e, id: string, key: string) => {
+    const k = typeof key === 'string' ? key.trim() : '';
+    if (typeof id !== 'string' || !/^[A-Za-z0-9_.-]{1,80}$/.test(id)) throw new Error('That is not a picture provider.');
+    if (!k || /\s/.test(k) || k.length > 400) throw new Error('That does not look like a key. Copy the whole key from the service.');
+    await writeProviderKeys({ ...(await readProviderKeys()), [id]: k });
+  });
+  ipcMain.handle('assistant:provider-key-clear', async (_e, id: string) => {
+    const keys = await readProviderKeys();
+    delete keys[id];
+    await writeProviderKeys(keys);
+  });
+
   ipcMain.handle('assistant:clear-key', async () => {
     controller?.abort();
     await clearKey();
     return status();
   });
 
-  ipcMain.handle('assistant:send', (e, args: { text: string; mode: Mode; context: string; settings: unknown; notes?: unknown }) => {
+  ipcMain.handle('assistant:send', (e, args: { text: string; mode: Mode; context: string; settings: unknown; notes?: unknown; attachments?: unknown; pluginTools?: unknown }) => {
     sender = e.sender;
+    extraTools = cleanExtraTools(args.pluginTools);
     notes = Array.isArray(args.notes) ? args.notes.filter((n): n is string => typeof n === 'string').map((n) => n.slice(0, 1500)).slice(0, 40) : [];
     settings = cleanSettings(args.settings);
     const text = userTurnText(args.mode, String(args.text ?? ''));
-    return turn((signal) => conversation.send(text, { context: String(args.context ?? ''), signal, hooks }));
+    return turn((signal) => conversation.send(text, { context: String(args.context ?? ''), attachments: cleanAttachments(args.attachments), signal, hooks }));
   });
 
   ipcMain.handle('assistant:retry', (e, rawSettings: unknown) => {

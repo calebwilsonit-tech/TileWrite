@@ -90,7 +90,7 @@ describe('tool definitions', () => {
 
   it('keep reading and changing apart: every tool that changes the project is an act tool', () => {
     const act = TOOLS.filter((t) => t.kind === 'act').map((t) => t.name);
-    expect(act).toEqual(['place_objects', 'update_objects', 'delete_objects', 'paint_tiles', 'connect_wires', 'remove_wires', 'set_event_sheet', 'write_dialogue', 'write_cutscene', 'write_items', 'write_minigames', 'write_skins', 'write_world_map', 'write_mixer', 'write_ui_layout', 'write_controls', 'set_project_settings', 'edit_event_rows', 'create_prefab', 'set_regions', 'write_translation', 'set_packs', 'write_table', 'set_variables', 'generate_map', 'write_ui_screen', 'write_script', 'write_project_notes']);
+    expect(act).toEqual(['place_objects', 'update_objects', 'delete_objects', 'paint_tiles', 'connect_wires', 'remove_wires', 'set_event_sheet', 'write_dialogue', 'write_cutscene', 'write_items', 'write_minigames', 'write_skins', 'write_world_map', 'write_mixer', 'write_ui_layout', 'write_controls', 'set_project_settings', 'edit_event_rows', 'create_prefab', 'set_regions', 'write_translation', 'set_packs', 'write_table', 'set_variables', 'generate_map', 'write_ui_screen', 'write_script', 'write_project_notes', 'submit_plan', 'draw_sprite', 'generate_image', 'place_blocks', 'set_gravity']);
   });
 
   it('checks the genre tools\' inputs with messages Claude can act on', () => {
@@ -317,8 +317,8 @@ describe('Conversation', () => {
 describe('settings, cost and prompts', () => {
   it('cleans saved settings', () => {
     expect(cleanSettings(undefined)).toEqual(DEFAULT_SETTINGS);
-    expect(cleanSettings({ model: ' x ', effort: 'bogus', fallback: 'yes' })).toEqual({ model: 'x', effort: DEFAULT_SETTINGS.effort, fallback: DEFAULT_SETTINGS.fallback });
-    expect(cleanSettings({ model: MODELS[1]!.id, effort: 'low', fallback: false })).toEqual({ model: MODELS[1]!.id, effort: 'low', fallback: false });
+    expect(cleanSettings({ model: ' x ', effort: 'bogus', fallback: 'yes' })).toEqual({ ...DEFAULT_SETTINGS, model: 'x' });
+    expect(cleanSettings({ model: MODELS[1]!.id, effort: 'low', fallback: false })).toEqual({ ...DEFAULT_SETTINGS, model: MODELS[1]!.id, effort: 'low', fallback: false });
   });
 
   it('prices usage per model, with cache reads far cheaper than fresh input', () => {
@@ -386,5 +386,102 @@ describe('friendlyError', () => {
   it('never repeats the key in a message', () => {
     const f = friendlyError(make(401, { error: { message: 'invalid x-api-key sk-ant-SECRET' } }, 'invalid x-api-key sk-ant-SECRET'));
     expect(f.message).not.toContain('SECRET');
+  });
+});
+
+// ---------- pictures, run limits and permissions ----------
+
+describe('pictures the person attaches', () => {
+  it('go in front of the words, with their names, in the first message', async () => {
+    const client = scripted([{ content: [text('I see a tree.')] }]);
+    const c = convo(client);
+    await c.send('What is this?', { context: 'CONTEXT', attachments: [{ name: 'tree.png', mediaType: 'image/png', data: 'AAAA' }], signal: live() });
+    const first = c.messages[0]!.content as Anthropic.ContentBlockParam[];
+    expect(first.map((b) => b.type)).toEqual(['text', 'text', 'image', 'text']);
+    expect((first[1] as Anthropic.TextBlockParam).text).toContain('tree.png');
+    expect((first[2] as Anthropic.ImageBlockParam).source).toEqual({ type: 'base64', media_type: 'image/png', data: 'AAAA' });
+    expect((first[3] as Anthropic.TextBlockParam).text).toBe('What is this?');
+  });
+
+  it('are at most six to a question', async () => {
+    const client = scripted([{ content: [text('ok')] }]);
+    const c = convo(client);
+    const many = Array.from({ length: 9 }, (_, i) => ({ name: `p${i}.png`, mediaType: 'image/png' as const, data: 'AA' }));
+    await c.send('look', { attachments: many, signal: live() });
+    expect((c.messages[0]!.content as Anthropic.ContentBlockParam[]).filter((b) => b.type === 'image')).toHaveLength(6);
+  });
+});
+
+describe('what one run may cost', () => {
+  const costly = (n: number): Reply => ({ content: [toolUse(`t${n}`, 'get_problems', {})], stop_reason: 'tool_use', usage: { input_tokens: 400_000, output_tokens: 10_000, cache_creation_input_tokens: 0, cache_read_input_tokens: 0 } as never });
+
+  it('stops the run when the limit is reached, answers the tools it did not run, and can be asked to carry on', async () => {
+    // (default model: $4 per million in, $20 per million out: each reply costs about $1.8)
+    const client = scripted([costly(1), costly(2), { content: [text('done')] }]);
+    let ran = 0;
+    const c = new Conversation({ client, runTool: async () => (ran++, { content: 'fine' }), settings: () => ({ ...DEFAULT_SETTINGS, fallback: false, runLimit: 2 }) });
+    const seen: number[] = [];
+    const r = await c.send('go', { signal: live(), hooks: { onUsage: (_t, _c, run) => seen.push(Math.round(run.cost * 10) / 10) } });
+    expect(r.stopReason).toBe('cost_limit');
+    expect(r.notice).toContain('limit you set');
+    expect(ran).toBe(1); // the second reply's tool was not run
+    expect(seen).toEqual([1.8, 3.6]);
+    // the history is still valid: every tool request has its answer, so the conversation can go on
+    const last = c.messages.at(-1)!;
+    expect(last.role).toBe('user');
+    expect(JSON.stringify(last.content)).toContain('cost limit');
+    // a new question starts a new run, with a clean count
+    const again = await c.send('thanks, carry on', { signal: live() });
+    expect(again.stopReason).toBe('end_turn');
+    expect(c.runUsage.cost).toBeLessThan(0.01);
+  });
+
+  it('no limit means none', async () => {
+    const client = scripted([costly(1), costly(2), costly(3), { content: [text('done')] }]);
+    const c = new Conversation({ client, runTool: async () => ({ content: 'fine' }), settings: () => ({ ...DEFAULT_SETTINGS, fallback: false, runLimit: 0 }) });
+    expect((await c.send('go', { signal: live() })).stopReason).toBe('end_turn');
+  });
+
+  it('Retry after an error carries on with the same run instead of starting a new count', async () => {
+    const client = scripted([costly(1), { throws: new Error('network'), content: [] }, { content: [text('done')] }]);
+    const c = new Conversation({ client, runTool: async () => ({ content: 'fine' }), settings: () => ({ ...DEFAULT_SETTINGS, fallback: false, runLimit: 0 }) });
+    await expect(c.send('go', { signal: live() })).rejects.toThrow('network');
+    const before = c.runUsage.cost;
+    expect(before).toBeGreaterThan(1);
+    await c.resume({ signal: live() });
+    expect(c.runUsage.cost).toBeGreaterThanOrEqual(before);
+  });
+});
+
+describe('the settings the person can change', () => {
+  it('permission and the run limit are kept when valid and mended when not', () => {
+    expect(cleanSettings({ permission: 'plan', runLimit: 5 })).toMatchObject({ permission: 'plan', runLimit: 5 });
+    expect(cleanSettings({ permission: 'root', runLimit: -3 })).toMatchObject({ permission: 'ask', runLimit: DEFAULT_SETTINGS.runLimit });
+    expect(cleanSettings({ runLimit: 'lots' }).runLimit).toBe(DEFAULT_SETTINGS.runLimit);
+    expect(cleanSettings({ runLimit: 0 }).runLimit).toBe(0);
+    expect(cleanSettings({}).permission).toBe('ask');
+  });
+});
+
+describe('tools a plugin adds', () => {
+  const extra = { name: 'farming__count_crops', description: 'Count the crops.', input_schema: { type: 'object' as const, properties: {} }, kind: 'read' as const };
+
+  it('are offered after the editor\u2019s own, and run without the editor\u2019s input check', async () => {
+    const client = scripted([{ content: [toolUse('t1', 'farming__count_crops', { field: 'north' })], stop_reason: 'tool_use' }, { content: [text('Three crops.')] }]);
+    const seen: ToolCallInfo[] = [];
+    const c = new Conversation({ client, runTool: async (call) => (seen.push(call), { content: '3' }), settings: () => ({ ...DEFAULT_SETTINGS, fallback: false }), extraTools: () => [extra] });
+    const r = await c.send('how many?', { signal: live() });
+    expect(r.text).toBe('Three crops.');
+    const names = client.calls[0]!.request.tools.map((t) => t.name);
+    expect(names.at(-1)).toBe('farming__count_crops');
+    expect(names.slice(0, -1)).toEqual(toolDefinitions().map((t) => t.name));
+    expect(seen).toEqual([{ id: 't1', name: 'farming__count_crops', kind: 'read', input: { field: 'north' } }]);
+  });
+
+  it('an editor tool is still checked, and an unknown name is still refused', async () => {
+    const client = scripted([{ content: [toolUse('t1', 'place_objects', { nonsense: true })], stop_reason: 'tool_use' }, { content: [text('ok')] }]);
+    const c = new Conversation({ client, runTool: async () => ({ content: 'ran' }), settings: () => ({ ...DEFAULT_SETTINGS, fallback: false }), extraTools: () => [extra] });
+    await c.send('place', { signal: live() });
+    expect(client.bodies[1]).toContain('is not valid');
   });
 });

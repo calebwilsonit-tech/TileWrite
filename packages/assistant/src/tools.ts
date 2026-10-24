@@ -597,6 +597,80 @@ export const TOOLS: ToolSpec[] = [
     description: 'Replace the project notes file (design notes and rules for future conversations).',
     schema: z.object({ text: z.string().max(20_000) }),
   },
+  {
+    name: 'submit_plan',
+    kind: 'act',
+    description: 'Show the user a plan before you build something bigger than a few small changes: a title and the steps you will take, in plain words. The user approves or rejects it. Depending on their permission setting, nothing may be changed until a plan is approved, and once it is you carry on with its steps without asking about each one. Keep steps short and in the order you will do them; name anything that is hard to take back.',
+    schema: z.object({
+      title: z.string().min(1).max(120),
+      steps: z.array(z.string().min(1).max(300)).min(1).max(25),
+      risks: z.array(z.string().max(300)).max(8).optional().describe('Anything the user should know before saying yes (it replaces something, it is hard to undo).'),
+    }),
+  },
+  {
+    name: 'draw_sprite',
+    kind: 'act',
+    description: 'Draw a small picture (pixel art) as a new sprite in the project: up to 128 x 128. Give a palette of colours and one text row per row of pixels; each character of a row is a colour: "." is transparent, "1" is the first palette colour, "2" the second, ... "9", then "a" the tenth ... "z". Every row must be exactly "width" characters. For an animation give more frames in moreFrames (each a list of rows). The user sees the picture before approving. Use list_prefabs or read_project_file to see what the existing sprites look like first, and keep a consistent style. For larger or painted pictures use generate_image when list_image_providers offers one.',
+    schema: z.object({
+      name: z.string().min(1).max(40).describe('Letters, numbers, spaces, - and _.'),
+      width: z.number().int().min(1).max(128),
+      height: z.number().int().min(1).max(128),
+      palette: z.array(z.string().regex(/^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$/)).min(1).max(35).describe('Colours as "#rrggbb" (or "#rrggbbaa").'),
+      rows: z.array(z.string()).min(1).max(128).describe('The first frame, top row first.'),
+      moreFrames: z.array(z.array(z.string()).min(1).max(128)).max(15).optional().describe('Further frames of an animation (same size).'),
+      frameMs: z.number().int().min(20).max(2000).optional().describe('How long each frame shows, in milliseconds (default 120).'),
+      replace: z.boolean().optional().describe('True to replace an existing sprite of that name.'),
+    }),
+  },
+  {
+    name: 'generate_image',
+    kind: 'act',
+    description: 'Make a picture from words with one of the image providers (list_image_providers says which exist; the person may need to have set one up) and add it to the project as a sprite. The user sees the picture before approving. Larger pictures cost the provider more.',
+    schema: z.object({
+      provider: z.string().min(1).describe('The id of a provider from list_image_providers.'),
+      prompt: z.string().min(1).max(1500),
+      name: z.string().min(1).max(40).describe('The sprite name to save it as.'),
+      width: z.number().int().min(8).max(512),
+      height: z.number().int().min(8).max(512),
+      reference: z.string().optional().describe('The name of an existing sprite to start from or match the style of.'),
+      replace: z.boolean().optional(),
+    }),
+  },
+  {
+    name: 'place_blocks',
+    kind: 'act',
+    description: 'Put solid blocks in the world, or take them away. Each box is a block of cells: x and y are map cells, z is the level it starts at (0 is the floor), w along x, d along y, h levels up. tile is a tile id from get_tiles. Stairs and ramps are blocks of their shape. At most 3000 cells at a time. Use this for walls, towers, floors in the air, bridges and steps; use paint_tiles for the ground itself.',
+    schema: z.object({
+      boxes: z
+        .array(
+          z.object({
+            x: z.number().int().min(0),
+            y: z.number().int().min(0),
+            z: z.number().int().min(0).max(254).optional(),
+            w: z.number().int().min(1).max(64).optional(),
+            d: z.number().int().min(1).max(64).optional(),
+            h: z.number().int().min(1).max(64).optional(),
+            tile: z.number().int().min(1).optional().describe('Required unless remove is true.'),
+            shape: z.enum(['cube', 'stairs', 'ramp']).optional(),
+            rot: z.number().int().min(0).max(3).optional().describe('Which way stairs and ramps face (0 to 3).'),
+            solid: z.boolean().optional().describe('False makes a block that can be walked through.'),
+          }),
+        )
+        .min(1)
+        .max(40),
+      remove: z.boolean().optional().describe('True takes the blocks in these boxes away instead.'),
+    }),
+  },
+  {
+    name: 'set_gravity',
+    kind: 'act',
+    description: 'Choose which way gravity pulls in the open scene ("-z" is down, the usual; "+z" is up; "-x", "+x", "-y", "+y" are the four sideways ways) and whether the game may place and break blocks while it runs (a builder or digging game). Gravity in any direction other than down needs the project\'s compatibility switch "Bodies collide with every block" (Project settings, Compatibility); say so if it is off.',
+    schema: z.object({
+      direction: z.enum(['-z', '+z', '-x', '+x', '-y', '+y']).optional(),
+      blocksEditable: z.boolean().optional().describe('May the game place and break blocks while it runs.'),
+      editLimit: z.number().int().min(1).max(100000).optional().describe('How many block edits one run of the game may make (default 200).'),
+    }),
+  },
 ];
 
 export function getTool(name: string): ToolSpec | undefined {

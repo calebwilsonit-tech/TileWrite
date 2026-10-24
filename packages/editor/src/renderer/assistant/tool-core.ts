@@ -10,6 +10,10 @@ export interface Proposal {
   lines: string[];
   /** For text (scripts, notes, the event sheet): what changes. */
   diff?: { name: string; lines: DiffLine[] };
+  /** Pictures to show with the card: what a drawing will look like, or what a picture maker made (set again by apply). */
+  images?: { name: string; png: Uint8Array }[];
+  /** A plan the person approves before Claude changes anything (see the permission levels). */
+  plan?: { steps: string[]; risks: string[] };
   /** Does the change; returns what to tell Claude. */
   apply(): Promise<string>;
   /** Take it back (only offered right after applying). */

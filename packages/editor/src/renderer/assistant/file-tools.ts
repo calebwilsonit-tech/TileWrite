@@ -37,8 +37,8 @@ function cleanPath(rel: string): string {
 const absolute = (rel: string): string => joinPath(projectDir(), ...cleanPath(rel).split('/'));
 
 /** Every file of the project (skipping saves, exports and tool folders), with sizes. */
-export async function listProjectFiles(): Promise<IndexedFile[]> {
-  const root = projectDir();
+export async function listProjectFiles(dir?: string): Promise<IndexedFile[]> {
+  const root = dir ?? projectDir();
   const out: IndexedFile[] = [];
   const walk = async (dir: string, rel: string): Promise<void> => {
     if (out.length >= MAX_FILES) return;
