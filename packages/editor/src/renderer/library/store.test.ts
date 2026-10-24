@@ -16,7 +16,7 @@ function memFs(): LibraryFs & { files: Map<string, string> } {
   };
 }
 
-const pack = (name: string, over: Partial<Pack> = {}): Pack => ({ format: PACK_FORMAT, formatVersion: PACK_VERSION, name, kind: 'tile', description: '', author: '', licence: 'CC0-1.0', tags: [], createdAt: '', files: [], tiles: [], autotile: [], uiPrefabs: [], code: false, ...over });
+const pack = (name: string, over: Partial<Pack> = {}): Pack => ({ format: PACK_FORMAT, formatVersion: PACK_VERSION, name, kind: 'tile', description: '', author: '', licence: 'CC0-1.0', tags: [], createdAt: '', files: [], tiles: [], autotile: [], uiPrefabs: [], uiScreens: [], code: false, ...over });
 
 describe('the personal library', () => {
   it('saves items, keeps every version, and restores an older one', async () => {

@@ -317,7 +317,7 @@ function SaveSection({ lib, onSaved }: { lib: Library; onSaved(): void }) {
       : kind === 'structure'
         ? structureNames.map((n) => ({ value: n, label: n }))
         : kind === 'ui'
-          ? store.uiDoc.prefabs.map((p) => ({ value: p.name, label: p.name }))
+          ? [...store.uiDoc.prefabs.map((p) => ({ value: `prefab:${p.name}`, label: p.name })), ...store.uiDoc.screens.map((s) => ({ value: `screen:${s.name}`, label: `Screen: ${s.name}` }))]
           : kind === 'behaviour'
             ? store.customBehaviors.map((b) => ({ value: b.name, label: b.name }))
             : kind === 'sound'

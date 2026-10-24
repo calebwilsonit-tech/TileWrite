@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { UI_ANCHOR_NAMES, WIDGET_LABELS, findWidget, parentOf, walkWidgets, type UiAnim, type UiAnchor, type UiDoc, type UiNode, type UiStyle } from '@tilewright/runtime';
-import { autoFocus } from '@tilewright/behaviors';
+import { autoFocus, listSourceChoices } from '@tilewright/behaviors';
 import { store } from '../app/store';
 import { useStudio } from '../studio/store';
 import { ActionListEditor } from '../panels/LogicEditors';
@@ -80,9 +80,7 @@ export function UiInspector({ doc, widgetId }: { doc: UiDoc; widgetId: string | 
   const sourceChoices = [
     { value: '', label: '(choose)' },
     ...tableNames.map((t) => ({ value: `table:${t}`, label: `each row of the table “${t}”` })),
-    { value: 'items', label: 'the items the player carries' },
-    { value: 'slots:12', label: '12 empty slots' },
-    { value: 'turns', label: 'the units in the turn order' },
+    ...listSourceChoices().map((s) => ({ value: s.value, label: s.label })),
   ];
   if (w.source && !sourceChoices.some((c) => c.value === w.source)) sourceChoices.push({ value: w.source, label: w.source });
   const styleOf = (): UiStyle => (stateTab === 'normal' ? w.style : (w.states[stateTab] ?? {}));

@@ -154,6 +154,8 @@ export interface ListSourceDef {
   label: string;
   /** The rows now. `id` is unique among them; `scope` is what the row's widgets can read (`{place.name}`...). */
   rows(sim: Simulation, argument: string): { id: string; scope: Record<string, VariableValue> }[];
+  /** What each name in a row's scope is, in plain words, for the designer's picker (`{"pet.name": "The pet's name"}`). */
+  fields?: Record<string, string>;
 }
 
 /**

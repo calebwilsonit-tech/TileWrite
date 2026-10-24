@@ -1,7 +1,7 @@
-import type { AutotileRuleData, TileDefData, UiPrefab } from '@tilewright/runtime';
+import type { AutotileRuleData, TileDefData, UiPrefab, UiScreen } from '@tilewright/runtime';
 import { joinPath } from '../project/api';
 import type { AssetFs } from '../studio/assets';
-import { PACK_FORMAT, PACK_VERSION, encodeFile, spritesOfTiles, tileClosure, tilesUsedByStructure, type Pack, type PackFile, type PackKind } from './pack';
+import { PACK_FORMAT, encodeFile, spritesOfTiles, tileClosure, tilesUsedByStructure, type Pack, type PackFile, type PackKind } from './pack';
 
 /** Reading a project's files into a pack. Everything the item needs comes along, so it works in a project that has none of it. */
 
@@ -11,6 +11,7 @@ export interface PackSource {
   tiles: readonly TileDefData[];
   autotile: readonly AutotileRuleData[];
   uiPrefabs: readonly UiPrefab[];
+  uiScreens?: readonly UiScreen[];
   tileSize: { w: number; h: number };
 }
 
@@ -64,7 +65,8 @@ async function addSprites(src: PackSource, names: Iterable<string>, files: Map<s
 
 const base = (kind: PackKind, info: PackInfo, src: PackSource): Pack => ({
   format: PACK_FORMAT,
-  formatVersion: PACK_VERSION,
+  // a pack is written in the oldest format that can hold it (screens need 2)
+  formatVersion: 1,
   name: info.name.trim(),
   kind,
   description: info.description ?? '',
@@ -77,6 +79,7 @@ const base = (kind: PackKind, info: PackInfo, src: PackSource): Pack => ({
   tiles: [],
   autotile: [],
   uiPrefabs: [],
+  uiScreens: [],
   code: false,
 });
 
@@ -127,11 +130,21 @@ export async function buildStructurePack(src: PackSource, info: PackInfo, struct
   return { pack: { ...p, files: [...files.values()] }, missing };
 }
 
-/** Interface pieces (the prefabs picked in the UI designer). */
-export function buildUiPack(src: PackSource, info: PackInfo, prefabNames: string[]): Built {
+/**
+ * Interface pieces: the prefabs and screens picked in the UI designer. A pick is a name (a prefab), `prefab:Name` or `screen:Name`.
+ * A screen that is a copy of a plugin's screen keeps the note of where it came from.
+ */
+export function buildUiPack(src: PackSource, info: PackInfo, picks: string[]): Built {
+  const prefabNames = picks.filter((n) => !n.startsWith('screen:')).map((n) => n.replace(/^prefab:/, ''));
+  const screenNames = picks.filter((n) => n.startsWith('screen:')).map((n) => n.slice(7));
   const wanted = src.uiPrefabs.filter((p) => prefabNames.includes(p.name));
-  const missing = prefabNames.filter((n) => !wanted.some((p) => p.name === n)).map((n) => `UI prefab ${n}`);
-  return { pack: { ...base('ui', info, src), uiPrefabs: structuredClone(wanted as UiPrefab[]) }, missing };
+  const screens = (src.uiScreens ?? []).filter((s) => screenNames.includes(s.name));
+  const missing = [
+    ...prefabNames.filter((n) => !wanted.some((p) => p.name === n)).map((n) => `UI prefab ${n}`),
+    ...screenNames.filter((n) => !screens.some((s) => s.name === n)).map((n) => `UI screen ${n}`),
+  ];
+  const pack: Pack = { ...base('ui', info, src), uiPrefabs: structuredClone(wanted as UiPrefab[]), uiScreens: structuredClone(screens as UiScreen[]) };
+  return { pack: screens.length > 0 ? { ...pack, formatVersion: 2 } : pack, missing };
 }
 
 /** A behaviour with the custom components and tables it names. */

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { AutotileRuleSchema, TileDefSchema, UiPrefabSchema, type AutotileRuleData, type TileDefData, type UiPrefab } from '@tilewright/runtime';
+import { AutotileRuleSchema, TileDefSchema, UiPrefabSchema, UiScreenSchema, type AutotileRuleData, type TileDefData, type UiPrefab, type UiScreen } from '@tilewright/runtime';
 
 /**
  * Asset packs: one JSON file holding art, tile definitions, structures, interface pieces, behaviours and sounds with what they
@@ -8,7 +8,8 @@ import { AutotileRuleSchema, TileDefSchema, UiPrefabSchema, type AutotileRuleDat
  */
 
 export const PACK_FORMAT = 'tilewright-pack';
-export const PACK_VERSION = 1;
+/** 2: a pack can hold whole interface screens (`uiScreens`). A pack without them is still written as 1, so older versions read it. */
+export const PACK_VERSION = 2;
 
 export const PACK_KINDS = ['tile', 'tileset', 'prop', 'attachment', 'character', 'animation', 'ui', 'structure', 'behaviour', 'sound', 'template'] as const;
 export type PackKind = (typeof PACK_KINDS)[number];
@@ -53,6 +54,8 @@ export const PackSchema = z.object({
   tiles: z.array(TileDefSchema).default([]),
   autotile: z.array(AutotileRuleSchema).default([]),
   uiPrefabs: z.array(UiPrefabSchema).default([]),
+  /** Whole screens (a pause menu, an inventory) with the role each plays. */
+  uiScreens: z.array(UiScreenSchema).default([]),
   /** The pack holds code (scripts or plugins): it is marked, needs approval, and is never installed silently. */
   code: z.boolean().default(false),
 });
@@ -70,7 +73,7 @@ export function parsePack(json: unknown): { ok: true; pack: Pack } | { ok: false
 // ---------- what is inside ----------
 
 export interface PackEntry {
-  kind: 'sprite' | 'tile' | 'structure' | 'table' | 'component' | 'behaviour' | 'sound' | 'ui prefab' | 'rule' | 'file';
+  kind: 'sprite' | 'tile' | 'structure' | 'table' | 'component' | 'behaviour' | 'sound' | 'ui prefab' | 'ui screen' | 'rule' | 'file';
   name: string;
 }
 
@@ -85,6 +88,7 @@ export function describePack(pack: Pack): PackEntry[] {
   }
   for (const t of pack.tiles) out.push({ kind: 'tile', name: t.name });
   for (const p of pack.uiPrefabs) out.push({ kind: 'ui prefab', name: p.name });
+  for (const s of pack.uiScreens) out.push({ kind: 'ui screen', name: s.name });
   if (pack.autotile.length > 0) out.push({ kind: 'rule', name: `${pack.autotile.length} autotile rules` });
   return out;
 }
@@ -122,10 +126,11 @@ export interface ProjectContents {
   files: ReadonlySet<string>;
   tiles: readonly TileDefData[];
   uiPrefabs: readonly UiPrefab[];
+  uiScreens?: readonly UiScreen[];
 }
 
 export interface Clash {
-  kind: 'file' | 'tile' | 'ui prefab';
+  kind: 'file' | 'tile' | 'ui prefab' | 'ui screen';
   name: string;
 }
 
@@ -134,6 +139,7 @@ export function findClashes(pack: Pack, have: ProjectContents): Clash[] {
   for (const f of pack.files) if (have.files.has(f.path)) out.push({ kind: 'file', name: f.path });
   for (const t of pack.tiles) if (have.tiles.some((x) => x.name.toLowerCase() === t.name.toLowerCase())) out.push({ kind: 'tile', name: t.name });
   for (const p of pack.uiPrefabs) if (have.uiPrefabs.some((x) => x.name === p.name)) out.push({ kind: 'ui prefab', name: p.name });
+  for (const s of pack.uiScreens) if (have.uiScreens?.some((x) => x.name === s.name)) out.push({ kind: 'ui screen', name: s.name });
   return out;
 }
 
@@ -146,6 +152,7 @@ export interface ImportResult {
   tiles: TileDefData[];
   autotile: AutotileRuleData[];
   uiPrefabs: UiPrefab[];
+  uiScreens: UiScreen[];
   /** The pack's tile ids and where they went in this project. */
   tileMap: Map<number, number>;
   /** Files and tiles that were skipped because they clash. */
@@ -279,8 +286,25 @@ export function applyImport(pack: Pack, have: ProjectContents, how: Resolution):
       prefabs.push({ ...structuredClone(p), name });
     } else prefabs.push(structuredClone(p));
   }
+  // interface screens: a clash is settled by the name; the id is made new when it is taken
+  const screens = structuredClone((have.uiScreens ?? []) as UiScreen[]);
+  for (const s of pack.uiScreens) {
+    const existing = screens.findIndex((x) => x.name === s.name);
+    if (existing >= 0 && how === 'skip') {
+      skipped.push(`UI screen ${s.name}`);
+      continue;
+    }
+    if (existing >= 0 && how === 'replace') {
+      screens[existing] = { ...structuredClone(s), id: screens[existing]!.id };
+      continue;
+    }
+    const name = existing >= 0 ? freeName(s.name, (n) => screens.some((x) => x.name === n)) : s.name;
+    if (name !== s.name) renamed.push(`UI screen ${s.name} -> ${name}`);
+    const id = freeName(s.id, (n) => screens.some((x) => x.id === n));
+    screens.push({ ...structuredClone(s), name, id });
+  }
   const rulesNow = rules.filter((r) => outTiles.some((t) => t.id === r.base) && outTiles.some((t) => t.id === r.result));
-  return { files: outFiles, tiles: outTiles, autotile: rulesNow, uiPrefabs: prefabs, tileMap, skipped, renamed };
+  return { files: outFiles, tiles: outTiles, autotile: rulesNow, uiPrefabs: prefabs, uiScreens: screens, tileMap, skipped, renamed };
 }
 
 // ---------- bytes <-> text ----------

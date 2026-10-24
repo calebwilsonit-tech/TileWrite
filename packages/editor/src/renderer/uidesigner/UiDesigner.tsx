@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { WIDGET_LABELS, WIDGET_TYPES, findWidget, screenBlocksInput, screenPauses, type UiDoc, type UiNode, type UiScreen, type WidgetType } from '@tilewright/runtime';
+import { WIDGET_LABELS, WIDGET_TYPES, findWidget, roleOfScreen, screenBlocksInput, screenPauses, type UiDoc, type UiNode, type UiScreen, type WidgetType } from '@tilewright/runtime';
 import { autoFocus, host } from '@tilewright/behaviors';
 import { usePlugins } from '../plugins/hooks';
 import { store, useApp } from '../app/store';
@@ -7,6 +7,7 @@ import { useStudio } from '../studio/store';
 import { CheckField, NumberField, SelectField, TextField } from '../panels/fields';
 import { DesignCanvas, canvasApi, namesOnScreen } from './DesignCanvas';
 import { FlowMap } from './FlowMap';
+import { PluginScreens } from './PluginScreens';
 import { UiInspector } from './UiInspector';
 import { RESOLUTIONS, designer, useDesigner } from './state';
 import { addScreen, addWidget, checkUiDoc, designScreen, prefabUses, removePrefab, removeScreen, screenNameProblem, updateScreen, updateWidget } from './ui-edit';
@@ -57,6 +58,22 @@ function ScreenProps({ doc, screenId }: { doc: UiDoc; screenId: string }) {
         }}
       />
       {problem && <p className="hint warn">{problem}</p>}
+      <SelectField<string>
+        testId="ui-screen-role"
+        label="This screen is used as"
+        value={s.role ?? ''}
+        options={[
+          { value: '', label: roleOfScreen(s) ? `(the usual for its name: ${host.ext.screenRoles.get(roleOfScreen(s))?.label ?? roleOfScreen(s)})` : '(nothing in particular: buttons open it)' },
+          ...[...host.ext.screenRoles.values()].map((r) => ({ value: r.id, label: r.label })),
+        ]}
+        onChange={(v) => set((x) => (x.role = v === '' ? undefined : v))}
+      />
+      {roleOfScreen(s) && host.ext.screenRoles.get(roleOfScreen(s))?.help && <p className="hint">{host.ext.screenRoles.get(roleOfScreen(s))!.help}</p>}
+      {s.from && (
+        <p className="hint" data-testid="ui-screen-from">
+          A copy of the screen “{s.from.screen}” from the plugin “{s.from.plugin}”. See Screens from plugins to compare it with the plugin&apos;s or put the plugin&apos;s back.
+        </p>
+      )}
       <CheckField
         testId="ui-screen-modal"
         label="The game waits while this screen is open (menus)"
@@ -108,7 +125,7 @@ function ScreenProps({ doc, screenId }: { doc: UiDoc; screenId: string }) {
       <NumberField testId="ui-screen-dim" label="Darken the game behind it (0 to 1)" min={0} max={1} step={0.1} value={s.dim} onCommit={(v) => set((x) => (x.dim = v))} />
       <SelectField<string> testId="ui-screen-transition" label="When it opens" value={s.transition} options={[{ value: 'none', label: 'appears at once' }, { value: 'fade', label: 'fades in' }, { value: 'slide', label: 'slides up' }]} onChange={(v) => set((x) => (x.transition = v as typeof x.transition))} />
       <p className="hint">
-        Screens named <strong>Title</strong>, <strong>Pause</strong> or <strong>Settings</strong> replace the game's built-in ones. The pause button opens Pause; a screen's Back setting decides what it does once a screen is open. Turn on <em>Screens</em> in the Play menu to watch which screen handled the last press.
+        The screen that plays a part (Title, Pause, Inventory, World map, Settings...) is the one the game opens for it; with none of your own, the plugin&apos;s is used. A screen named <strong>Title</strong>, <strong>Pause</strong> or <strong>Settings</strong> plays that part without choosing it. A screen&apos;s Back setting decides what it does once it is open. Turn on <em>Screens</em> in the Play menu to watch which screen handled the last press.
       </p>
     </fieldset>
   );
@@ -141,7 +158,7 @@ export function UiDesigner() {
     if (!screen && screenId) designer.set({ screenId: null, selected: null });
   }, [screen, screenId, prefabName]);
 
-  const problems = useMemo(() => checkUiDoc(doc, { tables: new Set(store.tables.map((t) => t.name)), sprites: new Set(sprites) }), [doc, sprites]);
+  const problems = useMemo(() => checkUiDoc(doc, { tables: new Set(store.tables.map((t) => t.name)), sprites: new Set(sprites), pluginScreens: new Set([...host.ext.screens.values()].map((d) => d.screen.name)), roles: new Set(host.ext.screenRoles.keys()) }), [doc, sprites]);
   const names = screen ? namesOnScreen(screen.root, doc) : [];
 
   const containerFor = (): string => {
@@ -285,29 +302,7 @@ export function UiDesigner() {
             </div>
           </section>
         )}
-        {host.ext.screens.size > 0 && (
-          <section data-testid="ui-plugin-screens">
-            <h3>Screens from plugins</h3>
-            <p className="hint">Adds a copy to this project that you can change; the plugin&apos;s own stays as it was.</p>
-            {[...host.ext.screens.values()].map((s) => (
-              <button
-                key={s.id}
-                data-testid={`ui-plugin-screen-${s.id}`}
-                title={s.role ? `Used as: ${host.ext.screenRoles.get(s.role)?.label ?? s.role}` : undefined}
-                onClick={() => {
-                  const taken = new Set(doc.screens.map((x) => x.name));
-                  let name = s.screen.name;
-                  for (let i = 2; taken.has(name); i++) name = `${s.screen.name} ${i}`;
-                  const made = addScreen(doc, name);
-                  designer.edit(updateScreen(made.doc, made.id, (copy) => void Object.assign(copy, structuredClone({ ...s.screen, id: made.id, name }))));
-                  designer.set({ screenId: made.id, selected: null });
-                }}
-              >
-                {s.screen.name}
-              </button>
-            ))}
-          </section>
-        )}
+        <PluginScreens doc={doc} />
         <section>
           <h3>UI prefabs</h3>
           {doc.prefabs.length === 0 && <p className="hint">Select a widget and use “Make a UI prefab” to reuse it.</p>}

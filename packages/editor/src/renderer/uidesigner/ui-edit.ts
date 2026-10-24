@@ -2,6 +2,7 @@ import {
   UI_ANCHORS,
   findWidget,
   newWidget,
+  roleOfScreen,
   parentOf,
   walkWidgets,
   type UiAnchor,
@@ -358,7 +359,7 @@ export function flowEdges(doc: UiDoc): FlowEdge[] {
 }
 
 /** Problems with the screens, in plain English. */
-export function checkUiDoc(doc: UiDoc, known: { tables?: ReadonlySet<string>; sprites?: ReadonlySet<string> } = {}): string[] {
+export function checkUiDoc(doc: UiDoc, known: { tables?: ReadonlySet<string>; sprites?: ReadonlySet<string>; /** Screens plugins ship, by name (a button may open them). */ pluginScreens?: ReadonlySet<string>; /** Parts plugins say a screen can play, so "role:pause" can be checked. */ roles?: ReadonlySet<string> } = {}): string[] {
   const out: string[] = [];
   const names = new Set<string>();
   for (const s of doc.screens) {
@@ -381,7 +382,9 @@ export function checkUiDoc(doc: UiDoc, known: { tables?: ReadonlySet<string>; sp
         if (a.type === 'uiScreen') {
           const op = String(a.params.op ?? 'open');
           const target = String(a.params.screen ?? '');
-          if ((op === 'open' || op === 'toggle' || op === 'close') && !doc.screens.some((s) => s.name === target)) out.push(`${label}: "${w.name}" ${op}s the screen "${target}", which does not exist.`);
+          // a name with {a value} in it is worked out while the game runs
+          const exists = target.includes('{') || (target.startsWith('role:') ? doc.screens.some((s) => roleOfScreen(s) === target.slice(5)) || (known.roles?.has(target.slice(5)) ?? true) : doc.screens.some((s) => s.name === target) || (known.pluginScreens?.has(target) ?? false));
+          if ((op === 'open' || op === 'toggle' || op === 'close') && !exists) out.push(`${label}: "${w.name}" ${op}s the screen "${target}", which does not exist.`);
         }
       }
       for (const dir of ['up', 'down', 'left', 'right'] as const) {

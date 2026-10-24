@@ -51,6 +51,7 @@ export const listSourceExample: PluginDefinition = definePlugin(manifestOf('list
     api.listSource({
       id: 'example-badges',
       label: 'Badges the player has earned',
+      fields: { 'badge.name': 'The name of the badge' },
       rows: (sim) =>
         Object.keys(sim.runtime.vars)
           .filter((k) => k.startsWith('badge:') && sim.runtime.vars[k])

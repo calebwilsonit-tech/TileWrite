@@ -149,3 +149,23 @@ describe('checking screens', () => {
     expect(checkUiDoc(withScreen().doc)).toEqual([]);
   });
 });
+
+describe('checking buttons that open screens', () => {
+  const openFrom = (screen: string): UiDoc => {
+    const start = withScreen();
+    const made = addWidget(start.doc, start.screen, start.root, 'button');
+    return updateWidget(made.doc, made.id, (w) => void (w.on.click = [{ type: 'uiScreen', params: { op: 'open', screen } }]));
+  };
+
+  it('a screen by name must exist, in the project or among the plugins\u2019', () => {
+    expect(checkUiDoc(openFrom('Nope'))).toEqual([expect.stringContaining('opens the screen "Nope", which does not exist')]);
+    expect(checkUiDoc(openFrom('Settings'), { pluginScreens: new Set(['Settings']) })).toEqual([]);
+    expect(checkUiDoc(openFrom('Menu'))).toEqual([]);
+  });
+
+  it('a part ("role:pause") must be one a plugin offers or a screen of the project plays; a name with a {value} in it is worked out in the game', () => {
+    expect(checkUiDoc(openFrom('role:pause'), { roles: new Set(['pause']) })).toEqual([]);
+    expect(checkUiDoc(openFrom('role:journal'), { roles: new Set(['pause']) })).toEqual([expect.stringContaining('role:journal')]);
+    expect(checkUiDoc(openFrom('{entry.opens}'))).toEqual([]);
+  });
+});

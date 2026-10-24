@@ -5,7 +5,7 @@ import { Hub, MemoryStore, createHubServer } from '../../../../hub-server/src';
 import { HubClient, HubProblem, hubAddressProblem, type HubRequest } from './hub';
 import { PACK_FORMAT, PACK_VERSION, type Pack } from './pack';
 
-const pack = (over: Partial<Pack> = {}): Pack => ({ format: PACK_FORMAT, formatVersion: PACK_VERSION, name: 'Meadow', kind: 'tileset', description: 'Soft grass', author: '', licence: 'CC-BY-4.0', tags: ['grass'], createdAt: '', files: [{ path: 'assets/sprites/m.sprite.json', encoding: 'utf8', data: '{}' }], tiles: [], autotile: [], uiPrefabs: [], code: false, ...over });
+const pack = (over: Partial<Pack> = {}): Pack => ({ format: PACK_FORMAT, formatVersion: PACK_VERSION, name: 'Meadow', kind: 'tileset', description: 'Soft grass', author: '', licence: 'CC-BY-4.0', tags: ['grass'], createdAt: '', files: [{ path: 'assets/sprites/m.sprite.json', encoding: 'utf8', data: '{}' }], tiles: [], autotile: [], uiPrefabs: [], uiScreens: [], code: false, ...over });
 
 describe('the hub client', () => {
   let server: Server;

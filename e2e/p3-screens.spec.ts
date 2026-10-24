@@ -40,7 +40,8 @@ test('Phase 3: Back works on the screens you made (the custom-screen bug)', asyn
   await expect(page.getByTestId('ui-screen-blocks')).not.toBeChecked();
   await page.getByTestId('btn-ws-world').click();
 
-  const stack = (): Promise<string[]> => page.evaluate(() => [...window.__play!.sim.runtime.ui.stack]);
+  // (the game's own heads-up display is always at the bottom of the stack; it is not what these are about)
+  const stack = (): Promise<string[]> => page.evaluate(() => window.__play!.sim.runtime.ui.stack.filter((n) => n !== 'HUD (built-in)'));
   await page.getByTestId('btn-play').click();
   await page.waitForFunction(() => window.__play !== undefined);
   await expect(page.getByTestId('tw-screen-Title')).toBeVisible();
@@ -97,7 +98,7 @@ test('Phase 3: Back works on the screens you made (the custom-screen bug)', asyn
   await tab(page, 'Layers').click();
   await page.getByTestId('view-screens').check();
   await page.waitForTimeout(500);
-  await expect(page.getByTestId('tw-screens-overlay')).toContainText('Screens open: 1');
+  await expect(page.getByTestId('tw-screens-overlay')).toContainText('Screens open: 2');
   await expect(page.getByTestId('tw-screens-overlay')).toContainText('Last press of pause');
   await page.screenshot({ path: shot('p3-screens-overlay.png') });
   await page.getByTestId('view-screens').uncheck();

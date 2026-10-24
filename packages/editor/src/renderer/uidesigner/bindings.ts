@@ -1,3 +1,4 @@
+import { rowVariables, HOST_VALUES } from '@tilewright/behaviors';
 import { findWidget, walkWidgets, type UiDoc, type UiNode, type TableData } from '@tilewright/runtime';
 
 /** Everything a widget can be tied to, grouped for the binding picker. */
@@ -52,17 +53,7 @@ export function scopeNames(doc: UiDoc, widgetId: string, tables: readonly TableD
       add('row.id', 'The row\'s id');
       const t = tables.find((x) => x.name === src.slice(6));
       for (const c of t?.columns ?? []) add(`row.${c.id}`, `${c.label ?? c.id} (this row)`);
-    } else if (src === 'items') {
-      add('item.name', 'Item name');
-      add('item.count', 'How many carried');
-      add('item.id', 'Item id');
-    } else if (src.startsWith('slots:')) add('slot', 'Slot number');
-    else if (src === 'turns' || r.type === 'turnOrder') {
-      add('unit.name', 'Unit name');
-      add('unit.team', 'Unit team');
-      add('unit.hp', 'Unit health');
-      add('unit.active', 'Is it this unit\'s turn (1 or 0)');
-    }
+    } else for (const [name, label] of rowVariables(r.type === 'turnOrder' && src === '' ? 'turns' : src)) add(name, label);
   }
   return out;
 }
@@ -71,6 +62,7 @@ export function bindingChoices(doc: UiDoc, widgetId: string | null, facts: Bindi
   const out: BindingChoice[] = widgetId ? scopeNames(doc, widgetId, facts.tables) : [];
   for (const v of [...new Set(facts.variables)].sort()) out.push({ path: v, label: v, group: 'Variables (flags and counters)' });
   for (const v of BUILTIN_VARS) out.push({ path: v, label: v, group: 'Game state' });
+  for (const [path, label] of HOST_VALUES) out.push({ path, label, group: 'The game and its screens' });
   for (const s of SETTINGS) out.push({ path: `settings.${s}`, label: `settings.${s}`, group: 'Player settings' });
   for (const i of facts.items) out.push({ path: `item:${i.id}`, label: `How many "${i.name}" are carried`, group: 'Items' });
   for (const t of facts.tables) {

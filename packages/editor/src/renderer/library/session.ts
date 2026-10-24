@@ -31,7 +31,7 @@ export async function openLibrary(): Promise<Library> {
 export function currentSource(): PackSource | null {
   const p = store.state.project;
   if (!p) return null;
-  return { fs: assetFs, dir: p.dir, tiles: ownTiles(p.project), autotile: p.project.autotile, uiPrefabs: store.uiDoc.prefabs, tileSize: { w: p.project.iso.tileW, h: p.project.iso.tileH } };
+  return { fs: assetFs, dir: p.dir, tiles: ownTiles(p.project), autotile: p.project.autotile, uiPrefabs: store.uiDoc.prefabs, uiScreens: store.uiDoc.screens, tileSize: { w: p.project.iso.tileW, h: p.project.iso.tileH } };
 }
 
 const ASSET_DIRS = ['assets/sprites', 'assets/structures', 'assets/tables', 'assets/components', 'assets/behaviors', 'assets/audio'];
@@ -101,6 +101,7 @@ export interface InstallReport {
   written: number;
   tiles: number;
   uiPrefabs: number;
+  uiScreens: number;
   renamed: string[];
   skipped: string[];
   warnings: string[];
@@ -115,7 +116,7 @@ export async function readLinks(dir: string): Promise<LinksFile> {
 export async function previewClashes(pack: Pack): Promise<{ clashes: Clash[]; problems: string[] }> {
   const p = store.state.project;
   if (!p) return { clashes: [], problems: [] };
-  const have = { files: await projectFiles(p.dir), tiles: ownTiles(p.project), uiPrefabs: store.uiDoc.prefabs as UiPrefab[] };
+  const have = { files: await projectFiles(p.dir), tiles: ownTiles(p.project), uiPrefabs: store.uiDoc.prefabs as UiPrefab[], uiScreens: store.uiDoc.screens };
   return { clashes: findClashes(pack, have), problems: checkPack(pack, { tileW: p.project.iso.tileW, tileH: p.project.iso.tileH }) };
 }
 
@@ -127,7 +128,7 @@ export async function installPack(pack: Pack, opts: InstallOptions): Promise<Ins
   const problems = checkPack(pack, { tileW: p.project.iso.tileW, tileH: p.project.iso.tileH });
   const blocking = problems.filter((x) => !x.includes('will not line up'));
   if (blocking.length > 0) throw new Error(blocking[0]);
-  const have = { files: await projectFiles(p.dir), tiles: ownTiles(p.project), uiPrefabs: store.uiDoc.prefabs as UiPrefab[] };
+  const have = { files: await projectFiles(p.dir), tiles: ownTiles(p.project), uiPrefabs: store.uiDoc.prefabs as UiPrefab[], uiScreens: store.uiDoc.screens };
   const r = applyImport(pack, have, opts.how);
   for (const f of r.files) {
     const data = decodeFile(f);
@@ -140,7 +141,7 @@ export async function installPack(pack: Pack, opts: InstallOptions): Promise<Ins
     const ok = await store.updateTiles(r.tiles, rules);
     if (!ok) throw new Error('The tiles could not be saved.');
   }
-  if (pack.uiPrefabs.length > 0) store.setUiDoc({ ...store.uiDoc, prefabs: r.uiPrefabs });
+  if (pack.uiPrefabs.length > 0 || pack.uiScreens.length > 0) store.setUiDoc({ ...store.uiDoc, prefabs: pack.uiPrefabs.length > 0 ? r.uiPrefabs : store.uiDoc.prefabs, screens: pack.uiScreens.length > 0 ? r.uiScreens : store.uiDoc.screens });
   await store.flushStory();
   await store.loadStory();
   await store.loadStructureFiles();
@@ -151,7 +152,7 @@ export async function installPack(pack: Pack, opts: InstallOptions): Promise<Ins
     const link: Link = { itemId: opts.item.id, name: opts.item.name, mode: opts.mode, version: opts.item.version, files: r.files.map((f) => f.path), tiles: pack.tiles.map((t) => r.tiles.find((x) => x.id === r.tileMap.get(t.id))?.name ?? t.name), prefabs: pack.uiPrefabs.map((x) => x.name), installedAt: new Date().toISOString(), author: pack.author, licence: pack.licence, source: opts.item.source ?? '' };
     await assetFs.write(joinPath(p.dir, LINKS_FILE), JSON.stringify(recordInstall(links, link), null, 2) + '\n');
   }
-  return { written: r.files.length, tiles: pack.tiles.length, uiPrefabs: pack.uiPrefabs.length, renamed: r.renamed, skipped: r.skipped, warnings: problems.filter((x) => x.includes('will not line up')) };
+  return { written: r.files.length, tiles: pack.tiles.length, uiPrefabs: pack.uiPrefabs.length, uiScreens: pack.uiScreens.length, renamed: r.renamed, skipped: r.skipped, warnings: problems.filter((x) => x.includes('will not line up')) };
 }
 
 /** Add a library item to the open project (the current version, or a given one). */

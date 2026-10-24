@@ -19,6 +19,7 @@ const pack = (over: Partial<Pack> = {}): Pack => ({
   tiles: [tile(1, 'Meadow', { art: 'meadow' }), tile(2, 'meadow edge-N', { art: 'meadow_edge', group: 1 })],
   autotile: [{ id: 'r1', name: 'edge N', base: 1, pattern: '0*******', result: 2 }],
   uiPrefabs: [],
+  uiScreens: [],
   code: false,
   ...over,
 });
@@ -107,6 +108,32 @@ describe('importing', () => {
     const r = applyImport(p, have({ uiPrefabs: [{ name: 'Slot', widget: w }] }), 'rename');
     expect(r.uiPrefabs.map((x) => x.name)).toEqual(['Slot', 'Slot 2']);
     expect(applyImport(p, have({ uiPrefabs: [{ name: 'Slot', widget: w }] }), 'skip').uiPrefabs).toHaveLength(1);
+  });
+});
+
+describe('whole interface screens', () => {
+  const have = (over: Partial<Parameters<typeof applyImport>[1]> = {}) => ({ files: new Set<string>(), tiles: [], uiPrefabs: [], ...over });
+  const screen = (name: string, id = name.toLowerCase()) => ({ id, name, root: { id: 'r', name: 'root', type: 'panel' }, modal: true, back: 'auto', backTo: '', priority: 0, dim: 0, transition: 'none', mapX: 0, mapY: 0, opensOnStart: false, role: 'pause', from: { plugin: 'prebuilt-screens', screen: 'prebuilt-pause', revision: 1, hash: 'abc' } }) as never;
+
+  it('travel in a pack of their own kind, with the part they play and where they came from, and are listed and found when they clash', () => {
+    const p = pack({ kind: 'ui', files: [], tiles: [], autotile: [], uiScreens: [screen('Pause')], formatVersion: 2 });
+    const parsed = parsePack(JSON.parse(JSON.stringify(p)));
+    expect(parsed.ok && parsed.pack.uiScreens[0]).toMatchObject({ name: 'Pause', role: 'pause', from: { plugin: 'prebuilt-screens' } });
+    expect(describePack(p)).toEqual([{ kind: 'ui screen', name: 'Pause' }]);
+    expect(findClashes(p, have({ uiScreens: [screen('Pause', 'mine')] }))).toEqual([{ kind: 'ui screen', name: 'Pause' }]);
+    expect(findClashes(p, have())).toEqual([]);
+  });
+
+  it('are renamed, replaced or skipped on a clash, and always get an id nobody else has', () => {
+    const p = pack({ kind: 'ui', files: [], tiles: [], autotile: [], uiScreens: [screen('Pause', 'pause')] });
+    const mine = have({ uiScreens: [screen('Pause', 'pause')] });
+    const renamed = applyImport(p, mine, 'rename');
+    expect(renamed.uiScreens.map((s) => [s.name, s.id])).toEqual([['Pause', 'pause'], ['Pause 2', 'pause 2']]);
+    expect(renamed.renamed).toEqual(['UI screen Pause -> Pause 2']);
+    expect(applyImport(p, mine, 'skip').uiScreens).toHaveLength(1);
+    const replaced = applyImport({ ...p, uiScreens: [{ ...screen('Pause', 'other'), dim: 0.5 }] }, mine, 'replace');
+    expect(replaced.uiScreens).toHaveLength(1);
+    expect(replaced.uiScreens[0]).toMatchObject({ id: 'pause', dim: 0.5 });
   });
 });
 
