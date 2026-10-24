@@ -1,4 +1,4 @@
-import { C, surfaceAt, type Body, type Collider, type Entity, type TransformIso } from '@tilewright/runtime';
+import { C, surfaceAt, type Collider, type Entity, type TransformIso } from '@tilewright/runtime';
 import { defineBehavior, stateOf } from '../framework';
 import { damage, isHurtBy, type Hurts } from './combat';
 
