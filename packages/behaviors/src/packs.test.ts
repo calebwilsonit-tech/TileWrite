@@ -101,7 +101,7 @@ describe('packs', () => {
     expect(conditionDef('testCond')).toBeDefined();
     expect(actionDef('testAct')).toBeDefined();
     expect(packInputActions().zoom_in?.label).toBe('Zoom in');
-    expect(editorExtensions().panels.get('test-panel')?.pack).toBe('test-pack');
+    expect(editorExtensions().panels.get('test-panel')?.plugin).toBe('test-pack');
     expect(editorExtensions().tools.has('test-tool')).toBe(true);
     expect(editorExtensions().importers.get('test-importer')?.extensions).toEqual(['.tst']);
     expect(packContents('test-pack')?.behaviors).toEqual(['testSpinner']);

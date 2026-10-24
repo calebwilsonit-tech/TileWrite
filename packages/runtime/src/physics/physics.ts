@@ -4,6 +4,7 @@ import type { Entity, EntityId } from '../scene/world';
 import type { TileMap } from '../tilemap/tilemap';
 import { gravityFrame, type GravityDir } from './gravity';
 import { stepBodies3d } from './physics3d';
+import { physicsModifiers } from './modifiers';
 import { GRAVITY, layersMatch } from './common';
 
 export { GRAVITY, layersMatch };
@@ -177,6 +178,15 @@ export function physicsSystem(ctx: SimContext): void {
   for (const e of world.query(C.Transform, C.Collider)) {
     const c = e.require<Collider>(C.Collider);
     if (c.solid && c.enabled) solids.push({ e, t: e.require<TransformIso>(C.Transform), c });
+  }
+
+  // plugins that change how bodies move (wind, ice, a conveyor) get the bodies before the step
+  const mods = physicsModifiers();
+  if (mods.length > 0) {
+    for (const e of world.query(C.Transform, C.Body)) {
+      const b = e.require<Body>(C.Body);
+      for (const m of mods) m.apply(ctx, e, b as unknown as Record<string, unknown>);
+    }
   }
 
   if (map) {
