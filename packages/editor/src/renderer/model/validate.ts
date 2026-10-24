@@ -15,7 +15,7 @@ import {
   listPacks,
   parsePoints,
 } from '@tilewright/behaviors';
-import { checkMachine, checkTree, type BehaviorTree, type StateMachine } from '@tilewright/plugin-ai';
+import { checkMachine, checkTree, type BehaviorTree, type StateMachine } from '@tilewright/behaviors';
 
 export interface Problem {
   id: string;

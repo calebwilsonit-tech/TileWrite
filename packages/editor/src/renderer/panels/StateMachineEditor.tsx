@@ -18,16 +18,7 @@ import {
 } from '../model/machine-edit';
 import { CheckField, NumberField, SelectField, TextField } from './fields';
 import { SoundField } from './SoundField';
-import {
-  CONDITION_LABELS,
-  bossMachine,
-  checkMachine,
-  describeMachineCondition,
-  guardMachine,
-  newMachineCondition,
-  type MachineCondition,
-  type StateMachine,
-} from '@tilewright/plugin-ai';
+import { CONDITION_LABELS, bossMachine, checkMachine, describeMachineCondition, guardMachine, newMachineCondition, type MachineCondition, type StateMachine } from '@tilewright/behaviors';
 
 type Drag = { kind: 'state'; id: string; dx: number; dy: number; x: number; y: number; moved: boolean } | { kind: 'link'; from: string; x: number; y: number } | { kind: 'pan'; sx: number; sy: number; vx: number; vy: number; moved: boolean };
 

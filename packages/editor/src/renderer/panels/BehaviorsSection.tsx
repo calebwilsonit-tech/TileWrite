@@ -8,7 +8,7 @@ import { StateMachineEditor } from './StateMachineEditor';
 import { BehaviorTreeEditor } from './BehaviorTreeEditor';
 import { ActionNodeEditor, EventNodeEditor } from './LogicEditors';
 import { attachBehavior, behaviorList, getBehavior, type BehaviorDef, type FieldSpec } from '@tilewright/behaviors';
-import type { BehaviorTree, StateMachine } from '@tilewright/plugin-ai';
+import { type BehaviorTree, type StateMachine } from '@tilewright/behaviors';
 
 type Edit = (label: string, fn: (x: EntityData) => void) => void;
 

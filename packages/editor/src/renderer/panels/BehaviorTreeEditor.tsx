@@ -2,23 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { NODE_H, NODE_W, addNode, canHaveChild, duplicateNode, kindColor, layoutTree, moveNode, nodeOf, parentOf, removeNode, setAction, setCondition, startTree, updateNode, wrapNode } from '../model/tree-edit';
 import { NumberField, SelectField, TextField } from './fields';
 import { SoundField } from './SoundField';
-import {
-  ACTION_KIND_LABELS,
-  CONDITION_KIND_LABELS,
-  NODE_KIND_LABELS,
-  archerTree,
-  checkTree,
-  describeNode,
-  guardTree,
-  newTreeAction,
-  newTreeCondition,
-  wandererTree,
-  type BehaviorTree,
-  type TreeAction,
-  type TreeCondition,
-  type TreeNode,
-  type TreeNodeKind,
-} from '@tilewright/plugin-ai';
+import { ACTION_KIND_LABELS, CONDITION_KIND_LABELS, NODE_KIND_LABELS, archerTree, checkTree, describeNode, guardTree, newTreeAction, newTreeCondition, wandererTree, type BehaviorTree, type TreeAction, type TreeCondition, type TreeNode, type TreeNodeKind } from '@tilewright/behaviors';
 
 const KINDS = Object.keys(NODE_KIND_LABELS) as TreeNodeKind[];
 const COMPOSITE_AND_DECORATOR: TreeNodeKind[] = ['sequence', 'selector', 'parallel', 'inverter', 'succeeder', 'repeat', 'cooldown'];

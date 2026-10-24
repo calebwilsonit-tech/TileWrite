@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ANY, STATE_H, STATE_W, addState, addTransition, arrowPath, moveState, positions, removeState, removeTransition, reorderTransition, toggleBehaviour, updateState, updateTransition } from './machine-edit';
-import { guardMachine, type StateMachine } from '@tilewright/plugin-ai';
+import { guardMachine, type StateMachine } from '@tilewright/behaviors';
 
 const empty = (): StateMachine => ({ target: 'player', start: '', states: [], transitions: [] });
 

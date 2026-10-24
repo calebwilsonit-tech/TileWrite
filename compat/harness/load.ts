@@ -1,3 +1,4 @@
+import '@tilewright/bundled-plugins';
 import path from 'node:path';
 import ts from 'typescript';
 import { compatOf, tilesetFromList, type ItemData, type ProjectData, type SceneData, type TableData, type UiDoc, type DialogueData, type CutsceneData, type PrefabData } from '@tilewright/runtime';

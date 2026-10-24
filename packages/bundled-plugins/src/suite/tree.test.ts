@@ -1,20 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { C, type EntityData, type TransformIso } from '@tilewright/runtime';
 import { flatScene, player, rig, thing, type Rig } from '@tilewright/plugin-sdk/testing';
-import {
-  archerTree,
-  checkTree,
-  childrenOf,
-  describeTreeAction,
-  describeNode,
-  guardTree,
-  newTreeNode,
-  wandererTree,
-  type BehaviorTree,
-  type TreeNode,
-} from '@tilewright/plugin-ai';
 import { attachBehavior } from '@tilewright/behaviors';
 import { healthOf } from '@tilewright/plugin-combat';
+import { archerTree, checkTree, childrenOf, describeTreeAction, describeNode, guardTree, newTreeNode, wandererTree, type BehaviorTree, type TreeNode } from '@tilewright/behaviors';
 import '@tilewright/bundled-plugins';
 
 const BODY = { vx: 0, vy: 0, vz: 0, radius: 0.3, height: 1, state: 'ground', stepUp: 0.35, stepDown: 0.4, ledge: 'fall', pits: 'fall', wade: false, gravity: 1, peakZ: 0, layer: 4, mask: 65535, noclip: false, blockedBy: [], blockedTerrain: false, standingOn: null };

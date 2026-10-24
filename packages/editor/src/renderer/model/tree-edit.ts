@@ -1,14 +1,4 @@
-import {
-  childrenOf,
-  isComposite,
-  isDecorator,
-  newTreeNode,
-  type BehaviorTree,
-  type TreeAction,
-  type TreeCondition,
-  type TreeNode,
-  type TreeNodeKind,
-} from '@tilewright/plugin-ai';
+import { childrenOf, isComposite, isDecorator, newTreeNode, type BehaviorTree, type TreeAction, type TreeCondition, type TreeNode, type TreeNodeKind } from '@tilewright/behaviors';
 
 
 /**
