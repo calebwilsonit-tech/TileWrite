@@ -26,8 +26,6 @@ const TOOLS: { id: StudioTool; label: string; key: string; hint: string }[] = [
   { id: 'vpath', label: 'Shape path', key: 'P', hint: 'On a vector layer: click to place points; double-click or Enter finishes, clicking the first point closes the shape, Esc cancels. Tick Smooth for curves.' },
 ];
 
-export const STUDIO_TOOL_KEYS = Object.fromEntries(TOOLS.map((t) => [t.key.toLowerCase(), t.id])) as Record<string, StudioTool>;
-
 export function ToolBox() {
   const s = useStudio((x) => x);
   const doc = studio.doc;

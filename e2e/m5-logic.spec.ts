@@ -109,7 +109,7 @@ test('M5: build a plate-and-gate puzzle with wires and an event row, entirely in
   // ---- an event row: when the gate is open, set "solved" to 1 ----
   await page.locator('.dv-tab', { hasText: 'Events' }).click();
   await page.getByTestId('add-row').click();
-  const rowId = await page.evaluate(() => window.__store!.doc!.events[0]!.id);
+  const rowId = await page.evaluate(() => window.__store!.doc!.events.at(-1)!.id);
   await page.getByTestId(`cond-type-${rowId}-0`).selectOption('signal');
   await page.getByTestId(`param-${rowId}-c0-who`).selectOption(`id:${gateId}`);
   const sig = page.getByTestId(`param-${rowId}-c0-name`);
@@ -136,8 +136,8 @@ test('M5: build a plate-and-gate puzzle with wires and an event row, entirely in
   await expect.poll(() => fs.readFileSync(sceneFile, 'utf8').includes('isOpen'), { timeout: 5000 }).toBe(true);
   const saved = JSON.parse(fs.readFileSync(sceneFile, 'utf8'));
   expect(saved.wires).toHaveLength(1);
-  expect(saved.events).toHaveLength(1);
-  expect(saved.events[0].conditions[0].params.name).toBe('isOpen');
+  expect(saved.events).toHaveLength(2);
+  expect(saved.events.at(-1).conditions[0].params.name).toBe('isOpen');
 
   // ---- play: the closed gate blocks, the crate on the plate opens it ----
   await page.getByTestId('btn-play').click();

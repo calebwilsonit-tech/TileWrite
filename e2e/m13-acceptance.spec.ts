@@ -215,7 +215,7 @@ test('M13: build the Last Storytender slice with the editor only, check it, let 
   // the flag opens the seal: one event row
   await tab(page, 'Events').click();
   await page.getByTestId('add-row').click();
-  const rowId = await page.evaluate(() => window.__store!.doc!.events[0]!.id);
+  const rowId = await page.evaluate(() => window.__store!.doc!.events.at(-1)!.id);
   await page.getByTestId(`cond-type-${rowId}-0`).selectOption('variable');
   await field(page, `param-${rowId}-c0-name`, 'accepted');
   const sealId = await byName(page, 'Seal');

@@ -140,3 +140,34 @@ describe('links', () => {
     expect(resolveInsideProject(project, 'assets/escape/secret.txt')).toBe(path.join(project, 'assets', 'escape', 'secret.txt'));
   });
 });
+
+describe('a folder that does not exist yet', () => {
+  it('can still be written into (the library is made the first time something is kept in it)', () => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'tilewright-sandbox-new-'));
+    try {
+      const root = path.join(tmp, 'library');
+      expect(resolveInsideAny([root], path.join(root, 'index.json'), { fs })).toBe(path.join(root, 'index.json'));
+      expect(() => resolveInsideAny([root], path.join(tmp, 'elsewhere', 'x'), { fs })).toThrow(/outside/);
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('a link to a folder above the project', () => {
+  it('is not mistaken for a folder that is just new', (ctx) => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'tilewright-sandbox-up-'));
+    try {
+      const project = path.join(tmp, 'project');
+      fs.mkdirSync(project, { recursive: true });
+      try {
+        fs.symlinkSync(tmp, path.join(project, 'up'), 'junction');
+      } catch {
+        return ctx.skip();
+      }
+      expect(() => resolveInsideProject(project, 'up/anything.txt', { fs })).toThrow(/link that leads outside/);
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+});

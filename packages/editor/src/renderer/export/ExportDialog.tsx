@@ -220,8 +220,3 @@ export function ExportDialog() {
     </div>
   );
 }
-
-/** Used by the toolbar and the command palette. */
-export const openExport = (): void => {
-  if (store.state.project) document.dispatchEvent(new CustomEvent('tw:export'));
-};

@@ -63,18 +63,31 @@ export function resolveInsideAny(roots: Iterable<string>, file: string, opts: { 
   throw new PathProblem(`Tilewright can only use files inside a project folder you chose. "${file}" is outside.`);
 }
 
+/** The real place of a folder that may not exist yet (a library that is made on first use): the nearest part that does, with the rest put back on. */
+function realOrNearest(folder: string, fs: RealFs, lib: PathLib): string {
+  const rest: string[] = [];
+  let probe = lib.resolve(folder);
+  for (;;) {
+    try {
+      return lib.join(fs.realpathSync(probe), ...rest);
+    } catch {
+      const up = lib.dirname(probe);
+      if (up === probe) return lib.resolve(folder);
+      rest.unshift(lib.basename(probe));
+      probe = up;
+    }
+  }
+}
+
 /** Follow links: the nearest part of the path that exists must really be inside the real folder. */
 function checkReal(root: string, full: string, fs: RealFs, lib: PathLib): void {
-  let realRoot: string;
-  try {
-    realRoot = fs.realpathSync(root);
-  } catch {
-    throw new PathProblem('The project folder cannot be found.');
-  }
+  const realRoot = realOrNearest(root, fs, lib);
   let probe = full;
   for (;;) {
     try {
       const real = fs.realpathSync(probe);
+      // nothing of the path inside the folder exists yet (it is new): the nearest part that does is the folder itself or above it
+      if (!isInside(root, probe, lib)) return;
       if (!isInside(realRoot, real, lib)) throw new PathProblem('That path goes through a link that leads outside the project folder.');
       return;
     } catch (e) {

@@ -103,7 +103,7 @@ test('plugins: the examples appear where they belong in the editor', async () =>
   await page.getByTestId('ui-new-screen').click();
   await page.getByTestId('ui-plugin-widget-example-clock').click();
   expect(await page.evaluate(() => JSON.stringify(window.__store!.uiDoc))).toContain('"type":"plugin"');
-  await page.getByTestId('ui-plugin-screen-credits').click();
+  await page.getByTestId('ui-plugin-screen-credits-customize').click();
   expect(await page.evaluate(() => window.__store!.uiDoc.screens.map((s) => s.name))).toEqual(['Hud', 'Credits']);
   await page.getByTestId('btn-ws-world').click();
 

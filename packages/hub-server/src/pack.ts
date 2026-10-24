@@ -20,9 +20,6 @@ export const LICENCE_LABELS: Record<Licence, string> = {
   custom: 'Custom (read the description)',
 };
 
-/** Licences that ask for the author to be named in a game that uses the item. */
-export const NEEDS_CREDIT: readonly string[] = ['CC-BY-4.0', 'CC-BY-NC-4.0'];
-
 export const LIMITS = {
   /** The whole pack as JSON text. */
   packBytes: 8 * 1024 * 1024,

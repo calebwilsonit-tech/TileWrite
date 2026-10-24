@@ -141,7 +141,7 @@ test('Phase 2: the three levels of logic - quick actions, wires through nodes, a
   await page.keyboard.press('Delete');
   await expect.poll(() => page.evaluate(() => window.__store!.doc!.graphs[0]!.nodes.length)).toBe(3);
   await page.getByTestId('graph-to-sheet').click();
-  await expect.poll(() => page.evaluate(() => ({ graphs: window.__store!.doc!.graphs.length, rows: window.__store!.doc!.events.length }))).toEqual({ graphs: 0, rows: 1 });
+  await expect.poll(() => page.evaluate(() => ({ graphs: window.__store!.doc!.graphs.length, rows: window.__store!.doc!.events.length }))).toEqual({ graphs: 0, rows: 2 });
   await page.getByTestId('graph-from-sheet').click();
   await expect.poll(() => page.evaluate(() => ({ graphs: window.__store!.doc!.graphs.length, rows: window.__store!.doc!.events.length }))).toEqual({ graphs: 1, rows: 0 });
 

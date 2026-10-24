@@ -1,5 +1,4 @@
 import {
-  UI_ANCHORS,
   findWidget,
   newWidget,
   roleOfScreen,
@@ -314,8 +313,6 @@ export function anchorForDrop(rect: { w: number; h: number }, box: { x: number; 
   const y = v === 't' ? box.y : v === 'b' ? box.y + box.h - rect.h : cy - rect.h / 2;
   return { anchor, x: Math.round(x), y: Math.round(y) };
 }
-
-export const ANCHOR_CHOICES: UiAnchor[] = [...UI_ANCHORS];
 
 // ---------- focus order ----------
 

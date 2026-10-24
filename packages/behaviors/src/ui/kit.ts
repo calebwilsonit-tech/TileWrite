@@ -19,7 +19,6 @@ export const FOCUS: UiStyle = { fill: 'color-mix(in srgb, var(--tw-highlight) 25
 export const action = (type: string, params: Record<string, unknown> = {}): { type: string; params: Record<string, unknown> } => ({ type, params });
 export const openScreen = (screen: string): ReturnType<typeof action> => action('uiScreen', { op: 'open', screen });
 export const closeScreen = (screen: string): ReturnType<typeof action> => action('uiScreen', { op: 'close', screen });
-export const goBack = (): ReturnType<typeof action> => action('uiScreen', { op: 'back', screen: '' });
 
 export function text(id: string, words: string, patch: Patch = {}): UiNode {
   return node('text', id, { name: id, text: words, wMode: 'auto', hMode: 'auto', ...patch });

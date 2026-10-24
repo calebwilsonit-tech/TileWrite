@@ -302,7 +302,6 @@ export function UiDesigner() {
             </div>
           </section>
         )}
-        <PluginScreens doc={doc} />
         <section>
           <h3>UI prefabs</h3>
           {doc.prefabs.length === 0 && <p className="hint">Select a widget and use “Make a UI prefab” to reuse it.</p>}
@@ -339,6 +338,7 @@ export function UiDesigner() {
             </div>
           </section>
         )}
+        <PluginScreens doc={doc} />
       </aside>
 
       <main className="ui-main">

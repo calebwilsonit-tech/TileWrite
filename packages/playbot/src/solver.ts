@@ -1,4 +1,4 @@
-import { C, type EntityData, type InputRecording, type TransformIso } from '@tilewright/runtime';
+import { type EntityData, type InputRecording } from '@tilewright/runtime';
 import { Bot, formatTime } from './bot';
 import { Game, type GameSetup } from './game';
 import { expandEntities } from '@tilewright/runtime';
@@ -197,10 +197,4 @@ export function solvePuzzles(setup: GameSetup, opts: SolveOptions = {}): SolveRe
       ? `No solution found yet after ${plans} plans (the search stopped at its limit). A bigger room needs a bigger limit, or the puzzle may not be solvable.`
       : `No way to reach the goal was found with up to ${maxSteps} steps of ${macros.length === 0 ? 'nothing to use in this room' : 'moves, plates, levers and crates'} (${plans} plans tried). The puzzle may be impossible.`,
   };
-}
-
-/** A player position helper for callers that want to show where the solver stood. */
-export function playerCell(game: Game): { x: number; y: number } {
-  const t = game.player.get<TransformIso>(C.Transform)!;
-  return { x: Math.floor(t.x), y: Math.floor(t.y) };
 }

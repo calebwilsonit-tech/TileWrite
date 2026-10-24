@@ -112,5 +112,3 @@ export function arrowPath(a: { x: number; y: number }, b: { x: number; y: number
   return { d: `M${p1.x},${p1.y} Q${cx},${cy} ${p2.x},${p2.y}`, label: { x: (p1.x + 2 * cx + p2.x) / 4, y: (p1.y + 2 * cy + p2.y) / 4 } };
 }
 
-/** A self-loop would be drawn as a small ring on the card's top edge. */
-export const isLoop = (t: MachineTransition): boolean => t.from === t.to;

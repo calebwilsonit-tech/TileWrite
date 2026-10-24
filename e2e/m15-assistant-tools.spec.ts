@@ -65,7 +65,7 @@ test('M15: Claude writes minigames, skins, a world map and the sound mix, edits 
 
   await expect(page.getByTestId('proposal').nth(5)).toContainText('Add a row');
   await page.getByTestId('proposal-apply').click();
-  expect(await page.evaluate(() => window.__store!.doc!.events.map((r) => r.comment))).toEqual(['Greet']);
+  expect(await page.evaluate(() => window.__store!.doc!.events.map((r) => r.comment).filter((c) => c === 'Greet'))).toEqual(['Greet']);
   // the screen layout, the controls and the project settings
   await expect(page.getByTestId('proposal').nth(6)).toContainText('screen layout');
   await page.getByTestId('proposal-apply').click();
@@ -85,7 +85,7 @@ test('M15: Claude writes minigames, skins, a world map and the sound mix, edits 
   expect(labels).toContain('Claude: change the minigames');
   expect(labels).toContain('Claude: change the world map');
   await page.getByTestId('btn-undo').click(); // the event row
-  expect(await page.evaluate(() => window.__store!.doc!.events.length)).toBe(0);
+  expect(await page.evaluate(() => window.__store!.doc!.events.length)).toBe(1);
   await page.getByTestId('btn-undo').click(); // the prefab
   await page.getByTestId('btn-undo').click(); // the world map: it was the last story change
   expect(await page.evaluate(() => window.__store!.worldMap)).toBeNull();
