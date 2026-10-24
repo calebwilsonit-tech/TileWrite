@@ -1,4 +1,4 @@
-import '../../bundled';
+import '../../bundled-editor';
 import { EMPTY_TILE, FLAG, SLOPE_RISE, groundHeightAt, reachableCells } from '@tilewright/runtime';
 import { highSide, lowSide, meetsTop } from '../tools/algorithms';
 import type { EditorDoc } from './doc';

@@ -1,3 +1,4 @@
+import '../packages/editor/src/bundled-editor';
 import fs from 'node:fs';
 import path from 'node:path';
 import { Bot, Game, extractPushPuzzle, solvePush, type PlayReport } from '@tilewright/playbot';

@@ -1,7 +1,9 @@
 import '../bundled';
 import 'pixi.js/unsafe-eval'; // Pixi's shader helpers without `new Function`, which the Content-Security-Policy forbids
 import { IsoRenderer, compatOf, crashReport, formatCrashReport, tilesetFromList, type SpriteData } from '@tilewright/runtime';
-import { activate, defaultImporter, installScriptGlobals, loadScript, packsOfProject, setActivePacks, syncCustomBlocks, type Transpiler } from '@tilewright/behaviors';
+import * as sdk from '@tilewright/plugin-sdk';
+import { PluginsBundleSchema } from '@tilewright/exporter';
+import { activate, defaultImporter, evaluatePlugin, host, parseManifest, installScriptGlobals, loadScript, packsOfProject, setActivePacks, syncCustomBlocks, type Transpiler } from '@tilewright/behaviors';
 import { GameManifestSchema, ScriptsBundleSchema, type GameManifest } from '@tilewright/exporter';
 import { joinPath } from '../renderer/project/api';
 import { assetFs } from '../renderer/project/assetFs';
@@ -121,6 +123,23 @@ async function boot(): Promise<void> {
   const splashScreen = manifest.splashText ? splash(manifest.splashText) : null;
 
   const { project } = await openProject(assetFs, root);
+  // plugins other people wrote were shipped inside the game, with the permissions its author allowed
+  if (manifest.plugins.length > 0) {
+    const shipped = PluginsBundleSchema.parse(JSON.parse(await assetFs.read(joinPath(root, 'plugins.json'))));
+    for (const s of shipped.plugins) {
+      const m = parseManifest(s.manifest);
+      if (!m.ok) {
+        console.warn(`A plugin in this game has a manifest that is not valid: ${m.problems.join(' ')}`);
+        continue;
+      }
+      try {
+        host.register(await evaluatePlugin({ manifest: m.manifest, runtimeCode: s.code, editorCode: null, changelog: '', hash: '' }, sdk));
+        host.grant(m.manifest.id, s.granted);
+      } catch (e) {
+        console.warn(e instanceof Error ? e.message : String(e));
+      }
+    }
+  }
   setActivePacks(packsOfProject(project));
   const [tables, components, customBehaviors] = await Promise.all([loadTables(assetFs, root), loadComponents(assetFs, root), loadCustomBehaviors(assetFs, root)]);
   for (const p of syncCustomBlocks(components.items, customBehaviors.items)) console.warn(p);

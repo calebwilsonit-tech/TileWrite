@@ -1,7 +1,3 @@
-// The editor is a composition root: it makes the plugins that ship with Tilewright known to the plugin host, with their editor parts,
-// and the example plugins that show people who write plugins what each kind of addition does.
-import '@tilewright/bundled-plugins/tooling';
-import { host } from '@tilewright/plugin-sdk';
-import { EXAMPLES } from '@tilewright/plugin-examples';
-
-for (const e of EXAMPLES) host.register(e.plugin);
+// The game side of the plugins that ship with Tilewright: this is what an exported game and the editor's checks need.
+// (The editor itself also imports bundled-editor.ts, which adds their editor parts.)
+import '@tilewright/bundled-plugins';

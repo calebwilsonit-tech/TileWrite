@@ -1,6 +1,8 @@
 import { defaultImporter, loadScript } from '@tilewright/behaviors';
 import { SETTINGS_FILE, buildCredits, buildManifest, creditProblems, creditsOf, exeFileName, exportFolderName, listGameFiles, parseSettings, settingsProblems, type ExportJob, type ExportResult, type ExportSettings, type Platform, type ScriptsBundle } from '@tilewright/exporter';
+import { host } from '@tilewright/behaviors';
 import { store } from '../app/store';
+import { pluginManager } from '../plugins/manager';
 import { getTranspiler } from '../code/script-manager';
 import { api, joinPath } from '../project/api';
 import { assetFs } from '../project/assetFs';
@@ -60,8 +62,34 @@ export async function checkForExport(settings: ExportSettings): Promise<ExportCh
 
   const compiled = await compileScripts();
   problems.push(...compiled.problems);
+  problems.push(...pluginsForGame().problems);
   for (const c of creditProblems(creditsOf(await readLinksText(p.dir)))) problems.push({ severity: 'warn', text: c.text });
   return { problems, scripts: compiled.scripts };
+}
+
+/**
+ * The game part of every plugin the project uses that did not come with the editor, ready to ship, and what is wrong with the
+ * project's plugins: one that is not installed here, or one the person has not allowed.
+ */
+export function pluginsForGame(): { bundle: { format: 1; plugins: { manifest: Record<string, unknown>; code: string; granted: string[] }[] }; problems: ExportProblem[] } {
+  const problems: ExportProblem[] = [];
+  const bundle = { format: 1 as const, plugins: [] as { manifest: Record<string, unknown>; code: string; granted: string[] }[] };
+  const p = store.state.project;
+  for (const id of p?.project.packs ?? []) {
+    const known = host.known.get(id);
+    if (!known) {
+      problems.push({ severity: 'error', text: `The game needs the plugin "${id}", which is not installed on this computer. Install it, or switch it off in Project settings.` });
+      continue;
+    }
+    if (known.manifest.builtin || id.startsWith('example-')) continue; // these are in the player
+    const chosen = pluginManager.chosen(id);
+    if (!chosen?.pkg || chosen.state !== 'ready') {
+      problems.push({ severity: 'error', text: `The plugin "${id}" has not been allowed to run here, so it cannot go into the game.` });
+      continue;
+    }
+    if (chosen.pkg.runtimeCode) bundle.plugins.push({ manifest: chosen.pkg.manifest as unknown as Record<string, unknown>, code: chosen.pkg.runtimeCode, granted: host.permissionsOf(id).granted });
+  }
+  return { bundle, problems };
 }
 
 /** Compile every script the way an export does (and report each one that does not compile, or whose name is taken twice). */
@@ -102,13 +130,16 @@ export async function runInWindow(): Promise<string | null> {
   const files = await listGameFiles(assetFs, p.dir, joinPath);
   const names = Object.keys(compiled.scripts.scripts).sort((a, b) => a.localeCompare(b));
   // the window title says it is a test run, so it is never mistaken for the finished game
-  const manifest = buildManifest({ ...settings, gameName: `${settings.gameName} (running from the editor)` }, p.project.startScene, names, 'editor run');
+  const shipped = pluginsForGame();
+  if (shipped.problems.length > 0) return shipped.problems.map((x) => x.text).join(' ');
+  const manifest = buildManifest({ ...settings, gameName: `${settings.gameName} (running from the editor)` }, p.project.startScene, names, 'editor run', shipped.bundle.plugins.map((x) => String(x.manifest.id)));
   await api().preview.open({
     projectDir: p.dir,
     files,
     generated: [
       { path: 'game.json', text: `${JSON.stringify(manifest, null, 2)}\n` },
       { path: 'scripts.json', text: JSON.stringify(compiled.scripts) },
+      { path: 'plugins.json', text: JSON.stringify(shipped.bundle) },
     ],
     gameName: settings.gameName,
     version: settings.version,
@@ -128,7 +159,9 @@ export async function exportGame(settings: ExportSettings, scripts: ScriptsBundl
   await saveExportSettings(settings);
   const files = await listGameFiles(assetFs, p.dir, joinPath);
   const scriptNames = Object.keys(scripts.scripts).sort((a, b) => a.localeCompare(b));
-  const manifest = buildManifest(settings, p.project.startScene, scriptNames, info.version);
+  const shipped = pluginsForGame();
+  if (shipped.problems.length > 0) throw new Error(shipped.problems.map((x) => x.text).join(' '));
+  const manifest = buildManifest(settings, p.project.startScene, scriptNames, info.version, shipped.bundle.plugins.map((x) => String(x.manifest.id)));
   const job: ExportJob = {
     projectDir: p.dir,
     outRoot,
@@ -139,6 +172,7 @@ export async function exportGame(settings: ExportSettings, scripts: ScriptsBundl
     generated: [
       { path: 'game.json', text: `${JSON.stringify(manifest, null, 2)}\n` },
       { path: 'scripts.json', text: JSON.stringify(scripts) },
+      { path: 'plugins.json', text: JSON.stringify(shipped.bundle) },
     ],
     icon: settings.icon,
     gameName: settings.gameName,

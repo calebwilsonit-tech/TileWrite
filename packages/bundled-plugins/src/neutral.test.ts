@@ -13,7 +13,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '.
 const CORE = ['runtime', 'behaviors', 'editor', 'exporter', 'playbot', 'assistant', 'hub-server', 'plugin-sdk'];
 
 /** Where a core package may name the bundled plugins: the one file that makes them known to the host. */
-const COMPOSITION_ROOTS = new Set(['packages/editor/src/bundled.ts', 'packages/playbot/src/bundled.ts', 'packages/exporter/src/bundled.ts']);
+const COMPOSITION_ROOTS = new Set(['packages/editor/src/bundled.ts', 'packages/editor/src/bundled-editor.ts', 'packages/playbot/src/bundled.ts', 'packages/exporter/src/bundled.ts']);
 
 /** Words that belong to one game and so to its plugin. */
 const FORBIDDEN = ['storytender', 'echo', 'lantern', 'sentence', 'dough', 'quill', 'mnemosynth', 'critic', 'spoiler'];

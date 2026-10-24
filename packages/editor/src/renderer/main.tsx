@@ -1,4 +1,4 @@
-import '../bundled';
+import '../bundled-editor';
 // Pixi must not use eval/new Function: the editor's Content-Security-Policy forbids it.
 import 'pixi.js/unsafe-eval';
 import { createRoot } from 'react-dom/client';

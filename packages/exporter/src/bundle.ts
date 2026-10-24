@@ -44,6 +44,16 @@ export const ScriptsBundleSchema = z.object({
 });
 export type ScriptsBundle = z.infer<typeof ScriptsBundleSchema>;
 
+/**
+ * The plugins other people wrote that the game uses, shipped inside it as `plugins.json`: only their game part (the editor part never
+ * leaves the editor), with the permissions the author allowed. The plugins that ship with Tilewright are in the player already.
+ */
+export const PluginsBundleSchema = z.object({
+  format: z.literal(1),
+  plugins: z.array(z.object({ manifest: z.record(z.string(), z.unknown()), code: z.string(), granted: z.array(z.string()).default([]) })),
+});
+export type PluginsBundle = z.infer<typeof PluginsBundleSchema>;
+
 /** `game.json`: how the game starts. */
 export const GameManifestSchema = z.object({
   format: z.literal(1),
@@ -55,11 +65,13 @@ export const GameManifestSchema = z.object({
   icon: z.string(),
   startScene: z.string(),
   scripts: z.array(z.string()),
+  /** Ids of the plugins (not from the editor) whose game part is in `plugins.json`. */
+  plugins: z.array(z.string()).default([]),
   builtWith: z.string(),
 });
 export type GameManifest = z.infer<typeof GameManifestSchema>;
 
-export function buildManifest(s: ExportSettings, startScene: string, scripts: string[], engineVersion: string): GameManifest {
+export function buildManifest(s: ExportSettings, startScene: string, scripts: string[], engineVersion: string, plugins: string[] = []): GameManifest {
   return {
     format: 1,
     name: s.gameName,
@@ -69,6 +81,7 @@ export function buildManifest(s: ExportSettings, startScene: string, scripts: st
     icon: s.icon,
     startScene,
     scripts,
+    plugins,
     builtWith: `Tilewright ${engineVersion}`,
   };
 }

@@ -1,4 +1,4 @@
-import '../../bundled';
+import '../../bundled-editor';
 import { resolveInstance, type EntityData, type PrefabData, type SpriteData } from '@tilewright/runtime';
 import { playerEntity } from '../project/templates';
 import { host, solid, thing } from '@tilewright/behaviors';
