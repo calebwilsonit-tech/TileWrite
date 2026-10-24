@@ -27,7 +27,7 @@ Other things that look like "only wall blocks are solid" in that script are the 
 
 There is also an engine reason the owner had to write it that way: the engine had **no gravity direction, no per-body "up", and no collision against anything above the feet or beside a body that is not on the floor**. Phase 3 step 4.3 adds those (see below), so that this script can be replaced by a switch that only says which way gravity points.
 
-**Proposed change to the project:** none yet. Once the engine's gravity exists (step 4.3), the three scripts can be replaced by one behaviour that sets the scene's gravity direction when the switch is pressed, and the collision then comes from the engine. The diff will be written out in full and handed to the owner; **nothing in `compat/projects/Demo` has been or will be changed without their say-so.**
+**Proposed change to the project:** now that the engine has gravity (step 4.3), the three scripts can go: four Quick Action rows turn the player's gravity toward the wall or the ceiling and back, and the collision comes from the engine. The change was written as a diff, applied to a copy and played: the player stands on the west wall, climbs to the platforms, is stopped by them, and falls back to the floor when the countdown ends, with no tick inside a block. It is in `compat/proposals/upside-down-gravity.diff` with an explanation in `upside-down.md` (kept out of git, since it holds parts of the project). **Nothing in `compat/projects/Demo` has been changed, and nothing will be without the owner's say-so.**
 
 ## Problem 1: a block turns see-through
 
@@ -46,4 +46,9 @@ It is behind the compatibility flag `fadeBySight`: projects made before it keep 
 
 ## What step 4.3 adds, and what it does to the two problems
 
-See the rest of this page as steps land.
+Gravity is now a direction (see [blocks-and-gravity.md](blocks-and-gravity.md)), a body is a box that is stopped by every solid block in every direction, and the walls that fade are the ones the camera's line of sight really runs through.
+
+- **Problem 2 (passed through):** under block physics a body glued to a wall is stopped by blocker cells, platforms, stacks with gaps and every other solid block, because it is the engine that moves it, with collision on every step. The test `e2e/p3-gravity-room.spec.ts` turns gravity to the floor, a wall, the ceiling and another wall in a room of mixed blocks (including blocker cells and a pillar out of the wall) and checks, on every fifth tick, that the player is never inside a block.
+- **Problem 1 (see-through):** the body's real box in its current way up feeds the fade rule. `e2e/p3-gravity-play.spec.ts` plays the same room in the editor and compares, on the floor, on the west wall, on the ceiling and on the south wall, which ceiling blocks are drawn faded with which ones the rule says are in the way: they are the same.
+
+Both are on only where the compatibility flags are on: new projects have them; an older project keeps playing as it did until the owner ticks the two boxes in Project settings -> Compatibility.

@@ -39,6 +39,11 @@ export interface Sprite {
   alpha?: number;
   /** No contact shadow under it (decals, attachments). */
   noShadow?: boolean;
+  /**
+   * Pictures to use when gravity pulls this object somewhere other than down, by direction (`'-x'`, `'+z'`...). A direction that is
+   * not listed uses `asset`, turned so its head points up (the automatic look until custom art exists).
+   */
+  byGravity?: Partial<Record<'-z' | '+z' | '-x' | '+x' | '-y' | '+y', string>>;
 }
 
 /** A picture fixed to the face of a block (a window, a torch, a poster) or lying on a top (a rug). */

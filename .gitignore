@@ -15,3 +15,4 @@ compat/projects/*
 !compat/projects/README.md
 compat/baselines/owner/
 e2e/compat-screens.spec.ts-snapshots/owner-*
+compat/proposals/

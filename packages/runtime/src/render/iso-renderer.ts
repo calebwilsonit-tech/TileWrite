@@ -858,8 +858,12 @@ export class IsoRenderer {
       const turned = gdir !== undefined && gdir !== '-z';
       const frame = turned ? gravityFrame(gdir) : null;
       const oriented = frame ? spriteBox(frame, { x: t.x, y: t.y, h: t.h }, s.w, s.d, s.height) : null;
-      const sheetBased = s.asset !== undefined && s.asset !== '' && this.sprites.has(s.asset);
-      const look: Sprite = oriented && !sheetBased ? { ...s, w: oriented.x1 - oriented.x0, d: oriented.y1 - oriented.y0, height: oriented.z1 - oriented.z0, noShadow: true } : s;
+      // a picture of its own for this gravity, when the object has one (then it is drawn upright, as made)
+      const own = gdir !== undefined ? s.byGravity?.[gdir] : undefined;
+      const ownSheet = own !== undefined && own !== '' && this.sprites.has(own);
+      const drawn: Sprite = ownSheet ? { ...s, asset: own } : s;
+      const sheetBased = drawn.asset !== undefined && drawn.asset !== '' && this.sprites.has(drawn.asset);
+      const look: Sprite = oriented && !sheetBased ? { ...drawn, w: oriented.x1 - oriented.x0, d: oriented.y1 - oriented.y0, height: oriented.z1 - oriented.z0, noShadow: true } : drawn;
       const view = this.viewFor(e, look, side, flip);
       view.gfx.visible = !hiddenFace && s.visible && this.entitiesVisible && !(this.entityHidden?.(e) ?? false);
       view.gfx.alpha = s.alpha ?? 1;
@@ -868,7 +872,7 @@ export class IsoRenderer {
       if (sheetBased) {
         // the picture is turned so its head points the way up is on the screen (up the wall, down from the ceiling)
         let target = 0;
-        if (frame) {
+        if (frame && !ownSheet) {
           const away = gridToScreen(t.x + frame.up[0], t.y + frame.up[1], t.h + frame.up[2], this.iso);
           target = Math.atan2(away.x - p.x, -(away.y - p.y));
         }
@@ -1077,9 +1081,9 @@ export class IsoRenderer {
     }
   }
 
-  /** Alpha of the tile view for a cell's column (for tests and the debugger). */
-  tileAlpha(x: number, y: number): number | undefined {
-    return this.cellViews.get(y * (this.tileMap?.width ?? 0) + x)?.find((v) => v.box.minZ === -1)?.gfx.alpha;
+  /** Alpha of the tile view for a cell's column, or of the block at level `z` of it (for tests and the debugger). */
+  tileAlpha(x: number, y: number, z = -1): number | undefined {
+    return this.cellViews.get(y * (this.tileMap?.width ?? 0) + x)?.find((v) => v.box.minZ === z)?.gfx.alpha;
   }
 
   /** Cell under a viewport pixel, assuming the plane at height h. */
