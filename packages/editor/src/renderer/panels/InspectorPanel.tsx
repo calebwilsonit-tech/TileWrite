@@ -2,6 +2,7 @@ import { FACING_NAMES, GRAVITY_DIRS, GRAVITY_NAMES, type Animator, type EntityDa
 import { behaviorList } from '@tilewright/behaviors';
 import { applySprite, setLocomotionClips, setPlainClip } from '../studio/apply';
 import { BehaviorsSection } from './BehaviorsSection';
+import { PluginComponentsSection } from './PluginComponents';
 import { QuickActionsSection } from './LogicEditors';
 import { AttachSection } from './AttachSection';
 import { SoundField } from './SoundField';
@@ -158,6 +159,7 @@ function EntityInspector({ ids }: { ids: string[] }) {
         </fieldset>
       )}
       <BehaviorsSection entity={e} edit={edit} />
+      <PluginComponentsSection entity={e} edit={edit} />
       <AttachSection entity={e} />
       <QuickActionsSection entity={e} />
       <WiresSection entityId={e.id} />

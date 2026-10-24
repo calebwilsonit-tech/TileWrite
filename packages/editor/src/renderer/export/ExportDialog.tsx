@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { PLATFORM_LABEL, defaultSettings, type ExportResult, type ExportSettings, type Platform, type ScriptsBundle } from '@tilewright/exporter';
+import { host } from '@tilewright/behaviors';
 import { store } from '../app/store';
+import { usePlugins } from '../plugins/hooks';
 import { api } from '../project/api';
 import { checkForExport, exportGame, loadExportSettings, saveExportSettings, type ExportProblem } from './export';
 
@@ -15,6 +17,9 @@ export function ExportDialog() {
   const [result, setResult] = useState<ExportResult | null>(null);
   const [failure, setFailure] = useState('');
   const [platform, setPlatform] = useState<Platform>('win32');
+  const [alsoMake, setAlsoMake] = useState<string[]>([]);
+  const [targetNotes, setTargetNotes] = useState<string[]>([]);
+  usePlugins();
   const [canExport, setCanExport] = useState(true);
   const scripts = useRef<ScriptsBundle>({ format: 1, scripts: {} });
   const run = useRef(0);
@@ -65,8 +70,21 @@ export function ExportDialog() {
     const out = await api().chooseFolder('Choose where to put the finished game');
     if (!out) return;
     setBusy(true);
+    setTargetNotes([]);
     try {
-      setResult(await exportGame(settings, scripts.current, out));
+      const made = await exportGame(settings, scripts.current, out);
+      setResult(made);
+      const notes: string[] = [];
+      for (const id of alsoMake) {
+        const t = host.ext.exportTargets.get(id);
+        if (!t?.finish) continue;
+        try {
+          notes.push(`${t.label}: ${await t.finish({ folder: made.folder, exe: made.exe, zip: made.zip, name: settings.gameName }, host.editorHostFor(t.plugin))}`);
+        } catch (e) {
+          notes.push(`${t.label}: ${e instanceof Error ? e.message : String(e)}`);
+        }
+      }
+      setTargetNotes(notes);
     } catch (e) {
       setFailure(e instanceof Error ? e.message.replace(/^Error invoking remote method '[^']+': (Error: )?/, '') : 'The game could not be exported.');
     } finally {
@@ -110,6 +128,25 @@ export function ExportDialog() {
             <input data-testid="export-icon" placeholder="assets/icon.png" value={settings.icon} onChange={(e) => change({ icon: e.target.value.trim() })} onBlur={() => void recheck(settings)} />
           </label>
         </div>
+
+        {[...host.ext.exportTargets.values()].filter((t) => !t.platforms || t.platforms.includes(platform)).length > 0 && (
+          <section data-testid="export-targets">
+            <h3>Also make</h3>
+            {[...host.ext.exportTargets.values()]
+              .filter((t) => !t.platforms || t.platforms.includes(platform))
+              .map((t) => {
+                const why = store.state.project ? (t.check?.(store.state.project.project) ?? []) : [];
+                return (
+                  <label key={t.id} className="field check">
+                    <input data-testid={`export-target-${t.id}`} type="checkbox" checked={alsoMake.includes(t.id)} disabled={why.length > 0} onChange={(e) => setAlsoMake(e.target.checked ? [...alsoMake, t.id] : alsoMake.filter((x) => x !== t.id))} />
+                    <span>
+                      {t.label}: {t.describe()} {why.length > 0 && <em className="warn-text">{why.join(' ')}</em>}
+                    </span>
+                  </label>
+                );
+              })}
+          </section>
+        )}
 
         <section data-testid="export-checks">
           <h3>Before exporting</h3>
@@ -163,6 +200,11 @@ export function ExportDialog() {
               </p>
             )}
             {result.zipProblem && <p className="warn-text">{result.zipProblem}</p>}
+            {targetNotes.map((n) => (
+              <p key={n} data-testid="export-target-note">
+                {n}
+              </p>
+            ))}
           </div>
         )}
         {!canExport && <p className="warn-text">This editor cannot make games here: it needs to be built first (npm run build), on Windows or Linux.</p>}

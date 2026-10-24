@@ -164,6 +164,8 @@ export interface ExportTargetDef {
   check?(project: ProjectData): string[];
   /** Describe what it will make (shown in the Export dialog). */
   describe(): string;
+  /** Runs after the game has been exported: pack it further, send it somewhere. Say what it did, in a line. */
+  finish?(result: { folder: string; exe: string; zip: string | null; name: string }, host: import('./host').EditorHost): Promise<string> | string;
 }
 
 export interface PrefabDef {

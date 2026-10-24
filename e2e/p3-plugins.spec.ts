@@ -61,7 +61,7 @@ test('plugins: the examples appear where they belong in the editor', async () =>
   test.setTimeout(120_000);
   const { page, app, errors } = await launchEditor();
   await createProjectViaUi(page, 'Examples', 'empty');
-  const ids = ['example-panel', 'example-tool', 'example-prefab', 'example-validator', 'example-behavior', 'example-input', 'example-events'];
+  const ids = ['example-panel', 'example-tool', 'example-prefab', 'example-validator', 'example-behavior', 'example-input', 'example-events', 'example-component', 'example-inspector', 'example-block', 'example-widget', 'example-screen'];
   await page.evaluate((list) => window.__store!.updateProjectSettings({ packs: list }), ids);
 
   // the settings list them with what they need
@@ -88,6 +88,24 @@ test('plugins: the examples appear where they belong in the editor', async () =>
   await page.evaluate((i) => window.__store!.select([i]), id);
   await expect(page.getByTestId('add-behavior').locator('option[value="exampleSpinner"]')).toHaveCount(1);
   expect(await page.evaluate(() => Object.keys(window.__plugins!.host.inputActions()))).toContain('example_wave');
+
+  // a component with an inspector of the plugin's own, a kind of block, and a widget and a screen in the UI designer
+  await page.getByTestId('add-component').selectOption('exampleScore');
+  await page.getByTestId('add-component-ok').click();
+  await expect(page.getByTestId('plugin-inspector-exampleScore').locator('input')).toHaveValue('0');
+  await page.getByTestId('plugin-inspector-exampleScore').locator('input').fill('7');
+  await page.getByTestId('plugin-inspector-exampleScore').locator('input').press('Tab');
+  await expect.poll(() => page.evaluate((i) => (window.__store!.doc!.getEntity(i)!.components.exampleScore as { points: number }).points, id)).toBe(7);
+  await page.getByTestId('blocktype-add-example-ice').click();
+  await expect(page.getByTestId('tile-Ice')).toBeVisible();
+  await page.getByTestId('btn-ws-ui').click();
+  await page.getByTestId('ui-new-screen-name').fill('Hud');
+  await page.getByTestId('ui-new-screen').click();
+  await page.getByTestId('ui-plugin-widget-example-clock').click();
+  expect(await page.evaluate(() => JSON.stringify(window.__store!.uiDoc))).toContain('"type":"plugin"');
+  await page.getByTestId('ui-plugin-screen-credits').click();
+  expect(await page.evaluate(() => window.__store!.uiDoc.screens.map((s) => s.name))).toEqual(['Hud', 'Credits']);
+  await page.getByTestId('btn-ws-world').click();
 
   // a check in the Problems panel
   await page.evaluate((i) => window.__store!.doc!.updateEntities([i], 'Rename', (e) => void (e.name = 'TODO door')), id);

@@ -14,6 +14,7 @@ import {
   worldViews,
   type ViewNode,
 } from './screens-logic';
+import { host } from '../plugins/host';
 
 /**
  * Draws the interface screens as plain DOM (so the editor's Play and an exported game use exactly the same thing) and passes
@@ -161,6 +162,7 @@ const KEYFRAMES = (anim: UiNode['anim'][number]): Keyframe[] => {
 };
 
 export class UiScreens {
+  private readonly widgetCleanups = new WeakMap<HTMLElement, () => void>();
   private readonly root = document.createElement('div');
   private readonly layers = new Map<string, HTMLElement>();
   private readonly live = new Map<string, Live>();
@@ -687,6 +689,19 @@ export class UiScreens {
           live2.el.style.transform = `rotate(${a}deg) translateY(${Math.abs(i - mid) * 3}px)`;
           live2.el.style.marginLeft = i === 0 ? '0' : '-24px';
         });
+        break;
+      }
+      case 'plugin': {
+        // a kind of widget a plugin added: it fills the element in every frame, from the values the game has
+        const def = host.ext.widgets.get(n.source);
+        if (!def) {
+          el.textContent = `(the plugin widget "${n.source}" is not available)`;
+          break;
+        }
+        const values: Record<string, string | number | boolean> = { ...this.sim.runtime.vars, 'time.seconds': this.sim.tick / 60 } as Record<string, string | number | boolean>;
+        this.widgetCleanups.get(el)?.();
+        const stop = def.render(el, n, values);
+        if (typeof stop === 'function') this.widgetCleanups.set(el, stop);
         break;
       }
       default:

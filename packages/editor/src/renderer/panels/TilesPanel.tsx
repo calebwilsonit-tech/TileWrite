@@ -3,6 +3,8 @@ import { DEFAULT_TILESET, compositeFrame, type SpriteData, type TileDefData } fr
 import { useApp, store } from '../app/store';
 import { ownTiles, setTileArt, tileFromSprite } from '../project/tiles';
 import { studio, useStudio } from '../studio/store';
+import { host } from '@tilewright/behaviors';
+import { usePlugins } from '../plugins/hooks';
 
 const hex = (n: number): string => `#${n.toString(16).padStart(6, '0')}`;
 
@@ -91,6 +93,40 @@ function TileArt({ tiles }: { tiles: TileDefData[] }) {
   );
 }
 
+/** Kinds of block plugins brought (ice, a trampoline...): one click adds each to this project's tiles, with the rules it carries. */
+function BlockKinds() {
+  usePlugins();
+  const tileset = useApp((s) => s.project?.project.tileset) ?? [];
+  const kinds = [...host.ext.blockTypes.values()];
+  if (kinds.length === 0) return null;
+  return (
+    <div data-testid="plugin-block-kinds">
+      <h4>Kinds of block from plugins</h4>
+      {kinds.map((k) => {
+        const have = tileset.some((t) => t.props?.custom?.blockType === k.id);
+        return (
+          <button
+            key={k.id}
+            className="small"
+            data-testid={`blocktype-add-${k.id}`}
+            disabled={have}
+            title={have ? 'Already one of this project\'s tiles' : `Add ${k.name} to this project's tiles`}
+            onClick={() => {
+              const p = store.state.project;
+              if (!p) return;
+              const id = Math.max(0, ...p.project.tileset.map((t) => t.id)) + 1;
+              const tile: TileDefData = { id, name: k.name, top: k.top, left: k.left, right: k.right, props: { ...(k.solid === undefined ? {} : { solid: k.solid }), ...(k.tags ? { tags: k.tags } : {}), custom: { ...(k.custom ?? {}), blockType: k.id } } };
+              void store.updateTiles([...p.project.tileset, tile], p.project.autotile);
+            }}
+          >
+            {have ? `${k.name} (added)` : `Add ${k.name}`}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 export function TilesPanel() {
   const selected = useApp((s) => s.options.tile);
   const projectTiles = useApp((s) => s.project?.project.tileset);
@@ -107,6 +143,7 @@ export function TilesPanel() {
       <button data-testid="btn-autotile" onClick={() => document.dispatchEvent(new CustomEvent('tw:autotile'))} title="Edges, shores and cliff faces that appear by themselves">
         Autotiling…
       </button>
+      <BlockKinds />
       <input data-testid="tile-search" className="search" type="search" placeholder="Search tiles…" value={query} onChange={(e) => setQuery(e.target.value)} aria-label="Search tiles" />
       <div className="tile-grid">
         {tiles.map((t) => {

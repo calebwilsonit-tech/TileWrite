@@ -26,6 +26,7 @@ export const WIDGET_TYPES = [
   'turnOrder',
   'spacer',
   'instance',
+  'plugin',
 ] as const;
 export type WidgetType = (typeof WIDGET_TYPES)[number];
 
@@ -47,6 +48,7 @@ export const WIDGET_LABELS: Record<WidgetType, string> = {
   turnOrder: 'Turn order bar (whose turn is next)',
   spacer: 'Spacer (empty room)',
   instance: 'UI prefab (a reusable piece)',
+  plugin: 'Plugin widget (a kind of widget a plugin added)',
 };
 
 /** Where in its parent a widget is pinned. */
