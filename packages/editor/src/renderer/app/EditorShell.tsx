@@ -28,6 +28,7 @@ import { ExportDialog } from '../export/ExportDialog';
 import { TutorialCard } from '../tutorial/TutorialCard';
 import { AssistantPanel } from '../assistant/AssistantPanel';
 import { assistant } from '../assistant/store';
+import { PluginPanelView, syncPluginPanels } from '../plugins/PluginPanel';
 
 const components: Record<string, React.FunctionComponent<IDockviewPanelProps>> = {
   viewport: () => <ViewportPanel />,
@@ -50,6 +51,7 @@ const components: Record<string, React.FunctionComponent<IDockviewPanelProps>> =
   assistant: () => <AssistantPanel />,
   problems: () => <ProblemsPanel />,
   console: () => <ConsolePanel />,
+  plugin: (props) => <PluginPanelView panelId={String((props.params as { panelId?: string }).panelId ?? '')} />,
 };
 
 const CodeView = lazy(() => import('../code/CodeView'));
@@ -246,6 +248,9 @@ export function EditorShell() {
     };
   }, []);
 
+  const stopPanels = useRef<(() => void) | null>(null);
+  useEffect(() => () => stopPanels.current?.(), []);
+
   const onReady = (e: DockviewReadyEvent): void => {
     apiRef.current = e.api;
     void window.tilewright.settings.get().then((s) => {
@@ -263,6 +268,8 @@ export function EditorShell() {
         e.api.clear();
         buildDefault(e.api);
       }
+      stopPanels.current?.();
+      stopPanels.current = syncPluginPanels(e.api);
       e.api.onDidLayoutChange(() => {
         window.clearTimeout(saveTimer.current);
         saveTimer.current = window.setTimeout(() => void store.saveSetting('layout', { version: LAYOUT_VERSION, data: e.api.toJSON() }), 600);

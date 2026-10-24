@@ -1,4 +1,4 @@
-import { formatPoints, parsePoints } from '@tilewright/behaviors';
+import { formatPoints, host, parsePoints } from '@tilewright/behaviors';
 import { EMPTY_TILE, FLAG, SLOPE, cellToStack, groundHeightAt, reachableCells, stackColumn, stackRemoveBlock, stackSetBlock, stackSetFace, type BlockFace, type CellStack, type PrefabData, type SlopeDir, type StackBlock } from '@tilewright/runtime';
 import type { CellData, CellPatch } from '../model/cells';
 import type { EditorDoc, Stroke } from '../model/doc';
@@ -105,6 +105,7 @@ export interface ToolMeta {
 }
 
 export const TOOL_META: ToolMeta[] = [
+  { id: 'plugin', label: 'Plugin tool', group: 'Helpers', hint: 'A tool a plugin added. Choose it in the Tools panel, under Plugins.', edits: 'none', options: [] },
   { id: 'select', label: 'Select', group: 'Select', hotkey: 'V', hint: 'Click to select things, drag to move them, drag empty space to box-select. Delete removes, R rotates, Ctrl+C / Ctrl+V copies.', edits: 'objects', options: [] },
   { id: 'paint', label: 'Brush', group: 'Paint', hotkey: 'B', hint: 'Paint the chosen tile. Drag to paint a line of cells.', edits: 'ground', options: ['tile', 'size'] },
   { id: 'rect', label: 'Rectangle', group: 'Paint', hotkey: 'U', hint: 'Drag a rectangle and fill it with the chosen tile. Outline option draws only the border.', edits: 'ground', options: ['tile', 'outline'] },
@@ -1005,7 +1006,23 @@ function blocksTool(): ToolImpl {
   };
 }
 
+/** The tool a plugin added, as the person chose it in the Tools panel: it is told where the mouse goes down, drags and comes up. */
+function pluginTool(): ToolImpl {
+  const def = (env: ToolEnv) => host.editor.tools.get(env.opts.pluginTool);
+  const send = (kind: 'down' | 'drag' | 'up', p: Pointer, env: ToolEnv): void => {
+    if (p.cell) def(env)?.onCell(p.cell, host.editorHostFor(def(env)!.plugin), { kind, shift: p.shift, alt: p.alt });
+  };
+  return {
+    down: (p, env) => send('down', p, env),
+    move: (p, env) => send('drag', p, env),
+    up: (p, env) => send('up', p, env),
+    cancel: () => undefined,
+    hover: () => undefined,
+  };
+}
+
 export const TOOLS: Record<ToolId, ToolImpl> = {
+  plugin: pluginTool(),
   blocks: blocksTool(),
   patrol: patrolTool(),
   wire: wireTool(),

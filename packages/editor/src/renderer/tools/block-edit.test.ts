@@ -68,7 +68,7 @@ describe('the hotbar', () => {
 describe('the Blocks tool, used', () => {
   const opts: ToolOptions = {
     tile: 2, size: 1, height: 3, density: 0.5, slopeDir: 2, bridgeLevel: 1, blockFrom: 0, blockTo: 0, prefab: 'crate', outline: false, edge: 1, blockMode: 'add',
-    spacing: 1, avoidPaths: true, attachment: '', zFrom: 0, zTo: 3, blockShape: 'cube', blockRot: 0, blockSolid: true, blockHeight: 2, hotbar: [1, 2, 3], hotbarNext: 0,
+    spacing: 1, avoidPaths: true, attachment: '', zFrom: 0, zTo: 3, blockShape: 'cube', blockRot: 0, blockSolid: true, blockHeight: 2, hotbar: [1, 2, 3], hotbarNext: 0, pluginTool: '',
   };
   function rig(hit: { x: number; y: number; z: number; face: 'top' | 'n' | 'e' | 's' | 'w' } | null) {
     const doc = EditorDoc.fromScene(newScene('T', 12, 12));

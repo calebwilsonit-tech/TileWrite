@@ -55,6 +55,7 @@ interface StoryCommand {
 }
 
 export type ToolId =
+  | 'plugin'
   | 'blocks'
   | 'select'
   | 'paint'
@@ -120,6 +121,8 @@ export interface ToolOptions {
   /** The Blocks tool: the nine tiles of the hotbar (keys 1 to 9), and which slot the next new tile takes. */
   hotbar: number[];
   hotbarNext: number;
+  /** The Plugin tool: which tool a plugin added is in use (its id). */
+  pluginTool: string;
 }
 
 export interface ViewOptions {
@@ -260,6 +263,7 @@ const initial: AppState = {
     blockHeight: 2,
     hotbar: [1, 2, 3, 4, 5, 6],
     hotbarNext: 0,
+    pluginTool: '',
     zFrom: 0,
     zTo: 3,
   },

@@ -9,12 +9,15 @@ import { AutotileDialog } from './app/AutotileDialog';
 import { ProjectSettingsDialog } from './app/ProjectSettingsDialog';
 import { TranslationsDialog } from './app/TranslationsDialog';
 import { studio } from './studio/store';
+import { host } from '@tilewright/behaviors';
+import { pluginManager } from './plugins/manager';
 
 declare global {
   interface Window {
     /** Exposed for end-to-end tests. */
     __sample?: SampleHandle | M2Handle;
     __store?: typeof store;
+    __plugins?: { host: typeof host; manager: typeof pluginManager };
   }
 }
 
@@ -80,6 +83,7 @@ export function App() {
 
   useEffect(() => {
     window.__store = store;
+    window.__plugins = { host, manager: pluginManager };
     window.__studio = studio;
     void store.init().then(() => setReady(true));
   }, []);

@@ -1,6 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
-import { activeInput, listPacks, packContents } from '@tilewright/behaviors';
-import { COMPAT_FLAGS, COMPAT_NAMES, DomInputSource, bindingChanges, bindingLabel, checkProjectInput, projectDefaults, rebind, type ProjectInput } from '@tilewright/runtime';
+import { activeInput } from '@tilewright/behaviors';
+import { PluginsTab } from '../plugins/PluginsTab';
+import {
+  COMPAT_FLAGS,
+  COMPAT_NAMES,
+  DomInputSource,
+  bindingChanges,
+  bindingLabel,
+  checkProjectInput,
+  projectDefaults,
+  rebind,
+  type ProjectInput,
+} from '@tilewright/runtime';
 import { CheckField, SelectField, TextField } from '../panels/fields';
 import { store, useApp } from './store';
 
@@ -90,7 +101,7 @@ export function ProjectSettingsDialog() {
         <div className="seg" role="tablist">
           {(['game', 'packs', 'controls', 'compat'] as Tab[]).map((t) => (
             <button key={t} role="tab" aria-selected={tab === t} className={tab === t ? 'on' : ''} data-testid={`ps-tab-${t}`} onClick={() => setTab(t)}>
-              {t === 'game' ? 'Game' : t === 'packs' ? 'Packs' : t === 'controls' ? 'Controls' : 'Compatibility'}
+              {t === 'game' ? 'Game' : t === 'packs' ? 'Plugins' : t === 'controls' ? 'Controls' : 'Compatibility'}
             </button>
           ))}
         </div>
@@ -113,7 +124,7 @@ export function ProjectSettingsDialog() {
           </div>
         )}
 
-        {tab === 'packs' && <PacksTab />}
+        {tab === 'packs' && <PluginsTab />}
 
         {tab === 'compat' && <CompatTab />}
 
@@ -210,43 +221,3 @@ function CompatTab() {
 }
 
 /** Which packs (the engine's modules, the reference game's mechanics, anything a programmer added) the game uses. */
-function PacksTab() {
-  const project = useApp((s) => s.project)!;
-  useApp((s) => s.storyVersion);
-  const explicit = project.project.packs;
-  const packs = listPacks();
-  const on = new Set(explicit ?? packs.filter((p) => p.active).map((p) => p.id));
-  const set = (id: string, enabled: boolean): void => {
-    const next = new Set(on);
-    if (enabled) {
-      next.add(id);
-      for (const dep of packs.find((p) => p.id === id)?.requires ?? []) next.add(dep);
-    } else {
-      next.delete(id);
-      for (const p of packs) if (p.requires.includes(id)) next.delete(p.id);
-    }
-    void store.updateProjectSettings({ packs: [...next] });
-  };
-  return (
-    <div data-testid="ps-packs">
-      <p className="hint">
-        {explicit === undefined
-          ? 'This project was made before packs existed, so everything is switched on. Changing any box makes your choice permanent.'
-          : 'A pack adds behaviours and event blocks to the pickers. Turning one off hides them; objects that still use them do nothing and the Problems panel says so.'}
-      </p>
-      {packs.map((p) => {
-        const contents = packContents(p.id);
-        return (
-          <fieldset className="story-card" key={p.id} data-testid={`pack-${p.id}`}>
-            <legend>
-              {p.name} <small>v{p.version}</small>
-            </legend>
-            <CheckField label={p.description} testId={`pack-toggle-${p.id}`} value={on.has(p.id)} onChange={(v) => set(p.id, v)} />
-            {p.requires.length > 0 && <p className="hint">Needs: {p.requires.join(', ')}.</p>}
-            {contents && contents.behaviors.length > 0 && <p className="hint">Behaviours: {contents.behaviors.join(', ')}.</p>}
-          </fieldset>
-        );
-      })}
-    </div>
-  );
-}

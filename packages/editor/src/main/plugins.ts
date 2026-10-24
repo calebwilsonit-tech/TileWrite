@@ -52,7 +52,7 @@ export function registerPlugins(deps: Deps): void {
 
   ipcMain.handle('plugins:list', async (): Promise<InstalledPlugin[]> => {
     const out: InstalledPlugin[] = [];
-    let ids: string[] = [];
+    let ids: string[];
     try {
       ids = (await fs.readdir(deps.storeDir, { withFileTypes: true })).filter((e) => e.isDirectory()).map((e) => e.name);
     } catch {

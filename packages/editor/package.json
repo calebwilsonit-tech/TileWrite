@@ -55,6 +55,7 @@
   "author": "Tilewright contributors",
   "dependencies": {
     "@tilewright/bundled-plugins": "*",
-    "@tilewright/plugin-sdk": "*"
+    "@tilewright/plugin-sdk": "*",
+    "@tilewright/plugin-examples": "*"
   }
 }

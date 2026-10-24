@@ -252,6 +252,7 @@ export function installIsolatedEditorPart(id: string, code: string): (api: Plugi
         for (const t of d.tools) api.tool({ id: `${id}:${t.id}`, label: t.label, ...(t.group ? { group: t.group } : {}), ...(t.help ? { help: t.help } : {}), onCell: (cell, _h, ev) => void p.tool(t.id, cell, ev).catch((e: Error) => host.editorHost?.notify('error', e.message)) });
         for (const i of d.importers) api.importer({ id: `${id}:${i.id}`, label: i.label, extensions: i.extensions, import: (name, bytes) => p.importFile(i.id, name, bytes) });
         for (const e of d.exporters) api.exporter({ id: `${id}:${e.id}`, label: e.label, extension: e.extension, from: e.from, export: (name, text) => p.exportFile(e.id, name, text) });
+        host.touch(id);
       },
       crashed,
     );

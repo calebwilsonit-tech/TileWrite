@@ -36,7 +36,7 @@ export interface EditorHost {
   /** The clipboard's text, and putting text on it. Needs the `clipboard` permission. */
   clipboard: { read(): Promise<string>; write(text: string): Promise<void> };
   /** Run another program on this computer (the person is asked each time). Needs the `programs` permission, which is off by default. */
-  runProgram(command: string, args: string[]): Promise<{ code: number; stdout: string; stderr: string }>;
+  runProgram(command: string, args: string[], plugin?: string): Promise<{ code: number; stdout: string; stderr: string }>;
 }
 
 /** A panel a plugin adds to the editor. Plain DOM, so a plugin needs no UI framework. */
@@ -226,7 +226,7 @@ const emptyExtensions = (): Extensions => ({
   assistantNotes: new Map(),
 });
 
-export type HostChange = { kind: 'installed' | 'removed' | 'failed' | 'granted'; plugin: string };
+export type HostChange = { kind: 'installed' | 'removed' | 'failed' | 'granted' | 'extended'; plugin: string };
 
 export class PluginHost {
   /** Plugins the host knows about (turned on or not). */
@@ -333,7 +333,7 @@ export class PluginHost {
       },
       runProgram: async (command, args) => {
         this.need(id, 'programs', 'run another program');
-        return raw().runProgram(command, args);
+        return raw().runProgram(command, args, name());
       },
     };
   }
@@ -372,6 +372,11 @@ export class PluginHost {
     }
     setExtraInputActions(this.inputActions());
     this.emit({ kind: 'installed', plugin: id });
+  }
+
+  /** A plugin added something after it was turned on (its sandboxed editor part says what it offers a moment later): tell the editor to look again. */
+  touch(id: string): void {
+    if (this.installed.has(id)) this.emit({ kind: 'extended', plugin: id });
   }
 
   /** Turn a plugin off, and the plugins that need it. Everything it added goes. */

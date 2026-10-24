@@ -18,7 +18,7 @@ const baseOpts: ToolOptions = {
   outline: false,
   edge: 1,
   blockMode: 'add', spacing: 1, avoidPaths: true, attachment: '', zFrom: 0, zTo: 3,
-  blockShape: 'cube', blockRot: 0, blockSolid: true, blockHeight: 2, hotbar: [1, 2, 3], hotbarNext: 0,
+  blockShape: 'cube', blockRot: 0, blockSolid: true, blockHeight: 2, hotbar: [1, 2, 3], hotbarNext: 0, pluginTool: '',
 };
 
 function setup(w = 12, h = 12, opts: Partial<ToolOptions> = {}) {

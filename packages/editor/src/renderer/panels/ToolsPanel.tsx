@@ -4,6 +4,8 @@ import { describeKeys } from '../app/commands';
 import { allPrefabs, attachmentSprites, prefabById } from '../tools/prefabs';
 import { useStudio } from '../studio/store';
 import { TOOL_META, toolMeta, type ToolMeta } from '../tools/tools';
+import { host } from '@tilewright/behaviors';
+import { usePlugins } from '../plugins/hooks';
 
 const GROUPS: ToolMeta['group'][] = ['Select', 'Paint', 'Height', 'Blocks', 'Terrain', 'Collision', 'Objects', 'Logic', 'Helpers'];
 
@@ -216,13 +218,15 @@ export function ToolsPanel() {
   const tool = useApp((s) => s.tool);
   const options = useApp((s) => s.options);
   const locks = useApp((s) => s.locks);
+  usePlugins();
+  const pluginTools = [...host.editor.tools.values()];
   return (
     <div className="panel tools-panel" data-testid="tools-panel">
       {GROUPS.map((g) => (
         <section key={g}>
           <h3>{g}</h3>
           <div className="tool-grid">
-            {TOOL_META.filter((t) => t.group === g).map((t) => {
+            {TOOL_META.filter((t) => t.group === g && t.id !== 'plugin').map((t) => {
               const locked = (t.edits === 'ground' && locks.ground) || (t.edits === 'objects' && locks.objects) || (t.edits === 'regions' && locks.regions);
               return (
                 <button
@@ -241,6 +245,28 @@ export function ToolsPanel() {
           </div>
         </section>
       ))}
+      {pluginTools.length > 0 && (
+        <section data-testid="plugin-tools">
+          <h3>Plugins</h3>
+          <div className="tool-grid">
+            {pluginTools.map((t) => (
+              <button
+                key={t.id}
+                data-testid={`plugin-tool-${t.id}`}
+                className={`tool${tool === 'plugin' && options.pluginTool === t.id ? ' on' : ''}`}
+                title={t.help ?? t.label}
+                aria-pressed={tool === 'plugin' && options.pluginTool === t.id}
+                onClick={() => {
+                  store.setOptions({ pluginTool: t.id });
+                  store.set({ tool: 'plugin' });
+                }}
+              >
+                <span>{t.label}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
       <ToolOptionsView tool={tool} options={options} />
     </div>
   );
