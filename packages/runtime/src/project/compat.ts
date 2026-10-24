@@ -15,6 +15,11 @@ export const COMPAT_FLAGS = {
     help: 'Off: the older physics, which only checks the feet against a map of heights (a ceiling does not stop a jump, and gravity can only point down). On: every body whole box is tested against every solid block it moves into, so ceilings, overhangs and walls work, and gravity can point at any of the six sides.',
     since: 3,
   },
+  loadRestoresHealth: {
+    label: 'Loading a saved game brings the player back with the health they had',
+    help: 'Off: the older behaviour, where a loaded game always started at full health (the health is made on the first tick, after the load had already tried to set it). On: the health in the save is used.',
+    since: 3,
+  },
   pauseAction: {
     label: 'The pause button is a Quick Action you can see and change',
     help: 'Off: the pause button opens the screen used as Pause by itself, which nothing in the project shows (the older rule). On: it does nothing by itself; the Quick Action "When the pause button is pressed, open the Pause screen", which every new scene starts with, does it, so you can change or remove it. Back (closing a screen) works either way.',

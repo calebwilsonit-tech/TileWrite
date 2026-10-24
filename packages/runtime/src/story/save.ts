@@ -145,6 +145,9 @@ export function applySave(sim: Simulation, save: SaveData): void {
       hs.hp = save.player.hp;
       hs.dead = false;
       hs.iframes = 0;
+    } else if (save.player.hp !== null && sim.compat.loadRestoresHealth) {
+      // the player has no health yet (it is made on the first tick): whatever gives them health asks for this when it does
+      r.scratch.set('restore:player-hp', save.player.hp);
     }
   }
 }

@@ -48,7 +48,7 @@ function battlefield(): SceneData {
 
 describe('a battle with a second hill and a third enemy, under the block physics', () => {
   it('is won by the bot: no enemy gets stuck partway across a cell on its turn', () => {
-    const game = new Game({ scene: battlefield(), compat: { fadeBySight: true, blockPhysics: true, pauseAction: false } });
+    const game = new Game({ scene: battlefield(), compat: { fadeBySight: true, blockPhysics: true, loadRestoresHealth: false, pauseAction: false } });
     const bot = new PointerBot(game);
     bot.wait(0.3);
     expect(battle(bot)).toMatchObject({ active: true, team: 'blue' });

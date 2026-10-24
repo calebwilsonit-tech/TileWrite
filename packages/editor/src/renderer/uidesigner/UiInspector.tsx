@@ -48,6 +48,10 @@ function StyleEditor({ style, onChange, testPrefix }: { style: UiStyle; onChange
       <SelectField<string> testId={`${testPrefix}-align`} label="Text alignment" value={style.align ?? ''} options={[{ value: '', label: '(default)' }, { value: 'left', label: 'left' }, { value: 'center', label: 'centre' }, { value: 'right', label: 'right' }]} onChange={(v) => set({ align: (v || undefined) as UiStyle['align'] })} />
       <CheckField testId={`${testPrefix}-bold`} label="Bold" value={style.bold === true} onChange={(v) => set({ bold: v || undefined })} />
       <CheckField testId={`${testPrefix}-shadow`} label="Drop shadow" value={style.shadow === true} onChange={(v) => set({ shadow: v || undefined })} />
+      <NumberField testId={`${testPrefix}-scale`} label="Size (1 = as made; everything inside grows or shrinks)" min={0.5} max={3} step={0.1} value={style.scale ?? 1} onCommit={(v) => set({ scale: v === 1 ? undefined : v })} />
+      <CheckField testId={`${testPrefix}-themeScale`} label="Also follow the size set in Story, Interface" value={style.themeScale === true} onChange={(v) => set({ themeScale: v || undefined })} />
+      <CheckField testId={`${testPrefix}-scroll`} label="Scroll when what is inside does not fit" value={style.scroll === true} onChange={(v) => set({ scroll: v || undefined })} />
+      <NumberField testId={`${testPrefix}-maxH`} label="Never taller than this much of its parent (%, 0 = no limit)" min={0} max={100} step={5} value={style.maxH ?? 0} onCommit={(v) => set({ maxH: v >= 10 ? v : undefined })} />
     </div>
   );
 }
@@ -189,6 +193,7 @@ export function UiInspector({ doc, widgetId }: { doc: UiDoc; widgetId: string | 
             {w.type !== 'keybind' && <BindButton doc={doc} widgetId={widgetId} wrap testId="ui-bind-text" onPick={(t) => edit((n) => (n.text = `${n.text}${n.text && !n.text.endsWith(' ') ? ' ' : ''}${t}`))} />}
           </div>
         )}
+        {w.type === 'keybind' && <TextField testId="ui-label" label="Name shown for the control (words; {control.label} in a list)" value={w.label ?? ''} onCommit={sets('label')} />}
         {w.type === 'image' && <SelectField<string> testId="ui-sprite" label="Sprite" value={w.sprite} options={[{ value: '', label: '(none)' }, ...sprites.map((s) => ({ value: s, label: s }))]} onChange={sets('sprite')} />}
         {['bar', 'slider', 'toggle', 'dropdown'].includes(w.type) && (
           <div className="row">
@@ -215,6 +220,7 @@ export function UiInspector({ doc, widgetId }: { doc: UiDoc; widgetId: string | 
           <>
             <SelectField<string> testId="ui-source" label="Repeats for" value={w.source} options={sourceChoices} onChange={sets('source')} />
             <SelectField<string> testId="ui-template" label="Each one looks like" value={w.template} options={[{ value: '', label: w.children.length ? '(the first widget inside)' : '(put a widget inside, or pick a UI prefab)' }, ...prefabNames.map((p) => ({ value: p, label: `UI prefab “${p}”` }))]} onChange={sets('template')} />
+            <TextField testId="ui-empty" label="Words when there is nothing to show" value={w.empty ?? ''} onCommit={sets('empty')} />
             {w.type === 'grid' && <CheckField testId="ui-drag" label="Allow dragging a cell onto another (they swap places)" value={w.drag} onChange={sets('drag')} />}
           </>
         )}

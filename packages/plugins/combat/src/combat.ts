@@ -210,6 +210,14 @@ export const health = behaviorDef<Health>({
   summary: (s) => `${s.max} hit points; ${s.onDeath === 'remove' ? 'disappears' : s.onDeath === 'respawn' ? 'respawns' : 'stays down'} at zero.`,
   update(ctx, e, s) {
     const st = stateFor(e, s);
+    // a saved game was loaded before this body had its health: it comes back with the health the save says
+    const saved = ctx.runtime.scratch.get('restore:player-hp');
+    if (typeof saved === 'number' && e.tags.has('player')) {
+      ctx.runtime.scratch.delete('restore:player-hp');
+      st.hp = Math.min(s.max, saved);
+      st.dead = false;
+      st.iframes = 0;
+    }
     const t = transform(e);
     const b = body(e);
     const sp = sprite(e);
