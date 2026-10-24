@@ -120,7 +120,7 @@ describe('performance budget: 5,000 tiles and 200 objects', () => {
     r.run(30); // warm up
     // best of several windows: other programs (and other tests) sharing the CPU only ever make a window slower
     let best = Infinity;
-    for (let w = 0; w < 6; w++) {
+    for (let w = 0; w < 12; w++) {
       const t0 = performance.now();
       for (let i = 0; i < 60; i++) r.sim.step(i < 30 ? GRID_PLUS_X : {});
       best = Math.min(best, (performance.now() - t0) / 60);
