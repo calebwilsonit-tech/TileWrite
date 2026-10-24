@@ -1,5 +1,6 @@
 import { C, blockersBetween, facingOfGridDir, lineClear, lightLevel, makeOccluder, type Body, type Cell2, type Entity, type LightingModel, type TransformIso, stateOf, setOutput, spawnPrefabAt, newNav, parsePoints, steerTo, type NavState, behaviorDef } from '@tilewright/plugin-sdk';
-import { aiFlags, facingVector, healthOf } from '@tilewright/plugin-combat';
+import { aiFlags, healthOf } from '@tilewright/plugin-combat';
+import { facingVector } from '@tilewright/plugin-sdk';
 
 
 const transform = (e: Entity): TransformIso => e.require<TransformIso>(C.Transform);

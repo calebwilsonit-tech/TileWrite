@@ -1,15 +1,28 @@
-import { C, addImpact, emitFx, requestHitStop, screenIntentToGrid, teleportBody, type Body, type Entity, type SimContext, type Sprite, type TransformIso, settingsOf, stateOf, input, setOutput, behaviorDef } from '@tilewright/plugin-sdk';
-
+import {
+  C,
+  addImpact,
+  emitFx,
+  requestHitStop,
+  screenIntentToGrid,
+  teleportBody,
+  type Body,
+  type Entity,
+  type SimContext,
+  type Sprite,
+  type TransformIso,
+  settingsOf,
+  stateOf,
+  input,
+  setOutput,
+  behaviorDef,
+  facingVector,
+} from '@tilewright/plugin-sdk';
 
 const transform = (e: Entity): TransformIso => e.require<TransformIso>(C.Transform);
-const sprite = (e: Entity): Sprite | undefined => e.get<Sprite>(C.Sprite);
-const body = (e: Entity): Body | undefined => e.get<Body>(C.Body);
 
-/** Unit vector in grid space for a facing index (0 = East, clockwise; see FACING_NAMES). */
-export function facingVector(facing: number): { x: number; y: number } {
-  const a = (facing * Math.PI) / 4;
-  return screenIntentToGrid(Math.cos(a), Math.sin(a));
-}
+const sprite = (e: Entity): Sprite | undefined => e.get<Sprite>(C.Sprite);
+
+const body = (e: Entity): Body | undefined => e.get<Body>(C.Body);
 
 /** Flags that AI and bosses share so behaviours can cooperate without knowing about each other. */
 export interface AiFlags {
@@ -30,6 +43,7 @@ export function aiFlags(e: Entity): AiFlags {
 // ---------- health ----------
 
 export type Team = 'auto' | 'player' | 'enemy' | 'neutral';
+
 export type Hurts = 'player' | 'enemies' | 'anything';
 
 export interface Health {

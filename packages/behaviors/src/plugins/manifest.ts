@@ -60,6 +60,8 @@ export const PluginManifestSchema = z.object({
   assets: z.string().max(200).default(''),
   /** True for the plugins that ship with the editor. */
   builtin: z.boolean().default(false),
+  /** True for a plugin every project has on (a project cannot turn it off): the screens a game cannot run without. */
+  essential: z.boolean().default(false),
 });
 export type PluginManifest = z.infer<typeof PluginManifestSchema>;
 

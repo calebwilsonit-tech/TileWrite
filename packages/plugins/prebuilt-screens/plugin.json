@@ -6,15 +6,11 @@
   "author": "Tilewright",
   "license": "MIT",
   "engine": "^1.0.0",
-  "dependencies": {
-    "combat": "^1.0.0",
-    "inventory": "^1.0.0",
-    "story": "^1.0.0",
-    "storytender": "^1.0.0"
-  },
+  "dependencies": {},
   "permissions": [],
   "entry": {
     "runtime": "src/index.ts"
   },
-  "builtin": true
+  "builtin": true,
+  "essential": true
 }

@@ -38,6 +38,8 @@ export interface EventDef {
   entityText?: string;
   /** What the event carries, as a short note for the picker. */
   carries?: string;
+  /** The game saves by itself when this happens (a checkpoint was reached). */
+  autosave?: boolean;
 }
 
 /** Something that changes how every body moves, before the step (wind, ice, a conveyor belt, a tide). */

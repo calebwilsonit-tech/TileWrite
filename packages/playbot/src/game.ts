@@ -24,7 +24,7 @@ import {
   type UiDoc,
 } from '@tilewright/runtime';
 import { addStandardSystems, contextOf, resolveRef, routeInput } from '@tilewright/behaviors';
-import { placeAtSpawn } from '@tilewright/plugin-story';
+import { placeAtSpawn } from '@tilewright/behaviors';
 
 export interface GameSetup {
   scene: SceneData;

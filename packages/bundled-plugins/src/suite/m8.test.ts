@@ -2,10 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { C, CutsceneSchema, DialogueSchema, ItemSchema, itemCount, quickSlots, type EntityData, type TransformIso } from '@tilewright/runtime';
 import { GRID_PLUS_X, ctxOf, flatScene, player, rig, thing, type Rig } from '@tilewright/plugin-sdk/testing';
 import { attachBehavior, newAction, newCondition, newRow, output } from '@tilewright/behaviors';
-import { beginDialogue, placeAtSpawn, playCutscene } from '@tilewright/plugin-story';
+import { beginDialogue, playCutscene } from '@tilewright/plugin-story';
 import { damage, healthOf } from '@tilewright/plugin-combat';
 import { litPosts } from '@tilewright/plugin-storytender';
 import { useItem } from '@tilewright/plugin-inventory';
+import { placeAtSpawn } from '@tilewright/behaviors';
 import '@tilewright/bundled-plugins';
 
 const pos = (r: Rig, id: string): { x: number; y: number } => {

@@ -32,41 +32,15 @@ import {
   SCREENS_CSS,
   UiScreens,
   setUiBridge,
+  type GameUiHost,
+  type GameUiLike,
+  type TitleInfo,
 } from '@tilewright/plugin-sdk';
 import { healthOf } from '@tilewright/plugin-combat';
 import { host as plugins } from '@tilewright/plugin-sdk';
 import { litPosts, type LitPost } from '@tilewright/plugin-storytender';
 import { confirmDialogue, selectChoice } from '@tilewright/plugin-story';
 import { useItem } from '@tilewright/plugin-inventory';
-
-/** What the screens need from whoever is running the game (the editor's Play, or an exported game). */
-export interface GameUiHost {
-  sim: Simulation;
-  settings: GameSettings;
-  bindings(): InputMapDef;
-  /** Names of the actions for the Controls screen (the game's own actions included); default: the built-in ones. */
-  actionLabels?(): Record<string, string>;
-  changeSettings(patch: Partial<GameSettings>): void;
-  rebind(action: string, binding: string): void;
-  resetBindings(): void;
-  /** Resolves with the next key or button the player presses (null on timeout). */
-  captureNext(): Promise<string | null>;
-  /** Start the current scene again from the beginning. */
-  restart(): void;
-  saveTo(slot: string): Promise<string>;
-  loadFrom(slot: string): Promise<string>;
-  slots(): Promise<SlotInfo[]>;
-  travelTo(post: LitPost): void;
-  /** Go to a scene (and a spawn point in it: an object's name or "x,y"; '' = its player start). */
-  travelToScene(scene: string, spawn: string): void;
-  quit?(): void;
-  /** Full screen on and off; only a game running in its own window can offer it. */
-  fullscreen?: { get(): boolean; set(on: boolean): void };
-  /** A sprite's first picture as an image address, for image widgets. */
-  spriteUrl?(name: string): string | null;
-  /** Does the pause button open Pause by itself? False when the project has its own rule for it. Default: yes. */
-  pauseKeyOpensPause?(): boolean;
-}
 
 /**
  * Every fixed piece of text in the game's own screens. The translation tables list these so a language can cover the
@@ -88,12 +62,6 @@ export const UI_STRINGS: readonly string[] = [
 
 /** Every fixed text of the game's screens, including the names of the controls. */
 export const uiStrings = (): string[] => [...new Set([...UI_STRINGS, ...Object.values(activeActionLabels())])];
-
-/** What the title screen shows (the game's name and a line under it). */
-export interface TitleInfo {
-  text: string;
-  subtitle: string;
-}
 
 type Screen = 'title' | 'main' | 'inventory' | 'travel' | 'map' | 'save' | 'load' | 'settings' | 'controls';
 
@@ -193,7 +161,7 @@ const hex = (n: number): string => `#${n.toString(16).padStart(6, '0')}`;
  * choices, fades, and the pause menu (inventory, travel to lit lanterns, save and load, settings, controls).
  * Plain DOM with no framework, so the editor's Play and exported games use exactly the same thing.
  */
-export class GameUi {
+export class GameUi implements GameUiLike {
   private readonly root = el('div', 'tw-ui');
   private readonly hud = el('div', 'tw-hud');
   private readonly hearts = el('div', 'tw-hearts');

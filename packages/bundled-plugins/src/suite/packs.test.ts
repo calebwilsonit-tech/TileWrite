@@ -34,7 +34,7 @@ describe('packs', () => {
 
   it('an empty list turns every optional part off, leaving only the core', () => {
     setActivePacks([]);
-    expect(activePackIds()).toEqual([]);
+    expect(activePackIds()).toEqual(['prebuilt-screens']);
     for (const id of ['echoRecorder', 'sentenceStone', 'health', 'meleeAttack', 'pickup', 'npcTalk', 'patrol', 'light', 'checkpoint', 'stateMachine']) expect(getBehavior(id), id).toBeUndefined();
     for (const id of ['gate', 'pressurePlate', 'lever', 'timer', 'logic', 'spawner', 'portal', 'followCamera']) expect(getBehavior(id), id).toBeDefined();
     expect(conditionDef('stoneSays')).toBeUndefined();
@@ -45,7 +45,7 @@ describe('packs', () => {
 
   it('turning a pack back on restores what it added; a pack that needs another turns it on too', () => {
     setActivePacks(['storytender']);
-    expect(activePackIds().sort()).toEqual(['lighting', 'storytender']);
+    expect(activePackIds().sort()).toEqual(['lighting', 'prebuilt-screens', 'storytender']);
     expect(getBehavior('echoRecorder')).toBeDefined();
     expect(getBehavior('light')).toBeDefined();
     expect(getBehavior('health')).toBeUndefined();

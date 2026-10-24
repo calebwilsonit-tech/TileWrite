@@ -2,7 +2,7 @@ import { LanguageSchema, defaultInstructions, newLanguage, type MinigameData, ty
 import { joinPath } from './api';
 import { UserError } from './io';
 import type { AssetFs } from '../studio/assets';
-import { uiStrings } from '@tilewright/plugin-prebuilt-screens';
+import { host } from '@tilewright/behaviors';
 
 export const LOCALE_DIR = 'assets/localization';
 const EXT = '.strings.json';
@@ -23,13 +23,13 @@ function* eventRows(rows: readonly EventRow[]): Generator<EventRow> {
 
 /**
  * Every piece of text in the project the player can read and a translation can replace: conversations, cutscene
- * lines, items, messages in event rows and pickups, and the game's own menus. Puzzle text (sentence stones and text
+ * lines, items, messages in event rows and pickups, and the game's own menus. Puzzle text (words that are part of a puzzle and text
  * blocks) is left out on purpose, because changing it changes the puzzle.
  */
 export function collectStrings(
   story: { items: readonly ItemData[]; dialogues: ReadonlyMap<string, DialogueData>; cutscenes: ReadonlyMap<string, CutsceneData> },
   scenes: readonly { path: string; scene: SceneData }[],
-  menus: readonly string[] = uiStrings(),
+  menus: readonly string[] = host.strings(),
   minigames: readonly MinigameData[] = [],
   interfaceStrings: readonly string[] = [],
 ): SourceString[] {

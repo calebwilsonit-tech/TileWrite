@@ -1,7 +1,7 @@
 import type { Graphics } from 'pixi.js';
 import { gridToScreen, type Aabb, type IsoConfig } from '@tilewright/runtime';
 import { PALETTE } from './palette';
-import { facingVector } from '@tilewright/plugin-combat';
+import { facingVector } from '@tilewright/behaviors';
 
 /** Debug shapes drawn in grid space on a Graphics, shared by the editor's overlay and the running game's. */
 

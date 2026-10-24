@@ -10,21 +10,19 @@ import {
   startDialogue,
   startMinigame,
   stepMinigame,
-  teleportBody,
   type CutsceneEffect,
   type CutsceneState,
   type CutsceneStep,
   type DialogueHost,
   type MinigameOutcome,
-  type Entity,
   type SimContext,
   type TransformIso,
   newNav,
   steerTo,
   type NavState,
   resolveRef,
+  resolvePoint,
 } from '@tilewright/plugin-sdk';
-
 
 /** What conversations can read and change in a running game. */
 function hostOf(ctx: SimContext): DialogueHost {
@@ -178,17 +176,6 @@ export function minigameSystem(ctx: SimContext): void {
     ctx.rng,
   );
   if (outcome) endMinigame(ctx, st.name, outcome);
-}
-
-// ---------- cutscenes ----------
-
-/** A reference ("player", "id:e3", "tag:guard", "name:Keeper") or a point "x,y", as a place on the map. */
-export function resolvePoint(ctx: SimContext, ref: string): { x: number; y: number } | undefined {
-  const m = /^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/.exec(ref);
-  if (m) return { x: Number(m[1]), y: Number(m[2]) };
-  const e = resolveRef(ctx, ref)[0];
-  const t = e?.get<TransformIso>(C.Transform);
-  return t ? { x: t.x, y: t.y } : undefined;
 }
 
 /** Begin a cutscene. Returns false if there is none by that name or one is already playing. */
@@ -453,13 +440,4 @@ export function cutsceneSystem(ctx: SimContext): void {
     ctx.runtime.view.shake = 0;
     ctx.events.emit('cutscene-ended', { name: cs.name });
   }
-}
-
-/** Put the player (or anyone) at a spawn: a named object, or a point "x,y". Returns false if there is no such place. */
-export function placeAtSpawn(ctx: SimContext, who: Entity, spawn: string): boolean {
-  if (!who.has(C.Transform) || spawn === '') return false;
-  const at = resolvePoint(ctx, /^(player|id:|tag:|name:)/.test(spawn) || /^[-\d.]+\s*,/.test(spawn) ? spawn : `name:${spawn}`);
-  if (!at) return false;
-  teleportBody(ctx, who, at.x, at.y);
-  return true;
 }

@@ -136,6 +136,8 @@ export interface PluginApi {
   // --- between plugins, and with the person ---
   /** Offer something to other plugins that depend on this one, by name. */
   provide(name: string, value: unknown): void;
+  /** Words the game shows that a translator should see (the plugin lists them; the editor puts them in the translation tables). */
+  strings(list: () => string[]): void;
   /** Take what a plugin this one depends on offered (undefined when it is not on). */
   use<T = unknown>(pluginId: string, name: string): T | undefined;
   /** A line in the Console, tagged with this plugin's name. */
@@ -172,6 +174,7 @@ interface Installed {
   systems: { name: string; fn: System; mode: SystemMode; stage: X.SystemStage }[];
   inputs: Record<string, InputActionDef>;
   provided: Map<string, unknown>;
+  strings: (() => string[])[];
   /** Everything added to the extension tables, by table and id, so uninstalling removes exactly that. */
   added: { kind: ExtensionKind; id: string }[];
   physicsModifiers: string[];
@@ -299,7 +302,7 @@ export class PluginHost {
       if (!satisfies(d.manifest.version, range)) throw new PluginError(`The plugin "${m.name}" needs "${dep}" ${range}, and ${d.manifest.version} is installed.`);
       this.install(dep, [...trail, id]);
     }
-    const rec: Installed = { def, behaviors: [], conditions: [], actions: [], systems: [], inputs: {}, provided: new Map(), added: [], physicsModifiers: [] };
+    const rec: Installed = { def, behaviors: [], conditions: [], actions: [], systems: [], inputs: {}, provided: new Map(), strings: [], added: [], physicsModifiers: [] };
     this.installed.set(id, rec);
     for (const [b, p] of this.offBehaviors) if (p === id) this.offBehaviors.delete(b);
     try {
@@ -352,6 +355,16 @@ export class PluginHost {
         this.fail(id, 'its editor part', e);
       }
     }
+  }
+
+  /** What a plugin that is on offered by name (the editor and the game host take the screens a plugin draws this way). */
+  provided<T = unknown>(pluginId: string, name: string): T | undefined {
+    return this.installed.get(pluginId)?.provided.get(name) as T | undefined;
+  }
+
+  /** Every fixed text the plugins that are on show to the player. */
+  strings(): string[] {
+    return [...new Set([...this.installed.values()].flatMap((r) => r.strings.flatMap((s) => s())))];
   }
 
   isInstalled(id: string): boolean {
@@ -539,6 +552,9 @@ export class PluginHost {
       },
       provide(name, value) {
         rec.provided.set(name, value);
+      },
+      strings(list) {
+        rec.strings.push(list);
       },
       use<T>(pluginId: string, name: string): T | undefined {
         if (pluginId !== id && !Object.keys(m.dependencies).includes(pluginId)) throw new PluginError(`The plugin "${m.name}" used "${pluginId}" without listing it under dependencies in plugin.json.`);

@@ -91,6 +91,7 @@ export const packsOfProject = (project: { packs?: readonly string[] | undefined 
  */
 export function setActivePacks(ids: readonly string[] | undefined): void {
   const want = new Set(ids ?? [...host.known.values()].filter((p) => p.manifest.builtin).map((p) => p.manifest.id));
+  for (const p of host.known.values()) if (p.manifest.essential) want.add(p.manifest.id);
   for (const id of host.active()) if (!want.has(id)) host.uninstall(id);
   for (const id of want) {
     if (!host.known.has(id)) continue;

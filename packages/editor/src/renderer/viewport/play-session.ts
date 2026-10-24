@@ -61,10 +61,7 @@ import { loadScene as loadSceneFile } from '../project/io';
 import { loadMixer, loadSounds } from '../studio/audio';
 import { loadLanguages } from '../project/localization';
 import type { CutsceneData, DialogueData, ItemData } from '@tilewright/runtime';
-import { GameUi, type GameUiHost } from '@tilewright/plugin-prebuilt-screens';
-import { describeScreens, addStandardSystems, contextOf, output, activeInput } from '@tilewright/behaviors';
-import { beginDialogue, beginMinigame, placeAtSpawn, playCutscene } from '@tilewright/plugin-story';
-import { litPosts } from '@tilewright/plugin-storytender';
+import { describeScreens, addStandardSystems, contextOf, host, noScreens, output, activeInput, actionDef, placeAtSpawn, type GameUiFactory, type GameUiHost, type GameUiLike } from '@tilewright/behaviors';
 
 export interface PlayOptions {
   renderer: IsoRenderer;
@@ -122,14 +119,21 @@ export interface PlayOptions {
 
 /**
  * One run of the game inside the editor: the simulation and its runner, the game's interface (HUD, dialogue,
- * pause menu), scene changes (portals, lanterns, fast travel), save slots and the player's settings.
+ * pause menu), scene changes (portals, checkpoints, fast travel), save slots and the player's settings.
  * An exported game does the same job with its own shell.
  */
+/** Run an event-sheet action by its name, as an event row would (a plugin that brings it must be on; otherwise nothing happens). */
+function runAction(ctx: ReturnType<typeof contextOf>, id: string, params: Record<string, unknown>): void {
+  const def = actionDef(id);
+  if (!def) return;
+  def.run(ctx, { ...Object.fromEntries(def.params.map((p) => [p.key, p.default])), ...params }, { picked: undefined });
+}
+
 export class PlaySession {
   readonly sim = new Simulation(1);
   readonly source = new DomInputSource();
   readonly runner: GameRunner;
-  readonly ui: GameUi;
+  readonly ui: GameUiLike;
   readonly inputMap = new InputMap(activeInputMap());
   /** Sounds and music (files in `assets/audio`); silent when there are none. */
   readonly audio = new AudioEngine();
@@ -202,7 +206,7 @@ export class PlaySession {
     sim.events.on('logic-break', (e) => o.onLogicBreak?.(String(e.text ?? '')));
     sim.events.on('load-request', (e) => void this.loadFrom(String(e.slot ?? 'autosave')));
     sim.events.on('quit-request', () => o.quit());
-    sim.events.on('lantern-lit', () => void this.saveTo('autosave'));
+    for (const e of host.ext.events.values()) if (e.autosave) sim.events.on(e.id, () => void this.saveTo('autosave'));
     sim.events.on('rested', () => void this.saveTo('autosave'));
 
     const cam = renderer.camera;
@@ -264,7 +268,7 @@ export class PlaySession {
     this.debugLayer.visible = false;
     renderer.world.addChild(this.debugLayer);
     if (o.record) this.runner.recorder = new InputRecorder();
-    this.ui = new GameUi(o.uiParent, this.uiHost());
+    this.ui = (host.provided<GameUiFactory>('prebuilt-screens', 'gameUi') ?? noScreens)(o.uiParent, this.uiHost());
     // the mouse reaches the game as cells under the pointer (control schemes read them)
     this.source.setPointer(
       renderer.canvas,
@@ -279,9 +283,9 @@ export class PlaySession {
     if (auto) {
       void languagesReady.then(() => {
         if (this.disposed) return;
-        if (auto.cutscene) playCutscene(contextOf(sim), auto.cutscene);
-        else if (auto.dialogue) beginDialogue(contextOf(sim), auto.dialogue);
-        else if (auto.minigame) beginMinigame(contextOf(sim), auto.minigame);
+        if (auto.cutscene) runAction(contextOf(sim), 'playCutscene', { cutscene: auto.cutscene });
+        else if (auto.dialogue) runAction(contextOf(sim), 'startDialogue', { dialogue: auto.dialogue });
+        else if (auto.minigame) runAction(contextOf(sim), 'playMinigame', { minigame: auto.minigame });
       });
     }
     this.runner.start();
@@ -364,7 +368,8 @@ export class PlaySession {
 
   /** Open a minigame by name, as an event row's "Play a minigame" action would (for tests and the Console). */
   openMinigame(name: string): boolean {
-    return beginMinigame(contextOf(this.sim), name);
+    runAction(contextOf(this.sim), 'playMinigame', { minigame: name });
+    return this.sim.runtime.minigame !== null;
   }
 
   /** Put the skin the player chose on the player character (nothing changes while it is already worn). */
@@ -756,9 +761,6 @@ export class PlaySession {
   }
 
   /** Litter-free list for tests and the debugger. */
-  get litLanterns(): ReturnType<typeof litPosts> {
-    return litPosts(this.sim.runtime.vars);
-  }
 
   dispose(): void {
     this.disposed = true;
