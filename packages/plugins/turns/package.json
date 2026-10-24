@@ -9,5 +9,8 @@
   "dependencies": {
     "@tilewright/plugin-sdk": "*",
     "@tilewright/plugin-combat": "*"
+  },
+  "exports": {
+    ".": "./src/index.ts"
   }
 }

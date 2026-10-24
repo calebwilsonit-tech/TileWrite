@@ -11,5 +11,8 @@
     "@tilewright/plugin-story": "*",
     "@tilewright/plugin-combat": "*",
     "@tilewright/plugin-turns": "*"
+  },
+  "exports": {
+    ".": "./src/index.ts"
   }
 }

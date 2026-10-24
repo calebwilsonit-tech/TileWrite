@@ -8,5 +8,9 @@
   "types": "./src/index.ts",
   "dependencies": {
     "@tilewright/plugin-sdk": "*"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./editor": "./src/editor.ts"
   }
 }

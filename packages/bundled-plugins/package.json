@@ -18,5 +18,9 @@
     "@tilewright/plugin-story": "*",
     "@tilewright/plugin-storytender": "*",
     "@tilewright/plugin-turns": "*"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./editor": "./src/editor.ts"
   }
 }

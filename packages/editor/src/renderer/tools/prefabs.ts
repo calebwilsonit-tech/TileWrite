@@ -1,14 +1,13 @@
 import '../../bundled';
 import { resolveInstance, type EntityData, type PrefabData, type SpriteData } from '@tilewright/runtime';
 import { playerEntity } from '../project/templates';
-import { attachBehavior } from '@tilewright/behaviors';
-import { archerTree, wandererTree } from '@tilewright/behaviors';
+import { host, solid, thing } from '@tilewright/behaviors';
 
 export interface Prefab {
   id: string;
   label: string;
   hint: string;
-  group: 'Basics' | 'Puzzle' | 'Story puzzles' | 'Story' | 'Light' | 'Enemies' | 'Logic' | 'World' | 'Decoration' | 'Your props' | 'Your prefabs';
+  group: string;
   /** Build entity data (without an id) standing at (x, y) on a floor at height h. */
   make(x: number, y: number, h: number): Omit<EntityData, 'id'>;
 }
@@ -23,37 +22,6 @@ function withHeight(e: Omit<EntityData, 'id'>, h: number): Omit<EntityData, 'id'
   return e;
 }
 
-interface Look {
-  shape?: 'box' | 'diamond';
-  color: number;
-  w: number;
-  d: number;
-  height: number;
-}
-
-function thing(name: string, tags: string[], look: Look, x: number, y: number, h: number, behaviours: string[] = [], extra: Record<string, unknown> = {}): Omit<EntityData, 'id'> {
-  const components: Record<string, unknown> = {
-    transform: { x, y, h, facing: 2 },
-    sprite: { shape: look.shape ?? 'box', color: look.color, w: look.w, d: look.d, height: look.height, sortOffset: 0, visible: true },
-    ...extra,
-  };
-  for (const b of behaviours) attachBehavior(components, b);
-  return { name, tags, components };
-}
-
-const solid = (w: number, d: number, height: number, layer = 16): Record<string, unknown> => ({
-  collider: { w, d, height, solid: true, trigger: false, layer, mask: 65535, enabled: true, inside: [] },
-});
-
-/** A walking body on the enemy collision layer. */
-function enemyBody(radius = 0.3): Record<string, unknown> {
-  return {
-    body: {
-      vx: 0, vy: 0, vz: 0, radius, height: 1.2, state: 'ground', stepUp: 0.35, stepDown: 0.4, ledge: 'fall', pits: 'fall', wade: false,
-      gravity: 1, peakZ: 0, layer: 4, mask: 65535, noclip: false, blockedBy: [], blockedTerrain: false, standingOn: null,
-    },
-  };
-}
 export const PREFABS: Prefab[] = [
   {
     id: 'player',
@@ -125,32 +93,11 @@ export const PREFABS: Prefab[] = [
     make: (x, y, h) => thing('Trigger zone', ['zone'], { shape: 'diamond', color: 0x4ad1c8, w: 2, d: 2, height: 0.05 }, x, y, h, ['triggerZone']),
   },
   {
-    id: 'npc',
-    label: 'NPC (talks)',
-    group: 'Story',
-    hint: 'A character the player talks to with Interact. Choose its conversation in the Inspector; write conversations in the Story panel.',
-    make: (x, y, h) => thing('Villager', ['npc'], { color: 0x3d8fe8, w: 0.6, d: 0.6, height: 1.2 }, x, y, h, ['npcTalk']),
-  },
-  {
-    id: 'minigame',
-    label: 'Minigame (arcade)',
-    group: 'Story',
-    hint: 'The player plays a small game with Interact. Choose its minigame in the Inspector; make minigames in the Story panel.',
-    make: (x, y, h) => thing('Arcade', ['minigame'], { color: 0xd06a1a, w: 0.7, d: 0.7, height: 1.2 }, x, y, h, ['minigameStation']),
-  },
-  {
     id: 'soundsource',
     label: 'Sound source',
     group: 'Story',
     hint: 'A sound that comes from this spot and gets quieter as the player walks away: a waterfall, a campfire, a dripping pipe. Choose the sound in the Inspector.',
     make: (x, y, h) => thing('Sound source', ['sound-source'], { shape: 'diamond', color: 0x7ad0e8, w: 0.5, d: 0.5, height: 0.05 }, x, y, h, ['soundSource']),
-  },
-  {
-    id: 'lanternpost',
-    label: 'Lantern post (checkpoint)',
-    group: 'Story',
-    hint: 'The player lights it and rests with Interact. Defeat returns them to the last post they rested at, and lit posts are in the Travel menu.',
-    make: (x, y, h) => thing('Lantern post', ['lantern-post'], { color: 0x6b6f7a, w: 0.4, d: 0.4, height: 1.4 }, x, y, h, ['checkpoint']),
   },
   {
     id: 'portal',
@@ -159,48 +106,7 @@ export const PREFABS: Prefab[] = [
     hint: 'A doorway to another scene (or another spot in this one). Say where it leads in the Inspector.',
     make: (x, y, h) => thing('Portal', ['portal'], { shape: 'diamond', color: 0xb18cff, w: 1, d: 1, height: 0.05 }, x, y, h, ['portal']),
   },
-  {
-    id: 'cutscene',
-    label: 'Cutscene trigger',
-    group: 'Story',
-    hint: 'Plays a cutscene when the player walks into it. Write cutscenes in the Story panel.',
-    make: (x, y, h) => thing('Cutscene trigger', ['cutscene'], { shape: 'diamond', color: 0xffd34a, w: 2, d: 2, height: 0.05 }, x, y, h, ['cutsceneTrigger']),
-  },  {
-    id: 'stone',
-    label: 'Sentence stone',
-    group: 'Story puzzles',
-    hint: 'A stone with a sentence and one swappable word ("The bridge [ HOLDS ]"). The player swaps the word with Interact; wire each word to what it should change.',
-    make: (x, y, h) => thing('Sentence stone', ['stone'], { color: 0x9ea7c4, w: 0.7, d: 0.7, height: 1 }, x, y, h, ['sentenceStone']),
-  },
-  {
-    id: 'text',
-    label: 'Text block',
-    group: 'Story puzzles',
-    hint: 'A block of text. Underlined it becomes a bridge, bold a wall, italic it slides. The player (or a wire) changes the formatting.',
-    make: (x, y, h) => thing('Text block', ['text'], { color: 0xb9b4c9, w: 2, d: 1, height: 0.1 }, x, y, h, ['textBlock']),
-  },
-  {
-    id: 'lantern',
-    label: 'Lantern (light)',
-    group: 'Light',
-    hint: 'Lights the area around it. Walls cast shadows. Switch it on and off with a wire if you like.',
-    make: (x, y, h) => thing('Lantern', ['light'], { color: 0xffc866, w: 0.4, d: 0.4, height: 1.1 }, x, y, h, ['light']),
-  },
-  {
-    id: 'lightsensor',
-    label: 'Light sensor',
-    group: 'Light',
-    hint: 'Sends a signal while the spot it stands on is lit (or dark). Wire it to a gate.',
-    make: (x, y, h) => thing('Light sensor', ['sensor'], { shape: 'diamond', color: 0xffe9a8, w: 0.9, d: 0.9, height: 0.05 }, x, y, h, ['lightSensor']),
-  },
-  {
-    id: 'dough',
-    label: 'Rising dough',
-    group: 'Light',
-    hint: 'Grows taller over time, faster near light. It becomes a taller solid block, so it can turn into a platform or wall.',
-    make: (x, y, h) => thing('Rising dough', ['dough'], { color: 0xf3dfb1, w: 0.9, d: 0.9, height: 0.2 }, x, y, h, ['growing']),
-  },
-  {
+   {
     id: 'flowers',
     label: 'Flowers',
     group: 'Decoration',
@@ -236,58 +142,6 @@ export const PREFABS: Prefab[] = [
     make: (x, y, h) => thing('Banner', ['decoration'], { color: 0xc9a227, w: 0.2, d: 0.2, height: 1.8 }, x, y, h),
   },
   {
-    id: 'guard',
-    label: 'Guard',
-    group: 'Enemies',
-    hint: 'Walks a route (Patrol path tool), sees you in a cone, hears footsteps, chases you around walls, then searches and goes home. Hurts on touch.',
-    make: (x, y, h) =>
-      thing('Guard', ['enemy'], { color: 0x9b2d30, w: 0.6, d: 0.6, height: 1.2 }, x, y, h, ['health', 'vision', 'chase', 'patrol', 'damageOnTouch'], enemyBody()),
-  },
-  {
-    id: 'archer',
-    label: 'Archer',
-    group: 'Enemies',
-    hint: 'Shoots at you from a distance (Ranged Attack) and keeps its distance with a Behaviour Tree: it backs away when you are close and follows when you are far. Edit its tree in the Inspector.',
-    make: (x, y, h) => {
-      const e = thing('Archer', ['enemy'], { color: 0xb5651d, w: 0.6, d: 0.6, height: 1.2 }, x, y, h, ['health', 'vision', 'rangedAttack', 'behaviorTree'], enemyBody());
-      Object.assign(e.components.vision as object, { range: 11, angle: 200 });
-      e.components.behaviorTree = archerTree();
-      return e;
-    },
-  },
-  {
-    id: 'wanderer',
-    label: 'Wanderer',
-    group: 'Enemies',
-    hint: 'Ambles about near where it stands and runs away when hurt, decided by a Behaviour Tree you can change in the Inspector. Harmless until you add Damage on Touch.',
-    make: (x, y, h) => {
-      const e = thing('Wanderer', ['enemy'], { color: 0x6b8e5a, w: 0.55, d: 0.55, height: 1 }, x, y, h, ['health', 'behaviorTree'], enemyBody());
-      e.components.behaviorTree = wandererTree();
-      return e;
-    },
-  },
-  {
-    id: 'boss',
-    label: 'Boss',
-    group: 'Enemies',
-    hint: 'A tough guard with Boss Phases: faster and stronger as its health runs down. Mark its room with a Region set to "Bosses here only act while the player is inside".',
-    make: (x, y, h) => {
-      const e = thing('Boss', ['enemy', 'boss'], { color: 0x5b2a86, w: 1.2, d: 1.2, height: 2 }, x, y, h, ['health', 'vision', 'chase', 'damageOnTouch', 'bossPhases'], enemyBody(0.55));
-      Object.assign(e.components.health as object, { max: 12, onDeath: 'stay', invulnerableSeconds: 0.5, fallDamage: 0 });
-      (e.components.chase as { speed: number }).speed = 2.6;
-      (e.components.vision as { range: number; angle: number }).range = 9;
-      (e.components.vision as { range: number; angle: number }).angle = 200;
-      (e.components.damageOnTouch as { range: number }).range = 0.9;
-      return e;
-    },
-  },
-  {
-    id: 'spikes',
-    label: 'Spikes',
-    group: 'Enemies',
-    hint: 'A trap that hurts whatever touches it.',
-    make: (x, y, h) => thing('Spikes', ['trap'], { shape: 'diamond', color: 0xcfd3dc, w: 0.9, d: 0.9, height: 0.1 }, x, y, h, ['damageOnTouch']),
-  },  {
     id: 'logic',
     label: 'Logic gate',
     group: 'Logic',
@@ -323,13 +177,6 @@ export const PREFABS: Prefab[] = [
     make: (x, y, h) => thing('Spawner', ['spawner'], { color: 0xff8844, w: 0.5, d: 0.5, height: 0.5 }, x, y, h, ['spawner']),
   },
   {
-    id: 'coin',
-    label: 'Pickup (coin)',
-    group: 'World',
-    hint: 'Disappears when the player touches it and adds to a counter.',
-    make: (x, y, h) => thing('Coin', ['pickup'], { color: 0xffd34a, w: 0.4, d: 0.4, height: 0.4 }, x, y, h, ['pickup']),
-  },
-  {
     id: 'platform',
     label: 'Moving platform',
     group: 'World',
@@ -347,6 +194,7 @@ export const PREFABS: Prefab[] = [
 
 /** The project's drawn sprites, for the props and decals made in the tile studio (the studio keeps this up to date). */
 let propSprites: ReadonlyMap<string, SpriteData> = new Map();
+
 export function setPropSprites(sprites: ReadonlyMap<string, SpriteData>): void {
   propSprites = sprites;
 }
@@ -395,6 +243,7 @@ export function attachmentSprites(): SpriteData[] {
 }
 
 export type AttachFace = '+x' | '-x' | '+y' | '-y' | 'top';
+
 export const FACE_OF_BLOCK: Record<string, AttachFace> = { e: '+x', w: '-x', s: '+y', n: '-y', top: 'top' };
 
 /** Where the middle of a spot on a block face is in the world: the cell, the face, how far along it, and the level of the block. */
@@ -464,8 +313,13 @@ export function projectPrefabChoices(prefabs: ReadonlyMap<string, PrefabData>): 
     }));
 }
 
+/** What the plugins that are on added to the Place tool. */
+export function pluginPrefabChoices(): Prefab[] {
+  return [...host.ext.prefabs.values()].map((p) => ({ id: p.id, label: p.label, hint: p.hint, group: p.group, make: p.make.bind(p) }));
+}
+
 export function allPrefabs(prefabs: ReadonlyMap<string, PrefabData>): Prefab[] {
-  return [...PREFABS, ...spritePropChoices(), ...projectPrefabChoices(prefabs)];
+  return [...PREFABS, ...pluginPrefabChoices(), ...spritePropChoices(), ...projectPrefabChoices(prefabs)];
 }
 
 export function prefabById(id: string, prefabs: ReadonlyMap<string, PrefabData> = new Map()): Prefab {

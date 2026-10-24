@@ -150,7 +150,8 @@ describe('M6 validation', () => {
   });
 
   it('the new objects in the Place tool carry their behaviours', async () => {
-    const { PREFABS } = await import('../tools/prefabs');
+    const { allPrefabs } = await import('../tools/prefabs');
+    const PREFABS = allPrefabs(new Map());
     const make = (id: string) => PREFABS.find((p) => p.id === id)!.make(3.5, 3.5, 0);
     expect(make('stone').components).toHaveProperty('sentenceStone');
     expect(make('text').components).toHaveProperty('textBlock');
@@ -188,7 +189,8 @@ describe('M7 validation', () => {
   });
 
   it('the Place tool offers guards, bosses and spikes ready to use', async () => {
-    const { PREFABS } = await import('../tools/prefabs');
+    const { allPrefabs } = await import('../tools/prefabs');
+    const PREFABS = allPrefabs(new Map());
     const g = PREFABS.find((p) => p.id === 'guard')!.make(3.5, 3.5, 0);
     for (const part of ['health', 'vision', 'chase', 'patrol', 'damageOnTouch', 'body']) expect(g.components, part).toHaveProperty(part);
     expect((g.components.body as { layer: number }).layer).toBe(4);

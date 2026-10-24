@@ -12,5 +12,8 @@
     "@tilewright/plugin-inventory": "*",
     "@tilewright/plugin-story": "*",
     "@tilewright/plugin-storytender": "*"
+  },
+  "exports": {
+    ".": "./src/index.ts"
   }
 }

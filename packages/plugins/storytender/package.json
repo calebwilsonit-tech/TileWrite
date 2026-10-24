@@ -10,5 +10,9 @@
     "@tilewright/plugin-sdk": "*",
     "@tilewright/plugin-lighting": "*",
     "@tilewright/plugin-combat": "*"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./editor": "./src/editor.ts"
   }
 }

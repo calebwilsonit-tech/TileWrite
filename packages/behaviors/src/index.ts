@@ -25,6 +25,7 @@ export * from './events/graph-convert';
 export * from './builtins/devices';
 export * from './builtins/interact';
 export * from './nav';
+export * from './prefab-kit';
 export * from './authoring/machine';
 export * from './authoring/tree';
 export * from './story/context';

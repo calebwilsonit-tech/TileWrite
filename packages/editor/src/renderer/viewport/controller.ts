@@ -24,7 +24,7 @@ import type { EditorDoc, DocEvent } from '../model/doc';
 import { store, type ToolId } from '../app/store';
 import { studio } from '../studio/store';
 import { TOOLS, toolMeta, type Pointer, type Preview, type ToolEnv } from '../tools/tools';
-import { PREFABS, prefabById } from '../tools/prefabs';
+import { allPrefabs, prefabById } from '../tools/prefabs';
 import type { P } from '../tools/algorithms';
 import { OverlayDrawer, cellTopHeight } from './overlay';
 import { PlaySession } from './play-session';
@@ -636,7 +636,7 @@ export class ViewportController {
       return;
     }
     if (meta.edits === 'objects' && (store.state.tool === 'place' || store.state.tool === 'props')) {
-      const prefab = PREFABS.find((x) => x.id === store.state.options.prefab);
+      const prefab = allPrefabs(store.prefabs).find((x) => x.id === store.state.options.prefab);
       const kind = prefab ? objectLayerOf(prefab.make(0, 0, 0)) : 'objects';
       if ((kind === 'decoration' && locks.decoration) || (kind === 'lights' && locks.lightsLayer)) {
         store.notify('warn', `The ${kind === 'lights' ? 'lights' : 'decoration'} layer is locked. Unlock it in the Layers panel to place this.`);

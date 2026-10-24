@@ -339,6 +339,21 @@ export class PluginHost {
     this.emit({ kind: 'removed', plugin: id });
   }
 
+  /** Give a plugin its editor part (a function the editor installs; it is never part of an exported game). Installs it at once when the plugin is already on. */
+  attachEditor(id: string, installEditor: (api: PluginApi) => void): void {
+    const def = this.known.get(id);
+    if (!def) throw new PluginError(`There is no plugin called "${id}".`);
+    def.installEditor = installEditor;
+    const rec = this.installed.get(id);
+    if (this.inEditor && rec) {
+      try {
+        installEditor(this.apiFor(id, rec));
+      } catch (e) {
+        this.fail(id, 'its editor part', e);
+      }
+    }
+  }
+
   isInstalled(id: string): boolean {
     return this.installed.has(id);
   }
