@@ -1,5 +1,5 @@
 import { definePlugin } from '@tilewright/plugin-sdk';
-import manifest from '../plugin.json';
+import manifest from '../plugin.json' with { type: 'json' };
 import { events } from './events';
 import { bossPhases, chase, patrol, vision } from './ai';
 import { stateMachine } from './brain';

@@ -1,5 +1,5 @@
 import { definePlugin, type GameUiHost } from '@tilewright/plugin-sdk';
-import manifest from '../plugin.json';
+import manifest from '../plugin.json' with { type: 'json' };
 import { GameUi, uiStrings } from './game-ui';
 
 export * from './game-ui';
