@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { emptyUiDoc, UiDocSchema, type UiDoc } from '@tilewright/runtime';
 import { host, withPluginScreens } from '@tilewright/behaviors';
-import '@tilewright/bundled-plugins';
+import '../../bundled-editor';
 import { customize, diffScreens, pluginScreenRows, removeCopy, revert } from './plugin-screens';
 import { updateWidget } from './ui-edit';
 
@@ -26,7 +26,7 @@ describe('screens that come with plugins', () => {
     expect(again.screen.name).toBe('Pause 2');
   });
 
-  it('a changed copy is noticed, compared in plain sentences, and put back by Revert', () => {
+  it('a changed copy is noticed, compared in plain words, and put back by Revert', () => {
     const { doc, screen } = customize(emptyUiDoc(), 'prebuilt-screens', 'prebuilt-pause')!;
     const edited = updateWidget(doc, 'resume.label', (n) => void (n.text = 'Carry on'));
     expect(row(edited, 'prebuilt-pause').state.kind).toBe('changed');

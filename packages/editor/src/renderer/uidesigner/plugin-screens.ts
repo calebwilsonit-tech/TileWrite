@@ -91,7 +91,7 @@ const short = (v: unknown): string => {
 };
 
 /**
- * What differs between a project's screen and the plugin's, in plain sentences, widget by widget (they are matched by id,
+ * What differs between a project's screen and the plugin's, in plain words, widget by widget (they are matched by id,
  * which a copy keeps). `mine` is the project's, `theirs` the plugin's. An empty list means they are the same.
  */
 export function diffScreens(mine: UiScreen, theirs: UiScreen, limit = 40): string[] {
