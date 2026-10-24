@@ -17,6 +17,7 @@ Start with the tutorial in the app (the project screen's **Take the tutorial** b
 | Blocks, what is solid, gravity in any direction, placing blocks while the game runs | [blocks-and-gravity.md](blocks-and-gravity.md) |
 | Why blocks turned see-through and were passed through on a wall (a case study) | [gravity_diagnosis.md](gravity_diagnosis.md) |
 | Which behaviour changes are switches, and which projects have them on | [compat_flags.md](compat_flags.md) |
+| What the phase 3 cleanup looked at, removed and left alone | [cleanup_audit.md](cleanup_audit.md) |
 | Your own tables, components, behaviours and events, with no code | [data-and-blocks.md](data-and-blocks.md) |
 | Control schemes, the pointer, building with ghosts, the four isometric views | [control-schemes.md](control-schemes.md) |
 | Procedural maps (rooms, caves, islands, towns), seeds, new runs, very large maps | [procedural-maps.md](procedural-maps.md) |
