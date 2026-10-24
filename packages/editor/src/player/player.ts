@@ -1,5 +1,5 @@
 import 'pixi.js/unsafe-eval'; // Pixi's shader helpers without `new Function`, which the Content-Security-Policy forbids
-import { IsoRenderer, crashReport, formatCrashReport, tilesetFromList, type SpriteData } from '@tilewright/runtime';
+import { IsoRenderer, compatOf, crashReport, formatCrashReport, tilesetFromList, type SpriteData } from '@tilewright/runtime';
 import { activate, defaultImporter, installScriptGlobals, loadScript, packsOfProject, setActivePacks, syncCustomBlocks, type Transpiler } from '@tilewright/behaviors';
 import { GameManifestSchema, ScriptsBundleSchema, type GameManifest } from '@tilewright/exporter';
 import { joinPath } from '../renderer/project/api';
@@ -186,6 +186,7 @@ async function boot(): Promise<void> {
     layout: ui.layout,
     uiDoc: uiDoc.doc,
     input: controls.input,
+    compat: compatOf(project),
     tileset: () => tileset,
     currentScene: () => null,
     notify: (kind, text) => {

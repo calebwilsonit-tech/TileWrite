@@ -273,6 +273,8 @@ export const ProjectSchema = z.object({
   title: z.object({ enabled: z.boolean().default(false), subtitle: z.string().default('') }).optional(),
   /** The packs this game uses (see packs in the behaviours package). Missing means all of them, as before packs existed. */
   packs: z.array(z.string()).optional(),
+  /** Compatibility flags (see compat.ts): behaviour that changed after projects were made. Missing flags are off, as the project always played. */
+  compat: z.record(z.string(), z.boolean()).optional(),
 });
 export type ProjectData = z.infer<typeof ProjectSchema>;
 

@@ -920,7 +920,7 @@ class AppStore {
   }
 
   /** Change the project's name, first scene, tile size or title screen. Saved at once. */
-  async updateProjectSettings(patch: Partial<Pick<ProjectData, 'name' | 'startScene' | 'iso' | 'title' | 'packs'>>): Promise<boolean> {
+  async updateProjectSettings(patch: Partial<Pick<ProjectData, 'name' | 'startScene' | 'iso' | 'title' | 'packs' | 'compat'>>): Promise<boolean> {
     const p = this.state.project;
     if (!p) return false;
     const ok = await this.guard('Saving the project settings', async () => {

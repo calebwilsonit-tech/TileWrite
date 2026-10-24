@@ -1,3 +1,4 @@
+import { legacyFlags, type CompatFlags } from '../project/compat';
 import { Tweens } from '../anim/tween';
 import type { LightingModel } from '../lighting/lighting';
 import type { EventRow, GraphData, PrefabData, RegionData, VariableValue, WireData } from '../project/schema';
@@ -251,6 +252,8 @@ export class Simulation {
   /** Terrain used by physics and AI. Set it before the first step. */
   map: TileMap | null = null;
   tick = 0;
+  /** Which behaviours that changed after projects were made this game plays with (see project/compat.ts). Set by whoever loads the project. */
+  compat: CompatFlags = legacyFlags();
   private readonly systems: { name: string; fn: System; mode: SystemMode }[] = [];
   /** Buttons held down while a menu or conversation had the controls: ignored until they are let go. */
   private readonly suppressed = new Set<string>();

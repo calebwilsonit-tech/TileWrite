@@ -1,4 +1,5 @@
 import {
+  currentFlags,
   migrateProject,
   migrateScene,
   parseProject,
@@ -45,7 +46,10 @@ export async function createProject(fs: ProjectFs, parentDir: string, name: stri
   if (await fs.exists(joinPath(dir, PROJECT_FILE))) {
     throw new UserError(`There is already a Tilewright project in "${folder}". Pick a different name or open that project instead.`);
   }
-  const { project, scene, files } = templateById(templateId).build(name.trim() || folder);
+  const made = templateById(templateId).build(name.trim() || folder);
+  // a new project plays with every behaviour that changed after older ones were made (see compat.ts); older projects keep theirs
+  const project = { ...made.project, compat: currentFlags() };
+  const { scene, files } = made;
   await fs.write(joinPath(dir, MAIN_SCENE_PATH), stringifyScene(scene));
   for (const [rel, text] of Object.entries(files ?? {})) await fs.write(joinPath(dir, ...rel.split('/')), text);
   await fs.write(joinPath(dir, PROJECT_FILE), projectText(project));

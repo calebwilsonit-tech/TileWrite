@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { activeInput, listPacks, packContents } from '@tilewright/behaviors';
-import { ACTION_LABELS, DEFAULT_INPUT_MAP, DomInputSource, bindingChanges, bindingLabel, checkProjectInput, projectDefaults, rebind, type ProjectInput } from '@tilewright/runtime';
+import { ACTION_LABELS, COMPAT_FLAGS, COMPAT_NAMES, DEFAULT_INPUT_MAP, DomInputSource, bindingChanges, bindingLabel, checkProjectInput, projectDefaults, rebind, type ProjectInput } from '@tilewright/runtime';
 import { CheckField, SelectField, TextField } from '../panels/fields';
 import { store, useApp } from './store';
 
-type Tab = 'game' | 'packs' | 'controls';
+type Tab = 'game' | 'packs' | 'controls' | 'compat';
 
 /**
  * The project's own settings: its name, the first scene, the title screen, and the game's controls (which keys and
@@ -88,9 +88,9 @@ export function ProjectSettingsDialog() {
       <div className="dialog wide" role="dialog" aria-label="Project settings" data-testid="project-settings" style={{ maxHeight: '86vh', overflow: 'auto' }} onMouseDown={(e) => e.stopPropagation()}>
         <h2>Project settings</h2>
         <div className="seg" role="tablist">
-          {(['game', 'packs', 'controls'] as Tab[]).map((t) => (
+          {(['game', 'packs', 'controls', 'compat'] as Tab[]).map((t) => (
             <button key={t} role="tab" aria-selected={tab === t} className={tab === t ? 'on' : ''} data-testid={`ps-tab-${t}`} onClick={() => setTab(t)}>
-              {t === 'game' ? 'Game' : t === 'packs' ? 'Packs' : 'Controls'}
+              {t === 'game' ? 'Game' : t === 'packs' ? 'Packs' : t === 'controls' ? 'Controls' : 'Compatibility'}
             </button>
           ))}
         </div>
@@ -114,6 +114,8 @@ export function ProjectSettingsDialog() {
         )}
 
         {tab === 'packs' && <PacksTab />}
+
+        {tab === 'compat' && <CompatTab />}
 
         {tab === 'controls' && (
           <div data-testid="ps-controls">
@@ -178,6 +180,31 @@ export function ProjectSettingsDialog() {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+/**
+ * Behaviour that changed after this project was made. A project made before a change plays as it always did (the box is
+ * empty); a new project has every box ticked. Tick one to get the newer behaviour, untick it to go back.
+ */
+function CompatTab() {
+  const project = useApp((s) => s.project)!;
+  useApp((s) => s.storyVersion);
+  const flags = project.project.compat ?? {};
+  return (
+    <div data-testid="ps-compat">
+      <p className="hint">
+        {project.project.compat === undefined
+          ? 'This project was made before these options existed, so it plays exactly as it always did. Tick a box to try the newer behaviour; untick it to go back.'
+          : 'Each box is a behaviour that changed after older projects were made. Untick one to play it the way older projects do.'}
+      </p>
+      {COMPAT_NAMES.map((name) => (
+        <fieldset className="story-card" key={name} data-testid={`compat-${name}`}>
+          <CheckField label={COMPAT_FLAGS[name].label} testId={`compat-toggle-${name}`} value={flags[name] === true} onChange={(v) => void store.updateProjectSettings({ compat: { ...flags, [name]: v } })} />
+          <p className="hint">{COMPAT_FLAGS[name].help}</p>
+        </fieldset>
+      ))}
     </div>
   );
 }

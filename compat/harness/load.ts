@@ -1,6 +1,6 @@
 import path from 'node:path';
 import ts from 'typescript';
-import { tilesetFromList, type ItemData, type ProjectData, type SceneData, type TableData, type UiDoc, type DialogueData, type CutsceneData, type PrefabData } from '@tilewright/runtime';
+import { compatOf, tilesetFromList, type ItemData, type ProjectData, type SceneData, type TableData, type UiDoc, type DialogueData, type CutsceneData, type PrefabData } from '@tilewright/runtime';
 import { activate, clearScripts, defaultImporter, installScriptGlobals, loadScript, packsOfProject, setActivePacks, syncCustomBlocks, tsTranspiler } from '@tilewright/behaviors';
 import { Game } from '@tilewright/playbot';
 import { loadScene, openProject } from '../../packages/editor/src/renderer/project/io';
@@ -125,6 +125,7 @@ export function gameOn(p: LoadedProject, scenePath: string, seed = 1): Game {
     tables: p.tables,
     ui: p.ui,
     tileset: tilesetFromList(p.project.tileset),
+    compat: compatOf(p.project),
     seed,
   });
 }

@@ -3,7 +3,7 @@ import { defineConfig } from 'vitest/config';
 // The compatibility corpus (see compat/README.md). It plays every project for a few thousand ticks, so it gets its own run.
 export default defineConfig({
   test: {
-    include: ['compat/compat.test.ts'],
+    include: ['compat/*.test.ts'],
     environment: 'node',
     testTimeout: 300_000,
     hookTimeout: 300_000,

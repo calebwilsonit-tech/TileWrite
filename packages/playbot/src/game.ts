@@ -6,6 +6,7 @@ import {
   openStartScreens,
   physicsSystem,
   teleportBody,
+  type CompatFlags,
   type CutsceneData,
   type MinigameData,
   type TableData,
@@ -41,6 +42,8 @@ export interface GameSetup {
   tileset?: TileSet;
   /** The project's interface screens. */
   ui?: UiDoc;
+  /** The project's compatibility flags (default: every one off, as an older project plays). */
+  compat?: CompatFlags;
   seed?: number;
 }
 
@@ -58,6 +61,7 @@ export class Game {
 
   constructor(setup: GameSetup) {
     this.sim = new Simulation(setup.seed ?? 1);
+    if (setup.compat) this.sim.compat = setup.compat;
     this.scenes = setup.scenes;
     this.first = setup.scene;
     this.prefabs = setup.prefabs;

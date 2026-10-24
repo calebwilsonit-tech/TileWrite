@@ -62,7 +62,7 @@ import {
   type GameUiHost,
   activeInput,
 } from '@tilewright/behaviors';
-import { POINTER_BINDINGS } from '@tilewright/runtime';
+import { POINTER_BINDINGS, type CompatFlags } from '@tilewright/runtime';
 import { drawCone, drawFootprint, drawLightRadius, drawPath, drawWire, shapesOf, wireShapes } from './debug-draw';
 import { assetFs } from '../project/assetFs';
 import { joinPath } from '../project/api';
@@ -121,6 +121,8 @@ export interface PlayOptions {
   layout?: UiLayout;
   /** The game's own controls (assets/input.json). */
   input?: ProjectInput;
+  /** The project's compatibility flags. */
+  compat?: CompatFlags;
 }
 
 /**
@@ -161,6 +163,8 @@ export class PlaySession {
     const { sim } = this;
     const renderer = o.renderer;
     this.scenePath = o.scenePath;
+    if (o.compat) sim.compat = o.compat;
+    renderer.occlusionMode = sim.compat.fadeBySight ? 'swept' : 'legacy';
     this.settings = loadSettings(typeof localStorage === 'undefined' ? undefined : localStorage);
     this.useInput(o.input);
     sim.runtime.difficulty = this.settings.difficulty;

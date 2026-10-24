@@ -19,7 +19,7 @@ import {
 } from '@tilewright/runtime';
 import { parsePoints } from '@tilewright/behaviors';
 import { objectLayerOf, type ObjectLayer } from '../model/layers';
-import { crashReport } from '@tilewright/runtime';
+import { compatOf, crashReport } from '@tilewright/runtime';
 import type { EditorDoc, DocEvent } from '../model/doc';
 import { store, type ToolId } from '../app/store';
 import { studio } from '../studio/store';
@@ -776,6 +776,7 @@ export class ViewportController {
         uiDoc: store.uiDoc,
         input: store.input,
         tables: store.tables,
+        compat: project ? compatOf(project.project) : undefined,
         mixer: studio.mixerSource,
         liveAssets: () => ({ prefabs: store.prefabs, sprites: studio.assets, story: store.story, skins: store.skins, minigames: store.minigames, worldMap: store.worldMap, layout: store.uiLayout, uiDoc: store.uiDoc, input: store.input, tables: store.tables }),
       });

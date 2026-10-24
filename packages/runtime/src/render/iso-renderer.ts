@@ -14,6 +14,7 @@ import type { Entity, EntityId, World } from '../scene/world';
 import { DEFAULT_TILESET, FLAG, SLOPE, TileMap, type TileDef, type TileSet } from '../tilemap/tilemap';
 import { Camera } from './camera';
 import { boxAt, isInFront, rectsOverlap, rotateBox, screenRect, sortBoxes, type DepthBox } from './depth';
+import { blocksView, fadesLegacy, type OcclusionMode } from './occlusion';
 
 function shade(color: number, f: number): number {
   const r = Math.min(255, Math.round(((color >> 16) & 255) * f));
@@ -78,6 +79,8 @@ interface TileView {
   box: DepthBox;
   /** Things that rise above the ground can hide the focus entity and fade out. */
   occluder: boolean;
+  /** Hid the followed thing on the last frame (so a block at the edge of the view does not flicker). */
+  hiding?: boolean;
   /** The tile counts as a wall (Layers panel: Walls). */
   wall: boolean;
 }
@@ -129,6 +132,8 @@ export class IsoRenderer {
   occlusionFade = true;
   /** Alpha an occluding wall fades to. */
   fadeAlpha = 0.3;
+  /** Which rule says a wall is in the way of the thing being followed (see occlusion.ts). */
+  occlusionMode: OcclusionMode = 'legacy';
 
   /** Overlay for editor gizmos; drawn above everything, in the same projected space as the world. */
   readonly overlay = new Container();
@@ -1021,9 +1026,11 @@ export class IsoRenderer {
     const focusRect = focusBox ? screenRect(focusBox, this.iso) : undefined;
     for (const v of this.tiles) {
       let target = 1;
-      if (this.occlusionFade && focusBox && focusRect && v.occluder && v.box.maxZ > focusBox.minZ + 0.5) {
+      if (this.occlusionFade && focusBox && focusRect && v.occluder) {
         const vb = rotateBox(v.box, this.iso);
-        if (rectsOverlap(focusRect, screenRect(vb, this.iso)) && isInFront(focusBox, vb)) target = this.fadeAlpha;
+        const hides = this.occlusionMode === 'legacy' ? fadesLegacy(focusBox, vb, this.iso) : blocksView(focusBox, vb, this.iso, v.hiding === true);
+        v.hiding = hides;
+        if (hides) target = this.fadeAlpha;
       }
       if (this.xray) target = Math.min(target, 0.3);
       const a = v.gfx.alpha;
