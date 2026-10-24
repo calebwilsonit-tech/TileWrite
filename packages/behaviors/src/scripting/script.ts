@@ -17,12 +17,11 @@ import {
 } from '@tilewright/runtime';
 import { actionDef, conditionDef, resolveRef } from '../events/sheet';
 import { defineBehavior, getBehavior, behaviorList, stateOf, undefineBehavior, type BehaviorDef, type FieldSpec, type Phase, type SignalSpec } from '../framework';
-import { damage, heal } from '../builtins/combat';
 import { blockAtCell, breakBlock, placeBlock } from '../builtins/blocks';
 import { newNav, steerTo, type NavState } from '../nav';
 import { input as signalInput, output as signalOutput, setOutput } from '../signals';
 import { spawnPrefabAt } from '../builtins/world';
-import { beginDialogue, playCutscene } from '../story/director';
+import { host } from '../plugins/host';
 import type { ScriptDef, ScriptEntity, ScriptGame, ScriptSettingSpec, ScriptValue } from './api';
 
 /** Where a script's messages and breakpoint hits go (the editor's Console and debugger, or a game's log). */
@@ -256,13 +255,20 @@ class GameView implements ScriptGame {
   private entityOf(t: ScriptEntity): Entity | undefined {
     return this.ctx.world.get(t.id);
   }
+  /** Call a method a plugin gives scripts; when no plugin gives it (the plugin is off in this project) the script is told and gets the fallback. */
+  private viaPlugin<T>(name: string, args: unknown[], fallback: T): T {
+    const def = host.ext.scriptMethods.get(name);
+    if (!def) {
+      this.hooks.log('warn', `${name}() does nothing here: no plugin that is turned on in this project provides it.`);
+      return fallback;
+    }
+    return def.run(this.ctx, this.current, args) as T;
+  }
   damage(target: ScriptEntity, amount: number): boolean {
-    const e = this.entityOf(target);
-    return e ? damage(this.ctx, e, amount, { source: this.current }) : false;
+    return this.viaPlugin('damage', [this.entityOf(target), amount], false);
   }
   heal(target: ScriptEntity, amount: number): void {
-    const e = this.entityOf(target);
-    if (e) heal(this.ctx, e, amount);
+    this.viaPlugin('heal', [this.entityOf(target), amount], undefined);
   }
   itemCount(item: string): number {
     return itemCount(this.ctx.runtime.vars, item);
@@ -274,10 +280,10 @@ class GameView implements ScriptGame {
     return got;
   }
   startDialogue(name: string): boolean {
-    return beginDialogue(this.ctx, name);
+    return this.viaPlugin('startDialogue', [name], false);
   }
   playCutscene(name: string): boolean {
-    return playCutscene(this.ctx, name);
+    return this.viaPlugin('playCutscene', [name], false);
   }
   travel(scene: string, spawn = ''): void {
     if (!this.ctx.runtime.travel) this.ctx.runtime.travel = { scene: scene || this.ctx.runtime.scene, spawn };

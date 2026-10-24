@@ -89,7 +89,7 @@ export interface PluginApi {
   action(def: ActionDef): void;
   event(def: EventDef): void;
   /** Run a function once per tick (a simulation system). */
-  system(name: string, fn: System, mode?: SystemMode): void;
+  system(name: string, fn: System, mode?: SystemMode, stage?: X.SystemStage): void;
   /** A button the game listens for, with the keys a new player starts with ("key:KeyF", "pad:button0", "mouse:0"). */
   inputAction(id: string, def: InputActionDef): void;
   /** Add a collision layer with its own bit. */
@@ -154,7 +154,7 @@ interface Installed {
   behaviors: string[];
   conditions: string[];
   actions: string[];
-  systems: { name: string; fn: System; mode: SystemMode }[];
+  systems: { name: string; fn: System; mode: SystemMode; stage: X.SystemStage }[];
   inputs: Record<string, InputActionDef>;
   provided: Map<string, unknown>;
   /** Everything added to the extension tables, by table and id, so uninstalling removes exactly that. */
@@ -415,8 +415,8 @@ export class PluginHost {
       event(def) {
         host.add(rec, id, 'events', def.id, def);
       },
-      system(name, fn, mode = 'gameplay') {
-        rec.systems.push({ name: `${id}:${name}`, fn: host.watched(id, `the system "${name}"`, fn), mode });
+      system(name, fn, mode = 'gameplay', stage = 'default') {
+        rec.systems.push({ name: `${id}:${name}`, fn: host.watched(id, `the system "${name}"`, fn), mode, stage });
       },
       inputAction(actionId, def) {
         rec.inputs[actionId] = def;
@@ -539,7 +539,7 @@ export class PluginHost {
     return { behaviors: [...r.behaviors], conditions: [...r.conditions], actions: [...r.actions], inputs: Object.keys(r.inputs), systems: r.systems.map((s) => s.name), extensions: [...r.added.map((a) => ({ kind: a.kind, id: a.id })), ...editorParts] };
   }
 
-  systems(): { name: string; fn: System; mode: SystemMode }[] {
+  systems(): { name: string; fn: System; mode: SystemMode; stage: X.SystemStage }[] {
     return [...this.installed.values()].flatMap((r) => r.systems);
   }
 

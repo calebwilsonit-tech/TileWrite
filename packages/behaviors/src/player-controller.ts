@@ -18,10 +18,9 @@ import { eventSheetSystem } from './events/sheet';
 import { graphSystem } from './events/graph';
 import { eventNodeSystem } from './builtins/nodes';
 import { footstepSystem } from './builtins/world';
-import { cutsceneSystem, dialogueSystem, minigameSystem } from './story/director';
-import { quickSlotSystem } from './story/inventory';
 import { behaviorSystems } from './signals';
 import { packSystems } from './packs';
+import type { SystemStage } from './plugins/extensions';
 
 export const PLAYER_CONTROLLER = 'playerController';
 
@@ -113,15 +112,17 @@ export function turnClockGuard({ world, runtime }: SimContext): void {
  * (control, sources, wires and logic, actuators), the event sheet, then physics and animation.
  */
 export function addStandardSystems(sim: Simulation, physics: (ctx: SimContext) => void): void {
-  // conversations and cutscenes listen to the real buttons and run even while the world is frozen
-  sim.addSystem('dialogue', dialogueSystem, 'always');
-  sim.addSystem('minigame', minigameSystem, 'always');
-  sim.addSystem('cutscene', cutsceneSystem, 'always');
+  const plugged = packSystems();
+  const stage = (at: SystemStage): void => {
+    for (const s of plugged) if (s.stage === at) sim.addSystem(s.name, s.fn, s.mode);
+  };
+  stage('first');
   sim.addSystem('clock-guard', turnClockGuard, 'gameplay');
   sim.addSystem('player-controller', playerControllerSystem, 'player');
-  sim.addSystem('quick-slots', quickSlotSystem, 'player');
+  stage('after-player');
   for (const s of behaviorSystems()) sim.addSystem(s.name, s.fn, 'gameplay');
-  for (const s of packSystems()) sim.addSystem(s.name, s.fn, s.mode);
+  stage('after-behaviors');
+  stage('default');
   sim.addSystem('event-sheet', eventSheetSystem, 'gameplay');
   sim.addSystem('logic-graphs', graphSystem, 'gameplay');
   sim.addSystem('event-nodes', eventNodeSystem, 'gameplay');

@@ -9,6 +9,9 @@ import type { ActionDef, ConditionDef } from '../events/sheet';
 
 // ---------- the game (runtime parts) ----------
 
+/** Where in a tick a plugin's system runs: before everything ('first'), right after the player moves ('after-player'), after the behaviours have run ('after-behaviors'), or with the other plugins' systems ('default'). */
+export type SystemStage = 'first' | 'after-player' | 'after-behaviors' | 'default';
+
 export interface InputActionDef {
   label: string;
   bindings: string[];

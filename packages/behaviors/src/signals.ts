@@ -1,6 +1,5 @@
 import type { Entity, SimContext } from '@tilewright/runtime';
 import { PHASE_ORDER, behaviorPhase } from './framework';
-import { lightingSystem } from './builtins/light';
 
 export const SIGNALS = 'signals';
 
@@ -93,7 +92,5 @@ export function behaviorSystems(): { name: string; fn: (ctx: SimContext) => void
     if (phase === 'logic') out.push({ name: 'wires+logic', fn: propagateSignals });
     else out.push({ name: `behaviours:${phase}`, fn: behaviorPhase(phase) });
   }
-  // lighting is rebuilt after the lights have decided whether they are on; sensors read it on the next tick
-  out.push({ name: 'lighting', fn: lightingSystem });
   return out;
 }

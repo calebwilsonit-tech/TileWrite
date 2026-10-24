@@ -128,7 +128,7 @@ export function packContents(id: string): { behaviors: string[]; conditions: str
 }
 
 /** Systems the installed packs want run each tick. */
-export function packSystems(): { name: string; fn: (typeof host.systems extends () => infer R ? R : never)[number]['fn']; mode: ReturnType<typeof host.systems>[number]['mode'] }[] {
+export function packSystems(): ReturnType<typeof host.systems> {
   return host.systems();
 }
 
