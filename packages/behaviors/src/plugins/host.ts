@@ -423,9 +423,9 @@ export class PluginHost {
     return this.installed.get(pluginId)?.provided.get(name) as T | undefined;
   }
 
-  /** The starters every plugin the host knows offers. */
+  /** The starters every plugin the host knows offers (the examples for plugin authors do not put theirs in the New project list). */
   allTemplates(): X.TemplateDef[] {
-    return [...this.known.values()].flatMap((d) => d.templates ?? []);
+    return [...this.known.values()].filter((d) => !d.manifest.id.startsWith('example-')).flatMap((d) => d.templates ?? []);
   }
 
   /** What the plugins that are on tell the assistant. */
