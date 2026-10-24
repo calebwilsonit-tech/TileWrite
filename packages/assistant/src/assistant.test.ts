@@ -90,11 +90,11 @@ describe('tool definitions', () => {
 
   it('keep reading and changing apart: every tool that changes the project is an act tool', () => {
     const act = TOOLS.filter((t) => t.kind === 'act').map((t) => t.name);
-    expect(act).toEqual(['place_objects', 'update_objects', 'delete_objects', 'paint_tiles', 'connect_wires', 'remove_wires', 'set_event_sheet', 'write_dialogue', 'write_cutscene', 'write_items', 'write_minigames', 'write_skins', 'write_world_map', 'write_mixer', 'write_ui_layout', 'write_controls', 'set_project_settings', 'edit_event_rows', 'create_prefab', 'set_regions', 'write_translation', 'set_packs', 'write_table', 'set_variables', 'generate_map', 'write_ui_screen', 'write_script', 'write_project_notes', 'submit_plan', 'draw_sprite', 'generate_image', 'place_blocks', 'set_gravity']);
+    expect(act).toEqual(['place_objects', 'update_objects', 'delete_objects', 'paint_tiles', 'connect_wires', 'remove_wires', 'set_event_sheet', 'write_dialogue', 'write_cutscene', 'write_items', 'write_minigames', 'write_skins', 'write_world_map', 'write_mixer', 'write_ui_layout', 'write_controls', 'set_project_settings', 'edit_event_rows', 'create_prefab', 'set_regions', 'write_translation', 'set_plugins', 'write_table', 'set_variables', 'generate_map', 'write_ui_screen', 'write_script', 'write_project_notes', 'submit_plan', 'draw_sprite', 'generate_image', 'place_blocks', 'set_gravity']);
   });
 
   it('checks the genre tools\' inputs with messages Claude can act on', () => {
-    expect(checkToolInput('set_packs', { enable: ['turns'] }).ok).toBe(true);
+    expect(checkToolInput('set_plugins', { enable: ['turns'] }).ok).toBe(true);
     expect(checkToolInput('generate_map', { kind: 'volcano', width: 40, height: 30 }).ok).toBe(false);
     expect(checkToolInput('generate_map', { kind: 'cave', width: 4, height: 30 }).ok).toBe(false);
     expect(checkToolInput('write_table', { name: '1bad', columns: [{ id: 'a' }], rows: [] }).ok).toBe(false);

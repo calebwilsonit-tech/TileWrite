@@ -15,11 +15,11 @@ In **Project settings -> Controls** each built-in action shows the keys and butt
 **Your own actions** (for example `dash`) are named with lower-case letters, numbers and `_`, given a name to show and a key. Use them in event rows (the *button is pressed* condition: type the action name) or scripts (`input.pressed("dash")`). They appear on the game's Settings -> Controls screen and players can rebind them. The project check warns about an action with no key, a key used twice, and a built-in action left with no key.
 
 ## The interface (**Story -> Interface**, `assets/ui.json`)
-- **The picture** shows the game's screen. Drag a piece (hearts, lantern bar, quick slots, boss bars, messages, or your own) and it pins itself to the nearest of nine places: corners, edge middles, or the centre, keeping the distance you left. *Preview as* shows widescreen, square-ish, ultrawide and a sideways phone; **Make it bigger** gives the picture the whole window. The picture uses the same placement rules as the game.
+- **The picture** shows the game's screen. Drag a piece (the ones the plugins you switched on add, such as hearts, quick slots or a light bar, messages, or your own) and it pins itself to the nearest of nine places: corners, edge middles, or the centre, keeping the distance you left. *Preview as* shows widescreen, square-ish, ultrawide and a sideways phone; **Make it bigger** gives the picture the whole window. The picture uses the same placement rules as the game.
 - **Pinned to** and the pixel fields do the same by number. Pieces left on *where the game puts it* stay in the column at the top left. **Shown** hides a piece; **Size** scales it.
 - **Add a counter / bar / text** makes your own: a counter shows a flag or counter beside a label, a bar fills as a number grows toward a maximum (a number or another counter), a text shows words with `{name}` replaced by a flag or counter. Test ids and names: `tw-widget-<name>`.
 - **Theme**: lettering (storybook, clean, typewriter, friendly), five colours, corner roundness and the size of menus and the conversation box. They apply to every screen of the game, the title screen included.
-- Problems (a counter with no flag, hidden hearts or messages, two pieces with one name) are listed under the editor and in the Problems panel.
+- Problems (a counter with no flag, hidden messages, two pieces with one name) are listed under the editor and in the Problems panel.
 
 Words in these screens (the title, the line under it, labels and texts) are part of **Translations**.
 

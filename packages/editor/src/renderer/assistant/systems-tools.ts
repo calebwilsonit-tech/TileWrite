@@ -1,4 +1,4 @@
-import { GENERATOR_NAMES, TableSchema, UiScreenSchema, generate, newGeneratorSpec, type TableData, type VariableData } from '@tilewright/runtime';
+import { GENERATOR_NAMES, TableSchema, UiScreenSchema, generate, roleOfScreen, newGeneratorSpec, type TableData, type VariableData } from '@tilewright/runtime';
 import { listPacks, packContents } from '@tilewright/behaviors';
 import { lineDiff, type ToolOutput } from '@tilewright/assistant';
 import { store } from '../app/store';
@@ -14,13 +14,13 @@ function outline(node: { type: string; name: string; children?: unknown }, depth
   return [`${'  '.repeat(depth)}${node.type} "${node.name}"`, ...kids.flatMap((k) => outline(k, depth + 1))];
 }
 
-/** Reading tools about packs, templates, tables and interface screens. Null when the name is not one of them. */
+/** Reading tools about plugins, templates, tables and interface screens. Null when the name is not one of them. */
 export async function runSystemsRead(name: string, input: Record<string, unknown>): Promise<ToolOutput | null> {
   switch (name) {
-    case 'list_packs': {
+    case 'list_plugins': {
       const p = store.state.project?.project;
       if (!p) return fail('No project is open.');
-      const on = new Set(p.packs ?? listPacks().filter((x) => x.active).map((x) => x.id));
+      const on = new Set(p.plugins ?? listPacks().filter((x) => x.active).map((x) => x.id));
       return text(
         json(
           listPacks().map((x) => ({ id: x.id, name: x.name, on: on.has(x.id), needs: x.requires, description: x.description, adds: packContents(x.id)?.behaviors ?? [] })),
@@ -28,7 +28,7 @@ export async function runSystemsRead(name: string, input: Record<string, unknown
       );
     }
     case 'list_templates':
-      return text(json(listTemplates().map((t) => ({ id: t.id, name: t.name, description: t.description, packs: t.build('x').project.packs }))));
+      return text(json(listTemplates().map((t) => ({ id: t.id, name: t.name, description: t.description, plugins: t.build('x').project.plugins }))));
     case 'get_tables': {
       const names = input.names as string[] | undefined;
       const list = store.tables.filter((t) => !names || names.includes(t.name));
@@ -41,7 +41,7 @@ export async function runSystemsRead(name: string, input: Record<string, unknown
         const s = doc.screens.find((x) => x.name === wanted || x.id === wanted);
         return s ? text(json(s, 0)) : fail(`There is no screen "${wanted}". The screens are: ${doc.screens.map((x) => x.name).join(', ') || '(none)'}.`);
       }
-      return text(doc.screens.length === 0 ? '(No interface screens yet.)' : doc.screens.map((s) => `${s.name} (id ${s.id})${s.opensOnStart ? ' opens on start' : ''}${s.modal ? ' modal' : ''}\n${outline(s.root as never).join('\n')}`).join('\n\n'));
+      return text(doc.screens.length === 0 ? '(No interface screens yet.)' : doc.screens.map((s) => `${s.name} (id ${s.id})${roleOfScreen(s) && roleOfScreen(s) !== s.name.toLowerCase() ? ` role ${roleOfScreen(s)}` : ''}${s.opensOnStart ? ' opens on start' : ''}${s.modal ? ' modal' : ''}\n${outline(s.root as never).join('\n')}`).join('\n\n'));
     }
     default:
       return null;
@@ -55,8 +55,8 @@ function setPacks(input: Record<string, unknown>): Proposal {
   const known = new Set(all.map((x) => x.id));
   const enable = (input.enable as string[] | undefined) ?? [];
   const disable = (input.disable as string[] | undefined) ?? [];
-  for (const id of [...enable, ...disable]) if (!known.has(id)) fail(`There is no pack "${id}". The packs are: ${[...known].join(', ')}.`);
-  const before = [...(p.packs ?? all.filter((x) => x.active).map((x) => x.id))];
+  for (const id of [...enable, ...disable]) if (!known.has(id)) fail(`There is no plugin "${id}". The plugins are: ${[...known].join(', ')}.`);
+  const before = [...(p.plugins ?? all.filter((x) => x.active).map((x) => x.id))];
   const next = new Set(before);
   for (const id of enable) {
     next.add(id);
@@ -69,17 +69,17 @@ function setPacks(input: Record<string, unknown>): Proposal {
   const after = [...next];
   const added = after.filter((id) => !before.includes(id));
   const removed = before.filter((id) => !next.has(id));
-  if (added.length === 0 && removed.length === 0) fail('The game already has exactly those packs.');
+  if (added.length === 0 && removed.length === 0) fail('The game already has exactly those plugins.');
   return {
-    tool: 'set_packs',
-    title: 'Change the packs',
+    tool: 'set_plugins',
+    title: 'Change the plugins',
     lines: [...added.map((id) => `Switch on ${all.find((x) => x.id === id)?.name ?? id}`), ...removed.map((id) => `Switch off ${all.find((x) => x.id === id)?.name ?? id}`)],
     async apply() {
-      const ok = await store.updateProjectSettings({ packs: after });
-      return ok ? `The game now uses: ${after.join(', ') || '(no packs)'}. list_behaviors and list_event_blocks show what that adds.` : fail('The settings could not be saved.');
+      const ok = await store.updateProjectSettings({ plugins: after });
+      return ok ? `The game now uses: ${after.join(', ') || '(no plugins)'}. list_behaviors and list_event_blocks show what that adds.` : fail('The settings could not be saved.');
     },
     async undo() {
-      return store.updateProjectSettings({ packs: before });
+      return store.updateProjectSettings({ plugins: before });
     },
   };
 }
@@ -182,10 +182,10 @@ function writeUiScreen(input: Record<string, unknown>): Proposal {
   };
 }
 
-/** Action tools for packs, tables, variables, procedural maps and interface screens. Null when the name is not one of them. */
+/** Action tools for plugins, tables, variables, procedural maps and interface screens. Null when the name is not one of them. */
 export function prepareSystemsAction(name: string, input: Record<string, unknown>): Proposal | null {
   switch (name) {
-    case 'set_packs':
+    case 'set_plugins':
       return setPacks(input);
     case 'write_table':
       return writeTable(input);

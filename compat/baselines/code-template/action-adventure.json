@@ -2,8 +2,8 @@
   "loadProblems": [],
   "check": [],
   "project": {
-    "schemaVersion": 1,
-    "packs": "combat,inventory,story,ai,lighting",
+    "schemaVersion": 2,
+    "plugins": "combat,inventory,story,ai,lighting",
     "roundTrip": true
   },
   "scenes": {
@@ -287,7 +287,7 @@
   "playthroughs": {},
   "exported": {
     "files": {
-      "project.json": "77e91827ee82e83d",
+      "project.json": "f996269b55cbd2e9",
       "scenes/main.scene.json": "9d46a311c905d3b8"
     },
     "manifest": "da0bd169ff1a3b5a",

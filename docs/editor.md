@@ -3,7 +3,7 @@
 Everything here works with the mouse and keyboard only. Press **Ctrl+K** any time to search every command.
 
 ## Projects
-- **New project**: pick a name and a template (Empty with nothing in it, the genre starters - Action adventure, Tactics, Builder, Roguelike, Point and click - or Starter room, Puzzle dungeon; each genre starter switches on the packs that genre needs and has a few things in it to play with), then choose where to create it. Tilewright makes `<folder>/<name>/` containing `project.json` and `scenes/main.scene.json`.
+- **New project**: pick a name and a template (Empty with nothing in it, the genre starters - Action adventure, Tactics, Builder, Roguelike, Point and click - or Starter room, Puzzle dungeon; each genre starter switches on the plugins that genre needs and has a few things in it to play with), then choose where to create it. Tilewright makes `<folder>/<name>/` containing `project.json` and `scenes/main.scene.json`.
 - **Open an existing project**: choose a folder that has a `project.json`. If the file is damaged or from a newer Tilewright, you get a plain-English message and nothing is changed.
 - **Recent projects** remembers the last 12. The ✕ only removes the list entry, never files.
 - Files are plain JSON. A scene writes one map row per line, so version-control diffs of a small edit are small.
@@ -27,7 +27,7 @@ Panels dock, tab, split and float: drag a tab. The layout is remembered; **Comma
 | Assets | The project's sprites, with search, tags and "find where it is used" (see [sprite-studio.md](sprite-studio.md)); its prefabs; and its sounds and music (see [sound-and-effects.md](sound-and-effects.md)). |
 | Structures | Block-level editing by the box: the marked box of the Box select tool, copy / cut / fill / hollow / replace / remove, saving a region as a structure (a house, a ruin) with the objects in it, and placing structures with the Place structure tool (see [tile-studio.md](tile-studio.md)). |
 | Library | Your personal collection of tiles, props, characters, structures, interface pieces, behaviours and sounds, kept outside any project: save, search, folders and tags, versions, add to a project as a link or a copy, and .twpack files to share (see [asset-library.md](asset-library.md)). |
-| Hub | The community Asset Hub: connect to a hub (an address you type), search packs, read their licence, add them to your library, rate and report them, sign in and share your own (see [asset-hub.md](asset-hub.md)). |
+| Hub | The community Asset Hub: connect to a hub (an address you type), search asset packs, read their licence, add them to your library, rate and report them, sign in and share your own (see [asset-hub.md](asset-hub.md)). |
 | Graph | Logic graphs: boxes joined by lines (events, actions, ifs, repeats, waits, functions), a search box that adds boxes, breakpoints, live glow while playing, and buttons to move logic to and from the event sheet (see [logic.md](logic.md)). |
 | Events | The scene's event sheet: rows that read like sentences, variables, and a "Convert to code" button (see [logic.md](logic.md)). |
 | Story | Items, conversations (a graph of lines, choices, flags and gifts), cutscenes, minigames and skins (see [story-systems.md](story-systems.md)), and the **Translations...** button (see [translations-and-settings.md](translations-and-settings.md)). |

@@ -108,7 +108,7 @@ export function LibraryPanel() {
           if (r.error) store.notify('warn', r.error);
           else if (r.item) store.notify('info', `Added "${r.item.name}" to your library.`);
         })}>
-          Import a pack file...
+          Import an asset pack file...
         </button>
         {project && updates > 0 && (
           <button data-testid="library-update" onClick={() => void guard('Updating', async () => {
@@ -272,9 +272,9 @@ function Details({ lib, item, folders, onChange, guard, onGone }: { lib: Library
       <div className="row">
         <button data-testid="library-export" onClick={() => void guard('Exporting', async () => {
           const where = await exportItem(item.id);
-          if (where) store.notify('info', `Saved the pack to ${where}.`);
+          if (where) store.notify('info', `Saved the asset pack to ${where}.`);
         })}>
-          Save as a pack file...
+          Save as an asset pack file...
         </button>
         <button
           className="danger"

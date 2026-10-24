@@ -1,5 +1,7 @@
 # Genre audit: what the engine assumed about the game, and what changes
 
+> In this page, written in phase 2, "pack" means what is now called a **plugin** (the word was changed in phase 3; see [cleanup_audit.md](cleanup_audit.md)). It is kept as it was written, as a record.
+
 Written at the start of phase 2 (2026-10-18), before any change, by reading the code. The first build was shaped by one reference game, *The Last Storytender* (an action-adventure puzzle game). The goal is a general isometric engine. This page says where the shape shows, what should stay in the core, what becomes an optional module or a pack, and what each of the eight proof games needs that is missing.
 
 Verdicts: **core** (genuinely general, stays), **module** (general but optional: a project turns it on and can strip it), **pack** (belongs to one game; moves into the "Storytender" behaviour pack that loads like any plugin), **new** (does not exist yet).

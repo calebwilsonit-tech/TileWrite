@@ -121,7 +121,7 @@ export class Library {
       const items = (raw.items ?? []).filter((i): i is LibraryItem => !!i && typeof i.id === 'string' && (PACK_KINDS as readonly string[]).includes(i.kind));
       this.index = { version: 1, folders: raw.folders ?? [], items };
     } catch {
-      throw new Error('The library list is damaged (index.json). Its packs are still in the packs folder; move index.json away to start a fresh list.');
+      throw new Error('The library list is damaged (index.json). Its asset packs are still in the packs folder; move index.json away to start a fresh list.');
     }
   }
 

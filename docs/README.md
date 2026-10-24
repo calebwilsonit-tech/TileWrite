@@ -25,7 +25,7 @@ Start with the tutorial in the app (the project screen's **Take the tutorial** b
 | Resources, production chains, day and night, waves, routes, villagers with needs, fire and growth | [simulation-helpers.md](simulation-helpers.md) |
 | Real time, speed-up and turn-based play | [time-and-turns.md](time-and-turns.md) |
 | Writing a plugin: the guide, every extension point | [plugins/](plugins/README.md) |
-| Packs and the plugin API (older page) | [packs-and-plugins.md](packs-and-plugins.md) |
+| Switching plugins on; the older plugin API | [packs-and-plugins.md](packs-and-plugins.md) |
 | Design screens, menus, HUDs, inventories, shops: the UI designer | [ui-designer.md](ui-designer.md) |
 | Title screen, project settings, controls, HUD layout and theme | [interface-and-controls.md](interface-and-controls.md) |
 | Translate the game, player settings (zoom, full screen, language) | [translations-and-settings.md](translations-and-settings.md) |
@@ -33,7 +33,7 @@ Start with the tutorial in the app (the project screen's **Take the tutorial** b
 | Floor tiles, walls and cliffs, edge sets, trees and tall props, wall attachments, structures | [tile-studio.md](tile-studio.md) |
 | Your library of tiles, props, characters, structures, interface pieces, behaviours and sounds; asset packs; versions; link or copy | [asset-library.md](asset-library.md) |
 | The eight genre samples and a recipe for each genre | [samples.md](samples.md) |
-| The community Asset Hub: licences, credits for your game, packs with code, moderation | [asset-hub.md](asset-hub.md) |
+| The community Asset Hub: licences, credits for your game, asset packs with code, moderation | [asset-hub.md](asset-hub.md) |
 | Running an Asset Hub for a community (steps for the owner) | [HUB_HOSTING.md](HUB_HOSTING.md) |
 | Shores, edges and cliff faces that draw themselves; hide and lock layers | [autotiling-and-layers.md](autotiling-and-layers.md) |
 | Add sounds and music, hit shake, sparks | [sound-and-effects.md](sound-and-effects.md) |

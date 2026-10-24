@@ -50,8 +50,8 @@
     "warning: The tile \"grass inner-SW-NW\" is covered by the sprite \"grass_inner-SW-NW\", which is not in this project, so it is drawn as a flat colour."
   ],
   "project": {
-    "schemaVersion": 1,
-    "packs": "combat,inventory,story,ai,lighting,storytender",
+    "schemaVersion": 2,
+    "plugins": "combat,inventory,story,ai,lighting,storytender",
     "roundTrip": true
   },
   "scenes": {

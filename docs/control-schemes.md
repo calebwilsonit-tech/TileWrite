@@ -10,7 +10,7 @@ The mouse reaches the game as actions: `pointer_primary` and `pointer_secondary`
 - **Cell-locked movement**: **Grid Mover** walks cell by cell along a path over stairs and heights and never stops between cells (tactics, roguelikes, puzzle games).
 - An object may have both; orders from the interface use whichever behaviour it has.
 
-## The schemes (pack **Control schemes**; Direct Control is always available)
+## The schemes (plugin **Control schemes**; Direct Control is always available)
 | Scheme | For | What it does |
 | --- | --- | --- |
 | **Direct Control** | action games | WASD or arrows walk, Shift runs, Space jumps. Follows the turned view: up is up the screen. |

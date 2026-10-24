@@ -1,6 +1,6 @@
 # The Asset Hub
 
-The **Hub** panel (bottom dock) is a window onto a community **Asset Hub**: a server where people share packs of tiles, props, characters, structures, interface pieces, behaviours and sounds. Everything is free to take; the author decides under which licence. The hub itself is a small program you can run on your own computer or host for a community (see [HUB_HOSTING.md](HUB_HOSTING.md)). Tilewright does not ship with an address for a public hub and never contacts one by itself: the Hub panel only talks to the address you type.
+The **Hub** panel (bottom dock) is a window onto a community **Asset Hub**: a server where people share asset packs of tiles, props, characters, structures, interface pieces, behaviours and sounds. Everything is free to take; the author decides under which licence. The hub itself is a small program you can run on your own computer or host for a community (see [HUB_HOSTING.md](HUB_HOSTING.md)). Tilewright does not ship with an address for a public hub and never contacts one by itself: the Hub panel only talks to the address you type.
 
 ## Taking something
 1. Type the hub's address (for a hub on your own computer: `http://localhost:8787`) and press **Connect**. Addresses on the internet must start with `https://`.
@@ -9,7 +9,7 @@ The **Hub** panel (bottom dock) is a window onto a community **Asset Hub**: a se
 4. Rate it (sign in first) or **Report** it with a few words about what is wrong.
 
 ## Licences
-Every pack on the hub has a licence, chosen when it was saved to the author's library:
+Every asset pack on the hub has a licence, chosen when it was saved to the author's library:
 
 | Licence | What it means for your game |
 | --- | --- |
@@ -22,14 +22,14 @@ Every pack on the hub has a licence, chosen when it was saved to the author's li
 ### Credits for your game
 Whatever you add from a hub keeps its author and licence in `assets/library-links.json`. When you **export** the game, Tilewright writes a **CREDITS.txt** beside the program: one line for each thing that has an author, with the licence and where it came from, and the licence texts' addresses. The export dialog also warns you when something is CC-BY-NC (not for sale) or came with no licence.
 
-## Packs with code
-A pack that contains scripts or plugins is marked **HAS CODE** everywhere. On the hub it is **held back until a moderator approves it**: its publisher can see it waiting, nobody else can. It is limited to 256 KB of code per pack so a person can actually read it. In the Hub panel you must tick *I understand it contains code* before it is added to your library, and installing it into a project needs a second yes in the Library panel. Packs without code (pictures, tile data, structures, tables, interface pieces, sounds) cannot run anything.
+## Asset packs with code
+An asset pack that contains scripts or plugins is marked **HAS CODE** everywhere. On the hub it is **held back until a moderator approves it**: its publisher can see it waiting, nobody else can. It is limited to 256 KB of code per asset pack so a person can actually read it. In the Hub panel you must tick *I understand it contains code* before it is added to your library, and installing it into a project needs a second yes in the Library panel. Asset packs without code (pictures, tile data, structures, tables, interface pieces, sounds) cannot run anything.
 
 ## Sharing
 Sign in (or make an account), choose an item from your library, add a note about what changed, press **Publish**. The author shown is your account name, whatever the file says. Publishing the same name again makes a new version. You can publish up to ten times an hour. Items with code say they are waiting for a moderator; refused items show the moderator's reason under **your uploads**.
 
 ## Reports and moderation
-Anyone signed in can report an item. When three different people report the same item it is hidden until a moderator has looked. A moderator (someone with the hub's secret token) sees the waiting packs and the open reports, and can approve, refuse with a reason, or remove an item. See [HUB_HOSTING.md](HUB_HOSTING.md) for how.
+Anyone signed in can report an item. When three different people report the same item it is hidden until a moderator has looked. A moderator (someone with the hub's secret token) sees the waiting asset packs and the open reports, and can approve, refuse with a reason, or remove an item. See [HUB_HOSTING.md](HUB_HOSTING.md) for how.
 
 ## What is designed but not built
 - **Payments and paid items**: not built. Everything on the hub is free.
@@ -42,4 +42,4 @@ Anyone signed in can report an item. When three different people report the same
 `GET /api/v1/health`, `POST /accounts`, `POST /login`, `GET /items?q=&kind=&tag=&licence=&sort=`, `GET /items/:id`, `GET /items/:id/pack`, `POST /items`, `POST /items/:id/rate`, `POST /items/:id/report`, `DELETE /items/:id`, `GET /mine`, and for moderators `GET /admin/queue`, `POST /admin/items/:id/approve`, `POST /admin/items/:id/reject`, `POST /admin/reports/:id/dismiss`. Requests carry `Authorization: Bearer <token>`. The editor makes the requests from its main process (the pages themselves may not reach the internet), allows plain `http://` only for this computer, and limits what comes back to 24 MB of text.
 
 ## Tested by
-`packages/hub-server/src/hub.test.ts` (accounts, publishing, search, code packs held back, ratings, reports, limits, the HTTP server), `packages/editor/src/renderer/library/hub.test.ts` (the editor's client against the real server), `packages/exporter/src/exporter.test.ts` (credits), `e2e/p2-tiles-showcase.spec.ts`.
+`packages/hub-server/src/hub.test.ts` (accounts, publishing, search, code asset packs held back, ratings, reports, limits, the HTTP server), `packages/editor/src/renderer/library/hub.test.ts` (the editor's client against the real server), `packages/exporter/src/exporter.test.ts` (credits), `e2e/p2-tiles-showcase.spec.ts`.

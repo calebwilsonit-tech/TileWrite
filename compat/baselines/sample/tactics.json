@@ -11,8 +11,8 @@
     "warning: Controls: \"pad:button3\" is used by both \"Dodge\" and \"End the turn\"."
   ],
   "project": {
-    "schemaVersion": 1,
-    "packs": "combat,turns,controls",
+    "schemaVersion": 2,
+    "plugins": "combat,turns,controls",
     "roundTrip": true
   },
   "scenes": {

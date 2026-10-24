@@ -45,11 +45,11 @@ test('Phase 2: Claude builds a small room in four different genres from one sent
   // ---------- 1. tactics ----------
   const unit = (prefab: string, name: string, x: number, y: number) => ({ prefab, x, y, name });
   mock.enqueue(
-    { content: [tool('a1', 'list_packs', {}), tool('a2', 'list_prefabs', {})] },
+    { content: [tool('a1', 'list_plugins', {}), tool('a2', 'list_prefabs', {})] },
     {
       content: [
         { type: 'text', text: 'A tactics room needs turns, combat and the grid cursor.' },
-        tool('a3', 'set_packs', { enable: ['turns', 'controls', 'combat'] }),
+        tool('a3', 'set_plugins', { enable: ['turns', 'controls', 'combat'] }),
         tool('a4', 'place_objects', { objects: [unit('crate', 'Knight', 3.5, 8.5), unit('crate', 'Orc', 9.5, 3.5), unit('crate', 'Controls', 0.5, 0.5)] }),
         tool('a5', 'update_objects', {
           updates: [
@@ -65,7 +65,7 @@ test('Phase 2: Claude builds a small room in four different genres from one sent
     { content: [{ type: 'text', text: 'The battle room is ready: a knight and an orc take turns, and you move the knight by clicking.' }] },
   );
   await askAndApprove(page, 'Make a tiny tactics battle: one knight of mine against one orc, turn by turn.');
-  expect(await page.evaluate(() => window.__store!.state.project!.project.packs)).toEqual(expect.arrayContaining(['turns', 'controls', 'combat']));
+  expect(await page.evaluate(() => window.__store!.state.project!.project.plugins)).toEqual(expect.arrayContaining(['turns', 'controls', 'combat']));
   expect((await entity(page, 'Knight'))[0]!.components).toEqual(expect.arrayContaining(['turnTaker', 'gridMover', 'health']));
   expect((await entity(page, 'Orc'))[0]!.components).toContain('unitAi');
   expect(await page.evaluate(() => window.__store!.doc!.events.map((e) => e.actions.map((a) => a.type)))).toEqual([['startBattle']]);
@@ -81,7 +81,7 @@ test('Phase 2: Claude builds a small room in four different genres from one sent
   mock.enqueue(
     {
       content: [
-        tool('b1', 'set_packs', { enable: ['controls', 'sim'] }),
+        tool('b1', 'set_plugins', { enable: ['controls', 'sim'] }),
         tool('b2', 'write_table', {
           name: 'Buildings',
           columns: [{ id: 'name', type: 'text' }, { id: 'prefab', type: 'prefab' }, { id: 'w', type: 'number' }, { id: 'd', type: 'number' }, { id: 'cost', type: 'number' }],
@@ -107,7 +107,7 @@ test('Phase 2: Claude builds a small room in four different genres from one sent
   mock.enqueue(
     {
       content: [
-        tool('c1', 'set_packs', { enable: ['turns', 'controls', 'combat'] }),
+        tool('c1', 'set_plugins', { enable: ['turns', 'controls', 'combat'] }),
         tool('c2', 'generate_map', { kind: 'dungeon', width: 40, height: 30, seed: 7, lockSeed: true }),
         tool('c3', 'place_objects', { objects: [unit('crate', 'Hero', 3.5, 3.5)] }),
         tool('c4', 'update_objects', { updates: [{ target: 'Hero', add_behaviors: ['turnTaker', 'gridMover', 'health'], settings: { turnTaker: { team: 'blue' } } }] }),
@@ -127,7 +127,7 @@ test('Phase 2: Claude builds a small room in four different genres from one sent
   mock.enqueue(
     {
       content: [
-        tool('d1', 'set_packs', { enable: ['controls', 'story'] }),
+        tool('d1', 'set_plugins', { enable: ['controls', 'story'] }),
         tool('d2', 'place_objects', { objects: [unit('crate', 'Hero', 4.5, 8.5), unit('crate', 'Lamp', 12.5, 8.5)] }),
         tool('d3', 'update_objects', {
           updates: [

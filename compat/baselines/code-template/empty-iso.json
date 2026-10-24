@@ -2,8 +2,8 @@
   "loadProblems": [],
   "check": [],
   "project": {
-    "schemaVersion": 1,
-    "packs": "",
+    "schemaVersion": 2,
+    "plugins": "",
     "roundTrip": true
   },
   "scenes": {
@@ -287,7 +287,7 @@
   "playthroughs": {},
   "exported": {
     "files": {
-      "project.json": "ff082d0e26910361",
+      "project.json": "7a2307ad114f363c",
       "scenes/main.scene.json": "39ae721bab20b5dd"
     },
     "manifest": "5c1f51d761e21654",

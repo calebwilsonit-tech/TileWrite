@@ -36,7 +36,7 @@ export interface CompatReport {
   loadProblems: string[];
   /** The whole-project check (what Export insists on). */
   check: string[];
-  project: { schemaVersion: number; packs: string; roundTrip: boolean };
+  project: { schemaVersion: number; plugins: string; roundTrip: boolean };
   scenes: Record<string, SceneReport>;
   /** What the project's own scenarios (compat/scenarios) did. */
   scenarios: Record<string, { checkpoints: Checkpoint[]; error: string }>;
@@ -181,7 +181,7 @@ export async function buildReport(dir: string): Promise<CompatReport> {
     return {
       loadProblems: [...p.problems].sort(),
       check,
-      project: { schemaVersion: p.project.schemaVersion, packs: p.project.packs === undefined ? '(none listed: the old built-in set)' : p.project.packs.join(','), roundTrip: projectOk },
+      project: { schemaVersion: p.project.schemaVersion, plugins: p.project.plugins === undefined ? '(none listed: the old built-in set)' : p.project.plugins.join(','), roundTrip: projectOk },
       scenes,
       scenarios,
       scripts: { typecheck: typecheckScripts(p.scripts), compile, logs: p.log },

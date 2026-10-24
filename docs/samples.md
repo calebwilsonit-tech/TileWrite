@@ -18,7 +18,7 @@ Two of them (tactics and colony) are also exported to programs of their own and 
 
 ## Recipes: how to make each genre
 
-Start from the template of that name in **New project**; each switches on the packs the genre needs (Project settings -> Packs). The assistant can do the same from one sentence ([assistant.md](assistant.md)).
+Start from the template of that name in **New project**; each switches on the plugins the genre needs (Project settings -> Plugins). The assistant can do the same from one sentence ([assistant.md](assistant.md)).
 
 **Turn-based tactics.** Template *Tactics*. Soldiers are objects with **Turn Taker**, **Grid Mover** and **Health**; enemies add **Unit AI**. An object with **Grid Cursor** lets the player click a soldier, click where to walk or who to hit. The row *when the scene starts -> start a turn-based battle* begins it; *a battle has been won* ends it. Hills give height advantage ([time-and-turns.md](time-and-turns.md), [control-schemes.md](control-schemes.md)).
 
@@ -26,11 +26,11 @@ Start from the template of that name in **New project**; each switches on the pa
 
 **Roguelike.** Template *Roguelike*. In **Generate** make a dungeon, unlock the seed and tick *make the map when the game starts*; place monsters with a rule for the rooms. *Roll a random row of a table* gives loot; the row *the hero is defeated -> start a new run* is permadeath; *the scene starts* begins the battle again each run ([procedural-maps.md](procedural-maps.md), [data-and-blocks.md](data-and-blocks.md)).
 
-**Tower defence.** Template *Builder* plus the Combat pack. Waypoints named "Waypoint 1..n" with the tag `route`; a **Wave Spawner** on a gate reads a table of waves; enemies have **Path Follower** and **Health**; towers have **Ranged Attack** with *Its shots hurt: the enemy side*; *something reaches the end of its path* takes a life ([simulation-helpers.md](simulation-helpers.md)).
+**Tower defence.** Template *Builder* plus the Combat plugin. Waypoints named "Waypoint 1..n" with the tag `route`; a **Wave Spawner** on a gate reads a table of waves; enemies have **Path Follower** and **Health**; towers have **Ranged Attack** with *Its shots hurt: the enemy side*; *something reaches the end of its path* takes a life ([simulation-helpers.md](simulation-helpers.md)).
 
 **Point and click.** Template *Point and click*. **Click to Move** on the hero; **Hotspot** on each thing (what Look, Use and Talk say, or `dialogue:Name`); three buttons that *Choose the verb*; rows that react to *an object is used (hotspot)* ([control-schemes.md](control-schemes.md), [story-systems.md](story-systems.md)).
 
-**Strategy.** Combat, Control schemes and Simulation helpers packs. An object with **Camera Rig** and **RTS Control**; units with **Commandable Unit** and **Health**; a **Producer** for income and a button that pays and creates a unit. Drag a box to select, right-click to move or attack, hold A for attack-move ([control-schemes.md](control-schemes.md)).
+**Strategy.** Combat, Control schemes and Simulation helpers plugins. An object with **Camera Rig** and **RTS Control**; units with **Commandable Unit** and **Health**; a **Producer** for income and a button that pays and creates a unit. Drag a box to select, right-click to move or attack, hold A for attack-move ([control-schemes.md](control-schemes.md)).
 
 **An interface for any game.** The UI designer's screens: Title, Settings, Pause (reserved names), a HUD that opens on start, lists and grids from tables. Bind widgets to variables or `settings.music`; give widgets actions; check the four picture shapes ([ui-designer.md](ui-designer.md), [interface-and-controls.md](interface-and-controls.md)).
 

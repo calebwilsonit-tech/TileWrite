@@ -11,7 +11,7 @@ test('Phase 2: a new empty project has no player, no rules and no packs; it stil
 
   // nothing in it: no objects, no packs, and no complaint about a missing player
   expect(await page.evaluate(() => window.__store!.doc!.entities.length)).toBe(0);
-  expect(JSON.parse(fs.readFileSync(path.join(dir, 'project.json'), 'utf8')).packs).toEqual([]);
+  expect(JSON.parse(fs.readFileSync(path.join(dir, 'project.json'), 'utf8')).plugins).toEqual([]);
   await expect(page.getByTestId('problem-count')).toHaveText('No problems');
 
   // it plays: a camera over an empty field, nothing else
@@ -29,10 +29,10 @@ test('Phase 2: a new empty project has no player, no rules and no packs; it stil
   await expect(page.getByTestId('pack-toggle-storytender')).toBeChecked();
   await expect(page.getByTestId('pack-toggle-lighting')).toBeChecked(); // it needs lighting
   await expect(page.getByTestId('pack-storytender')).toContainText('echoRecorder');
-  await expect.poll(() => JSON.parse(fs.readFileSync(path.join(dir, 'project.json'), 'utf8')).packs.sort()).toEqual(['lighting', 'storytender']);
+  await expect.poll(() => JSON.parse(fs.readFileSync(path.join(dir, 'project.json'), 'utf8')).plugins.sort()).toEqual(['lighting', 'storytender']);
   // and off again: its dependents leave with it
   await page.getByTestId('pack-toggle-lighting').click();
-  await expect.poll(() => JSON.parse(fs.readFileSync(path.join(dir, 'project.json'), 'utf8')).packs).toEqual([]);
+  await expect.poll(() => JSON.parse(fs.readFileSync(path.join(dir, 'project.json'), 'utf8')).plugins).toEqual([]);
 
   // the controls tab only lists the buttons the packs added (none are on): no "Record an echo" or "Attack"
   await page.getByTestId('ps-tab-controls').click();

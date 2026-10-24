@@ -7,6 +7,12 @@ import { z } from 'zod';
 
 export const CURRENT_SCHEMA_VERSION = 1;
 
+/**
+ * The project file has its own version because it changed on its own: format 2 calls the list of plugins `plugins` (format 1
+ * called it `packs`). Scenes and every other file stay at CURRENT_SCHEMA_VERSION. The upgrade is in ./migrate.ts.
+ */
+export const CURRENT_PROJECT_VERSION = 2;
+
 // Zod's JIT compiler probes for `new Function`, which the editor's Content-Security-Policy forbids
 // (and logs an error for even though the probe is caught). Our files are small, so skip the JIT.
 z.config({ jitless: true });
@@ -276,8 +282,8 @@ export const ProjectSchema = z.object({
   startScene: z.string(),
   /** A title screen shown when the game starts (New game, Continue, Load game, Settings, Quit). */
   title: z.object({ enabled: z.boolean().default(false), subtitle: z.string().default('') }).optional(),
-  /** The packs this game uses (see packs in the behaviours package). Missing means all of them, as before packs existed. */
-  packs: z.array(z.string()).optional(),
+  /** The plugins this game uses. Missing means the built-in set, as before plugins could be chosen. (Called `packs` in project format 1.) */
+  plugins: z.array(z.string()).optional(),
   /** Compatibility flags (see compat.ts): behaviour that changed after projects were made. Missing flags are off, as the project always played. */
   compat: z.record(z.string(), z.boolean()).optional(),
 });

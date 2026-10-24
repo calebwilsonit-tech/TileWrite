@@ -45,10 +45,10 @@ function InstalledRow({ id, versions }: { id: string; versions: InstalledPlugin[
   const [showLog, setShowLog] = useState(false);
   const chosen = pluginManager.chosen(id) ?? versions[0]!;
   const project = useApp((s) => s.project)!;
-  const on = (project.project.packs ?? []).includes(id);
+  const on = (project.project.plugins ?? []).includes(id);
   const toggle = (v: boolean): void => {
-    const cur = project.project.packs ?? listPacks().filter((p) => p.active).map((p) => p.id);
-    void store.updateProjectSettings({ packs: v ? [...new Set([...cur, id])] : cur.filter((x) => x !== id) });
+    const cur = project.project.plugins ?? listPacks().filter((p) => p.active).map((p) => p.id);
+    void store.updateProjectSettings({ plugins: v ? [...new Set([...cur, id])] : cur.filter((x) => x !== id) });
   };
   const pkg = chosen.pkg;
   return (
@@ -113,7 +113,7 @@ export function PluginsTab() {
   useSyncExternalStore((fn) => pluginManager.subscribe(fn), () => pluginManager.version);
   const [address, setAddress] = useState('');
   const [msg, setMsg] = useState('');
-  const explicit = project.project.packs;
+  const explicit = project.project.plugins;
   const all = listPacks();
   const on = new Set(explicit ?? all.filter((p) => p.active).map((p) => p.id));
   const installedIds = [...new Set(pluginManager.installed.map((p) => p.id))];
@@ -127,7 +127,7 @@ export function PluginsTab() {
       next.delete(id);
       for (const p of all) if (p.requires.includes(id)) next.delete(p.id);
     }
-    void store.updateProjectSettings({ packs: [...next] });
+    void store.updateProjectSettings({ plugins: [...next] });
   };
   const run = async (what: () => Promise<unknown>, ok: string): Promise<void> => {
     try {

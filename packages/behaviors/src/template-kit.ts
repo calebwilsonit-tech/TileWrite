@@ -1,5 +1,5 @@
 /** Small builders for the starter projects (templates): a player, a crate, a thing with some behaviours, a walled room, and the project file that names the plugins it needs. Plugins use them for the templates they add. */
-import { CURRENT_SCHEMA_VERSION, DEFAULT_TILESET, TileMap, pauseButtonRow, tileMapToRows, type EntityData, type ProjectData, type SceneData } from '@tilewright/runtime';
+import { CURRENT_PROJECT_VERSION, CURRENT_SCHEMA_VERSION, DEFAULT_TILESET, TileMap, pauseButtonRow, tileMapToRows, type EntityData, type ProjectData, type SceneData } from '@tilewright/runtime';
 import { attachBehavior } from './framework';
 import { setActivePacks } from './packs';
 
@@ -38,16 +38,16 @@ export function crateEntity(id: string, x: number, y: number): EntityData {
   };
 }
 
-export function baseProject(name: string, packs?: string[]): ProjectData {
+export function baseProject(name: string, plugins?: string[]): ProjectData {
   return {
-    schemaVersion: CURRENT_SCHEMA_VERSION,
+    schemaVersion: CURRENT_PROJECT_VERSION,
     name,
     iso: { tileW: 64, tileH: 32, heightPx: 16 },
     tileset: Object.entries(DEFAULT_TILESET).map(([id, t]) => ({ id: Number(id), ...t })),
     autotile: [],
     scenes: [MAIN_SCENE_PATH],
     startScene: MAIN_SCENE_PATH,
-    packs: packs ?? [],
+    plugins: plugins ?? [],
   };
 }
 

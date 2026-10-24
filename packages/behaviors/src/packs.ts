@@ -5,14 +5,18 @@ import { PluginManifestSchema } from './plugins/manifest';
 
 /**
  * Packs, the first name for plugins. A "pack" here is a plugin written as a plain object (id, name, version, `install`); the
- * project file's `packs` list names the plugins a project uses, and a project made before plugins had manifests keeps working
- * because the same ids are the engine's own plugins. Everything is kept by the plugin host (`plugins/host.ts`); these functions
- * are the older, smaller doorway to it.
+ * project file's `plugins` list (called `packs` in project format 1) names the plugins a project uses, and a project made before
+ * plugins had manifests keeps working because the same ids are the engine's own plugins. Everything is kept by the plugin host
+ * (`plugins/host.ts`); these functions are the older, smaller doorway to it.
+ *
+ * The names that plugin authors used are deprecated in favour of `definePlugin` (see docs/plugins/README.md). They stay for as
+ * long as the SDK does: the script API only grows, so a plugin written against them keeps loading.
  */
 
 export type { EditorHost, EditorPanelDef, EditorToolDef, ImporterDef, EditorExtensions, PluginApi } from './plugins/host';
 export type { InputActionDef } from './plugins/extensions';
 
+/** @deprecated Write a plugin with `definePlugin` and a manifest instead; a `Pack` is the same thing without one. */
 export interface Pack {
   id: string;
   name: string;
@@ -51,19 +55,25 @@ export function manifestOfPack(pack: Pack): PluginDefinition['manifest'] {
   });
 }
 
-/** Make a pack known (it is not on until it is installed). Registering again replaces the older version. */
+/**
+ * Make a pack known (it is not on until it is installed). Registering again replaces the older version.
+ * @deprecated Use `host.register` with a plugin definition (`definePlugin`).
+ */
 export function registerPack(pack: Pack): void {
   host.register({ manifest: manifestOfPack(pack), install: pack.install.bind(pack), ...(pack.installEditor ? { installEditor: pack.installEditor.bind(pack) } : {}) });
 }
 
+/** @deprecated Use `host.install`. */
 export function installPack(id: string): void {
   host.install(id);
 }
 
+/** @deprecated Use `host.uninstall`. */
 export function uninstallPack(id: string): void {
   host.uninstall(id);
 }
 
+/** @deprecated Use `host.isInstalled`. */
 export function isPackInstalled(id: string): boolean {
   return host.isInstalled(id);
 }
@@ -83,7 +93,7 @@ export function setLegacyPacks(ids: readonly string[]): void {
 export const legacyPacks = (): readonly string[] => legacy;
 
 /** The packs a project file asks for (a file with no list is a project from before plugins existed). */
-export const packsOfProject = (project: { packs?: readonly string[] | undefined }): readonly string[] => project.packs ?? legacy;
+export const packsOfProject = (project: { plugins?: readonly string[] | undefined }): readonly string[] => project.plugins ?? legacy;
 
 /**
  * Turn exactly these packs on (and everything else off). `undefined` means "all the engine's own packs", which is what a project made

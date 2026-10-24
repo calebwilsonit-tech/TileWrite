@@ -75,7 +75,7 @@ export function pluginsForGame(): { bundle: { format: 1; plugins: { manifest: Re
   const problems: ExportProblem[] = [];
   const bundle = { format: 1 as const, plugins: [] as { manifest: Record<string, unknown>; code: string; granted: string[] }[] };
   const p = store.state.project;
-  for (const id of p?.project.packs ?? []) {
+  for (const id of p?.project.plugins ?? []) {
     const known = host.known.get(id);
     if (!known) {
       problems.push({ severity: 'error', text: `The game needs the plugin "${id}", which is not installed on this computer. Install it, or switch it off in Project settings.` });

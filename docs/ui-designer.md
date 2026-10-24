@@ -2,7 +2,7 @@
 
 The **UI** workspace (button in the top bar, Ctrl+4) is where every screen of the game is made: title screens, pause and settings menus, the heads-up display, inventories, shops, card hands, unit panels. Screens are drawn by the same code the game uses, so what you see is what the player gets. They are saved in `assets/screens.json`.
 
-(The older **Story -> Interface** page, which positions the built-in hearts, lantern bar and quick slots, still exists and works beside this. A project can use either or both.)
+(The older **Story -> Interface** page, which positions the pieces the plugins add to the display (hearts, quick slots, boss bars, a light bar), still exists and works beside this. A project can use either or both.)
 
 ## Screens
 

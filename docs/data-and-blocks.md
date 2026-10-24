@@ -31,8 +31,8 @@ A behaviour is event rows with settings of their own that run for **every object
 ## Custom events (`assets/events.json`)
 Name the things that can happen in your game (`wave-cleared`). The *Emit* action and the *An event happened* condition offer these names.
 
-## Packs
-Everything above, plus prefabs, sprites and screens, can be bundled and shared; see [packs-and-plugins.md](packs-and-plugins.md).
+## Sharing
+Everything above, plus prefabs, sprites and screens, can be bundled and shared; see [asset-library.md](asset-library.md) and [plugins/README.md](plugins/README.md).
 
 ## Tested by
 `packages/runtime/src/data/data.test.ts` (tables, CSV, names, arithmetic), `packages/behaviors/src/custom.test.ts`, `e2e/p2-data.spec.ts`.

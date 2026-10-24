@@ -11,8 +11,8 @@ Real-time and turn-based are equal citizens: both run on the same maps, objects 
 
 Change it with the **Pause or resume the game, or change its speed** action (and test it with *The game clock is*). Game time (`clock.elapsed`, in 60ths of a second) only counts while the world is really moving, so day and night, seasons and growth timers built on it pause with the game and never advance in turn mode. The clock is part of saves and replays.
 
-## Turn-based play (the **Turn-based play** pack)
-Switch the pack on in Project settings -> Packs. It adds three behaviours:
+## Turn-based play (the **Turn-based play** plugin)
+Switch the plugin on in Project settings -> Plugins. It adds three behaviours:
 - **Turn Taker**: marks an object as a unit. *Team*, *speed in the order* (higher goes first), *action points* each turn, and how it attacks: *range* in cells, *damage*, the action points an attack costs, and *extra damage per level above the target* (**height advantage**: standing two levels above gives +2, below gives less; never less than 1). With *End the turn when out of action points* on, a person's unit ends its turn by itself.
 - **Grid Mover**: walks a path cell by cell over stairs, ramps and heights (it respects the same step limits as the terrain). *Action points per cell*, speed, highest climb, furthest drop. It never walks through another unit, a crate, a closed gate or a wall.
 - **Unit AI**: plays the unit's own turn: it scores every cell it can reach (nearer the enemy, able to hit from there, higher ground; *cautious* units keep their distance), walks there, attacks if it can and ends the turn. Enemy turns need nothing else.

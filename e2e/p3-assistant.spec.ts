@@ -34,7 +34,7 @@ async function setUp(name: string, extraPacks: string[] = []) {
   const { page, workDir } = launched;
   await createProjectViaUi(page, name, 'empty-iso');
   const projectDir = path.join(workDir, name);
-  if (extraPacks.length > 0) await page.evaluate((packs) => window.__store!.updateProjectSettings({ packs }), ['combat', 'inventory', 'story', 'ai', 'lighting', 'storytender', ...extraPacks]);
+  if (extraPacks.length > 0) await page.evaluate((packs) => window.__store!.updateProjectSettings({ plugins: packs }), ['combat', 'inventory', 'story', 'ai', 'lighting', 'storytender', ...extraPacks]);
   await page.locator('.dv-tab', { hasText: 'Claude' }).click();
   await page.getByTestId('key-input').fill(KEY);
   await page.getByTestId('key-save').click();

@@ -2,8 +2,8 @@
   "loadProblems": [],
   "check": [],
   "project": {
-    "schemaVersion": 1,
-    "packs": "",
+    "schemaVersion": 2,
+    "plugins": "",
     "roundTrip": true
   },
   "scenes": {

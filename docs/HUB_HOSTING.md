@@ -27,7 +27,7 @@ hub.example.com {
   reverse_proxy 127.0.0.1:8787
 }
 ```
-(nginx with certbot works too). Keep the hub itself on `127.0.0.1` so only the proxy can reach it. Set the proxy's request size limit to at least 10 MB (packs may be up to 8 MB).
+(nginx with certbot works too). Keep the hub itself on `127.0.0.1` so only the proxy can reach it. Set the proxy's request size limit to at least 10 MB (asset packs may be up to 8 MB).
 
 ## 4. Keep it running
 Run it as a service so it restarts: a systemd unit (`ExecStart=/usr/bin/node /srv/hub/hub.mjs --data /srv/hub/data`, `Environment=HUB_ADMIN_TOKEN=...`, `Restart=always`, run as a user that is not root), or a process manager such as pm2. Put the admin token in a file only the service user can read, not in a script you share.
@@ -40,18 +40,18 @@ curl -X POST -H "Authorization: Bearer $TOKEN" https://hub.example.com/api/v1/ad
 curl -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -d "{\"note\":\"It reads files it should not.\"}" https://hub.example.com/api/v1/admin/items/<id>/reject
 curl -X DELETE -H "Authorization: Bearer $TOKEN" https://hub.example.com/api/v1/items/<id>
 ```
-**Packs with code** never appear until approved. To review one, fetch it with the same token (`GET /items/<id>/pack`), open the `files` that end in `.ts` or `.js` (they are text, or base64 if the pack says so), and read them. Refuse anything you do not understand. Approving code you did not read puts every user of your hub at risk.
+**Asset packs with code** never appear until approved. To review one, fetch it with the same token (`GET /items/<id>/pack`), open the `files` that end in `.ts` or `.js` (they are text, or base64 if the asset pack says so), and read them. Refuse anything you do not understand. Approving code you did not read puts every user of your hub at risk.
 
 **Reports**: three different people reporting the same item hides it until you look. `GET /admin/queue` lists the reports; approve the item to dismiss them, refuse or remove it to act on them, or dismiss a single report with `POST /admin/reports/<id>/dismiss`.
 
 ## 6. Things to decide and do before opening to the public
 - **Terms and a contact address** for takedown requests. The hub has no web page, so publish yours somewhere your community will see.
 - **What licences you allow.** The list (`CC0-1.0`, `CC-BY-4.0`, `CC-BY-NC-4.0`, `free-for-any-game`, `custom`) is in `packages/hub-server/src/pack.ts`; remove one by editing it and rebuilding.
-- **Limits**: 8 MB per pack, 400 files, 256 KB of code, 10 publishes per account per hour, 30 sign-in attempts per minute per address, three reports to hide. All are constants in `packages/hub-server/src` you can change.
+- **Limits**: 8 MB per asset pack, 400 files, 256 KB of code, 10 publishes per account per hour, 30 sign-in attempts per minute per address, three reports to hide. All are constants in `packages/hub-server/src` you can change.
 - **Backups**: copy the data folder regularly. Restoring is copying it back.
 - **Updates**: build the new `hub.mjs`, stop the hub, replace the file, start it. The data format is plain JSON.
 - **Privacy**: the hub stores account names, salted password hashes (scrypt) and the packs. It stores no email address, no IP address and sends nothing anywhere. If you put it behind a proxy, the proxy's logs hold addresses; that is your responsibility.
 - **Payments**: the hub has none and the editor has no payment code. Do not add paid items without legal and tax advice.
 
 ## 7. What is not here
-No web page for browsing, no email, no password reset, no moderation page, no database, no per-user storage quota, no virus scanning of uploaded files beyond refusing code in packs that do not declare it. See the end of [asset-hub.md](asset-hub.md).
+No web page for browsing, no email, no password reset, no moderation page, no database, no per-user storage quota, no virus scanning of uploaded files beyond refusing code in asset packs that do not declare it. See the end of [asset-hub.md](asset-hub.md).

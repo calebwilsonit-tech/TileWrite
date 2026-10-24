@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { Simulation } from '../core/simulation';
 import { C } from '../scene/components';
 import { FLAG, SLOPE, TileMap } from '../tilemap/tilemap';
-import { migrateScene } from './migrate';
-import { CURRENT_SCHEMA_VERSION, ProjectSchema, SceneSchema } from './schema';
+import { migrateProject, migrateScene } from './migrate';
+import { CURRENT_PROJECT_VERSION, CURRENT_SCHEMA_VERSION, ProjectSchema, SceneSchema } from './schema';
 import { loadScene, newScene, parseProject, parseScene, stringifyScene, tileMapFromRows, tileMapToRows } from './scene';
 
 describe('scene format', () => {
@@ -78,6 +78,43 @@ describe('project format', () => {
   it('needs at least one scene and a name', () => {
     expect(ProjectSchema.safeParse({ schemaVersion: 1, name: 'x', scenes: [], startScene: '' }).success).toBe(false);
     expect(ProjectSchema.safeParse({ schemaVersion: 1, name: '', scenes: ['a'], startScene: 'a' }).success).toBe(false);
+  });
+});
+
+describe('the project file, format 1 to 2', () => {
+  const old = { schemaVersion: 1, name: 'Old', scenes: ['scenes/main.scene.json'], startScene: 'scenes/main.scene.json' };
+
+  it('reads the list that format 1 called "packs" as "plugins", and says it is format 2 now', () => {
+    const r = parseProject({ ...old, packs: ['combat', 'controls'] });
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.value.plugins).toEqual(['combat', 'controls']);
+      expect(r.value.schemaVersion).toBe(CURRENT_PROJECT_VERSION);
+      expect('packs' in r.value).toBe(false);
+    }
+  });
+
+  it('keeps "no list" as no list: a project made before plugins could be chosen still gets the old built-in set', () => {
+    const r = parseProject(old);
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.value.plugins).toBeUndefined();
+  });
+
+  it('keeps an empty list empty, and prefers "plugins" when a file somehow has both', () => {
+    const empty = parseProject({ ...old, packs: [] });
+    if (empty.ok) expect(empty.value.plugins).toEqual([]);
+    const both = parseProject({ ...old, packs: ['a'], plugins: ['b'] });
+    if (both.ok) expect(both.value.plugins).toEqual(['b']);
+  });
+
+  it('refuses a project from a newer Tilewright than this one', () => {
+    const r = migrateProject({ ...old, schemaVersion: CURRENT_PROJECT_VERSION + 1 });
+    expect(r.ok).toBe(false);
+  });
+
+  it('leaves scenes at format 1: only the project file changed', () => {
+    expect(CURRENT_SCHEMA_VERSION).toBe(1);
+    expect(migrateScene({ schemaVersion: 1, name: 'x' }).ok).toBe(true);
   });
 });
 

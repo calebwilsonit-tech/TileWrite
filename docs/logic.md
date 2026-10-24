@@ -76,7 +76,7 @@ Moving between levels, one undo step each:
 - An event sheet can still be converted to code (**Convert to code** in the Events panel), so a graph can go graph -> sheet -> code.
 
 ### Problems it finds
-The Problems panel lists, each with a one-click fix: a wire to a deleted object, a wire to a signal that no longer exists, an action node whose action points at a deleted object or at a switched-off pack, an action node nothing triggers, an event node wired to nothing, a graph line to a deleted box, a box nothing leads to, a Call to a function that does not exist.
+The Problems panel lists, each with a one-click fix: a wire to a deleted object, a wire to a signal that no longer exists, an action node whose action points at a deleted object or at a switched-off plugin, an action node nothing triggers, an event node wired to nothing, a graph line to a deleted box, a box nothing leads to, a Call to a function that does not exist.
 
 ### Honest limits
 Graph boxes pass values through variables (there are no value pins), so "math" is the expression in *Change a variable* ("{row.cost} * 2"). A Wait remembers only the time left, not which object was being looped over. Functions live in the scene they were made in. Graphs and nodes in custom behaviours are not yet available (their event rows are).

@@ -14,7 +14,7 @@ function start(id: string): { sim: Simulation; ids: Map<string, ReturnType<typeo
 
 describe('the genre starters', () => {
   it('each one names the packs it needs, and nothing it does not', () => {
-    const packs = Object.fromEntries(listTemplates().map((t) => [t.id, t.build('T').project.packs]));
+    const packs = Object.fromEntries(listTemplates().map((t) => [t.id, t.build('T').project.plugins]));
     expect(packs.empty).toEqual([]);
     expect(packs.tactics).toEqual(['combat', 'turns', 'controls']);
     expect(packs.builder).toEqual(['controls', 'sim']);

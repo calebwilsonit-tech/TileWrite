@@ -1,13 +1,13 @@
-# Packs and the plugin API
+# Switching plugins on, and the older plugin API
 
-> The plugin platform (manifests, permissions, trust, the sandbox, `npm create tilewright-plugin`, a reference for every extension point) is described in [plugins/README.md](plugins/README.md). This page is about switching plugins on in a project; the older word for a plugin was "pack", and project files still say `packs`.
+> The plugin platform (manifests, permissions, trust, the sandbox, `npm create tilewright-plugin`, a reference for every extension point) is described in [plugins/README.md](plugins/README.md). This page is about switching plugins on in a project, and about the older, smaller way of writing one. The older word for a plugin was "pack": project files made before format 2 call the list `packs`, and are read as `plugins` when opened. (A file of art, tiles and screens that you share is an *asset pack*: see [asset-library.md](asset-library.md).)
 
-A **pack** is a group of things a project can switch on: behaviours, event-sheet blocks, systems that run every tick, buttons, and additions to the editor. The engine's own optional parts and the reference game's mechanics are packs, and so is anything a programmer writes against the same plugin API. An empty project switches none on.
+A **plugin** is a group of things a project can switch on: behaviours, event-sheet blocks, systems that run every tick, buttons, screens, and additions to the editor. The engine's own optional parts and the reference game's mechanics are plugins, and so is anything a programmer writes against the same plugin API. An empty project switches none on.
 
-## Switching packs on and off
-**Project settings -> Packs** (the **Project settings...** button at the bottom of the Inspector) lists every pack with a tick box, what it needs and the behaviours it adds. Turning one off hides its behaviours and blocks from the pickers and removes the buttons it added from the Controls tab; objects that still use a hidden behaviour do nothing, and the Problems panel says "this belongs to the Combat pack, which is switched off". A project made before packs existed has no list and plays with the action-adventure packs (Combat, Inventory, Story, AI, Lighting and The Last Storytender); Turn-based play, Control schemes and Simulation helpers are new and stay off until you tick them.
+## Switching plugins on and off
+**Project settings -> Plugins** (the **Project settings...** button at the bottom of the Inspector) lists every plugin with a tick box, what it needs and the behaviours it adds. Turning one off hides its behaviours and blocks from the pickers and removes the buttons it added from the Controls tab; objects that still use a hidden behaviour do nothing, and the Problems panel says "this belongs to the Combat plugin, which is switched off". A project made before plugins could be chosen has no list and plays with the action-adventure plugins (Combat, Inventory, Story, AI, Lighting and The Last Storytender); Turn-based play, Control schemes and Simulation helpers are new and stay off until you tick them.
 
-| Pack | Adds |
+| Plugin | Adds |
 | --- | --- |
 | **Combat** | Health, Damage on Touch, Melee Attack, Ranged Attack, Dodge, Projectile; the health condition; damage and heal actions; the attack and dodge buttons |
 | **Inventory** | Pickup; has-item condition; give and take item actions; inventory and quick-slot buttons |
@@ -21,8 +21,10 @@ A **pack** is a group of things a project can switch on: behaviours, event-sheet
 
 Everything not listed (gates, plates, levers, timers, logic gates, moving platforms, state machines, spawners, portals, the follow camera, sound sources) is core and always there.
 
-## Writing a pack (programmers)
-A pack is an object with an `install(api)` function. Everything it adds is recorded and removed again if the pack is turned off.
+## The older way to write one (programmers)
+> New plugins are written with `definePlugin`, a manifest and the SDK: see [plugins/README.md](plugins/README.md). What follows is the plain-object form (`Pack`, `registerPack`, `installPack`), which is deprecated but keeps working, because plugins written against it must keep loading.
+
+A plugin written this way is an object with an `install(api)` function. Everything it adds is recorded and removed again if it is turned off.
 
 ```ts
 import { behaviorDef, registerPack, installPack, type Pack } from '@tilewright/behaviors';
@@ -50,9 +52,9 @@ installPack('farming');
 - `api.system` runs a function once per tick (mode `gameplay` by default: skipped while a conversation or menu is open).
 - `api.inputAction` adds a button with its starting keys, shown in Project settings -> Controls and in the game's Controls screen.
 - `api.panel`, `api.tool`, `api.importer` add to the editor; they are plain DOM and callbacks, so a plugin needs no UI framework. The editor passes an `EditorHost` (notify, the open project, scene objects, project file read and write).
-- A pack that throws while installing is left uninstalled and the editor says so.
+- A plugin that throws while installing is left uninstalled and the editor says so.
 
-The Storytender pack (`packages/behaviors/src/packs/storytender.ts`) is written exactly this way and is switched on in the finished sample.
+The Storytender plugin (`packages/plugins/storytender`) is written with the same API and is switched on in the finished sample.
 
 ## Tested by
-`packages/behaviors/src/packs.test.ts` (install, remove, dependencies, a third-party pack through every part of the API), `e2e/p2-packs.spec.ts`.
+`packages/bundled-plugins/src/suite/packs.test.ts` (install, remove, dependencies, a third-party plugin through every part of the API), `e2e/p2-packs.spec.ts`.

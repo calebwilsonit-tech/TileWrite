@@ -7,8 +7,8 @@
     "warning: Controls: \"KeyS\" is used by both \"Move down\" and \"Stop the selected units\"."
   ],
   "project": {
-    "schemaVersion": 1,
-    "packs": "controls,story,inventory",
+    "schemaVersion": 2,
+    "plugins": "controls,story,inventory",
     "roundTrip": true
   },
   "scenes": {

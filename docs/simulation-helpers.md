@@ -1,6 +1,6 @@
 # Simulation helpers
 
-The **Simulation helpers** pack (Project settings -> Packs) gives any game the machinery of a colony builder, a tower defence or a village sim without a line of code. Nothing in it knows what a farm or a tower is: resources are ordinary variables, and every rule is a number in a data table or a field in the Inspector. Add the behaviours from **Add behaviour -> Simulation**.
+The **Simulation helpers** plugin (Project settings -> Plugins) gives any game the machinery of a colony builder, a tower defence or a village sim without a line of code. Nothing in it knows what a farm or a tower is: resources are ordinary variables, and every rule is a number in a data table or a field in the Inspector. Add the behaviours from **Add behaviour -> Simulation**.
 
 | Helper | What it does |
 | --- | --- |
@@ -48,4 +48,4 @@ Event blocks: the **the player can afford** condition, **it is night / a season 
 2. Rule: `from` grass, `to` fire, `near` fire, `min` 1, `chance` 40. Rule: fire to ash with `near` 0, `chance` 20.
 3. Put **Cellular Automaton** on any object. All cells change together using the game's seeded random numbers, so a replay burns identically. Only the changed cells are redrawn.
 
-Behaviours in this pack are covered by `packages/behaviors/src/sim.test.ts`.
+Behaviours in this plugin are covered by `packages/behaviors/src/sim.test.ts`.

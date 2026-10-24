@@ -7,8 +7,8 @@
     "warning: Controls: \"KeyS\" is used by both \"Move down\" and \"Stop the selected units\"."
   ],
   "project": {
-    "schemaVersion": 1,
-    "packs": "controls,story,inventory",
+    "schemaVersion": 2,
+    "plugins": "controls,story,inventory",
     "roundTrip": true
   },
   "scenes": {
@@ -292,7 +292,7 @@
   "playthroughs": {},
   "exported": {
     "files": {
-      "project.json": "ec6f85a158bf1295",
+      "project.json": "de12946cf3a0b3fb",
       "scenes/main.scene.json": "3b93abac4144cfef"
     },
     "manifest": "d046ee597fa6e34a",

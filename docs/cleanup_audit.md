@@ -55,11 +55,13 @@ The reference game's words (`storytender`, `echo`, `lantern`, `sentence`, `dough
 
 ## 7. Performance, before and after
 
-Measured on the development computer (a graphics card, not a low-end machine). "Before" are the figures written down at the end of phase 2.
+Measured on the development computer (a graphics card, not a low-end machine). "Phase 2 as written" are the figures written down at the end of phase 2. Because a computer is not the same on two days, the end-to-end test was also run on the code of the end of phase 2 (commit `a65ef20`, built and run the same way) today: "Phase 2, today".
 
-| What | Before (phase 2) | After |
-| --- | --- | --- |
-| 200 walking villagers, logic per step (`perf.test.ts`) | under 1 ms | see below |
-| Builder sample, 200 moving units, frames a second (`p2-perf.spec.ts`) | 60.2, 95th percentile 16.8 ms | see below |
-| 5,000 tiles and 200 objects, a tick (`m9.test.ts`) | under 16 ms | see below |
-| Unit tests, whole run | 1152 tests in 110 files | see the summary in PROGRESS.md |
+| What | Phase 2 as written | Phase 2, today | After (this phase) |
+| --- | --- | --- | --- |
+| 200 walking villagers, logic per step (`perf.test.ts`) | under 1 ms | not run | 0.94 to 0.97 ms |
+| Builder sample, 200 moving units, frames a second (`p2-perf.spec.ts`) | 60.2, 95th percentile 16.8 ms | 57.2, 95th percentile 18.1 ms | 56.9 to 57.2, 95th percentile 18.1 ms (three runs) |
+| 5,000 tiles and 200 objects, a tick (`m9.test.ts`) | under 16 ms (a budget, no figure kept) | not run | 1.63 ms (budget 5.5 ms) |
+| Unit tests, whole run | 1152 tests in 110 files | not run | see the summary in PROGRESS.md |
+
+Reading: the frame rate is the same as phase 2's code gives on the same computer today (57.2 against 56.9 to 57.2), so the interface rewrite (screens as data, the heads-up display as widgets) cost no measurable frame time; the 60.2 written at the end of phase 2 was a better day for the machine, not a faster engine. The logic step is at the edge of the "under 1 ms" figure (0.94 to 0.97) and was not measured more finely in phase 2, so no change in either direction is claimed.

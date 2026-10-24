@@ -122,7 +122,7 @@ export function HubPanel() {
 
   return (
     <div className="panel hub-panel" data-testid="hub-panel">
-      <p className="hint">The Asset Hub is a place where people share packs of tiles, props, characters, structures and more. Everything you take stays free to use under the licence its author chose. This computer only talks to the address you type here.</p>
+      <p className="hint">The Asset Hub is a place where people share asset packs of tiles, props, characters, structures and more. Everything you take stays free to use under the licence its author chose. This computer only talks to the address you type here.</p>
       <div className="row">
         <input data-testid="hub-address" aria-label="Hub address" value={address} onChange={(e) => setAddress(e.target.value)} />
         <button data-testid="hub-connect" onClick={() => void connect()}>
@@ -223,7 +223,7 @@ export function HubPanel() {
               </p>
               {open.code && (
                 <div className="warn" data-testid="hub-code-warning">
-                  <p>This pack contains code (scripts or plugins). A moderator approved it, but code can still do things you do not want: read it before you use it.</p>
+                  <p>This asset pack contains code (scripts or plugins). A moderator approved it, but code can still do things you do not want: read it before you use it.</p>
                   <label className="field">
                     <input type="checkbox" data-testid="hub-code-ok" checked={codeOk} onChange={(e) => setCodeOk(e.target.checked)} /> <span>I understand it contains code and I want it in my library.</span>
                   </label>
@@ -258,7 +258,7 @@ export function HubPanel() {
 
           <h3>Share something of yours</h3>
           {!signedIn ? (
-            <p className="hint">Sign in to share. The pack goes up with your account name as its author, under the licence you chose when you saved it to your library.</p>
+            <p className="hint">Sign in to share. The asset pack goes up with your account name as its author, under the licence you chose when you saved it to your library.</p>
           ) : (
             <>
               <div className="row">

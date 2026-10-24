@@ -4,8 +4,8 @@
     "error: scenes/main.scene.json: This scene has no player start, so the game has nowhere to begin. Use the Place tool to add one."
   ],
   "project": {
-    "schemaVersion": 1,
-    "packs": "",
+    "schemaVersion": 2,
+    "plugins": "",
     "roundTrip": true
   },
   "scenes": {
@@ -205,7 +205,7 @@
   "playthroughs": {},
   "exported": {
     "files": {
-      "project.json": "31dd7795259a9271",
+      "project.json": "d54f5c7640741989",
       "scenes/main.scene.json": "06b8e41cb08cd445"
     },
     "manifest": "c8982010473f1c2e",

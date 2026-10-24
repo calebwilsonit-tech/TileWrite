@@ -125,7 +125,10 @@ describe('performance budget: 5,000 tiles and 200 objects', () => {
       for (let i = 0; i < 60; i++) r.sim.step(i < 30 ? GRID_PLUS_X : {});
       best = Math.min(best, (performance.now() - t0) / 60);
     }
-    const avg = best;    expect(r.sim.world.count).toBeGreaterThanOrEqual(200);
+    const avg = best;
+    process.stdout.write(`5,000 tiles and 200 objects: ${avg.toFixed(2)} ms per tick
+`);
+    expect(r.sim.world.count).toBeGreaterThanOrEqual(200);
     // budget: simulation alone may use a third of a frame, leaving the rest for drawing
     expect(avg).toBeLessThan(5.5);
   });

@@ -65,8 +65,8 @@
     "warning: scenes/main.scene.json: \"window\" uses the sprite \"window\", which is not in this project (it was deleted or renamed). It is drawn as a plain shape until you pick a sprite again."
   ],
   "project": {
-    "schemaVersion": 1,
-    "packs": "combat,inventory,story,ai,lighting,storytender",
+    "schemaVersion": 2,
+    "plugins": "combat,inventory,story,ai,lighting,storytender",
     "roundTrip": true
   },
   "scenes": {

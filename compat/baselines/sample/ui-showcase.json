@@ -2,8 +2,8 @@
   "loadProblems": [],
   "check": [],
   "project": {
-    "schemaVersion": 1,
-    "packs": "combat,inventory,story,ai,lighting,storytender",
+    "schemaVersion": 2,
+    "plugins": "combat,inventory,story,ai,lighting,storytender",
     "roundTrip": true
   },
   "scenes": {

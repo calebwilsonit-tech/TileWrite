@@ -5,6 +5,7 @@ import { FLAG, TileMap, type TileSet } from '../tilemap/tilemap';
 import { groundHeightAt } from '../physics/terrain';
 import { GeneratorSpecSchema, generate } from '../procgen/generate';
 import { newView } from '../story/cutscene';
+import { migrateProject } from './migrate';
 import { expandEntities, type PrefabMap } from './prefab';
 import {
   CURRENT_SCHEMA_VERSION,
@@ -103,8 +104,11 @@ export function parseScene(json: unknown): LoadResult<SceneData> {
   return r.success ? { ok: true, value: r.data } : { ok: false, error: describeSchemaError(r.error, 'This scene file') };
 }
 
+/** A project file of any format: upgraded to the current one first (so a list of `packs` from format 1 is read as `plugins`), then checked. */
 export function parseProject(json: unknown): LoadResult<ProjectData> {
-  const r = ProjectSchema.safeParse(json);
+  const migrated = migrateProject(json);
+  if (!migrated.ok) return { ok: false, error: migrated.error };
+  const r = ProjectSchema.safeParse(migrated.value);
   return r.success ? { ok: true, value: r.data } : { ok: false, error: describeSchemaError(r.error, 'This project file') };
 }
 

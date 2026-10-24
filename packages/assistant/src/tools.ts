@@ -223,9 +223,9 @@ export const TOOLS: ToolSpec[] = [
     schema: z.object({}),
   },
   {
-    name: 'list_packs',
+    name: 'list_plugins',
     kind: 'read',
-    description: 'The packs (modules) the game can switch on, which are on now, what each adds (behaviours, event blocks, buttons) and what it needs. A new game has none on: turn-based play, control schemes (click to move, hotspots, grid cursor, box-select units, builder, camera), simulation helpers (producers, calendar, waves, villagers), combat, inventory, story, AI and lighting are all packs. Check this before using a behaviour that is not listed by list_behaviors.',
+    description: 'The plugins the game can switch on, which are on now, what each adds (behaviours, event blocks, buttons, screens) and what it needs. A new game has none on: turn-based play, control schemes (click to move, hotspots, grid cursor, box-select units, builder, camera), simulation helpers (producers, calendar, waves, villagers), combat, inventory, story, AI and lighting are all plugins. Check this before using a behaviour that is not listed by list_behaviors.',
     schema: z.object({}),
   },
   {
@@ -243,7 +243,7 @@ export const TOOLS: ToolSpec[] = [
   {
     name: 'get_ui_screens',
     kind: 'read',
-    description: 'The interface screens made in the UI designer (title, pause, settings, HUD...). Without a name: each screen and its widget outline. With a name: that screen\'s complete data.',
+    description: 'The interface screens made in the UI designer (title, pause, settings, HUD...), each with the role it plays. Without a name: each screen and its widget outline. With a name: that screen\'s complete data.',
     schema: z.object({ screen: z.string().optional() }),
   },
 
@@ -482,7 +482,7 @@ export const TOOLS: ToolSpec[] = [
   {
     name: 'write_controls',
     kind: 'act',
-    description: 'Change the keys and buttons a new player starts with (assets/input.json; players can still rebind them in Settings). overrides maps a built-in action (move_left, move_right, move_up, move_down, run, interact, jump, pause, and the buttons the plugins that are on add: list_packs says which) to its bindings and replaces that action\'s list. actions, when given, is the whole list of the game\'s own actions {id: lower_case_name, label, bindings}; event rows ("a button is pressed", type the action name) and scripts (input.pressed("name")) can use them. Bindings look like "key:KeyF", "key:Space", "key:ArrowUp", "mouse:0" or "pad:button0".',
+    description: 'Change the keys and buttons a new player starts with (assets/input.json; players can still rebind them in Settings). overrides maps a built-in action (move_left, move_right, move_up, move_down, run, interact, jump, pause, and the buttons the plugins that are on add: list_plugins says which) to its bindings and replaces that action\'s list. actions, when given, is the whole list of the game\'s own actions {id: lower_case_name, label, bindings}; event rows ("a button is pressed", type the action name) and scripts (input.pressed("name")) can use them. Bindings look like "key:KeyF", "key:Space", "key:ArrowUp", "mouse:0" or "pad:button0".',
     schema: z.object({
       overrides: z.record(z.string(), z.array(z.string())).optional(),
       resetOverrides: z.boolean().optional().describe('True first forgets every built-in change.'),
@@ -548,9 +548,9 @@ export const TOOLS: ToolSpec[] = [
     schema: z.object({ language: z.string().regex(/^[a-z]{2,3}(-[a-z0-9]{2,8})?$/, 'A code like fr, de or pt-br.'), name: z.string().optional(), strings: z.record(z.string(), z.string()) }),
   },
   {
-    name: 'set_packs',
+    name: 'set_plugins',
     kind: 'act',
-    description: 'Switch packs on or off for the game (ids from list_packs). Packs a pack needs are switched on with it. Turn on what the game needs: for example "turns" and "controls" for a tactics game, "controls" and "sim" for a town builder.',
+    description: 'Switch plugins on or off for the game (ids from list_plugins). Plugins a plugin needs are switched on with it. Turn on what the game needs: for example "turns" and "controls" for a tactics game, "controls" and "sim" for a town builder.',
     schema: z.object({ enable: z.array(z.string()).max(20).optional(), disable: z.array(z.string()).max(20).optional() }),
   },
   {
@@ -579,7 +579,7 @@ export const TOOLS: ToolSpec[] = [
   {
     name: 'write_ui_screen',
     kind: 'act',
-    description: 'Add an interface screen, or replace the one with the same id/name. `screen` is {id,name,root,modal?,dim?,opensOnStart?} where root is a widget {id,name,type,anchor,x,y,w,h,layout,gap,padding,text,value,children:[...]}. Widget types: panel, label, button, image, bar, slider, checkbox, choice, tabs, list, grid... (get_ui_screens shows real examples). Text can hold {variable} or {Table.row.column}. Read get_ui_screens first and copy its shapes.',
+    description: 'Add an interface screen, or replace the one with the same id/name. `screen` is {id,name,role?,root,modal?,dim?,opensOnStart?} where role says what the screen is used as ("title", "pause", "settings", "save", "load", "map", "inventory", "hud" or a role a plugin offers: a screen with a role replaces the built-in one the game would show, whatever its name) and root is a widget {id,name,type,anchor,x,y,w,h,layout,gap,padding,text,value,children:[...]}. Widget types: panel, label, button, image, bar, slider, checkbox, choice, tabs, list, grid... (get_ui_screens shows real examples). Text can hold {variable} or {Table.row.column}. A label can have `empty` (text shown when its value is empty); the style of a widget can have `scroll`, `maxH` and `scale`. Screens that came from a plugin carry `from`; to change one, write a copy with the same role (the original stays and can be reverted to). Read get_ui_screens first and copy its shapes.',
     schema: z.object({ screen: z.record(z.string(), z.unknown()) }),
   },
   {

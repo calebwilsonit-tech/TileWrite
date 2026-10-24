@@ -62,7 +62,7 @@ test('plugins: the examples appear where they belong in the editor', async () =>
   const { page, app, errors } = await launchEditor();
   await createProjectViaUi(page, 'Examples', 'empty');
   const ids = ['example-panel', 'example-tool', 'example-prefab', 'example-validator', 'example-behavior', 'example-input', 'example-events', 'example-component', 'example-inspector', 'example-block', 'example-widget', 'example-screen'];
-  await page.evaluate((list) => window.__store!.updateProjectSettings({ packs: list }), ids);
+  await page.evaluate((list) => window.__store!.updateProjectSettings({ plugins: list }), ids);
 
   // the settings list them with what they need
   await page.evaluate(() => document.dispatchEvent(new CustomEvent('tw:project-settings')));
@@ -113,7 +113,7 @@ test('plugins: the examples appear where they belong in the editor', async () =>
   await expect(page.getByText('"TODO door" is still a to-do.')).toBeVisible();
 
   // switched off, it all goes
-  await page.evaluate(() => window.__store!.updateProjectSettings({ packs: [] }));
+  await page.evaluate(() => window.__store!.updateProjectSettings({ plugins: [] }));
   await expect(page.getByTestId('plugin-tool-example-probe')).toHaveCount(0);
   await expect(page.getByRole('tab', { name: 'Object count' })).toHaveCount(0);
   await page.screenshot({ path: shot('p3-plugins-examples.png') });

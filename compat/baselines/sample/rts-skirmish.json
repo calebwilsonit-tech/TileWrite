@@ -9,8 +9,8 @@
     "warning: Controls: \"KeyS\" is used by both \"Move down\" and \"Stop the selected units\"."
   ],
   "project": {
-    "schemaVersion": 1,
-    "packs": "controls,combat,sim",
+    "schemaVersion": 2,
+    "plugins": "controls,combat,sim",
     "roundTrip": true
   },
   "scenes": {

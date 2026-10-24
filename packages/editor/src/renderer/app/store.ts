@@ -459,7 +459,7 @@ class AppStore {
 
   private async openLoaded(p: OpenProject): Promise<void> {
     setActivePacks(packsOfProject(p.project));
-    setPlayerRequired(p.project.packs === undefined);
+    setPlayerRequired(p.project.plugins === undefined);
     await api().recent.add(p.dir, p.project.name);
     this.set({ project: p, workspace: 'world', recent: await api().recent.list() });
     await this.loadPrefabs();
@@ -469,7 +469,7 @@ class AppStore {
     await this.loadScripts();
     await this.openScene(p.project.startScene);
     // a game that has a player needs to keep one; a game with none (a tactics battle, a builder) plays without
-    setPlayerRequired(p.project.packs === undefined || (this.doc?.entities.some((e) => e.tags.includes('player')) ?? false));
+    setPlayerRequired(p.project.plugins === undefined || (this.doc?.entities.some((e) => e.tags.includes('player')) ?? false));
     this.set({ screen: 'editor' });
     this.startAutosave();
     const { studio } = await import('../studio/store');
@@ -942,14 +942,14 @@ class AppStore {
   }
 
   /** Change the project's name, first scene, tile size or title screen. Saved at once. */
-  async updateProjectSettings(patch: Partial<Pick<ProjectData, 'name' | 'startScene' | 'iso' | 'title' | 'packs' | 'compat'>>): Promise<boolean> {
+  async updateProjectSettings(patch: Partial<Pick<ProjectData, 'name' | 'startScene' | 'iso' | 'title' | 'plugins' | 'compat'>>): Promise<boolean> {
     const p = this.state.project;
     if (!p) return false;
     const ok = await this.guard('Saving the project settings', async () => {
       const project = { ...p.project, ...patch };
       await saveProject(realFs, p.dir, project);
-      if (patch.packs) {
-        setActivePacks(patch.packs);
+      if (patch.plugins) {
+        setActivePacks(patch.plugins);
         setPlayerRequired(this.doc?.entities.some((e) => e.tags.includes('player')) ?? false);
       }
       this.set({ project: { ...p, project }, docVersion: this.state.docVersion + 1, storyVersion: this.state.storyVersion + 1 });
