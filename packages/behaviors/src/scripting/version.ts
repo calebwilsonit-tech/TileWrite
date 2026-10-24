@@ -5,5 +5,6 @@
  *
  * 1.0.0  the API as it was when scripts were first written
  * 1.1.0  gravity (`game.gravity`, `me.gravity`) and blocks (`game.setBlock`, `game.breakBlock`, `game.blockAt`)
+ * 1.2.0  collision layers by name (`game.layer`), the ones plugins add included
  */
-export const SCRIPT_API_VERSION = '1.1.0';
+export const SCRIPT_API_VERSION = '1.2.0';

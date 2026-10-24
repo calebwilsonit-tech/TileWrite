@@ -52,6 +52,7 @@
   "ScriptGame.input",
   "ScriptGame.isLit",
   "ScriptGame.itemCount",
+  "ScriptGame.layer",
   "ScriptGame.log",
   "ScriptGame.playCutscene",
   "ScriptGame.player",

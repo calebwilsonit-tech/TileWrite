@@ -22,6 +22,7 @@ import { newNav, steerTo, type NavState } from '../nav';
 import { input as signalInput, output as signalOutput, setOutput } from '../signals';
 import { spawnPrefabAt } from '../builtins/world';
 import { host } from '../plugins/host';
+import { layerNamed } from '../plugins/layers';
 import type { ScriptDef, ScriptEntity, ScriptGame, ScriptSettingSpec, ScriptValue } from './api';
 
 /** Where a script's messages and breakpoint hits go (the editor's Console and debugger, or a game's log). */
@@ -314,6 +315,9 @@ class GameView implements ScriptGame {
     const r = breakBlock(this.ctx, Math.floor(x), Math.floor(y), Math.floor(z));
     if (!r.ok) this.hooks.log('warn', r.why);
     return r.ok;
+  }
+  layer(name: string): number {
+    return layerNamed(name) ?? 0;
   }
   blockAt(x: number, y: number, z: number): { tile: string; shape: string; solid: boolean } | undefined {
     const b = blockAtCell(this.ctx, Math.floor(x), Math.floor(y), Math.floor(z));

@@ -134,6 +134,8 @@ export interface ScriptGame {
   breakBlock(x: number, y: number, z: number): boolean;
   /** The block at a place, or undefined when there is none. */
   blockAt(x: number, y: number, z: number): { tile: string; shape: string; solid: boolean } | undefined;
+  /** The number of a collision layer by its name ("default", "player", "enemy", "prop", "ghost", and the layers plugins added), for a body's or collider's `layer` and `mask`. 0 when there is no such layer. */
+  layer(name: string): number;
   /** Announce something that other scripts and event rows can react to ("Something happens in the game"). */
   emit(type: string, data?: Record<string, unknown>): void;
   /** Things of one type that happened during this update (like "damaged", "died", "pickup"). */

@@ -119,7 +119,7 @@ describe('placing and breaking blocks while the game runs', () => {
 
 describe('the scripting API', () => {
   it('has a version, and gravity and blocks are in it', async () => {
-    expect(SCRIPT_API_VERSION).toBe('1.1.0');
+    expect(SCRIPT_API_VERSION).toBe('1.2.0');
     const { r } = room({ blocks: { runtime: true, limit: 10 } });
     const { gameViewOf } = await import('./index');
     const g = gameViewOf(contextOf(r.sim), r.get('p'), { log: () => undefined });
