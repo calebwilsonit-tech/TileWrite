@@ -61,7 +61,7 @@ import { loadScene as loadSceneFile } from '../project/io';
 import { loadMixer, loadSounds } from '../studio/audio';
 import { loadLanguages } from '../project/localization';
 import type { CutsceneData, DialogueData, ItemData } from '@tilewright/runtime';
-import { describeScreens, addStandardSystems, contextOf, host, noScreens, output, activeInput, actionDef, placeAtSpawn, type GameUiFactory, type GameUiHost, type GameUiLike } from '@tilewright/behaviors';
+import { describeScreens, withPluginScreens, addStandardSystems, contextOf, host, noScreens, output, activeInput, actionDef, placeAtSpawn, type GameUiFactory, type GameUiHost, type GameUiLike } from '@tilewright/behaviors';
 
 export interface PlayOptions {
   renderer: IsoRenderer;
@@ -175,7 +175,7 @@ export class PlaySession {
     for (const m of o.minigames ?? []) sim.assets.minigames.set(m.name, m);
     sim.assets.worldMap = o.worldMap ?? null;
     for (const t of o.tables ?? []) sim.assets.tables.set(t.name, t);
-    if (o.uiDoc) sim.assets.ui = o.uiDoc;
+    sim.assets.ui = withPluginScreens(o.uiDoc ?? sim.assets.ui);
     this.saves = new SaveManager(
       {
         read: (p) => assetFs.read(p),
@@ -202,10 +202,31 @@ export class PlaySession {
         o.notify('warn', text);
       }
     });
-    sim.events.on('save-request', () => void this.saveTo('autosave'));
+    // what the game's screens ask for (their buttons run actions, the actions announce a request, and this is where it is done)
+    const say = (message: Promise<string>): void => void message.then((m) => sim.events.emit('message', { text: m }));
+    sim.events.on('save-request', (e) => {
+      const slot = String(e.slot ?? 'autosave');
+      if (slot === 'autosave') void this.saveTo(slot);
+      else say(this.saveTo(slot).then((m) => (this.ui.refreshSaves?.(), m)));
+    });
     sim.events.on('logic-break', (e) => o.onLogicBreak?.(String(e.text ?? '')));
-    sim.events.on('load-request', (e) => void this.loadFrom(String(e.slot ?? 'autosave')));
+    sim.events.on('load-request', (e) => {
+      const slot = String(e.slot ?? 'autosave');
+      const which = slot === 'latest' ? this.saves.list().then((l) => l.filter((s) => s.exists && !s.damaged).sort((a, b) => b.savedAt.localeCompare(a.savedAt))[0]?.slot ?? 'autosave') : Promise.resolve(slot);
+      say(which.then((s) => this.loadFrom(s)));
+    });
     sim.events.on('quit-request', () => o.quit());
+    sim.events.on('restart-request', () => this.hostObj.restart());
+    sim.events.on('reset-controls-request', () => this.hostObj.resetBindings());
+    sim.events.on('travel-place-request', (e) => {
+      const node = sim.assets.worldMap?.nodes.find((n) => n.id === String(e.place ?? ''));
+      if (!node) return;
+      // a place whose unlock rule says where to arrive (a plugin rule, for example a checkpoint)
+      const post = host.ext.unlockRules.get(node.unlock.kind)?.arrival?.(sim.runtime.vars, node);
+      if (post) this.hostObj.travelTo(post);
+      else this.hostObj.travelToScene(node.scene, node.spawn);
+    });
+    sim.events.on('travel-post-request', (e) => this.hostObj.travelTo({ scene: String(e.scene ?? ''), id: String(e.id ?? ''), name: String(e.name ?? ''), x: Number(e.x), y: Number(e.y), h: Number(e.h ?? 0) }));
     for (const e of host.ext.events.values()) if (e.autosave) sim.events.on(e.id, () => void this.saveTo('autosave'));
     sim.events.on('rested', () => void this.saveTo('autosave'));
 
@@ -350,7 +371,7 @@ export class PlaySession {
     }
     if (live?.skins) this.skinsNow = live.skins;
     if (live?.layout) this.ui.setLayout(live.layout);
-    if (live?.uiDoc) sim.assets.ui = live.uiDoc;
+    if (live?.uiDoc) sim.assets.ui = withPluginScreens(live.uiDoc);
     if (live?.input) this.useInput(live.input);
     this.applySkinToPlayer();
     return 'Reloaded the game with your changes.';

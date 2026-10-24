@@ -52,6 +52,10 @@ export interface GameUiLike {
   setLayout(layout: UiLayout): void;
   openStart(): void;
   openTitle(info: TitleInfo): void;
+  /** Read the save slots again (the list of saves in a screen). */
+  refreshSaves?(): void;
+  /** A line of text that fades by itself. */
+  toast?(text: string): void;
   /** Once per game tick. */
   tick(): void;
   /** Once per frame. */

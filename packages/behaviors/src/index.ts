@@ -11,6 +11,7 @@ export type * from './plugins/extensions';
 export * from './custom';
 export * from './docs';
 export * from './ui/screens-logic';
+export * from './ui/defaults';
 export * from './ui/world-ui';
 export * from './signals';
 export * from './player-controller';

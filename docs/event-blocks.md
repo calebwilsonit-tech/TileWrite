@@ -4,7 +4,7 @@
 
 An event sheet is a list of rows, each reading like a line of instructions: **when** its conditions hold, **do** its actions. Rows can have sub-events that run only while the row holds. Objects are chosen as "the player", "anything tagged ...", or a particular object. See [logic.md](logic.md).
 
-There are 31 conditions and 52 actions.
+There are 31 conditions and 55 actions.
 
 ## Conditions
 
@@ -493,11 +493,27 @@ Id: `travel`.
 | Scene file (empty = this one) | `scene` | text | (empty) |  |
 | Appear at (object name, or "x,y") | `spawn` | text | (empty) |  |
 
-#### Save the game (autosave)
+#### Save the game
 
 Id: `saveGame`.
 
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Save slot (autosave, slot1, slot2, slot3; empty = autosave) | `slot` | text | (empty) |  |
+
+#### Start this area again
+
+Id: `restartArea`.
+
 No parameters.
+
+#### Travel to a place on the world map
+
+Id: `travelToPlace`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Place (its id on the world map) | `place` | text | (empty) |  |
 
 #### Load a saved game (continue)
 
@@ -505,7 +521,7 @@ Id: `loadGame`.
 
 | Parameter | Key | Kind | Starts as | Choices and notes |
 | --- | --- | --- | --- | --- |
-| Save slot | `slot` | text | "autosave" |  |
+| Save slot (autosave, slot1..3, or latest) | `slot` | text | "autosave" |  |
 
 #### Quit the game
 
@@ -556,6 +572,12 @@ Id: `playCutscene`.
 | Cutscene (name) | `cutscene` | text | (empty) |  |
 
 ### Interface
+
+#### Put all controls back to how they were
+
+Id: `resetControls`.
+
+No parameters.
 
 #### Open or close an interface screen
 

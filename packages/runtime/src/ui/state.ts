@@ -1,13 +1,26 @@
 import type { Assets, SceneRuntime } from '../core/simulation';
 import { evalValue } from '../data/expr';
 import type { ValueSource } from '../data/values';
-import { screenBlocksInput, screenPauses, type UiScreen } from './model';
+import { roleOfScreen, screenBlocksInput, screenPauses, type UiScreen } from './model';
 
 /** Which interface screens are open, and the yes/no questions widgets ask ("visible when gold >= 10"). Plain data and plain functions, so the game, the playbot and the tests share them. */
 
 type Host = { runtime: SceneRuntime; assets: Assets };
 
-export const screenNamed = (assets: Assets, name: string): UiScreen | undefined => assets.ui.screens.find((s) => s.name === name || s.id === name);
+/** A screen by name or id; "role:pause" means the screen that plays the Pause part. */
+export const screenNamed = (assets: Assets, name: string): UiScreen | undefined => (name.startsWith('role:') ? assets.ui.screens.find((s) => roleOfScreen(s) === name.slice(5)) : assets.ui.screens.find((s) => s.name === name || s.id === name));
+
+/** The screen that plays a role (a project's own before one a plugin offers, which the game adds with a lower priority: see `withDefaultScreens`). */
+export const screenForRole = (assets: Assets, role: string): UiScreen | undefined => assets.ui.screens.find((s) => roleOfScreen(s) === role);
+
+/** Open the screen that plays a role. False when there is none. */
+export function openRole(h: Host, role: string): boolean {
+  const s = screenForRole(h.assets, role);
+  return s ? openScreen(h, s.name) : false;
+}
+
+/** Is a screen that plays this role open? */
+export const roleOpen = (h: Host, role: string): boolean => h.runtime.ui.stack.some((n) => { const s = screenNamed(h.assets, n); return s !== undefined && roleOfScreen(s) === role; });
 
 /** Work out from the open screens whether the game waits and whether the game's own buttons are off. */
 export function sync(h: Host): void {

@@ -225,6 +225,11 @@ export class GameUi implements GameUiLike {
       },
       bindingText: (action) => (host.bindings()[action] ?? []).map((b) => bindingLabel(b)).join(' / '),
       spriteUrl: (name) => host.spriteUrl?.(name) ?? this.spriteFrameUrl(name),
+      saves: () => this.slotCache,
+      refreshSaves: () => void this.refreshSlots(),
+      controls: () => Object.entries(host.actionLabels?.() ?? activeActionLabels()).map(([action, label]) => ({ action, label })),
+      can: (what) => (what === 'quit' ? host.quit !== undefined : what === 'fullscreen' ? host.fullscreen !== undefined : false),
+      choices: (what) => this.choicesFor(what),
     });
     this.root.setAttribute('data-testid', 'tw-ui');
     this.hud.setAttribute('data-testid', 'tw-hud');
@@ -271,7 +276,7 @@ export class GameUi implements GameUiLike {
     return this.tr(this.host.sim.assets.items.get(id)?.name ?? id);
   }
 
-  private toast(text: string): void {
+  toast(text: string): void {
     if (!text) return;
     this.toastList.push({ text, until: performance.now() + 3500 });
     if (this.toastList.length > 5) this.toastList.shift();
@@ -418,6 +423,18 @@ export class GameUi implements GameUiLike {
     this.focus = screen === 'map' ? Math.max(0, this.mapPlaces().findIndex((p) => p.state === 'here')) : 0;
     this.message = '';
     if (screen === 'save' || screen === 'load' || screen === 'title') void this.refreshSlots();
+  }
+
+  refreshSaves(): void {
+    void this.refreshSlots();
+  }
+
+  /** The options a settings choice offers: appearances (skins) and languages, each shown by its own name. */
+  private choicesFor(what: string): { value: string; label: string }[] {
+    const sim = this.host.sim;
+    if (what === 'skin') return [{ value: '', label: 'Original' }, ...availableSkins(sim.assets.skins, sim.runtime.vars).map((s) => ({ value: s.id, label: s.name }))];
+    if (what === 'language') return languageChoices(sim.assets.strings).map((l) => ({ value: l.code, label: l.name }));
+    return [];
   }
 
   private async refreshSlots(): Promise<void> {

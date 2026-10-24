@@ -188,6 +188,13 @@ export const UiScreenSchema = z.object({
   mapY: z.number().default(0),
   /** Opened when the game starts (a title screen, or a heads-up display). */
   opensOnStart: z.boolean().default(false),
+  /**
+   * What the screen is used as: "title", "pause", "settings", "inventory", "map", "save", "load", "hud"... (the roles plugins offer).
+   * Empty: the screen named Title, Pause or Settings plays that part, as it always did.
+   */
+  role: z.string().optional(),
+  /** Where a screen that began as a plugin's screen came from, so it can be compared with a newer one or put back. */
+  from: z.object({ plugin: z.string(), screen: z.string(), revision: z.number().int().default(1), hash: z.string().default('') }).optional(),
 });
 export type UiScreen = z.infer<typeof UiScreenSchema>;
 
@@ -212,6 +219,13 @@ export const emptyUiDoc = (): UiDoc => ({ schemaVersion: CURRENT_SCHEMA_VERSION,
 
 /** The names the game treats specially: a screen with one of these replaces the built-in one. */
 export const RESERVED_SCREENS = { title: 'Title', pause: 'Pause', settings: 'Settings' } as const;
+
+/** What a screen is used as: the role it was given, or (for projects made before roles) the part its reserved name plays. */
+export function roleOfScreen(s: Pick<UiScreen, 'name' | 'role'>): string {
+  if (s.role) return s.role;
+  for (const [role, name] of Object.entries(RESERVED_SCREENS)) if (s.name === name) return role;
+  return '';
+}
 
 /** A new widget of a type, with a sensible size and look. */
 export function newWidget(type: WidgetType, id: string, name?: string): UiNode {

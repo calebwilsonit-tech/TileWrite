@@ -12,7 +12,9 @@ import {
   type ValueSource,
   type VariableValue,
 } from '@tilewright/runtime';
+import { placeState, quickSlots, type SlotInfo } from '@tilewright/runtime';
 import { runActionList } from '../events/sheet';
+import { host } from '../plugins/host';
 import { contextOf } from '../story/context';
 
 /**
@@ -31,6 +33,16 @@ export interface UiBridge {
   bindingText?(action: string): string;
   /** The picture of a sprite as an image address, for image widgets and icons. */
   spriteUrl?(name: string): string | null;
+  /** The save slots as last read (the list source "saves"); the host reads them again when asked. */
+  saves?(): SlotInfo[];
+  /** Read the save slots again (called when a screen with a list of saves opens). */
+  refreshSaves?(): void;
+  /** The controls the Controls screen lists (the list source "controls"): action id and its name. */
+  controls?(): { action: string; label: string }[];
+  /** Words for what the host can do, so a screen can hide what it cannot ("fullscreen", "quit"). */
+  can?(what: string): boolean;
+  /** The languages, appearances and so on a settings choice offers: name -> [value, shown name] pairs. */
+  choices?(what: string): { value: string; label: string }[];
 }
 
 const BRIDGE = 'ui.bridge';
@@ -149,7 +161,7 @@ export function rowsOf(sim: Simulation, node: UiNode): Row[] {
     return Array.from({ length: n }, (_, i) => ({ id: String(i + 1), scope: { slot: i + 1, index: i + 1 } }));
   }
   if (src === 'items') {
-    return carried(sim.runtime.vars).map(([id, count], i) => ({ id, scope: { 'item.id': id, 'item.name': sim.assets.strings.t(sim.assets.items.get(id)?.name ?? id), 'item.count': count, index: i + 1 } }));
+    return carried(sim.runtime.vars).map(([id, count], i) => ({ id, scope: { 'item.id': id, 'item.name': sim.assets.strings.t(sim.assets.items.get(id)?.name ?? id), 'item.count': count, 'item.description': sim.assets.strings.t(sim.assets.items.get(id)?.description ?? ''), 'item.usable': sim.assets.items.get(id)?.use ? 1 : 0, 'item.slot': quickSlots(sim.runtime.vars).indexOf(id) + 1, 'item.color': sim.assets.items.get(id)?.color ?? 0, index: i + 1 } }));
   }
   if (src === 'turns') {
     const t = sim.runtime.turns;
@@ -158,6 +170,53 @@ export function rowsOf(sim: Simulation, node: UiNode): Row[] {
       const hp = e?.get<{ hp: number }>('state:health')?.hp ?? 0;
       return { id: String(live), scope: { 'unit.name': e?.name ?? '?', 'unit.team': (e?.get<{ team?: string }>('turnTaker')?.team ?? '') as string, 'unit.active': i === t.index ? 1 : 0, 'unit.hp': hp, index: i + 1 } };
     });
+  }
+  if (src === 'saves') {
+    const list = uiBridge(sim)?.saves?.() ?? [];
+    const when = (s: SlotInfo): string => s.savedAt.slice(0, 16).replace('T', ' ');
+    return list.map((s, i) => ({
+      id: s.slot,
+      scope: {
+        'save.slot': s.slot,
+        'save.name': s.slot === 'autosave' ? sim.assets.strings.t('Autosave') : sim.assets.strings.fmt(sim.assets.strings.t('Slot {n}'), { n: s.slot.replace('slot', '') }),
+        'save.detail': s.damaged ? sim.assets.strings.t('damaged') : s.exists ? [s.label, when(s)].filter(Boolean).join(' - ') : sim.assets.strings.t('empty'),
+        'save.exists': s.exists ? 1 : 0,
+        'save.damaged': s.damaged ? 1 : 0,
+        'save.manual': s.slot === 'autosave' ? 0 : 1,
+        'save.scene': s.scene,
+        index: i + 1,
+      },
+    }));
+  }
+  if (src === 'controls') {
+    const b = uiBridge(sim);
+    return (b?.controls?.() ?? []).map((c, i) => ({ id: c.action, scope: { 'control.action': c.action, 'control.label': c.label, 'control.binding': b?.bindingText?.(c.action) ?? '', index: i + 1 } }));
+  }
+  if (src === 'places') {
+    const map = sim.assets.worldMap;
+    if (!map) return [];
+    const custom = (kind: string, node: Parameters<typeof placeState>[0]): boolean => host.ext.unlockRules.get(kind)?.met(sim.runtime.vars, node) ?? false;
+    return map.nodes
+      .map((node) => ({ node, state: placeState(node, sim.runtime.vars, sim.runtime.scene, custom) }))
+      .filter((p) => p.state === 'open' || p.state === 'here')
+      .map((p, i) => ({ id: p.node.id, scope: { 'place.id': p.node.id, 'place.name': p.node.label, 'place.scene': p.node.scene, 'place.here': p.state === 'here' ? 1 : 0, 'place.x': p.node.x, 'place.y': p.node.y, index: i + 1 } }));
+  }
+  if (src === 'quickslots') {
+    return quickSlots(sim.runtime.vars).map((id, i) => ({ id: String(i + 1), scope: { 'slot.number': i + 1, 'slot.item': id, 'slot.name': id ? sim.assets.strings.t(sim.assets.items.get(id)?.name ?? id) : '', 'slot.count': id ? Number(sim.runtime.vars[`item:${id}`] ?? 0) : 0, 'slot.color': id ? (sim.assets.items.get(id)?.color ?? 0) : 0, index: i + 1 } }));
+  }
+  if (src.startsWith('choices:')) {
+    return (uiBridge(sim)?.choices?.(src.slice(8)) ?? []).map((c, i) => ({ id: c.value, scope: { 'choice.value': c.value, 'choice.label': c.label, index: i + 1 } }));
+  }
+  {
+    const colon = src.indexOf(':');
+    const def = host.ext.listSources.get(colon < 0 ? src : src.slice(0, colon));
+    if (def) {
+      try {
+        return def.rows(sim, colon < 0 ? '' : src.slice(colon + 1)).map((r, i) => ({ id: r.id, scope: { index: i + 1, ...r.scope } }));
+      } catch {
+        return []; // the plugin's failure is recorded against it by the host; the screen just shows no rows
+      }
+    }
   }
   if (src.startsWith('var:')) {
     const n = Math.max(0, Math.min(200, Math.floor(num(readTarget(sim, src.slice(4))))));

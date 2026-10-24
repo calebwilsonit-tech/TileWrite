@@ -22,7 +22,8 @@ A plugin's `install(api)` is the **game part** (runs in the editor and in the ex
 | `api.unlockRule(def)` | A way a place on the world map can unlock. | `game.ts` key |
 | `api.bridgeSource(def)` | Cells that can be walked over a pit because of something the plugin brings; the checks and the playbot ask. | `game.ts` planks |
 | `api.widget(def)` | A kind of widget for the UI designer, drawn by the plugin every frame. | `ui.ts` clock |
-| `api.screen(def)`, `api.screenRole(def)` | A screen a project can copy and make its own, and what a screen can be used as. | `ui.ts` credits |
+| `api.screen(def)`, `api.screenRole(def)` | A screen a project can copy and make its own (`role` says what it plays: title, pause, inventory...; a project with no screen for a role plays with the plugin's), and what a screen can be used as. | `ui.ts` credits |
+| `api.listSource(def)` | Rows for lists and grids in screens, named in a widget's *source* (`pets`, or `pets:argument`). The engine itself offers `saves`, `controls`, `places`, `quickslots`, `items` and tables. | `ui.ts` list |
 | `api.strings(fn)` | Words the game shows, for the translation tables. | `ui.ts` strings |
 | `api.provide(name, value)` | Something for other plugins to take with `api.use(id, name)`; the screens of the game are provided as `gameUi`. | `ui.ts` game screens |
 | `api.assistantNote(text)` | A line telling the assistant what the plugin adds. | `tools.ts` assistant |

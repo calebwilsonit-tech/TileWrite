@@ -1,6 +1,6 @@
 import type { PluginDefinition } from '@tilewright/plugin-sdk';
 import { behaviorExample, blockExample, bridgeExample, componentExample, eventsExample, inputExample, layerExample, physicsExample, scriptExample, systemExample, unlockExample, whoExample } from './game';
-import { gameUiExample, screenExample, stringsExample, widgetExample } from './ui';
+import { gameUiExample, listSourceExample, screenExample, stringsExample, widgetExample } from './ui';
 import { exportTargetExample, exporterExample, importerExample, inspectorExample, panelExample, prefabExample, templateExample, toolExample, validatorExample } from './editor';
 import { assistantExample, moveExample, strategyExample } from './tools';
 
@@ -25,6 +25,7 @@ export const EXAMPLES: { point: string; plugin: PluginDefinition }[] = [
   { point: 'bridgeSource', plugin: bridgeExample },
   { point: 'widget', plugin: widgetExample },
   { point: 'screen / screenRole', plugin: screenExample },
+  { point: 'listSource', plugin: listSourceExample },
   { point: 'strings', plugin: stringsExample },
   { point: 'gameUi', plugin: gameUiExample },
   { point: 'panel', plugin: panelExample },

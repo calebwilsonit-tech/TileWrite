@@ -35,6 +35,7 @@ describe('the example plugins', () => {
       ['bridgeSource', (h) => h.ext.bridgeSources.size],
       ['widget', (h) => h.ext.widgets.size],
       ['screen / screenRole', (h) => h.ext.screens.size + h.ext.screenRoles.size],
+      ['listSource', (h) => h.ext.listSources.size],
       ['panel', (h) => h.editor.panels.size],
       ['tool', (h) => h.editor.tools.size],
       ['importer', (h) => h.editor.importers.size],

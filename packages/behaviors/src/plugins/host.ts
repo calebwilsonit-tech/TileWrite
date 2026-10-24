@@ -119,6 +119,8 @@ export interface PluginApi {
   widget(def: X.WidgetDef): void;
   screen(def: X.ScreenDef): void;
   screenRole(def: X.ScreenRoleDef): void;
+  /** Rows for lists and grids in screens ("saves", "party members"...). */
+  listSource(def: X.ListSourceDef): void;
 
   // --- the editor ---
   panel(def: EditorPanelDef): void;
@@ -211,6 +213,7 @@ const emptyExtensions = (): Extensions => ({
   widgets: new Map(),
   screens: new Map(),
   screenRoles: new Map(),
+  listSources: new Map(),
   inspectors: new Map(),
   exporters: new Map(),
   exportTargets: new Map(),
@@ -581,6 +584,9 @@ export class PluginHost {
       },
       screenRole(def) {
         host.add(rec, id, 'screenRoles', def.id, def);
+      },
+      listSource(def) {
+        host.add(rec, id, 'listSources', def.id, { ...def, rows: host.watched(id, `the list "${def.label}"`, def.rows.bind(def)) });
       },
       panel(def) {
         const mount = host.guarded(id, `the panel "${def.title}"`, def.mount.bind(def), undefined);

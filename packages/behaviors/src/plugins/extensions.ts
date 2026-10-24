@@ -1,4 +1,4 @@
-import type { EventRow, MapNode, RegionData, TileMap, VariableValue, WireData, EntityData, ProjectData, SceneData, SimContext, UiScreen, UiNode, System, SystemMode, Entity } from '@tilewright/runtime';
+import type { Simulation, EventRow, MapNode, RegionData, TileMap, VariableValue, WireData, EntityData, ProjectData, SceneData, SimContext, UiScreen, UiNode, System, SystemMode, Entity } from '@tilewright/runtime';
 import type { BehaviorDef } from '../framework';
 import type { ActionDef, ConditionDef } from '../events/sheet';
 
@@ -126,6 +126,18 @@ export interface ScreenDef {
   role?: string;
   /** Bump this when the screen changes, so projects that customized an older one can compare. */
   revision: number;
+}
+
+/**
+ * Where the rows of a list, grid or hand in a screen can come from, besides the engine's own sources (a table, the carried items,
+ * the save slots...). A screen names it as `source: "name"` or `"name:argument"`; every row says what `{row.x}` means inside it.
+ */
+export interface ListSourceDef {
+  /** The name a screen writes in `source`. */
+  id: string;
+  label: string;
+  /** The rows now. `id` is unique among them; `scope` is what the row's widgets can read (`{place.name}`...). */
+  rows(sim: Simulation, argument: string): { id: string; scope: Record<string, VariableValue> }[];
 }
 
 /** What a screen can be used as ("Title", "Pause", ...), so Back, the pause key and Continue know which one to open. */
@@ -314,6 +326,7 @@ export interface Extensions {
   widgets: Map<string, WidgetDef & OwnedBy>;
   screens: Map<string, ScreenDef & OwnedBy>;
   screenRoles: Map<string, ScreenRoleDef & OwnedBy>;
+  listSources: Map<string, ListSourceDef & OwnedBy>;
   inspectors: Map<string, InspectorDef & OwnedBy>;
   exporters: Map<string, ExporterDef & OwnedBy>;
   exportTargets: Map<string, ExportTargetDef & OwnedBy>;

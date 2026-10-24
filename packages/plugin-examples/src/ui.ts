@@ -44,3 +44,16 @@ export const gameUiExample: PluginDefinition = definePlugin(manifestOf('game-ui'
       return { menuOpen: false, setLayout: () => undefined, openStart: () => undefined, openTitle: () => undefined, tick: () => undefined, update: () => (line.textContent = 'Playing'), dispose: () => line.remove() };
     }),
 });
+
+// ---------- rows for a list in a screen ----------
+export const listSourceExample: PluginDefinition = definePlugin(manifestOf('list', 'Example: a list source', 'A list called "badges" that a screen can show: one row for every badge the player has earned.'), {
+  install: (api) =>
+    api.listSource({
+      id: 'example-badges',
+      label: 'Badges the player has earned',
+      rows: (sim) =>
+        Object.keys(sim.runtime.vars)
+          .filter((k) => k.startsWith('badge:') && sim.runtime.vars[k])
+          .map((k) => ({ id: k.slice(6), scope: { 'badge.name': k.slice(6) } })),
+    }),
+});
