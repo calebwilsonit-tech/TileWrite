@@ -32,7 +32,7 @@ function resolveInside(file: string): string {
   try {
     return resolveInsideAny(allowedRoots, file, { fs: fsSync });
   } catch (e) {
-    if (e instanceof PathProblem) throw new Error(e.message);
+    if (e instanceof PathProblem) throw new Error(e.message, { cause: e });
     throw e;
   }
 }
