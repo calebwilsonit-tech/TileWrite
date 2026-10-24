@@ -71,6 +71,10 @@ export class ViewportController {
   /** Which layer each drawn object is on (Objects, Decoration, Lights). */
   private layerOf = new Map<number, ObjectLayer>();
   private previews: Preview[] = [];
+  /** What the active tool is showing over the world (for the tests). */
+  get previewKinds(): string[] {
+    return this.previews.map((p) => p.kind);
+  }
   private walk: Set<string> | null = null;
   private marqueeEl!: HTMLDivElement;
   private unsubDoc: (() => void) | null = null;
@@ -427,6 +431,8 @@ export class ViewportController {
     for (const pv of this.previews) {
       if (pv.kind === 'box') this.overlay.box(this.ghostG, pv.box, pv.color, this.renderer.iso);
       if (pv.kind === 'cube') this.overlay.cube(this.ghostG, pv.x, pv.y, pv.z, pv.color, this.renderer.iso);
+      if (pv.kind === 'face') this.overlay.face(this.ghostG, pv.x, pv.y, pv.z, pv.face, pv.color, this.renderer.iso);
+      if (pv.kind === 'solid') for (const c of pv.cells) this.overlay.solid(this.ghostG, c.x, c.y, c.z, pv.color, pv.alpha, this.renderer.iso);
       if (pv.kind === 'ghost') {
         const prefab = prefabById(pv.prefab, store.prefabs);
         const data = prefab.make(pv.x, pv.y, pv.h);
@@ -555,6 +561,7 @@ export class ViewportController {
     const s = store.state;
     return {
       doc,
+      setOptions: (patch) => store.setOptions(patch),
       opts: s.options,
       selection: s.selection,
       setPreview: (p) => this.setPreviews(p),
@@ -606,7 +613,7 @@ export class ViewportController {
     const rect = this.renderer.canvas.getBoundingClientRect();
     const screen = { x: e.clientX - rect.left, y: e.clientY - rect.top };
     const cell = this.pickCell(screen.x, screen.y);
-    return { cell, screen, shift: e.shiftKey, alt: e.altKey, ctrl: e.ctrlKey || e.metaKey };
+    return { button: e.button, cell, screen, shift: e.shiftKey, alt: e.altKey, ctrl: e.ctrlKey || e.metaKey };
   }
 
   // ---- mouse ----
@@ -614,12 +621,14 @@ export class ViewportController {
   private onDown(e: PointerEvent): void {
     if (this.play || !this.doc) return;
     this.renderer.canvas.setPointerCapture?.(e.pointerId);
-    const panButton = e.button === 1 || e.button === 2 || (e.button === 0 && this.spaceDown);
+    // the Blocks tool uses the right button (remove) and the middle one (copy the block); the picture moves with Space+drag there
+    const ownsButtons = store.state.tool === 'blocks';
+    const panButton = (!ownsButtons && (e.button === 1 || e.button === 2)) || (e.button === 0 && this.spaceDown);
     if (panButton) {
       this.panning = { x: e.clientX, y: e.clientY };
       return;
     }
-    if (e.button !== 0) return;
+    if (e.button !== 0 && !ownsButtons) return;
     const meta = toolMeta(store.state.tool);
     const locks = store.state.locks;
     if ((meta.edits === 'ground' && locks.ground) || (meta.edits === 'objects' && locks.objects) || (meta.edits === 'regions' && locks.regions)) {

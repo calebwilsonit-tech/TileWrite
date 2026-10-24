@@ -60,5 +60,9 @@
     "combat",
     "turns",
     "controls"
-  ]
+  ],
+  "compat": {
+    "fadeBySight": true,
+    "blockPhysics": true
+  }
 }

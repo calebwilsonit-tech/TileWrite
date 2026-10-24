@@ -43,9 +43,27 @@ The controls follow the surface: on a floor or a ceiling the move keys go the sa
 
 Everything that moves a body (control, walking AI, a push) sets the two velocities in the plane the body walks on; the one along gravity is the body's fall, managed by the physics.
 
-## Placing and breaking blocks
+## Placing blocks in the editor (the Blocks tool, key D)
 
-In the editor, the **Blocks** tool places and removes blocks one at a time, on the face you point at (see below). While the game runs, a game can place and break blocks too, but only if the scene says so: **Inspector (no selection) -> Blocks while playing**, with a limit on how many edits one run may make. Then:
+It works the way Minecraft does. Point at any face (the ground too) and it lights up, with a see-through ghost of the block that would go beside it.
+
+| You do | What happens |
+| --- | --- |
+| Click | the block goes against the face you point at |
+| Drag along the face | a line, a wall (dragged up the side of a block) or a floor (dragged across a top), in one undo step |
+| Shift-drag | a box: the patch you drag, built up as many layers deep as **Shift-drag builds this many layers** says |
+| Right-click, or Ctrl+click | removes the block you point at (or use the **removes it** mode) |
+| Middle-click | copies the block: its tile, its shape and the way round it is |
+| R | turns stairs and ramps (north, east, south, west) |
+| 1 to 9 | pick a tile from the **hotbar** (it keeps the tiles you used lately; a new one takes the place of the one added longest ago) |
+| Alt+click | changes the tile of a block; the **paints one face** mode changes one face |
+| Space+drag | moves the picture (the right and middle buttons belong to this tool) |
+
+**Next block is** chooses a whole block, stairs or a ramp, which way stairs rise, and whether it is **not solid** (a vine, a picture). Stairs, ramps and bridges are blocks of a cell like any other, so a column with stairs on top can be built on, cut into and copied as structures; nothing about how it looks or plays changes when it is turned into blocks.
+
+## Placing and breaking blocks while the game runs
+
+While the game runs, a game can place and break blocks too, but only if the scene says so: **Inspector (no selection) -> Blocks while playing**, with a limit on how many edits one run may make. Then:
 
 - Quick Actions **Place a block** and **Break a block**, the condition **There is a block in a place**, and the events **a block is placed / broken**;
 - scripts: `game.setBlock(x, y, z, "stone")`, `game.breakBlock(x, y, z)`, `game.blockAt(x, y, z)`.

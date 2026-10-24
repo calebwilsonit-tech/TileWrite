@@ -14,6 +14,25 @@ export function columnToStack(tile: number, height: number): CellStack {
   return { floor: height === 0 ? tile : 0, blocks };
 }
 
+/**
+ * The stack that is the same as a cell: its column, a stair or ramp on top of it as a shaped block, and a deck as the one block
+ * it is. Nothing about how the cell looks or plays changes; it can now be edited block by block.
+ */
+export function cellToStack(c: { tile: number; height: number; slope: number; deck: number; deckTile: number }): CellStack {
+  const blocks: StackBlock[] = [];
+  for (let z = 0; z < c.height; z++) blocks.push({ z, tile: c.tile });
+  const dir = c.slope & 7;
+  if (dir !== 0 && c.tile !== EMPTY_TILE) blocks.push({ z: c.height, tile: c.tile, shape: c.slope & 8 ? 'stairs' : 'ramp', rot: (dir - 1) as 0 | 1 | 2 | 3 });
+  if (c.deck > 0) {
+    const tile = c.deckTile || c.tile;
+    const at = blocks.findIndex((b) => b.z === c.deck - 1);
+    if (at >= 0) blocks[at] = { z: c.deck - 1, tile };
+    else blocks.push({ z: c.deck - 1, tile });
+    blocks.sort((a, b) => a.z - b.z);
+  }
+  return { floor: c.height === 0 && dir === 0 ? c.tile : 0, blocks };
+}
+
 /** Solid runs of blocks, bottom to top. */
 export function stackRuns(stack: CellStack): BlockRun[] {
   const out: BlockRun[] = [];

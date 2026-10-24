@@ -60,5 +60,9 @@
     "controls",
     "sim",
     "combat"
-  ]
+  ],
+  "compat": {
+    "fadeBySight": true,
+    "blockPhysics": true
+  }
 }

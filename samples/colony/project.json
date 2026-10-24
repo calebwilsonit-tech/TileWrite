@@ -59,5 +59,9 @@
   "packs": [
     "controls",
     "sim"
-  ]
+  ],
+  "compat": {
+    "fadeBySight": true,
+    "blockPhysics": true
+  }
 }

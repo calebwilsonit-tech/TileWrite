@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { stackColumn, stackSetBlock, stackRemoveBlock, columnToStack, type BlockFace, type CellStack, type EntityData, type StackBlock } from '@tilewright/runtime';
+import { stackColumn, stackSetBlock, stackRemoveBlock, cellToStack, type BlockFace, type CellStack, type EntityData, type StackBlock } from '@tilewright/runtime';
 import type { CellData, CellPatch } from '../model/cells';
 import type { EditorDoc } from '../model/doc';
 
@@ -35,7 +35,7 @@ export const StructureSchema = z.object({
   w: z.number().int().min(1),
   d: z.number().int().min(1),
   h: z.number().int().min(1),
-  blocks: z.array(z.object({ x: z.number().int(), y: z.number().int(), z: z.number().int(), tile: z.number().int().min(1), faces: FaceSchema.optional() })),
+  blocks: z.array(z.object({ x: z.number().int(), y: z.number().int(), z: z.number().int(), tile: z.number().int().min(1), faces: FaceSchema.optional(), shape: z.enum(['cube', 'stairs', 'ramp']).optional(), rot: z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3)]).optional(), solid: z.boolean().optional() })),
   /** Objects inside the region (attachments, lamps, doors), with positions relative to its corner. */
   entities: z.array(z.object({ name: z.string(), tags: z.array(z.string()).default([]), components: z.record(z.string(), z.unknown()) })).default([]),
   description: z.string().default(''),
@@ -45,17 +45,15 @@ export type StructureBlock = Structure['blocks'][number];
 
 const hasFaces = (f?: StackBlock['faces']): f is NonNullable<StackBlock['faces']> => !!f && Object.keys(f).length > 0;
 
-/** The stack of a cell, if it can be edited block by block (stairs, ramps and decks cannot). */
+/** The stack of a cell: its blocks (a column, stairs, a ramp and a deck are all blocks). */
 function stackOf(c: CellData): CellStack | null {
-  if (c.stack) return c.stack;
-  if (c.slope !== 0 || c.deck !== 0) return null;
-  return columnToStack(c.tile, c.height);
+  return c.stack ?? cellToStack(c);
 }
 
 /** Turn an edited stack back into a cell patch. */
 function patchOf(stack: CellStack): CellPatch {
   const col = stackColumn(stack);
-  return { stack, tile: col.tile, height: col.height };
+  return { stack, tile: col.tile, height: col.height, slope: 0, deck: 0, deckTile: 0 };
 }
 
 /** Change the blocks of one cell with `fn`; refuses cells that cannot be split into blocks. */
@@ -79,7 +77,7 @@ export function captureBlocks(region: Region, cellAt: (x: number, y: number) => 
       if (!stack) continue;
       for (const b of stack.blocks) {
         if (b.z < r.z0 || b.z > r.z1) continue;
-        out.push({ x: x - r.x0, y: y - r.y0, z: b.z - r.z0, tile: b.tile, ...(hasFaces(b.faces) ? { faces: { ...b.faces } } : {}) });
+        out.push({ x: x - r.x0, y: y - r.y0, z: b.z - r.z0, tile: b.tile, ...(hasFaces(b.faces) ? { faces: { ...b.faces } } : {}), ...(b.shape && b.shape !== 'cube' ? { shape: b.shape, rot: b.rot ?? 0 } : {}), ...(b.solid === false ? { solid: false } : {}) });
       }
     }
   }
@@ -129,7 +127,7 @@ export function rotateStructure(s: Structure, turns: number): Structure {
     d: size.d,
     blocks: s.blocks.map((b) => {
       const p = rotatePoint(b.x, b.y, s.w, s.d, t);
-      return { ...b, x: p.x, y: p.y, ...(b.faces ? { faces: rotateFaces(b.faces, t) } : {}) };
+      return { ...b, x: p.x, y: p.y, ...(b.faces ? { faces: rotateFaces(b.faces, t) } : {}), ...(b.rot !== undefined ? { rot: ((b.rot + t) & 3) as 0 | 1 | 2 | 3 } : {}) };
     }),
     entities: s.entities.map((e) => {
       const tr = e.components.transform as { x: number; y: number } | undefined;
@@ -245,7 +243,7 @@ export function pasteEdits(s: Structure, at: { x: number; y: number; z: number }
       patch: (c) =>
         editCell(c, (stack) => {
           let st = stack;
-          for (const b of blocks) st = stackSetBlock(st, at.z + b.z, b.tile, hasFaces(b.faces) ? (b.faces as StackBlock['faces']) : undefined);
+          for (const b of blocks) st = stackSetBlock(st, at.z + b.z, b.tile, hasFaces(b.faces) ? (b.faces as StackBlock['faces']) : undefined, { ...(b.shape && b.shape !== 'cube' ? { shape: b.shape, rot: b.rot ?? 0 } : {}), ...(b.solid === false ? { solid: false } : {}) });
           return st;
         }) ?? {},
     });

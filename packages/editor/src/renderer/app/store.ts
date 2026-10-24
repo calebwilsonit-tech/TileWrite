@@ -111,6 +111,15 @@ export interface ToolOptions {
   zTo: number;
   /** The Blocks tool: what a click does. */
   blockMode: 'add' | 'replace' | 'face' | 'delete';
+  /** The Blocks tool: the shape of the next block (a whole block, stairs or a ramp), the way stairs and ramps rise (0 north, 1 east, 2 south, 3 west) and whether bodies are stopped by it. */
+  blockShape: 'cube' | 'stairs' | 'ramp';
+  blockRot: 0 | 1 | 2 | 3;
+  blockSolid: boolean;
+  /** The Blocks tool: how many layers deep a Shift-drag builds. */
+  blockHeight: number;
+  /** The Blocks tool: the nine tiles of the hotbar (keys 1 to 9), and which slot the next new tile takes. */
+  hotbar: number[];
+  hotbarNext: number;
 }
 
 export interface ViewOptions {
@@ -245,6 +254,12 @@ const initial: AppState = {
     outline: false,
     edge: 1,
     blockMode: 'add',
+    blockShape: 'cube',
+    blockRot: 0,
+    blockSolid: true,
+    blockHeight: 2,
+    hotbar: [1, 2, 3, 4, 5, 6],
+    hotbarNext: 0,
     zFrom: 0,
     zTo: 3,
   },

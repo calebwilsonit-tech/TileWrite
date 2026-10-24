@@ -601,6 +601,9 @@
         ]
       },
       "modal": false,
+      "back": "auto",
+      "backTo": "",
+      "priority": 0,
       "dim": 0,
       "transition": "none",
       "mapX": 40,

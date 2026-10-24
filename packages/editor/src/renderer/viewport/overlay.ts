@@ -196,6 +196,39 @@ export class OverlayDrawer {
     g.stroke({ width: 2, color, alpha: 0.95 });
   }
 
+  /** Light one face of a block (the way a Minecraft cursor does). */
+  face(g: Graphics, x: number, y: number, z: number, face: 'top' | 'n' | 'e' | 's' | 'w', color: number, iso: IsoConfig = DEFAULT_ISO): void {
+    const P = (dx: number, dy: number, dz: number): number[] => {
+      const p = gridToScreen(x + dx, y + dy, z + dz, iso);
+      return [p.x, p.y];
+    };
+    const corners: Record<string, [number, number, number][]> = {
+      top: [[0, 0, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1]],
+      n: [[0, 0, 0], [1, 0, 0], [1, 0, 1], [0, 0, 1]],
+      s: [[0, 1, 0], [1, 1, 0], [1, 1, 1], [0, 1, 1]],
+      w: [[0, 0, 0], [0, 1, 0], [0, 1, 1], [0, 0, 1]],
+      e: [[1, 0, 0], [1, 1, 0], [1, 1, 1], [1, 0, 1]],
+    };
+    const poly = corners[face]!.flatMap(([a, b, c]) => P(a, b, c));
+    g.poly(poly).fill({ color, alpha: 0.35 }).stroke({ width: 2, color, alpha: 0.95 });
+  }
+
+  /** A block-shaped ghost: where a block would be put (see-through, with its edges). */
+  solid(g: Graphics, x: number, y: number, z: number, color: number, alpha: number, iso: IsoConfig = DEFAULT_ISO): void {
+    const P = (dx: number, dy: number, dz: number): number[] => {
+      const p = gridToScreen(x + dx, y + dy, z + dz, iso);
+      return [p.x, p.y];
+    };
+    // the three faces that look toward the camera (the top, the south side and the east side)
+    for (const [corners, shade] of [
+      [[[0, 0, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1]], 1],
+      [[[0, 1, 0], [1, 1, 0], [1, 1, 1], [0, 1, 1]], 0.75],
+      [[[1, 0, 0], [1, 1, 0], [1, 1, 1], [1, 0, 1]], 0.6],
+    ] as [[number, number, number][], number][]) {
+      g.poly(corners.flatMap(([a, b, c]) => P(a, b, c))).fill({ color, alpha: alpha * shade }).stroke({ width: 1, color, alpha: 0.7 });
+    }
+  }
+
   /** Outline a box of blocks: the region of cells and levels (both ends included). */
   box(g: Graphics, r: { x0: number; y0: number; x1: number; y1: number; z0: number; z1: number }, color: number, iso: IsoConfig = DEFAULT_ISO): void {
     const P = (x: number, y: number, z: number): [number, number] => {

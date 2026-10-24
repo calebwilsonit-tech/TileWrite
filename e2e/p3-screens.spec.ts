@@ -12,6 +12,10 @@ import { SAMPLES_DIR, tab } from './sample-helpers';
 test('Phase 3: Back works on the screens you made (the custom-screen bug)', async () => {
   test.setTimeout(180_000);
   const { page, app, workDir, errors } = await launchEditor();
+  const key = async (k: string): Promise<void> => {
+    await page.waitForTimeout(250); // a hand does not tap a key twice within one frame
+    await page.keyboard.press(k);
+  };
   await createProjectViaUi(page, 'Scratch', 'empty');
   const copy = path.join(workDir, 'ui-showcase-copy');
   fs.rmSync(copy, { recursive: true, force: true });
@@ -46,9 +50,9 @@ test('Phase 3: Back works on the screens you made (the custom-screen bug)', asyn
   expect(await stack()).toEqual(['HUD']);
 
   // P is the pause key (Esc stops the game in the editor). It opens Pause, and the next press closes it for good.
-  await page.keyboard.press('p');
+  await key('p');
   await expect(page.getByTestId('tw-screen-Pause')).toBeVisible();
-  await page.keyboard.press('p');
+  await key('p');
   await expect(page.getByTestId('tw-screen-Pause')).toHaveCount(0);
   await page.waitForTimeout(400);
   expect(await stack()).toEqual(['HUD']); // it did not open again by itself
@@ -56,28 +60,29 @@ test('Phase 3: Back works on the screens you made (the custom-screen bug)', asyn
   // the bag is a screen of its own: Back leaves it and does NOT land on Pause
   await page.getByTestId('tw-ui-Bag').click();
   await expect(page.getByTestId('tw-screen-Inventory')).toBeVisible();
-  await page.keyboard.press('p');
+  await key('p');
   await expect(page.getByTestId('tw-screen-Inventory')).toHaveCount(0);
   await page.waitForTimeout(400);
   expect(await stack()).toEqual(['HUD']);
   await expect(page.getByTestId('tw-screen-Pause')).toHaveCount(0);
 
   // Pause -> Settings -> Back is Pause again, then Back is the game
-  await page.keyboard.press('p');
+  await key('p');
   await expect(page.getByTestId('tw-screen-Pause')).toBeVisible();
   await page.getByTestId('tw-ui-PauseSettings').click();
   await expect(page.getByTestId('tw-screen-Settings')).toBeVisible();
-  await page.keyboard.press('p');
+  await key('p');
   await expect(page.getByTestId('tw-screen-Settings')).toHaveCount(0);
   await expect(page.getByTestId('tw-screen-Pause')).toBeVisible();
-  await page.keyboard.press('p');
+  await key('p');
   await expect(page.getByTestId('tw-screen-Pause')).toHaveCount(0);
   await page.waitForTimeout(300);
   expect(await stack()).toEqual(['HUD']);
 
   // the Start button of a gamepad is the same Back
-  await page.keyboard.press('p');
+  await key('p');
   await expect(page.getByTestId('tw-screen-Pause')).toBeVisible();
+  await page.waitForTimeout(400); // the key is let go before the pad's button goes down, as with a person with two hands
   await page.evaluate(() => {
     const pad = { index: 0, id: 'test pad', connected: true, mapping: 'standard', timestamp: 0, axes: [0, 0, 0, 0], buttons: Array.from({ length: 17 }, (_, i) => ({ pressed: i === 9, touched: i === 9, value: i === 9 ? 1 : 0 })) };
     (navigator as unknown as { getGamepads: () => unknown[] }).getGamepads = () => [pad];

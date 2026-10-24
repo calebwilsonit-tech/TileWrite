@@ -236,6 +236,12 @@ function SceneInspector() {
         onChange={(v) => doc.setGravity(v)}
       />
       <p className="hint">{project?.project.compat?.blockPhysics ? 'Any object can have its own gravity (its Body settings). A switch or a rule can turn it while the game runs.' : 'Gravity in any direction needs "Bodies collide with every block" in Project settings -> Compatibility; this project plays with the older physics, where it always points down.'}</p>
+      <fieldset data-testid="scene-blocks-rules">
+        <legend>Blocks while playing</legend>
+        <CheckField testId="scene-blocks-runtime" label="The game may place and break blocks (a builder, a digging game)" value={doc.blockRules.runtime} onChange={(v) => doc.setBlockRules({ ...doc.blockRules, runtime: v })} />
+        {doc.blockRules.runtime && <NumberField testId="scene-blocks-limit" label="Most edits one run may make" min={1} max={100000} value={doc.blockRules.limit} onCommit={(v) => doc.setBlockRules({ ...doc.blockRules, limit: Math.round(v) })} />}
+        <p className="hint">Off, nothing changes the blocks while the game runs. On, Quick Actions "Place a block" and "Break a block" and the scripts' setBlock and breakBlock work, up to the limit; what they did is saved with the game.</p>
+      </fieldset>
       <p className="hint">
         {doc.entities.length} object{doc.entities.length === 1 ? '' : 's'}, {doc.regions.length} region{doc.regions.length === 1 ? '' : 's'}. Project: {project?.project.name}
       </p>

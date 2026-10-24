@@ -417,7 +417,11 @@ export class IsoRenderer {
         if (map.getTile(x, y) === 0 && !map.getStack(x, y)) continue;
         const st = map.getStack(x, y);
         if (st) for (const b of st.blocks) test(x, y, b.z);
-        else if (!map.getSlope(x, y) && map.getDeck(x, y) === 0) for (let z = 0; z < map.getHeight(x, y); z++) test(x, y, z);
+        else if (!map.getSlope(x, y) && map.getDeck(x, y) === 0) {
+          // a cell with no blocks on it: its ground can be pointed at, so the first block of a building can go on it
+          if (map.getHeight(x, y) === 0) test(x, y, -1);
+          for (let z = 0; z < map.getHeight(x, y); z++) test(x, y, z);
+        }
         else test(x, y, Math.max(0, Math.ceil(map.topHeight(x, y)) - 1));
         // a floor (the ground of a cell with no block on it) can be picked too
         if (st && st.floor !== 0 && !st.blocks.some((b) => b.z === 0)) test(x, y, -1);

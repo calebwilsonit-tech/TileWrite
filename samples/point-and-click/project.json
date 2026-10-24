@@ -60,5 +60,9 @@
     "controls",
     "story",
     "inventory"
-  ]
+  ],
+  "compat": {
+    "fadeBySight": true,
+    "blockPhysics": true
+  }
 }

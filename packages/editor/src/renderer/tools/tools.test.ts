@@ -18,6 +18,7 @@ const baseOpts: ToolOptions = {
   outline: false,
   edge: 1,
   blockMode: 'add', spacing: 1, avoidPaths: true, attachment: '', zFrom: 0, zTo: 3,
+  blockShape: 'cube', blockRot: 0, blockSolid: true, blockHeight: 2, hotbar: [1, 2, 3], hotbarNext: 0,
 };
 
 function setup(w = 12, h = 12, opts: Partial<ToolOptions> = {}) {
@@ -27,6 +28,7 @@ function setup(w = 12, h = 12, opts: Partial<ToolOptions> = {}) {
   const state = { selection: [] as string[], region: null as string | null, preview: [] as Preview[], walk: null as Set<string> | null, picks: new Map<string, string>() };
   const env: ToolEnv = {
     doc,
+    setOptions: (patch) => Object.assign(env.opts, patch),
     pickTile: (tile) => tile,
     tileset: () => ({}),
     blockBox: () => null,
@@ -55,6 +57,7 @@ function setup(w = 12, h = 12, opts: Partial<ToolOptions> = {}) {
     worldAt: (s) => ({ x: s.x / 10, y: s.y / 10 }),
   };
   const ptr = (x: number, y: number, extra: Partial<Pointer> = {}): Pointer => ({
+    button: 0,
     cell: { x, y },
     screen: { x: x * 10 + 5, y: y * 10 + 5 },
     shift: false,
@@ -464,8 +467,8 @@ describe('gestures', () => {
     for (const id of Object.keys(TOOLS) as ToolId[]) {
       if (id === 'select' || id === 'stamp') continue;
       expect(() => {
-        TOOLS[id].down({ cell: { x: -3, y: 99 }, screen: { x: 0, y: 0 }, shift: false, alt: false, ctrl: false }, env);
-        TOOLS[id].up({ cell: { x: -3, y: 99 }, screen: { x: 0, y: 0 }, shift: false, alt: false, ctrl: false }, env);
+        TOOLS[id].down({ button: 0, cell: { x: -3, y: 99 }, screen: { x: 0, y: 0 }, shift: false, alt: false, ctrl: false }, env);
+        TOOLS[id].up({ button: 0, cell: { x: -3, y: 99 }, screen: { x: 0, y: 0 }, shift: false, alt: false, ctrl: false }, env);
       }, id).not.toThrow();
     }
     expect(doc.entities).toHaveLength(0);

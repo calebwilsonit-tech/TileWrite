@@ -808,5 +808,9 @@
     "ai",
     "lighting",
     "storytender"
-  ]
+  ],
+  "compat": {
+    "fadeBySight": true,
+    "blockPhysics": true
+  }
 }

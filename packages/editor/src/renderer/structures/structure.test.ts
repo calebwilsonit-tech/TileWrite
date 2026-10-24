@@ -42,12 +42,17 @@ describe('regions', () => {
     expect(blocksOf(d, 12, 10)).toEqual([0, 1, 2]);
   });
 
-  it('refuses nothing quietly: stairs cannot be split into blocks and are left alone', () => {
+  it('stairs are blocks too: copied with their shape and way round, and turned with the structure', () => {
     const d = doc();
-    d.paint('stairs', [{ x: 5, y: 5, patch: { slope: 1, height: 1 } }]);
-    expect(captureBlocks({ x0: 5, y0: 5, x1: 5, y1: 5, z0: 0, z1: 3 }, cellAt(d))).toEqual([]);
+    d.paint('stairs', [{ x: 5, y: 5, patch: { slope: 2 | 8, height: 1 } }]); // stairs rising toward the east, on a one-level column
+    const blocks = captureBlocks({ x0: 5, y0: 5, x1: 5, y1: 5, z0: 0, z1: 3 }, cellAt(d));
+    expect(blocks.map((x) => [x.z, x.shape ?? 'cube', x.rot ?? 0])).toEqual([[0, 'cube', 0], [1, 'stairs', 1]]);
     const edits = fillEdits({ x0: 5, y0: 5, x1: 5, y1: 5, z0: 0, z1: 1 }, 5);
-    expect(edits[0]!.patch(readCell(d.map, 5, 5))).toEqual({});
+    const patch = edits[0]!.patch(readCell(d.map, 5, 5)) as { slope?: number; stack?: { blocks: { z: number; shape?: string }[] } };
+    expect(patch.slope).toBe(0); // the stair is a block of the stack now
+    expect(patch.stack!.blocks.map((x) => x.shape ?? 'cube')).toEqual(['cube', 'cube']);
+    const s = makeStructure('Stairs', { x0: 5, y0: 5, x1: 5, y1: 5, z0: 0, z1: 3 }, d, cellAt(d));
+    expect(rotateStructure(s, 1).blocks.find((x) => x.shape === 'stairs')!.rot).toBe(2); // a quarter turn: east becomes south
   });
 });
 

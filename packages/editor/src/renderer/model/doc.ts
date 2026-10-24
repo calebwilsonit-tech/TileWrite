@@ -146,6 +146,8 @@ export class EditorDoc {
   generator: GeneratorSpec | null = null;
   /** Which way gravity pulls in this scene ('-z', down, when not set). */
   gravity: GravityDir = '-z';
+  /** May the game place and break blocks while it runs, and how many edits one run may make. */
+  blockRules: { runtime: boolean; limit: number } = { runtime: false, limit: 200 };
   /** Returns false to refuse a change to a cell (a locked layer). */
   cellGuard: ((before: CellData, after: CellData) => boolean) | null = null;
 
@@ -171,6 +173,7 @@ export class EditorDoc {
     const rules = copy.generator ? GeneratorSpecSchema.safeParse(copy.generator) : null;
     doc.generator = rules?.success ? rules.data : null;
     doc.gravity = copy.gravity ?? '-z';
+    doc.blockRules = { runtime: copy.blocks?.runtime ?? false, limit: copy.blocks?.limit ?? 200 };
     return doc;
   }
 
@@ -191,6 +194,24 @@ export class EditorDoc {
       graphs: this.graphs,
       ...(this.generator ? { generator: this.generator } : {}),
       ...(this.gravity !== '-z' ? { gravity: this.gravity } : {}),
+      ...(this.blockRules.runtime ? { blocks: this.blockRules } : {}),
+    });
+  }
+
+  /** Whether the game may place and break blocks while it runs, and the limit on edits (an undo step). */
+  setBlockRules(rules: { runtime: boolean; limit: number }): void {
+    const before = { ...this.blockRules };
+    if (before.runtime === rules.runtime && before.limit === rules.limit) return;
+    this.run({
+      label: 'Blocks while playing',
+      redo: () => {
+        this.blockRules = { ...rules };
+        this.emit({ type: 'events' });
+      },
+      undo: () => {
+        this.blockRules = before;
+        this.emit({ type: 'events' });
+      },
     });
   }
 

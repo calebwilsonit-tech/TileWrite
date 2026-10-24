@@ -31,6 +31,26 @@ function Slider({ label, value, min, max, step = 1, onChange, testId }: { label:
   );
 }
 
+/** Nine tiles on keys 1 to 9: the ones used lately for blocks. */
+function Hotbar({ options }: { options: ToolOptions }) {
+  const tiles = useApp((s) => s.project?.project.tileset) ?? [];
+  const names = (id: number): string => tiles.find((t) => t.id === id)?.name ?? DEFAULT_NAMES[id] ?? String(id);
+  return (
+    <div className="opt hotbar" data-testid="hotbar" role="group" aria-label="Hotbar of block tiles">
+      <span>Hotbar (keys 1 to 9)</span>
+      <div className="seg">
+        {options.hotbar.map((id, i) => (
+          <button key={`${i}-${id}`} data-testid={`hotbar-${i + 1}`} className={options.tile === id ? 'on' : ''} title={names(id)} onClick={() => store.setOptions({ tile: id })}>
+            {i + 1} {names(id)}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+const DEFAULT_NAMES: Record<number, string> = { 1: 'grass', 2: 'stone', 3: 'sand', 4: 'water', 5: 'brick', 6: 'wood' };
+
 export function ToolOptionsView({ tool, options }: { tool: ToolId; options: ToolOptions }) {
   const meta = toolMeta(tool);
   useApp((s) => s.prefabNames);
@@ -100,9 +120,45 @@ export function ToolOptionsView({ tool, options }: { tool: ToolId; options: Tool
               </button>
             ))}
           </div>
-          <p className="hint">Shift+click always removes, Alt+click always changes the tile. Blocks of a plain column appear as you edit them.</p>
+          <p className="hint">Right-click or Ctrl+click always removes, Alt+click always changes the tile. Blocks of a plain column appear as you edit them.</p>
         </div>
       )}
+      {meta.options.includes('blockShape') && (
+        <div className="opt" data-testid="block-shape-options">
+          <span>Next block is</span>
+          <div className="seg" role="group" aria-label="Shape of the next block">
+            {(
+              [
+                ['cube', 'a whole block'],
+                ['stairs', 'stairs'],
+                ['ramp', 'a ramp'],
+              ] as const
+            ).map(([shape, label]) => (
+              <button key={shape} data-testid={`block-shape-${shape}`} className={options.blockShape === shape ? 'on' : ''} onClick={() => set({ blockShape: shape })}>
+                {label}
+              </button>
+            ))}
+          </div>
+          {options.blockShape !== 'cube' && (
+            <>
+              <span>Rises toward (R turns)</span>
+              <div className="seg" role="group" aria-label="Way the stairs rise">
+                {(['north', 'east', 'south', 'west'] as const).map((name, i) => (
+                  <button key={name} data-testid={`block-rot-${i}`} className={options.blockRot === i ? 'on' : ''} onClick={() => set({ blockRot: i as 0 | 1 | 2 | 3 })}>
+                    {name}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+          <label className="opt check">
+            <input data-testid="block-solid" type="checkbox" checked={!options.blockSolid} onChange={(e) => set({ blockSolid: !e.target.checked })} />
+            <span>Not solid (bodies walk through it)</span>
+          </label>
+          {meta.options.includes('blockHeight') && <Slider testId="opt-block-height" label="Shift-drag builds this many layers" value={options.blockHeight} min={1} max={12} onChange={(v) => set({ blockHeight: v })} />}
+        </div>
+      )}
+      {meta.options.includes('hotbar') && <Hotbar options={options} />}
       {meta.options.includes('outline') && (
         <label className="opt check">
           <input data-testid="opt-outline" type="checkbox" checked={options.outline} onChange={(e) => set({ outline: e.target.checked })} />

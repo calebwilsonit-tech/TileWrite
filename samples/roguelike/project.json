@@ -61,5 +61,9 @@
     "inventory",
     "turns",
     "controls"
-  ]
+  ],
+  "compat": {
+    "fadeBySight": true,
+    "blockPhysics": true
+  }
 }
