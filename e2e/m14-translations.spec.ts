@@ -21,7 +21,7 @@ async function play(page: Page, snapshot: Snapshot, ticks: number): Promise<void
 }
 
 /** The first line the elder says in the sample game, read from the sample's own file. */
-const elder = JSON.parse(fs.readFileSync(path.join(root, 'templates', 'last-storytender', 'assets', 'dialogues', 'Elder.dialogue.json'), 'utf8')) as { nodes: { type: string; text?: string }[] };
+const elder = JSON.parse(fs.readFileSync(path.join(root, 'packages', 'plugins', 'storytender', 'samples', 'last-storytender', 'assets', 'dialogues', 'Elder.dialogue.json'), 'utf8')) as { nodes: { type: string; text?: string }[] };
 const FIRST = elder.nodes.find((n) => n.type === 'line')!.text!;
 
 test('M14: add a language, translate a conversation and the menus, see them in the game, and switch language in Settings', async () => {

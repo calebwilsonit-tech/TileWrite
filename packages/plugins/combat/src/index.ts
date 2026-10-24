@@ -1,5 +1,6 @@
 import { definePlugin } from '@tilewright/plugin-sdk';
 import manifest from '../plugin.json' with { type: 'json' };
+import { templates } from './templates';
 import { events } from './events';
 import { actions, conditions } from './blocks';
 import type { Entity } from '@tilewright/plugin-sdk';
@@ -12,6 +13,7 @@ export * from './ranged';
 export * from './projectile';
 
 export const combatPlugin = definePlugin(manifest, {
+  templates,
   install(api) {
     api.assistantNote("Combat: health on objects, damage on touch, melee and ranged attacks (rangedAttack makes an enemy shoot), dodging, projectiles; the buttons attack and dodge.");
     for (const e of events) api.event(e);

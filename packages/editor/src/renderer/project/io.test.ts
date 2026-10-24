@@ -13,7 +13,7 @@ import {
   scenePathFor,
   type ProjectFs,
 } from './io';
-import { TEMPLATES } from './templates';
+import { listTemplates } from './templates';
 
 function memoryFs(): ProjectFs & { files: Map<string, string> } {
   const files = new Map<string, string>();
@@ -45,7 +45,7 @@ describe('project folders', () => {
   });
 
   it('creates a project from every template and opens it again', async () => {
-    for (const t of TEMPLATES) {
+    for (const t of listTemplates()) {
       const fs = memoryFs();
       const created = await createProject(fs, 'C:\\Games', 'Test Game', t.id);
       expect(created.dir).toBe('C:\\Games\\Test Game');

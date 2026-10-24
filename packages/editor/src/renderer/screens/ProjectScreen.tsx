@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useApp, store } from '../app/store';
-import { TEMPLATES } from '../project/templates';
+import { listTemplates } from '../project/templates';
 import { Toasts } from '../app/Chrome';
 import { tutorial } from '../tutorial/store';
 import { api } from '../project/api';
@@ -9,7 +9,7 @@ export function ProjectScreen() {
   const recent = useApp((s) => s.recent);
   const busy = useApp((s) => s.busy);
   const [name, setName] = useState('My Game');
-  const [template, setTemplate] = useState(TEMPLATES[0]!.id);
+  const [template, setTemplate] = useState(listTemplates()[0]!.id);
   const [showNew, setShowNew] = useState(false);
   const [samples, setSamples] = useState<{ id: string; name: string }[]>([]);
   useEffect(() => {
@@ -60,7 +60,7 @@ export function ProjectScreen() {
                 <input data-testid="project-name-input" value={name} onChange={(e) => setName(e.target.value)} />
               </label>
               <div className="templates" role="radiogroup" aria-label="Template">
-                {TEMPLATES.map((t) => (
+                {listTemplates().map((t) => (
                   <label key={t.id} className={`template${template === t.id ? ' on' : ''}`}>
                     <input type="radio" name="template" data-testid={`template-${t.id}`} checked={template === t.id} onChange={() => setTemplate(t.id)} />
                     <strong>{t.name}</strong>

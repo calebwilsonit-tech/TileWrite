@@ -155,7 +155,7 @@ export interface PluginApi {
 }
 
 /** Make a plugin from its plugin.json and its code. Throws, saying what is wrong, when the manifest is not valid. */
-export function definePlugin(manifest: unknown, parts: { install(api: PluginApi): void; installEditor?(api: PluginApi): void }): PluginDefinition {
+export function definePlugin(manifest: unknown, parts: { install(api: PluginApi): void; installEditor?(api: PluginApi): void; templates?: X.TemplateDef[] }): PluginDefinition {
   const r = parseManifest(manifest);
   if (!r.ok) throw new PluginError(`plugin.json is not valid: ${r.problems.join('; ')}`);
   return { manifest: r.manifest, ...parts };
@@ -167,6 +167,8 @@ export interface PluginDefinition {
   install(api: PluginApi): void;
   /** The editor part: only the editor installs it (never exported). */
   installEditor?(api: PluginApi): void;
+  /** Starter projects it offers in the New project list, whether or not it is on in the project that is open. */
+  templates?: X.TemplateDef[];
 }
 
 // ---------- what the host keeps ----------
@@ -368,6 +370,11 @@ export class PluginHost {
   /** What a plugin that is on offered by name (the editor and the game host take the screens a plugin draws this way). */
   provided<T = unknown>(pluginId: string, name: string): T | undefined {
     return this.installed.get(pluginId)?.provided.get(name) as T | undefined;
+  }
+
+  /** The starters every plugin the host knows offers. */
+  allTemplates(): X.TemplateDef[] {
+    return [...this.known.values()].flatMap((d) => d.templates ?? []);
   }
 
   /** What the plugins that are on tell the assistant. */

@@ -25,6 +25,7 @@ export * from './events/graph-convert';
 export * from './builtins/devices';
 export * from './builtins/interact';
 export * from './nav';
+export * from './template-kit';
 export * from './bridges';
 export * from './defeat';
 export * from './facing';

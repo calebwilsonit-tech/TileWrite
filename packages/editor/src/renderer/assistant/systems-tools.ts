@@ -2,7 +2,7 @@ import { GENERATOR_NAMES, TableSchema, UiScreenSchema, generate, newGeneratorSpe
 import { listPacks, packContents } from '@tilewright/behaviors';
 import { lineDiff, type ToolOutput } from '@tilewright/assistant';
 import { store } from '../app/store';
-import { TEMPLATES } from '../project/templates';
+import { listTemplates } from '../project/templates';
 import { checkUiDoc } from '../uidesigner/ui-edit';
 import { fail, json, requireEditing, undoTop, type Proposal } from './tool-core';
 
@@ -28,7 +28,7 @@ export async function runSystemsRead(name: string, input: Record<string, unknown
       );
     }
     case 'list_templates':
-      return text(json(TEMPLATES.map((t) => ({ id: t.id, name: t.name, description: t.description, packs: t.build('x').project.packs }))));
+      return text(json(listTemplates().map((t) => ({ id: t.id, name: t.name, description: t.description, packs: t.build('x').project.packs }))));
     case 'get_tables': {
       const names = input.names as string[] | undefined;
       const list = store.tables.filter((t) => !names || names.includes(t.name));

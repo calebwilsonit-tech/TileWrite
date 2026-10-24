@@ -405,7 +405,7 @@ test('M13: build the Last Storytender slice with the editor only, check it, let 
   await page.getByTestId('playthrough-run-Storytender slice').click();
   await expect(page.getByTestId('bot-log-item').first()).toContainText('Playthrough "Storytender slice" still works');
   await page.screenshot({ path: shot('m13-playbot-replay.png') });
-  // the finished slice, with its playthrough, is what ships as the sample game (templates/last-storytender; see docs/acceptance.md)
+  // the finished slice, with its playthrough, is what ships as the sample game (packages/plugins/storytender/samples/last-storytender; see docs/acceptance.md)
   if (process.env.TILEWRIGHT_SAMPLE_OUT) {
     fs.rmSync(process.env.TILEWRIGHT_SAMPLE_OUT, { recursive: true, force: true });
     fs.cpSync(projectDir, process.env.TILEWRIGHT_SAMPLE_OUT, { recursive: true, filter: (src) => !/[\\/](saves|\.tilewright|exports|release)([\\/]|$)/.test(src.slice(projectDir.length)) });

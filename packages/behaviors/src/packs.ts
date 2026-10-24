@@ -164,3 +164,6 @@ export function knownPackOfBehavior(id: string): string | undefined {
 export function installedBehaviorIds(): string[] {
   return behaviorList().map((b) => b.id);
 }
+
+/** The starter projects the plugins offer (for the New project list). */
+export const allPluginTemplates = (): ReturnType<typeof host.allTemplates> => host.allTemplates();

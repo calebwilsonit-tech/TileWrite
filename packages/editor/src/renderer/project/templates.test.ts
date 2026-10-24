@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { C, Simulation, TableSchema, loadScene, physicsSystem, pointerSnapshot, cameraSnapshot, type TransformIso } from '@tilewright/runtime';
-import { TEMPLATES, templateById } from './templates';
+import { listTemplates, templateById } from './templates';
 import { addStandardSystems, packsOfProject, setActivePacks } from '@tilewright/behaviors';
 
 function start(id: string): { sim: Simulation; ids: Map<string, ReturnType<typeof loadScene> extends Map<string, infer E> ? E : never>; built: ReturnType<ReturnType<typeof templateById>['build']> } {
@@ -14,7 +14,7 @@ function start(id: string): { sim: Simulation; ids: Map<string, ReturnType<typeo
 
 describe('the genre starters', () => {
   it('each one names the packs it needs, and nothing it does not', () => {
-    const packs = Object.fromEntries(TEMPLATES.map((t) => [t.id, t.build('T').project.packs]));
+    const packs = Object.fromEntries(listTemplates().map((t) => [t.id, t.build('T').project.packs]));
     expect(packs.empty).toEqual([]);
     expect(packs.tactics).toEqual(['combat', 'turns', 'controls']);
     expect(packs.builder).toEqual(['controls', 'sim']);
@@ -47,7 +47,7 @@ describe('the genre starters', () => {
   });
 
   it('every starter runs a second of game time without a problem', () => {
-    for (const t of TEMPLATES) {
+    for (const t of listTemplates()) {
       const { sim } = start(t.id);
       expect(() => {
         for (let i = 0; i < 60; i++) sim.step({});

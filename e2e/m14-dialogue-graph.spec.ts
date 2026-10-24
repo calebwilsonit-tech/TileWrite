@@ -33,7 +33,7 @@ test('M14: a conversation is shown as a graph, and cards can be added, moved, co
   await page.getByTestId('dg-big').click(); // the panel is short: use the whole window
 
   // ---- the sample's own conversation: a card for every step, a line for every link ----
-  const elder = JSON.parse(fs.readFileSync(path.join(root, 'templates', 'last-storytender', 'assets', 'dialogues', 'Elder.dialogue.json'), 'utf8'));
+  const elder = JSON.parse(fs.readFileSync(path.join(root, 'packages', 'plugins', 'storytender', 'samples', 'last-storytender', 'assets', 'dialogues', 'Elder.dialogue.json'), 'utf8'));
   await expect(page.locator('[data-testid^="dg-node-"]')).toHaveCount(elder.nodes.length);
   const expectedEdges = edgesOf(elder).length;
   expect(expectedEdges).toBeGreaterThan(2);

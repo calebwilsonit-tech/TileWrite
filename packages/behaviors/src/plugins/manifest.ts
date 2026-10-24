@@ -56,6 +56,8 @@ export const PluginManifestSchema = z.object({
     .default({}),
   /** Text file shown when the plugin is updated ("what changed"). */
   changelog: z.string().max(200).default(''),
+  /** Folder of finished sample games the plugin ships (each a project folder; the project screen offers them). */
+  samples: z.string().max(200).default(''),
   /** Folder of art, sounds, screens, templates and pages the plugin brings (copied into a game that uses them). */
   assets: z.string().max(200).default(''),
   /** True for the plugins that ship with the editor. */

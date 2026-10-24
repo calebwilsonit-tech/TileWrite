@@ -20,7 +20,7 @@ function projects(): { kind: string; id: string; dir: string }[] {
     }
   };
   add('sample', path.join(root, 'samples'));
-  add('template', path.join(root, 'templates'));
+  for (const e of fs.existsSync(path.join(root, 'packages', 'plugins')) ? fs.readdirSync(path.join(root, 'packages', 'plugins')) : []) add('plugin-sample', path.join(root, 'packages', 'plugins', e, 'samples'));
   add('owner', path.join(root, 'compat', 'projects'));
   return out.sort((a, b) => `${a.kind}/${a.id}`.localeCompare(`${b.kind}/${b.id}`));
 }

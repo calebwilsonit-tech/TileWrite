@@ -13,5 +13,6 @@
   "entry": {
     "runtime": "src/index.ts"
   },
-  "builtin": true
+  "builtin": true,
+  "samples": "samples"
 }
