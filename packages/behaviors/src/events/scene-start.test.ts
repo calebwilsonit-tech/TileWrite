@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { loadScene } from '@tilewright/runtime';
-import { newAction, newCondition, newRow, setActivePacks } from '../index';
-import { flatScene, rig } from '../testing';
+import { newAction, newCondition, newRow, setActivePacks } from '@tilewright/behaviors';
+import { flatScene, rig } from '@tilewright/plugin-sdk/testing';
 
 setActivePacks(undefined);
 

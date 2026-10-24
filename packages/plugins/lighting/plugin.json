@@ -1,0 +1,15 @@
+{
+  "id": "lighting",
+  "name": "Lighting",
+  "version": "1.0.0",
+  "description": "Lights, darkness and shadows.",
+  "author": "Tilewright",
+  "license": "MIT",
+  "engine": "^1.0.0",
+  "dependencies": {},
+  "permissions": [],
+  "entry": {
+    "runtime": "src/index.ts"
+  },
+  "builtin": true
+}

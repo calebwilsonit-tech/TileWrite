@@ -129,16 +129,6 @@ Id: `signal`.
 | Signal | `name` | signal | (empty) |  |
 | Is | `state` | select | "on" | `on`, `off` |
 
-#### An object's health compares
-
-Id: `health`.
-
-| Parameter | Key | Kind | Starts as | Choices and notes |
-| --- | --- | --- | --- | --- |
-| Object | `who` | entity | "player" |  |
-| Is | `op` | select | "<=" | `=`, `!=`, `>`, `>=`, `<`, `<=` |
-| Hit points | `value` | number | 1 |  |
-
 #### Something is inside an area
 
 Id: `inside`.
@@ -167,6 +157,27 @@ Id: `entityEvent`.
 | Object | `who` | entity | (empty) |  |
 | What happens to it | `name` | select | "died" | `died`, `damaged`, `pickup`, `turn-start`, `turn-end`, `unit-moved`, `landed`, `gravity-changed`, `noticed`, `state-changed`, `hotspot-used`, `boss-defeated` |
 
+#### An object's health compares
+
+Id: `health`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Object | `who` | entity | "player" |  |
+| Is | `op` | select | "<=" | `=`, `!=`, `>`, `>=`, `<`, `<=` |
+| Hit points | `value` | number | 1 |  |
+
+### Input
+
+#### The player presses a button
+
+Id: `action`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Button | `name` | action | "interact" |  |
+| When it is | `mode` | select | "pressed" | `pressed`, `held`, `released` |
+
 ### Story
 
 #### The player carries an item
@@ -186,26 +197,7 @@ Id: `minigameWon`.
 | --- | --- | --- | --- | --- |
 | Minigame (name) | `minigame` | text | (empty) |  |
 
-### Input
-
-#### The player presses a button
-
-Id: `action`.
-
-| Parameter | Key | Kind | Starts as | Choices and notes |
-| --- | --- | --- | --- | --- |
-| Button | `name` | action | "interact" |  |
-| When it is | `mode` | select | "pressed" | `pressed`, `held`, `released` |
-
 ### Puzzles
-
-#### Echoes exist
-
-Id: `echoCount`.
-
-| Parameter | Key | Kind | Starts as | Choices and notes |
-| --- | --- | --- | --- | --- |
-| At least how many | `atLeast` | number | 1 | at least 0 |
 
 #### A spot is lit (or dark)
 
@@ -216,6 +208,14 @@ Id: `litAt`.
 | Where | `where` | entity | "player" |  |
 | It is | `state` | select | "lit" | `lit`, `dark` |
 | Brightness that counts as lit (0 to 1) | `threshold` | number | 0.5 | 0.05 to 1 |
+
+#### Echoes exist
+
+Id: `echoCount`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| At least how many | `atLeast` | number | 1 | at least 0 |
 
 #### A sentence stone shows a word
 
@@ -482,27 +482,36 @@ Id: `setEnabled`.
 | Object | `who` | entity | "picked" |  |
 | Make its collision | `state` | select | "on" | `on`, `off` |
 
-### Combat
-
-#### Hurt an object
-
-Id: `damage`.
-
-| Parameter | Key | Kind | Starts as | Choices and notes |
-| --- | --- | --- | --- | --- |
-| Object | `who` | entity | "player" |  |
-| Damage | `amount` | number | 1 | at least 0 |
-
-#### Heal an object
-
-Id: `heal`.
-
-| Parameter | Key | Kind | Starts as | Choices and notes |
-| --- | --- | --- | --- | --- |
-| Object | `who` | entity | "player" |  |
-| Hit points | `amount` | number | 1 | at least 0 |
-
 ### Story
+
+#### Go to another scene
+
+Id: `travel`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Scene file (empty = this one) | `scene` | text | (empty) |  |
+| Appear at (object name, or "x,y") | `spawn` | text | (empty) |  |
+
+#### Save the game (autosave)
+
+Id: `saveGame`.
+
+No parameters.
+
+#### Load a saved game (continue)
+
+Id: `loadGame`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Save slot | `slot` | text | "autosave" |  |
+
+#### Quit the game
+
+Id: `quitGame`.
+
+No parameters.
 
 #### Give the player an item
 
@@ -545,35 +554,6 @@ Id: `playCutscene`.
 | Parameter | Key | Kind | Starts as | Choices and notes |
 | --- | --- | --- | --- | --- |
 | Cutscene (name) | `cutscene` | text | (empty) |  |
-
-#### Go to another scene
-
-Id: `travel`.
-
-| Parameter | Key | Kind | Starts as | Choices and notes |
-| --- | --- | --- | --- | --- |
-| Scene file (empty = this one) | `scene` | text | (empty) |  |
-| Appear at (object name, or "x,y") | `spawn` | text | (empty) |  |
-
-#### Save the game (autosave)
-
-Id: `saveGame`.
-
-No parameters.
-
-#### Load a saved game (continue)
-
-Id: `loadGame`.
-
-| Parameter | Key | Kind | Starts as | Choices and notes |
-| --- | --- | --- | --- | --- |
-| Save slot | `slot` | text | "autosave" |  |
-
-#### Quit the game
-
-Id: `quitGame`.
-
-No parameters.
 
 ### Interface
 
@@ -634,6 +614,26 @@ Id: `hitStop`.
 | Parameter | Key | Kind | Starts as | Choices and notes |
 | --- | --- | --- | --- | --- |
 | Seconds (0.05 is a good hit) | `seconds` | number | 0.08 | 0 to 0.2 |
+
+### Combat
+
+#### Hurt an object
+
+Id: `damage`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Object | `who` | entity | "player" |  |
+| Damage | `amount` | number | 1 | at least 0 |
+
+#### Heal an object
+
+Id: `heal`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Object | `who` | entity | "player" |  |
+| Hit points | `amount` | number | 1 | at least 0 |
 
 ### Puzzles
 

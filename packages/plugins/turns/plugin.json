@@ -1,0 +1,15 @@
+{
+  "id": "turns",
+  "name": "Turn-based play",
+  "version": "1.0.0",
+  "description": "Units that take turns: a queue by speed, action points, cell-by-cell walking, attacks with height advantage, enemy AI turns, win and lose.",
+  "author": "Tilewright",
+  "license": "MIT",
+  "engine": "^1.0.0",
+  "dependencies": {},
+  "permissions": [],
+  "entry": {
+    "runtime": "src/index.ts"
+  },
+  "builtin": true
+}

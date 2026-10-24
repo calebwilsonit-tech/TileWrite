@@ -1,0 +1,12 @@
+{
+  "name": "@tilewright/plugin-story",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Characters that talk, cutscene triggers, minigame stations, the world map.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@tilewright/plugin-sdk": "*"
+  }
+}

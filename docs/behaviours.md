@@ -6,8 +6,8 @@ A behaviour is ready-made logic you add to an object in the Inspector (**Behavio
 
 There are 58 behaviours. Behaviours made by scripts (see [code-window.md](code-window.md)) appear in the same list under "Scripts".
 
-- [AI](#ai) (Vision Cone, Chase, Patrol, Boss Phases, State Machine, Behaviour Tree)
-- [Combat](#combat) (Health, Damage on Touch, Melee Attack (quill), Dodge, Ranged Attack)
+- [AI](#ai) (Vision Cone, Chase, Patrol, Boss Phases, Behaviour Tree, State Machine)
+- [Combat](#combat) (Health, Damage on Touch, Melee Attack (quill), Ranged Attack, Dodge)
 - [Control schemes](#control-schemes) (Direct Control, Click to Move, Hotspot, Grid Cursor, Commandable Unit, RTS Control, Camera Rig, Builder)
 - [Interface](#interface) (World UI)
 - [Light](#light) (Light, Light Resource (lantern fuel), Light Sensor, Growing Object)
@@ -16,10 +16,10 @@ There are 58 behaviours. Behaviours made by scripts (see [code-window.md](code-w
 - [Player](#player) (Echo Recorder)
 - [Puzzle](#puzzle) (Pressure Plate, Trigger Zone, Lever, Timer, Gate / Door, Pushable)
 - [Simulation](#simulation) (Producer, Calendar, Wave Spawner, Path Follower, Utility Agent (needs), Cellular Automaton)
-- [Story](#story) (Sound Source, Scene Portal, NPC Talk, Minigame, Cutscene Trigger, Lantern Post (checkpoint))
+- [Story](#story) (Sound Source, Scene Portal, NPC Talk, Cutscene Trigger, Minigame, Lantern Post (checkpoint))
 - [Story puzzles](#story-puzzles) (Sentence Stone, Formattable Text Block)
 - [Turn-based](#turn-based) (Turn Taker, Unit AI)
-- [World](#world) (Spawner, Moving Platform, Falling Floor, Follow Camera, Pickup, Projectile)
+- [World](#world) (Spawner, Moving Platform, Falling Floor, Follow Camera, Projectile, Pickup)
 
 ## AI
 

@@ -1,4 +1,12 @@
-import { newMachineCondition, newMachineState, type MachineCondition, type MachineState, type MachineTransition, type StateMachine } from '@tilewright/behaviors';
+import {
+  newMachineCondition,
+  newMachineState,
+  type MachineCondition,
+  type MachineState,
+  type MachineTransition,
+  type StateMachine,
+} from '@tilewright/plugin-ai';
+
 
 export const STATE_W = 150;
 export const STATE_H = 70;

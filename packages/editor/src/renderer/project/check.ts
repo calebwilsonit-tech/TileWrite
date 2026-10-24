@@ -1,3 +1,4 @@
+import '../../bundled';
 import { checkDialogue, checkProjectInput, checkUiLayout, type ProjectInput, type UiLayout } from '@tilewright/runtime';
 import { checkCutscene, checkMinigame, checkMixer, checkWorldMap, expandEntities, type WorldMapData, type MixerData, type MinigameData, type SkinData, type CutsceneData, type DialogueData, type LanguageData, type EventRow, type ItemData, type PrefabData, type ProjectData, type SceneData, type TableData } from '@tilewright/runtime';
 import { analyseLevel, analysePushPuzzles } from '@tilewright/playbot';

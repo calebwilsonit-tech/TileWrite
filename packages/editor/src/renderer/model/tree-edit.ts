@@ -8,7 +8,8 @@ import {
   type TreeCondition,
   type TreeNode,
   type TreeNodeKind,
-} from '@tilewright/behaviors';
+} from '@tilewright/plugin-ai';
+
 
 /**
  * Edits of a behaviour tree as pure functions (each returns a new tree), and the layout the editor draws.

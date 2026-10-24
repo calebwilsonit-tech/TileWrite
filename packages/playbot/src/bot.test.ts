@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { DialogueSchema, FLAG, ItemSchema, newMinigame, tileMapToRows, type MinigameData, type SceneData } from '@tilewright/runtime';
 import { attachBehavior, output } from '@tilewright/behaviors';
-import { flatScene, player, thing } from '@tilewright/behaviors/src/testing';
+import { flatScene, player, thing } from '@tilewright/plugin-sdk/testing';
 import { Bot, formatTime } from './bot';
 import { Game } from './game';
 import { extractPushPuzzle, solvePush } from './push-solver';

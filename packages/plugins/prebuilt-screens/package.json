@@ -1,0 +1,16 @@
+{
+  "name": "@tilewright/plugin-prebuilt-screens",
+  "version": "1.0.0",
+  "private": true,
+  "description": "The title, pause, inventory, map, save, load and settings screens, the heads-up display, the conversation box and the minigame frame.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@tilewright/plugin-sdk": "*",
+    "@tilewright/plugin-combat": "*",
+    "@tilewright/plugin-inventory": "*",
+    "@tilewright/plugin-story": "*",
+    "@tilewright/plugin-storytender": "*"
+  }
+}

@@ -12,9 +12,9 @@ import {
   type InputRecording,
   type TransformIso,
 } from '@tilewright/runtime';
-import { healthOf } from '@tilewright/behaviors';
 import { Game } from './game';
 import type { PushMove } from './push-solver';
+import { healthOf } from '@tilewright/plugin-combat';
 
 /** A bot sees the game only through the buttons it presses: no teleporting, no editing the world. */
 

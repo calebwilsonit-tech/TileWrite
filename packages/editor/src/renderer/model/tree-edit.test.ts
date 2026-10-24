@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { checkTree, guardTree } from '@tilewright/behaviors';
 import { NODE_H, NODE_W, addNode, canHaveChild, duplicateNode, layoutTree, moveNode, nodeOf, parentOf, removeNode, setAction, setCondition, startTree, subtreeIds, wrapNode } from './tree-edit';
+import { checkTree, guardTree } from '@tilewright/plugin-ai';
 
 describe('behaviour tree edits', () => {
   it('builds a tree node by node, and a decorator holds only one child', () => {

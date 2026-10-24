@@ -1,0 +1,20 @@
+{
+  "id": "prebuilt-screens",
+  "name": "Prebuilt screens",
+  "version": "1.0.0",
+  "description": "The title, pause, inventory, map, save, load and settings screens, the heads-up display, the conversation box and the minigame frame.",
+  "author": "Tilewright",
+  "license": "MIT",
+  "engine": "^1.0.0",
+  "dependencies": {
+    "combat": "^1.0.0",
+    "inventory": "^1.0.0",
+    "story": "^1.0.0",
+    "storytender": "^1.0.0"
+  },
+  "permissions": [],
+  "entry": {
+    "runtime": "src/index.ts"
+  },
+  "builtin": true
+}

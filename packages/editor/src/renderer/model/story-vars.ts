@@ -1,3 +1,4 @@
+import '../../bundled';
 import type { CutsceneData, DialogueData, EntityData, PrefabData, PrefabNode, TableData } from '@tilewright/runtime';
 
 /**

@@ -9,5 +9,9 @@
   "dependencies": {
     "@tilewright/runtime": "*",
     "@tilewright/behaviors": "*"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./testing": "./src/testing.ts"
   }
 }

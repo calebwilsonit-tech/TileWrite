@@ -3,7 +3,7 @@ import { behaviorList, defineBehavior, getBehavior, reshelveBehavior, undefineBe
 import { registerAction, registerCondition, shelvedAction, shelvedCondition, unregisterAction, unregisterCondition, type ActionDef, type ConditionDef } from '../events/sheet';
 import type { ComponentDef, EventDef, Extensions, ExtensionKind, InputActionDef, OwnedBy } from './extensions';
 import type * as X from './extensions';
-import { ENGINE_VERSION, grants, worksWithEngine, type PluginManifest } from './manifest';
+import { ENGINE_VERSION, grants, parseManifest, worksWithEngine, type PluginManifest } from './manifest';
 import { satisfies } from './semver';
 import { addWhoFilter, removeWhoFilter, setGhostLayer } from '../builtins/filters';
 
@@ -82,6 +82,11 @@ export interface PluginApi {
   // --- the game ---
   /** Add a behaviour; it shows up in the Inspector's Add menu like a built-in one. */
   behavior<S extends object>(def: BehaviorDef<S>): BehaviorDef<S>;
+  /** Add several behaviours at once. */
+  behaviors(...defs: readonly BehaviorDef<any>[]): void; // eslint-disable-line @typescript-eslint/no-explicit-any
+  /** Add several conditions / actions to the event sheet's pickers at once. */
+  conditions(...defs: readonly ConditionDef[]): void;
+  actions(...defs: readonly ActionDef[]): void;
   /** Add a data component (state a plugin keeps on objects, with defaults). */
   component(def: ComponentDef): void;
   /** Add a condition or an action to the event sheet's pickers (a logic node), or an event objects can announce. */
@@ -137,6 +142,13 @@ export interface PluginApi {
 
   /** Take behaviours and event blocks the engine already defines into this plugin (used while the engine's own modules move into plugins). */
   adopt(members: { behaviors?: readonly string[]; conditions?: readonly string[]; actions?: readonly string[]; inputs?: Record<string, InputActionDef> }): void;
+}
+
+/** Make a plugin from its plugin.json and its code. Throws, saying what is wrong, when the manifest is not valid. */
+export function definePlugin(manifest: unknown, parts: { install(api: PluginApi): void; installEditor?(api: PluginApi): void }): PluginDefinition {
+  const r = parseManifest(manifest);
+  if (!r.ok) throw new PluginError(`plugin.json is not valid: ${r.problems.join('; ')}`);
+  return { manifest: r.manifest, ...parts };
 }
 
 export interface PluginDefinition {
@@ -400,6 +412,15 @@ export class PluginHost {
         defineBehavior(updated);
         rec.behaviors.push(def.id);
         return updated as typeof def;
+      },
+      behaviors(...defs) {
+        for (const d of defs) api.behavior(d);
+      },
+      conditions(...defs) {
+        for (const d of defs) api.condition(d);
+      },
+      actions(...defs) {
+        for (const d of defs) api.action(d);
       },
       component(def) {
         host.add(rec, id, 'components', def.id, def);

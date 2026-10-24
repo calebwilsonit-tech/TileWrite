@@ -1,0 +1,14 @@
+{
+  "name": "@tilewright/plugin-storytender",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Echoes, sentence stones, formattable text, lantern posts and lantern fuel, things that grow in the light. The mechanics of the reference game.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@tilewright/plugin-sdk": "*",
+    "@tilewright/plugin-lighting": "*",
+    "@tilewright/plugin-combat": "*"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "id": "ai",
+  "name": "AI",
+  "version": "1.0.0",
+  "description": "Patrolling, chasing, seeing, boss phases, state machines and behaviour trees for characters the player does not control.",
+  "author": "Tilewright",
+  "license": "MIT",
+  "engine": "^1.0.0",
+  "dependencies": {},
+  "permissions": [],
+  "entry": {
+    "runtime": "src/index.ts"
+  },
+  "builtin": true
+}

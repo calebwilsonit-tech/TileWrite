@@ -1,0 +1,15 @@
+{
+  "id": "controls",
+  "name": "Control schemes",
+  "version": "1.0.0",
+  "description": "Click to move and hotspots (adventures), a grid cursor (tactics), RTS selection and orders (strategy), a camera rig that pans, zooms and turns the world (builders), and placing buildings with ghosts. Direct control (walk with the keys) is always there.",
+  "author": "Tilewright",
+  "license": "MIT",
+  "engine": "^1.0.0",
+  "dependencies": {},
+  "permissions": [],
+  "entry": {
+    "runtime": "src/index.ts"
+  },
+  "builtin": true
+}

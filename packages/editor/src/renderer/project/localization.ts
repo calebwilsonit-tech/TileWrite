@@ -1,8 +1,8 @@
 import { LanguageSchema, defaultInstructions, newLanguage, type MinigameData, type CutsceneData, type DialogueData, type EventRow, type ItemData, type LanguageData, type SceneData, type UiLayout } from '@tilewright/runtime';
-import { uiStrings } from '@tilewright/behaviors';
 import { joinPath } from './api';
 import { UserError } from './io';
 import type { AssetFs } from '../studio/assets';
+import { uiStrings } from '@tilewright/plugin-prebuilt-screens';
 
 export const LOCALE_DIR = 'assets/localization';
 const EXT = '.strings.json';

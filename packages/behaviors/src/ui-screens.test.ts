@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { Simulation, TableSchema, UiDocSchema, UiNodeSchema, openStartScreens, applySave, evalUiCondition, newWidget, openScreen, serializeGame, type UiNode, type UiScreen, type VariableValue } from '@tilewright/runtime';
 import { activateWidget, autoFocus, findOnScreens, focusables, openScreens, rowsOf, setChoice, setSlider, setUiBridge, swapRows, uiBridge, writeTarget, readTarget, resolveScreen, type UiBridge } from './ui/screens-logic';
-import { newAction, setActivePacks } from './index';
+import { newAction, setActivePacks } from '@tilewright/behaviors';
 
 setActivePacks(undefined);
 

@@ -1,15 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import {
-  CONDITION_LABELS,
-  bossMachine,
-  checkMachine,
-  describeMachineCondition,
-  guardMachine,
-  newMachineCondition,
-  type MachineCondition,
-  type StateMachine,
-} from '@tilewright/behaviors';
-import {
   ANY,
   ANY_POS,
   STATE_H,
@@ -28,6 +18,16 @@ import {
 } from '../model/machine-edit';
 import { CheckField, NumberField, SelectField, TextField } from './fields';
 import { SoundField } from './SoundField';
+import {
+  CONDITION_LABELS,
+  bossMachine,
+  checkMachine,
+  describeMachineCondition,
+  guardMachine,
+  newMachineCondition,
+  type MachineCondition,
+  type StateMachine,
+} from '@tilewright/plugin-ai';
 
 type Drag = { kind: 'state'; id: string; dx: number; dy: number; x: number; y: number; moved: boolean } | { kind: 'link'; from: string; x: number; y: number } | { kind: 'pan'; sx: number; sy: number; vx: number; vy: number; moved: boolean };
 

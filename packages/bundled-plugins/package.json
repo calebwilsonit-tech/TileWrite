@@ -7,7 +7,16 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "dependencies": {
-    "@tilewright/behaviors": "*",
-    "@tilewright/plugin-sdk": "*"
+    "@tilewright/plugin-sdk": "*",
+    "@tilewright/plugin-ai": "*",
+    "@tilewright/plugin-combat": "*",
+    "@tilewright/plugin-controls": "*",
+    "@tilewright/plugin-inventory": "*",
+    "@tilewright/plugin-lighting": "*",
+    "@tilewright/plugin-prebuilt-screens": "*",
+    "@tilewright/plugin-sim": "*",
+    "@tilewright/plugin-story": "*",
+    "@tilewright/plugin-storytender": "*",
+    "@tilewright/plugin-turns": "*"
   }
 }

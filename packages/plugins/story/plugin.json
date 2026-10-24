@@ -1,0 +1,15 @@
+{
+  "id": "story",
+  "name": "Story",
+  "version": "1.0.0",
+  "description": "Characters that talk, cutscene triggers, minigame stations, the world map.",
+  "author": "Tilewright",
+  "license": "MIT",
+  "engine": "^1.0.0",
+  "dependencies": {},
+  "permissions": [],
+  "entry": {
+    "runtime": "src/index.ts"
+  },
+  "builtin": true
+}

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { C, UiDocSchema, tileMapToRows, type SceneData, type TransformIso } from '@tilewright/runtime';
 import { newAction, newCondition, newRow, setActivePacks } from '@tilewright/behaviors';
-import { flatScene, thing } from '@tilewright/behaviors/src/testing';
+import { flatScene, thing } from '@tilewright/plugin-sdk/testing';
 import { Game } from './game';
 import { PointerBot } from './pointer-bot';
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { SystemError, crashReport, formatCrashReport } from '@tilewright/runtime';
-import { flatScene, player, rig, thing } from './testing';
+import { flatScene, player, rig, thing } from '@tilewright/plugin-sdk/testing';
 
 describe('crash reports', () => {
   function boomRig() {

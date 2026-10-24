@@ -1,0 +1,13 @@
+{
+  "name": "@tilewright/plugin-ai",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Patrolling, chasing, seeing, boss phases, state machines and behaviour trees for characters the player does not control.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@tilewright/plugin-sdk": "*",
+    "@tilewright/plugin-combat": "*"
+  }
+}

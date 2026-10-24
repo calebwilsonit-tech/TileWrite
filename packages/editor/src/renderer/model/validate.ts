@@ -1,8 +1,21 @@
-import { actionDef, behaviorList, checkGraphs, checkMachine, checkSheet, checkTree, conditionDef, describeGraphNode, getBehavior, knownPackOfBehavior, listPacks, parsePoints, type BehaviorTree, type StateMachine } from '@tilewright/behaviors';
+import '../../bundled';
 import { EMPTY_TILE, FLAG, SLOPE_RISE, findPath, groundHeightAt, reachableCells, textBridgeCells } from '@tilewright/runtime';
 import { highSide, lowSide, meetsTop } from '../tools/algorithms';
 import type { EditorDoc } from './doc';
 import type { ProblemFix } from './logic-fix';
+import {
+  actionDef,
+  behaviorList,
+  checkGraphs,
+  checkSheet,
+  conditionDef,
+  describeGraphNode,
+  getBehavior,
+  knownPackOfBehavior,
+  listPacks,
+  parsePoints,
+} from '@tilewright/behaviors';
+import { checkMachine, checkTree, type BehaviorTree, type StateMachine } from '@tilewright/plugin-ai';
 
 export interface Problem {
   id: string;

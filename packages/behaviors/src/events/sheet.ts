@@ -2,13 +2,8 @@ import {
   PARTICLE_PRESETS,
   PARTICLE_PRESET_IDS,
   addImpact,
-  addItem,
-  autoSlot,
   emitFx,
   requestHitStop,
-  itemCount,
-  lightLevel,
-  minigameWon,
   C,
   evalValue,
   backScreen,
@@ -38,11 +33,7 @@ import {
   type VariableValue,
 } from '@tilewright/runtime';
 import { input, output, setInput, setOutput } from '../signals';
-import { damage, heal, healthOf } from '../builtins/combat';
-import { beginDialogue, beginMinigame, playCutscene } from '../story/director';
-import { echoEntities } from '../builtins/echo';
 import { blockAtCell, breakBlock, placeBlock, tileByName } from '../builtins/blocks';
-import { effectiveFormat, sentenceWords, TEXT_FORMATS, type SentenceStone, type TextBlock, type TextFormat } from '../builtins/text';
 
 /**
  * Event sheets: "When [conditions] do [actions]" rows in plain English, with sub-events, AND/OR,
@@ -116,7 +107,7 @@ export interface ParamSpec {
   extra?: 'events';
 }
 
-const COMPARISONS = [
+export const COMPARISONS = [
   { value: '=', label: 'is' },
   { value: '!=', label: 'is not' },
   { value: '>', label: 'is more than' },
@@ -125,8 +116,8 @@ const COMPARISONS = [
   { value: '<=', label: 'is at most' },
 ];
 
-const num = (p: Record<string, unknown>, k: string, d = 0): number => (typeof p[k] === 'number' ? (p[k] as number) : Number(p[k] ?? d) || d);
-const str = (p: Record<string, unknown>, k: string): string => String(p[k] ?? '');
+export const num = (p: Record<string, unknown>, k: string, d = 0): number => (typeof p[k] === 'number' ? (p[k] as number) : Number(p[k] ?? d) || d);
+export const str = (p: Record<string, unknown>, k: string): string => String(p[k] ?? '');
 
 export function compare(a: VariableValue | undefined, op: string, b: VariableValue): boolean {
   const numeric = typeof a === 'number' && typeof b === 'number';
@@ -179,7 +170,7 @@ export interface ActionDef {
   run(ctx: SimContext, p: Record<string, unknown>, row: RowContext): void;
 }
 
-const entityParam = (key: string, label: string, def = 'player'): ParamSpec => ({ key, label, type: 'entity', default: def });
+export const entityParam = (key: string, label: string, def = 'player'): ParamSpec => ({ key, label, type: 'entity', default: def });
 
 const GRAVITY_OPTIONS = GRAVITY_DIRS.map((d) => ({ value: d, label: GRAVITY_NAMES[d] }));
 
@@ -316,89 +307,6 @@ export const CONDITIONS: ConditionDef[] = [
       const want = str(p, 'state') !== 'off';
       return resolveRef(ctx, str(p, 'who'), row.picked).some((e) => (str(p, 'side') === 'input' ? input(e, str(p, 'name')) : output(e, str(p, 'name'))) === want);
     },
-  },
-  {
-    id: 'health',
-    label: "An object's health compares",
-    category: 'Objects',
-    params: [entityParam('who', 'Object', 'player'), { key: 'op', label: 'Is', type: 'select', default: '<=', options: COMPARISONS }, { key: 'value', label: 'Hit points', type: 'number', default: 1, step: 1 }],
-    describe: (p, n) => `${describeRef(str(p, 'who'), n)} has ${COMPARISONS.find((c) => c.value === str(p, 'op'))?.label ?? str(p, 'op')} ${num(p, 'value', 1)} hit points`,
-    test: (ctx, p, row) =>
-      resolveRef(ctx, str(p, 'who'), row.picked).some((e) => {
-        const h = healthOf(e);
-        return !!h && compare(h.hp, str(p, 'op'), num(p, 'value', 1));
-      }),
-  },  {
-    id: 'hasItem',
-    label: 'The player carries an item',
-    category: 'Story',
-    params: [{ key: 'item', label: 'Item (id)', type: 'text', default: '' }, { key: 'atLeast', label: 'At least how many', type: 'number', default: 1, min: 1, step: 1 }],
-    describe: (p) => `the player has at least ${num(p, 'atLeast', 1)} of "${str(p, 'item') || '(item)'}"`,
-    test: (ctx, p) => itemCount(ctx.runtime.vars, str(p, 'item')) >= num(p, 'atLeast', 1),
-  },
-  {
-    id: 'minigameWon',
-    label: 'A minigame has been won',
-    category: 'Story',
-    params: [{ key: 'minigame', label: 'Minigame (name)', type: 'text', default: '' }],
-    describe: (p) => `the minigame "${str(p, 'minigame') || '(minigame)'}" has been won`,
-    test: (ctx, p) => minigameWon(ctx.runtime.vars, str(p, 'minigame')),
-  },
-  {
-    id: 'echoCount',
-    label: 'Echoes exist',
-    category: 'Puzzles',
-    params: [{ key: 'atLeast', label: 'At least how many', type: 'number', default: 1, min: 0, step: 1 }],
-    describe: (p) => `there are at least ${num(p, 'atLeast', 1)} echoes`,
-    test: (ctx, p) => echoEntities(ctx).length >= num(p, 'atLeast', 1),
-  },
-  {
-    id: 'litAt',
-    label: 'A spot is lit (or dark)',
-    category: 'Puzzles',
-    params: [
-      entityParam('where', 'Where', 'player'),
-      { key: 'state', label: 'It is', type: 'select', default: 'lit', options: [{ value: 'lit', label: 'lit' }, { value: 'dark', label: 'dark' }] },
-      { key: 'threshold', label: 'Brightness that counts as lit (0 to 1)', type: 'number', default: 0.5, min: 0.05, max: 1, step: 0.05 },
-    ],
-    describe: (p, n) => `the place of ${describeRef(str(p, 'where'), n)} is ${str(p, 'state') === 'dark' ? 'dark' : 'lit'}`,
-    test: (ctx, p, row) => {
-      const model = ctx.runtime.lighting;
-      const e = resolveRef(ctx, str(p, 'where'), row.picked)[0];
-      const t = e?.get<TransformIso>(C.Transform);
-      if (!model || !t) return false;
-      const lit = lightLevel(model, t.x, t.y, t.h) >= num(p, 'threshold', 0.5);
-      return str(p, 'state') === 'dark' ? !lit : lit;
-    },
-  },
-  {
-    id: 'stoneSays',
-    label: 'A sentence stone shows a word',
-    category: 'Puzzles',
-    params: [entityParam('stone', 'Which stone', ''), { key: 'word', label: 'The word (as written in the stone)', type: 'text', default: '' }],
-    describe: (p, n) => `${describeRef(str(p, 'stone'), n)} shows the word "${str(p, 'word') || '(word)'}"`,
-    test: (ctx, p, row) =>
-      resolveRef(ctx, str(p, 'stone'), row.picked).some((e) => {
-        const s = e.get<SentenceStone>('sentenceStone');
-        if (!s) return false;
-        const words = sentenceWords(s);
-        return words.length > 0 && words[((s.selected % words.length) + words.length) % words.length]!.toLowerCase() === str(p, 'word').trim().toLowerCase();
-      }),
-  },
-  {
-    id: 'textIs',
-    label: 'A text block is formatted a certain way',
-    category: 'Puzzles',
-    params: [
-      entityParam('block', 'Which text block', ''),
-      { key: 'format', label: 'Formatting', type: 'select', default: 'underline', options: TEXT_FORMATS.map((f) => ({ value: f, label: f })) },
-    ],
-    describe: (p, n) => `${describeRef(str(p, 'block'), n)} is ${str(p, 'format')}`,
-    test: (ctx, p, row) =>
-      resolveRef(ctx, str(p, 'block'), row.picked).some((e) => {
-        const s = e.get<TextBlock>('textBlock');
-        return !!s && effectiveFormat(e, s.format) === str(p, 'format');
-      }),
   },
   {
     id: 'inside',
@@ -877,72 +785,6 @@ export const ACTIONS: ActionDef[] = [
     },
   },
   {
-    id: 'damage',
-    label: 'Hurt an object',
-    category: 'Combat',
-    params: [entityParam('who', 'Object', 'player'), { key: 'amount', label: 'Damage', type: 'number', default: 1, min: 0, step: 1 }],
-    describe: (p, n) => `hurt ${describeRef(str(p, 'who'), n)} for ${num(p, 'amount', 1)}`,
-    run(ctx, p, row) {
-      for (const e of resolveRef(ctx, str(p, 'who'), row.picked)) damage(ctx, e, num(p, 'amount', 1), { ignoreIframes: true });
-    },
-  },
-  {
-    id: 'heal',
-    label: 'Heal an object',
-    category: 'Combat',
-    params: [entityParam('who', 'Object', 'player'), { key: 'amount', label: 'Hit points', type: 'number', default: 1, min: 0, step: 1 }],
-    describe: (p, n) => `heal ${describeRef(str(p, 'who'), n)} by ${num(p, 'amount', 1)}`,
-    run(ctx, p, row) {
-      for (const e of resolveRef(ctx, str(p, 'who'), row.picked)) heal(ctx, e, num(p, 'amount', 1));
-    },
-  },  {
-    id: 'giveItem',
-    label: 'Give the player an item',
-    category: 'Story',
-    params: [{ key: 'item', label: 'Item (id)', type: 'text', default: '' }, { key: 'amount', label: 'How many', type: 'number', default: 1, min: 1, step: 1 }],
-    describe: (p) => `give the player ${num(p, 'amount', 1)} of "${str(p, 'item') || '(item)'}"`,
-    run(ctx, p) {
-      const got = addItem(ctx.runtime.vars, str(p, 'item'), num(p, 'amount', 1), ctx.assets.items.get(str(p, 'item')));
-      if (got > 0) autoSlot(ctx.runtime.vars, str(p, 'item'));
-      ctx.events.emit('item-given', { item: str(p, 'item'), amount: got });
-    },
-  },
-  {
-    id: 'takeItem',
-    label: 'Take an item from the player',
-    category: 'Story',
-    params: [{ key: 'item', label: 'Item (id)', type: 'text', default: '' }, { key: 'amount', label: 'How many', type: 'number', default: 1, min: 1, step: 1 }],
-    describe: (p) => `take ${num(p, 'amount', 1)} of "${str(p, 'item') || '(item)'}" from the player`,
-    run(ctx, p) {
-      addItem(ctx.runtime.vars, str(p, 'item'), -num(p, 'amount', 1));
-      ctx.events.emit('item-taken', { item: str(p, 'item') });
-    },
-  },
-  {
-    id: 'startDialogue',
-    label: 'Start a conversation',
-    category: 'Story',
-    params: [{ key: 'dialogue', label: 'Dialogue (name)', type: 'text', default: '' }],
-    describe: (p) => `start the conversation "${str(p, 'dialogue') || '(dialogue)'}"`,
-    run: (ctx, p) => void beginDialogue(ctx, str(p, 'dialogue')),
-  },
-  {
-    id: 'playMinigame',
-    label: 'Play a minigame',
-    category: 'Story',
-    params: [{ key: 'minigame', label: 'Minigame (name)', type: 'text', default: '' }],
-    describe: (p) => `play the minigame "${str(p, 'minigame') || '(minigame)'}"`,
-    run: (ctx, p) => void beginMinigame(ctx, str(p, 'minigame')),
-  },
-  {
-    id: 'playCutscene',
-    label: 'Play a cutscene',
-    category: 'Story',
-    params: [{ key: 'cutscene', label: 'Cutscene (name)', type: 'text', default: '' }],
-    describe: (p) => `play the cutscene "${str(p, 'cutscene') || '(cutscene)'}"`,
-    run: (ctx, p) => void playCutscene(ctx, str(p, 'cutscene')),
-  },
-  {
     id: 'travel',
     label: 'Go to another scene',
     category: 'Story',
@@ -1003,7 +845,8 @@ export const ACTIONS: ActionDef[] = [
     params: [],
     describe: () => 'quit the game',
     run: (ctx) => void ctx.events.emit('quit-request', {}),
-  },  {
+  },
+  {
     id: 'message',
     label: 'Show a message',
     category: 'Basics',
@@ -1076,64 +919,6 @@ export const ACTIONS: ActionDef[] = [
       const volume = p.volume === undefined ? 1 : num(p, 'volume');
       const source = str(p, 'at') ? resolveRef(ctx, str(p, 'at'), row.picked)[0]?.get<TransformIso>(C.Transform) : undefined;
       emitFx(ctx.runtime, { kind: 'sound', name, volume, ...(source ? { at: { x: source.x, y: source.y, near: 2, far: p.far === undefined ? 16 : num(p, 'far') } } : {}) });
-    },
-  },
-  {
-    id: 'setWord',
-    label: 'Change the word of a sentence stone',
-    category: 'Puzzles',
-    params: [entityParam('stone', 'Which stone', ''), { key: 'word', label: 'The word to show (as written in the stone)', type: 'text', default: '' }],
-    describe: (p, n) => `make ${describeRef(str(p, 'stone'), n)} show "${str(p, 'word') || '(word)'}"`,
-    run(ctx, p, row) {
-      for (const e of resolveRef(ctx, str(p, 'stone'), row.picked)) {
-        const s = e.get<SentenceStone>('sentenceStone');
-        if (!s) continue;
-        const at = sentenceWords(s).findIndex((w) => w.toLowerCase() === str(p, 'word').trim().toLowerCase());
-        if (at >= 0 && at !== s.selected) {
-          s.selected = at;
-          ctx.events.emit('sentence-changed', { entity: e.id, word: sentenceWords(s)[at] });
-        }
-      }
-    },
-  },
-  {
-    id: 'formatText',
-    label: 'Format a text block',
-    category: 'Puzzles',
-    params: [
-      entityParam('block', 'Which text block', ''),
-      { key: 'format', label: 'Formatting', type: 'select', default: 'underline', options: TEXT_FORMATS.map((f) => ({ value: f, label: f })) },
-    ],
-    describe: (p, n) => `make ${describeRef(str(p, 'block'), n)} ${str(p, 'format')}`,
-    run(ctx, p, row) {
-      for (const e of resolveRef(ctx, str(p, 'block'), row.picked)) {
-        const s = e.get<TextBlock>('textBlock');
-        if (s && s.format !== str(p, 'format')) {
-          s.format = str(p, 'format') as TextFormat;
-          ctx.events.emit('text-formatted', { entity: e.id, format: s.format });
-        }
-      }
-    },
-  },
-  {
-    id: 'clearEchoes',
-    label: 'Make every echo vanish',
-    category: 'Puzzles',
-    params: [],
-    describe: () => 'make every echo vanish',
-    run: (ctx) => void echoEntities(ctx).forEach((e) => ctx.world.destroy(e)),
-  },
-  {
-    id: 'addLight',
-    label: 'Add to (or take from) the lantern\'s light',
-    category: 'Variables',
-    params: [{ key: 'amount', label: 'Amount (negative takes light away; 0 fills it up)', type: 'number', default: 0, step: 5 }],
-    describe: (p) => (num(p, 'amount') === 0 ? 'fill the lantern with light' : `${num(p, 'amount') > 0 ? 'add' : 'take'} ${Math.abs(num(p, 'amount'))} ${num(p, 'amount') > 0 ? 'to' : 'from'} the lantern's light`),
-    run(ctx, p) {
-      const max = typeof ctx.runtime.vars.lightMax === 'number' ? ctx.runtime.vars.lightMax : 100;
-      const now = typeof ctx.runtime.vars.light === 'number' ? ctx.runtime.vars.light : max;
-      const amount = num(p, 'amount');
-      ctx.runtime.vars.light = amount === 0 ? max : Math.max(0, Math.min(max, now + amount));
     },
   },
   {

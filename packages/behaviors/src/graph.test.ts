@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { TableSchema, type EventAction, type EventCondition, type EventRow, type GraphData, type GraphNodeData } from '@tilewright/runtime';
-import { flatScene, rig, thing } from './testing';
-import { checkGraphs, graphToRows, newAction, newCondition, newRow, rowsToGraph, setActivePacks } from './index';
+import { flatScene, rig, thing } from '@tilewright/plugin-sdk/testing';
+import { checkGraphs, graphToRows, newAction, newCondition, newRow, rowsToGraph, setActivePacks } from '@tilewright/behaviors';
 
 setActivePacks(undefined);
 

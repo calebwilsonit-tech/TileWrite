@@ -1,0 +1,12 @@
+{
+  "name": "@tilewright/plugin-lighting",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Lights, darkness and shadows.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@tilewright/plugin-sdk": "*"
+  }
+}

@@ -52,5 +52,9 @@
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
   },
-  "author": "Tilewright contributors"
+  "author": "Tilewright contributors",
+  "dependencies": {
+    "@tilewright/bundled-plugins": "*",
+    "@tilewright/plugin-sdk": "*"
+  }
 }

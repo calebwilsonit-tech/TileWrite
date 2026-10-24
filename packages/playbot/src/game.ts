@@ -1,3 +1,4 @@
+import '@tilewright/bundled-plugins';
 import {
   C,
   Simulation,
@@ -22,7 +23,8 @@ import {
   type TileSet,
   type UiDoc,
 } from '@tilewright/runtime';
-import { addStandardSystems, contextOf, placeAtSpawn, resolveRef, routeInput } from '@tilewright/behaviors';
+import { addStandardSystems, contextOf, resolveRef, routeInput } from '@tilewright/behaviors';
+import { placeAtSpawn } from '@tilewright/plugin-story';
 
 export interface GameSetup {
   scene: SceneData;

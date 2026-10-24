@@ -1,3 +1,4 @@
+import '@tilewright/bundled-plugins';
 import {
   FLAG,
   cellWalkable,

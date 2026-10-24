@@ -1,0 +1,15 @@
+{
+  "id": "inventory",
+  "name": "Inventory",
+  "version": "1.0.0",
+  "description": "Items you carry, pickups, quick slots and the inventory screen.",
+  "author": "Tilewright",
+  "license": "MIT",
+  "engine": "^1.0.0",
+  "dependencies": {},
+  "permissions": [],
+  "entry": {
+    "runtime": "src/index.ts"
+  },
+  "builtin": true
+}

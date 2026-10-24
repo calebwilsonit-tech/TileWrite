@@ -1,3 +1,4 @@
+import '../../bundled';
 import {
   CURRENT_SCHEMA_VERSION,
   DEFAULT_TILESET,

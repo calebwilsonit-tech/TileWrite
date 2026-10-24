@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { TableSchema } from '@tilewright/runtime';
-import { ctxOf, flatScene, rig } from '../testing';
-import { actionDef, setActivePacks } from '../index';
+import { ctxOf, flatScene, rig } from '@tilewright/plugin-sdk/testing';
+import { actionDef, setActivePacks } from '@tilewright/behaviors';
 
 setActivePacks(undefined);
 

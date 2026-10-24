@@ -53,20 +53,6 @@ import {
   cameraDirection,
   gravityFrame,
 } from '@tilewright/runtime';
-import {
-  GameUi,
-  describeScreens,
-  addStandardSystems,
-  beginDialogue,
-  beginMinigame,
-  contextOf,
-  litPosts,
-  placeAtSpawn,
-  playCutscene,
-  output,
-  type GameUiHost,
-  activeInput,
-} from '@tilewright/behaviors';
 import { POINTER_BINDINGS, type CompatFlags } from '@tilewright/runtime';
 import { drawArrow, drawBox, drawCone, drawContact, drawFootprint, drawLightRadius, drawPath, drawWire, shapesOf, wireShapes } from './debug-draw';
 import { assetFs } from '../project/assetFs';
@@ -75,6 +61,10 @@ import { loadScene as loadSceneFile } from '../project/io';
 import { loadMixer, loadSounds } from '../studio/audio';
 import { loadLanguages } from '../project/localization';
 import type { CutsceneData, DialogueData, ItemData } from '@tilewright/runtime';
+import { GameUi, type GameUiHost } from '@tilewright/plugin-prebuilt-screens';
+import { describeScreens, addStandardSystems, contextOf, output, activeInput } from '@tilewright/behaviors';
+import { beginDialogue, beginMinigame, placeAtSpawn, playCutscene } from '@tilewright/plugin-story';
+import { litPosts } from '@tilewright/plugin-storytender';
 
 export interface PlayOptions {
   renderer: IsoRenderer;

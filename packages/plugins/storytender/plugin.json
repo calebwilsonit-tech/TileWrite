@@ -1,0 +1,17 @@
+{
+  "id": "storytender",
+  "name": "The Last Storytender",
+  "version": "1.0.0",
+  "description": "Echoes, sentence stones, formattable text, lantern posts and lantern fuel, things that grow in the light. The mechanics of the reference game.",
+  "author": "Tilewright",
+  "license": "MIT",
+  "engine": "^1.0.0",
+  "dependencies": {
+    "lighting": "^1.0.0"
+  },
+  "permissions": [],
+  "entry": {
+    "runtime": "src/index.ts"
+  },
+  "builtin": true
+}

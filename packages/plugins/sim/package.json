@@ -1,0 +1,13 @@
+{
+  "name": "@tilewright/plugin-sim",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Resources and production chains, a calendar with day and night and seasons, waves of enemies from a table, units that follow a route, villagers that choose by their needs, and cellular automata (fire, growth, spreading water).",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@tilewright/plugin-sdk": "*",
+    "@tilewright/plugin-combat": "*"
+  }
+}

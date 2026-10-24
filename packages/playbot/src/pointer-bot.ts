@@ -1,6 +1,7 @@
 import { C, cameraSnapshot, findPath, pictureOf, pointerSnapshot, type CameraReading, type Cell2, type Entity, type TransformIso } from '@tilewright/runtime';
-import { activateWidget, attackTargets, currentUnit, findOnScreens, moveRange, openScreens, setChoice, setSlider, takerOf, unitsOf, walkView, type ViewNode } from '@tilewright/behaviors';
 import { Bot, formatTime, type PlayReport } from './bot';
+import { activateWidget, findOnScreens, openScreens, setChoice, setSlider, walkView, type ViewNode } from '@tilewright/behaviors';
+import { attackTargets, currentUnit, moveRange, takerOf, unitsOf } from '@tilewright/plugin-turns';
 
 /**
  * A bot that plays with a mouse, a screen and turns, like a person does: it moves the pointer over cells, clicks, drags a box,

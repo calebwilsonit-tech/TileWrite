@@ -1,6 +1,8 @@
-import { archerTree, attachBehavior, wandererTree } from '@tilewright/behaviors';
+import '../../bundled';
 import { resolveInstance, type EntityData, type PrefabData, type SpriteData } from '@tilewright/runtime';
 import { playerEntity } from '../project/templates';
+import { archerTree, wandererTree } from '@tilewright/plugin-ai';
+import { attachBehavior } from '@tilewright/behaviors';
 
 export interface Prefab {
   id: string;

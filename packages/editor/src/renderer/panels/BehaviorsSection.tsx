@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { attachBehavior, behaviorList, getBehavior, type BehaviorDef, type BehaviorTree, type FieldSpec, type StateMachine } from '@tilewright/behaviors';
 import type { EntityData } from '@tilewright/runtime';
 import { store, useApp } from '../app/store';
 import { useStudio } from '../studio/store';
@@ -8,6 +7,8 @@ import { CheckField, NumberField, SelectField, TextField } from './fields';
 import { StateMachineEditor } from './StateMachineEditor';
 import { BehaviorTreeEditor } from './BehaviorTreeEditor';
 import { ActionNodeEditor, EventNodeEditor } from './LogicEditors';
+import { attachBehavior, behaviorList, getBehavior, type BehaviorDef, type FieldSpec } from '@tilewright/behaviors';
+import type { BehaviorTree, StateMachine } from '@tilewright/plugin-ai';
 
 type Edit = (label: string, fn: (x: EntityData) => void) => void;
 

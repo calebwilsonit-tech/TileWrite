@@ -1,0 +1,13 @@
+{
+  "name": "@tilewright/plugin-inventory",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Items you carry, pickups, quick slots and the inventory screen.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@tilewright/plugin-sdk": "*",
+    "@tilewright/plugin-combat": "*"
+  }
+}

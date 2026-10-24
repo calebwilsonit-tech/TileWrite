@@ -1,3 +1,4 @@
+import '../bundled';
 import 'pixi.js/unsafe-eval'; // Pixi's shader helpers without `new Function`, which the Content-Security-Policy forbids
 import { IsoRenderer, compatOf, crashReport, formatCrashReport, tilesetFromList, type SpriteData } from '@tilewright/runtime';
 import { activate, defaultImporter, installScriptGlobals, loadScript, packsOfProject, setActivePacks, syncCustomBlocks, type Transpiler } from '@tilewright/behaviors';

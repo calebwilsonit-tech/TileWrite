@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { C, applySave, currentFlags, serializeGame, tileMapFromRows, tileMapToRows, type Body, type SceneData, type TransformIso } from '@tilewright/runtime';
-import { GRID_PLUS_X, flatScene, player, rig, type Rig } from './testing';
-import { SCRIPT_API_VERSION, blockAtCell, breakBlock, contextOf, newAction, newCondition, newRow, placeBlock } from './index';
+import { GRID_PLUS_X, flatScene, player, rig, type Rig } from '@tilewright/plugin-sdk/testing';
+import { SCRIPT_API_VERSION, blockAtCell, breakBlock, contextOf, newAction, newCondition, newRow, placeBlock } from '@tilewright/behaviors';
 
 /** Phase 3, step 4.3: gravity and blocks from the logic side (rows, scripts) and at run time. */
 

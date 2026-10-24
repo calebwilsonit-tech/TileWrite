@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { FLAG, tileMapToRows, type SceneData } from '@tilewright/runtime';
-import { flatScene, player, thing } from '@tilewright/behaviors/src/testing';
+import { flatScene, player, thing } from '@tilewright/plugin-sdk/testing';
 import { analyseLevel, cellKey, fixedCells, goalsOf, prepare, reachCells, walkerOf, solidCells } from './analysis';
 import { analysePushPuzzles, extractPushPuzzle, solvePush } from './push-solver';
 

@@ -1,0 +1,13 @@
+{
+  "name": "@tilewright/plugin-turns",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Units that take turns: a queue by speed, action points, cell-by-cell walking, attacks with height advantage, enemy AI turns, win and lose.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@tilewright/plugin-sdk": "*",
+    "@tilewright/plugin-combat": "*"
+  }
+}

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { FLAG, tileMapToRows, type SceneData } from '@tilewright/runtime';
 import { attachBehavior } from '@tilewright/behaviors';
-import { flatScene, player, thing } from '@tilewright/behaviors/src/testing';
+import { flatScene, player, thing } from '@tilewright/plugin-sdk/testing';
 import { Game } from './game';
 import { Bot } from './bot';
 import { PlaythroughSchema, newPlaythrough, replayPlaythrough } from './playthrough';

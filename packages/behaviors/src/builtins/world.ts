@@ -282,3 +282,24 @@ export function footstepSystem(ctx: SimContext): void {
     if (name) emitFx(ctx.runtime, { kind: 'sound', name });
   }
 }
+
+// ---------- lifetime (for effects the engine spawns) ----------
+
+export const lifetime = defineBehavior<{ seconds: number }>({
+  id: 'lifetime',
+  name: 'Lifetime',
+  category: 'World',
+  hidden: true,
+  description: 'Disappears after a number of seconds.',
+  phase: 'actuator',
+  defaults: { seconds: 1 },
+  fields: [{ key: 'seconds', label: 'Seconds', type: 'number', min: 0, max: 600, step: 0.1 }],
+  inputs: [],
+  outputs: [],
+  requires: {},
+  update(ctx, e, s) {
+    const st = stateOf(e, 'lifetime', () => ({ left: s.seconds }));
+    st.left -= ctx.dt;
+    if (st.left <= 0) ctx.world.destroy(e);
+  },
+});

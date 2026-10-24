@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { EventRowSchema, type EventAction, type EventCondition, type EventRow, type Sprite, type TransformIso } from '@tilewright/runtime';
 import { ACTIONS, CONDITIONS, actionDef, checkSheet, compare, conditionDef, describeCondition, describeRef, describeRow, interpolate, newAction, newCondition, newRow, resolveRef } from './sheet';
-import { GRID_PLUS_X, flatScene, player, rig, thing } from '../testing';
 import { output, setInput } from '../signals';
+import { flatScene, player, rig, thing } from '@tilewright/plugin-sdk/testing';
 
 const row = (partial: Partial<EventRow> & { id: string }): EventRow => ({ ...newRow(partial.id), conditions: [], ...partial });
 const cond = (type: string, params: Record<string, unknown> = {}, negate = false): EventCondition => ({ ...newCondition(type), params: { ...newCondition(type).params, ...params }, negate });
@@ -236,15 +236,18 @@ describe('conditions', () => {
     expect(r.sim.runtime.vars.released).toBe(1);
   });
 
-  it('reacts to game events such as pickups and pushes', () => {
+  it('reacts to events that other parts of the game announce', () => {
     const { scene } = flatScene();
-    scene.entities.push(player('p', 5.5, 5.5), thing('coin', 'Coin', 6.5, 5.5, { pickup: { variable: 'coins' } }));
-    scene.events = [row({ id: 'pick', conditions: [cond('onEvent', { name: 'pickup' })], actions: [act('message', { text: 'Coins: {coins}' })] })];
+    scene.entities.push(player('p', 5.5, 5.5));
+    scene.events = [
+      row({ id: 'go', once: true, conditions: [cond('start')], actions: [act('emit', { name: 'something-happened' })] }),
+      row({ id: 'react', conditions: [cond('onEvent', { name: 'something-happened' })], actions: [act('message', { text: 'It happened' })] }),
+    ];
     const r = rig(scene);
     const msgs: unknown[] = [];
     r.sim.events.on('message', (e) => msgs.push(e.text));
-    r.run(60, GRID_PLUS_X);
-    expect(msgs).toEqual(['Coins: 1']);
+    r.run(60);
+    expect(msgs).toEqual(['It happened']);
   });
 });
 

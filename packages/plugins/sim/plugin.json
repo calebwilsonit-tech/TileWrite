@@ -1,0 +1,15 @@
+{
+  "id": "sim",
+  "name": "Simulation helpers",
+  "version": "1.0.0",
+  "description": "Resources and production chains, a calendar with day and night and seasons, waves of enemies from a table, units that follow a route, villagers that choose by their needs, and cellular automata (fire, growth, spreading water).",
+  "author": "Tilewright",
+  "license": "MIT",
+  "engine": "^1.0.0",
+  "dependencies": {},
+  "permissions": [],
+  "entry": {
+    "runtime": "src/index.ts"
+  },
+  "builtin": true
+}

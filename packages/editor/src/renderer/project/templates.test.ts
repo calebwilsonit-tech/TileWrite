@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { C, Simulation, TableSchema, loadScene, physicsSystem, pointerSnapshot, cameraSnapshot, type TransformIso } from '@tilewright/runtime';
-import { addStandardSystems, currentUnit, packsOfProject, setActivePacks } from '@tilewright/behaviors';
 import { TEMPLATES, templateById } from './templates';
+import { addStandardSystems, packsOfProject, setActivePacks } from '@tilewright/behaviors';
+import { currentUnit } from '@tilewright/plugin-turns';
 
 function start(id: string): { sim: Simulation; ids: Map<string, ReturnType<typeof loadScene> extends Map<string, infer E> ? E : never>; built: ReturnType<ReturnType<typeof templateById>['build']> } {
   const built = templateById(id).build('T');
