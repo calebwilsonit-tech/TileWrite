@@ -30,6 +30,7 @@ describe('the example plugins', () => {
       ['physicsModifier', (h) => h.ext.physicsModifiers.size],
       ['blockType', (h) => h.ext.blockTypes.size],
       ['whoFilter', (h) => h.ext.whoFilters.size],
+      ['defeatCheck', (h) => h.ext.defeatChecks.size],
       ['scriptMethod', (h) => h.ext.scriptMethods.size],
       ['unlockRule', (h) => h.ext.unlockRules.size],
       ['bridgeSource', (h) => h.ext.bridgeSources.size],

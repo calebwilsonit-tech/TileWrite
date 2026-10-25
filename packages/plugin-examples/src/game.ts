@@ -102,6 +102,11 @@ export const whoExample: PluginDefinition = definePlugin(manifestOf('who', 'Exam
   install: (api) => api.whoFilter({ id: 'example-heroes', label: 'Heroes', match: (e) => e.tags.has('hero') }),
 });
 
+// ---------- when an object counts as defeated ----------
+export const defeatExample: PluginDefinition = definePlugin(manifestOf('defeat', 'Example: defeat', 'An object with the tag "fragile" counts as defeated once it has the tag "broken".'), {
+  install: (api) => api.defeatCheck({ id: 'example-fragile', defeated: (e) => e.tags.has('fragile') && e.tags.has('broken') }),
+});
+
 // ---------- a method for scripts ----------
 export const scriptExample: PluginDefinition = definePlugin(manifestOf('script', 'Example: a script method', 'Scripts can call game.exampleShout(text).'), {
   install: (api) => api.scriptMethod({ id: 'exampleShout', run: (ctx, _self, [text]) => void ctx.events.emit('message', { text: String(text).toUpperCase() }), fallback: undefined }),

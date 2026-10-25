@@ -18,6 +18,7 @@ A plugin's `install(api)` is the **game part** (runs in the editor and in the ex
 | `api.physicsModifier(def)` | Changes how every body moves before each step (wind, ice, a conveyor). | `game.ts` wind |
 | `api.blockType(def)` | A kind of block with its own colours and rules; the Tiles panel offers to add it to the project. | `game.ts` ice |
 | `api.whoFilter(def)` | A group pressure plates and trigger zones can react to. | `game.ts` heroes |
+| `api.defeatCheck(def)` | When an object counts as defeated (the playbot and the screens ask `isDefeated`; with no plugin saying so, nothing is ever defeated). The combat plugin says so when health has run out. | `game.ts` defeat |
 | `api.scriptMethod(def)` | A method scripts can call (the script API names `damage`, `heal`, `startDialogue`, `playCutscene` are implemented this way). | `game.ts` shout |
 | `api.unlockRule(def)` | A way a place on the world map can unlock. | `game.ts` key |
 | `api.bridgeSource(def)` | Cells that can be walked over a pit because of something the plugin brings; the checks and the playbot ask. | `game.ts` planks |

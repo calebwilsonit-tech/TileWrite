@@ -68,6 +68,15 @@ export interface WhoFilterDef {
   match(entity: Entity): boolean;
 }
 
+/**
+ * A way to tell that an object has been defeated (put out of the game). The engine asks `isDefeated(entity)`; whatever keeps health, a
+ * count of lives, a timer or anything else on objects says so here. With none, nothing is ever defeated.
+ */
+export interface DefeatCheckDef {
+  id: string;
+  defeated(entity: Entity): boolean;
+}
+
 /** A method scripts can call on an object or on the game (me.damage, game.startDialogue...), implemented by a plugin. */
 export interface ScriptMethodDef {
   /** The name scripts call. */
@@ -398,6 +407,7 @@ export interface Extensions {
   physicsModifiers: Map<string, PhysicsModifierDef & OwnedBy>;
   collisionLayers: Map<string, CollisionLayerDef & OwnedBy>;
   whoFilters: Map<string, WhoFilterDef & OwnedBy>;
+  defeatChecks: Map<string, DefeatCheckDef & OwnedBy>;
   unlockRules: Map<string, UnlockRuleDef & OwnedBy>;
   scriptMethods: Map<string, ScriptMethodDef & OwnedBy>;
   blockTypes: Map<string, BlockTypeDef & OwnedBy>;

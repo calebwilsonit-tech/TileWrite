@@ -1,5 +1,5 @@
 import type { PluginDefinition } from '@tilewright/plugin-sdk';
-import { behaviorExample, blockExample, bridgeExample, componentExample, eventsExample, inputExample, layerExample, physicsExample, scriptExample, systemExample, unlockExample, whoExample } from './game';
+import { behaviorExample, blockExample, bridgeExample, componentExample, defeatExample, eventsExample, inputExample, layerExample, physicsExample, scriptExample, systemExample, unlockExample, whoExample } from './game';
 import { gameUiExample, listSourceExample, menuEntryExample, screenExample, stringsExample, widgetExample } from './ui';
 import { exportTargetExample, exporterExample, importerExample, inspectorExample, panelExample, prefabExample, templateExample, toolExample, validatorExample } from './editor';
 import { assistantExample, moveExample, strategyExample } from './tools';
@@ -22,6 +22,7 @@ export const EXAMPLES: { point: string; plugin: PluginDefinition }[] = [
   { point: 'physicsModifier', plugin: physicsExample },
   { point: 'blockType', plugin: blockExample },
   { point: 'whoFilter', plugin: whoExample },
+  { point: 'defeatCheck', plugin: defeatExample },
   { point: 'scriptMethod', plugin: scriptExample },
   { point: 'unlockRule', plugin: unlockExample },
   { point: 'bridgeSource', plugin: bridgeExample },

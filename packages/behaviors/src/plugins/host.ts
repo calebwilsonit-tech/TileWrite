@@ -108,6 +108,8 @@ export interface PluginApi {
   physicsModifier(def: X.PhysicsModifierDef): void;
   /** Add a group plates and zones can react to ("crates", "helpers"). */
   whoFilter(def: X.WhoFilterDef): void;
+  /** Say when an object counts as defeated (what the playbot and the screens ask: `isDefeated`). */
+  defeatCheck(def: X.DefeatCheckDef): void;
   /** Add a way a place on the world map can unlock ("a checkpoint is lit there"). */
   unlockRule(def: X.UnlockRuleDef): void;
   /** Give scripts a method (me.damage, game.startDialogue...) that this plugin implements. */
@@ -209,6 +211,7 @@ const emptyExtensions = (): Extensions => ({
   physicsModifiers: new Map(),
   collisionLayers: new Map(),
   whoFilters: new Map(),
+  defeatChecks: new Map(),
   unlockRules: new Map(),
   scriptMethods: new Map(),
   blockTypes: new Map(),
@@ -584,6 +587,9 @@ export class PluginHost {
         for (const [key, l] of host.ext.collisionLayers) if ((l.bit === def.bit || key === def.name) && l.plugin !== id) throw new PluginError(`The collision layer "${def.name}" (bit ${def.bit}) clashes with "${key}" (bit ${l.bit}) of the plugin "${l.plugin}".`);
         host.add(rec, id, 'collisionLayers', def.name, def);
         if (def.ghost) setGhostLayer(def.name, def.bit);
+      },
+      defeatCheck(def) {
+        host.add(rec, id, 'defeatChecks', def.id, def);
       },
       whoFilter(def) {
         host.add(rec, id, 'whoFilters', def.id, def);

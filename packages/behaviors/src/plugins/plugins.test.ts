@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { getBehavior } from '../framework';
+import { isDefeated } from '../defeat';
 import { actionDef, conditionDef } from '../events/sheet';
 import { ENGINE_VERSION, describePermission, grants, parseManifest, worksWithEngine, type PluginManifest } from './manifest';
 import { PluginError, host, type PluginDefinition } from './host';
@@ -292,6 +293,17 @@ describe('the host', () => {
       host.slowCallMs = 250;
       host.editorHost = null;
     }
+  });
+
+  it('says an object is defeated only when a plugin that is on says so', () => {
+    const broken = { tags: new Set(['fragile', 'broken']) } as never;
+    expect(isDefeated(broken)).toBe(false); // nothing keeps health or lives: nothing is defeated
+    host.register(plugin({ id: 't-defeat' }, (api) => api.defeatCheck({ id: 't-fragile', defeated: (e) => e.tags.has('fragile') && e.tags.has('broken') })));
+    host.install('t-defeat');
+    expect(isDefeated(broken)).toBe(true);
+    expect(isDefeated({ tags: new Set(['fragile']) } as never)).toBe(false);
+    host.uninstall('t-defeat');
+    expect(isDefeated(broken)).toBe(false);
   });
 
   it('puts a replaced plugin back as it was on (dev mode: the new code replaces the old)', () => {

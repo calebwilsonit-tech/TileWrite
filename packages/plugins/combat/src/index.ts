@@ -20,6 +20,8 @@ export const combatPlugin = definePlugin(manifest, {
     api.assistantNote("Combat: health on objects, damage on touch, melee and ranged attacks (rangedAttack makes an enemy shoot), dodging, projectiles; the buttons attack and dodge.");
     for (const e of events) api.event(e);
     api.behaviors(health, damageOnTouch, meleeAttack, rangedAttack, dodge, projectile);
+    // an object whose health has run out is defeated (what the playbot and the screens ask)
+    api.defeatCheck({ id: 'health', defeated: (e) => e.get<{ dead: boolean }>('state:health')?.dead ?? false });
     api.conditions(...conditions);
     api.actions(...actions);
     api.inputAction('attack', { label: 'Attack', bindings: ['key:KeyJ', 'mouse:0', 'pad:button2'] });
