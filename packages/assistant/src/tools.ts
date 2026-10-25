@@ -75,6 +75,39 @@ const cutsceneStep = z
   .describe('A cutscene step. Other keys depend on the type: wait {seconds}, say {speaker,text}, dialogue {dialogue}, cameraTo {target,seconds,zoom}, cameraReset {seconds}, move {who,to,speed}, face {who,toward}, fade {to,seconds,color}, animation {who,clip}, shake {amount,seconds}, sound {name}, music {name}, setVariable {name,value}, give {item,amount}, message {text}. Objects are "player", "name:Keeper", "tag:guard", "id:e3" or a point "x,y".');
 const eventRow = z.object({ ...rowFields, children: z.array(leafRow).optional().describe('Sub-events that run only when this row holds (one level).') });
 
+/** A colour of a drawing palette, by number: 1 is the first colour, 2 the second... (0 is none). */
+const colorNumber = z.number().int().min(0).max(35);
+const strokeFill = {
+  fill: colorNumber.optional().describe('The colour inside (0 or missing: none).'),
+  stroke: colorNumber.optional().describe('The colour of the outline (0 or missing: none).'),
+  strokeWidth: z.number().min(0.5).max(64).optional().describe('How thick the outline is, in pixels (default 1).'),
+};
+const drawShape = z.discriminatedUnion('type', [
+  z.object({ type: z.literal('rect'), x: z.number(), y: z.number(), w: z.number().min(0), h: z.number().min(0), radius: z.number().min(0).optional(), rotation: z.number().optional().describe('Degrees.'), ...strokeFill }),
+  z.object({ type: z.literal('ellipse'), cx: z.number(), cy: z.number(), rx: z.number().min(0), ry: z.number().min(0), rotation: z.number().optional(), ...strokeFill }),
+  z.object({ type: z.literal('path'), points: z.array(z.object({ x: z.number(), y: z.number() })).min(2).max(200), closed: z.boolean().optional().describe('Join the last point back to the first (needed for a fill).'), smooth: z.boolean().optional().describe('Curve through the points.'), ...strokeFill }),
+]);
+const drawLayer = z
+  .object({
+    name: z.string().min(1).max(30),
+    rows: z.array(z.string()).max(512).optional().describe('Pixels: one text row per row of the picture, "." clear, "1" the first palette colour... "9", then "a"... "z".'),
+    shapes: z.array(drawShape).max(200).optional().describe('Rectangles, ellipses and paths that stay editable in the studio. Colours are palette numbers. Drawn in order, later ones on top.'),
+    fills: z.array(z.object({ x: z.number().int().min(0), y: z.number().int().min(0), color: colorNumber })).max(50).optional().describe('Flood fills, after the rows: the area around the pixel (x, y) that has the same colour is filled with the colour.'),
+    svg: z.string().max(60000).optional().describe('A drawing in SVG: it is drawn at the size of the picture and its colours snapped to the palette.'),
+  })
+  .describe('One layer, from the bottom up. Give rows, or shapes, or an svg (fills can go with rows, or alone on an empty layer).');
+const paletteColors = z.array(z.string().regex(/^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$/)).min(1).max(35).describe('Colours as "#rrggbb" (or "#rrggbbaa"). Colour 1 is the first.');
+const tileProps = z
+  .object({
+    walkable: z.boolean().optional(),
+    water: z.boolean().optional(),
+    pit: z.boolean().optional(),
+    stair: z.boolean().optional(),
+    blocksLight: z.boolean().optional(),
+    tags: z.array(z.string().max(30)).max(10).optional(),
+  })
+  .describe('What the tile is, besides how it looks.');
+
 export const TOOLS: ToolSpec[] = [
   // ---------- read ----------
   {
@@ -211,6 +244,12 @@ export const TOOLS: ToolSpec[] = [
     schema: z.object({ folder: z.string().optional().describe('A folder like "assets/sprites"; empty for the project folder.') }),
   },
   {
+    name: 'project_references',
+    kind: 'read',
+    description: 'What uses what in the project. With a path: the files that file uses (a scene: its sprites, prefabs, tables, sounds) and the files that use it, and where in each it was found. With no path: the sprites, structures, tables, sounds and pictures that nothing uses, and the files used by the most others. Ask this BEFORE you delete, rename or replace a file or an asset, and to find leftovers. References are found by exact names and paths written in the files; one built from pieces in a script is not seen.',
+    schema: z.object({ path: z.string().optional().describe('A file path from project_index, like "assets/sprites/tree.sprite.json".') }),
+  },
+  {
     name: 'search_project',
     kind: 'read',
     description: 'Search the project: for words inside its text files (scenes, conversations, screens, scripts, notes, tables, translations...) and for files by name or kind. "query" is looked for in file names and in the text; with "kind" alone you get every file of that kind (for example every sprite, or every sound). Answers give the path and line, so read_project_file or the specific tools can follow. Use it to find where something is used before changing or deleting it.',
@@ -229,6 +268,12 @@ export const TOOLS: ToolSpec[] = [
     kind: 'read',
     description: 'Read one file of the project by its path (from project_index or list_project_files). Text files come back as text; a picture (PNG, JPEG, GIF, WebP, and BMP, PSD, Aseprite and SVG turned into PNG; a big one made smaller) comes back as a picture you can see, with its size, frames and the colours in it; a PDF comes back as the document itself (its pages), or its text when it is too big to send whole; a sprite comes back as a description and a picture of its first frame; a scene, a screens file, a conversation and the project file come back as their text AND a picture drawn from it (the map of a scene with its objects, regions and wires, and its logic graphs; each screen as a wireframe; a conversation as boxes and arrows; the tiles); a file a plugin can read comes back as that plugin explains it. Sounds cannot be heard: you get the length (MP3 too), levels in decibels, clipping, silence at the ends, any loop points stored in the file and a picture of the waveform, and must not guess how a sound sounds. A path may not leave the project folder.',
     schema: z.object({ path: z.string().min(1).describe('The path from the project folder, like "assets/screens.json".'), offset: z.number().int().min(0).optional().describe('For a long text file: start reading this many characters in (the reply says when there is more).') }),
+  },
+  {
+    name: 'tile_template',
+    kind: 'read',
+    description: 'The canvas for a ground tile in this project (the size follows the project tile shape): its width and height, the guide polygons of the faces, and the canvas as rows of characters where T is the top face, L the left, R the right and "." is outside (cut away). Ask for kind "floor" (a flat diamond) or "block" (a cube with a top and two sides, with its height in levels). Use it before draw_tile.',
+    schema: z.object({ kind: z.enum(['floor', 'block']), levels: z.number().min(0.5).max(4).optional() }),
   },
   {
     name: 'list_image_providers',
@@ -588,16 +633,34 @@ export const TOOLS: ToolSpec[] = [
   {
     name: 'draw_sprite',
     kind: 'act',
-    description: 'Draw a small picture (pixel art) as a new sprite in the project: up to 128 x 128. Give a palette of colours and one text row per row of pixels; each character of a row is a colour: "." is transparent, "1" is the first palette colour, "2" the second, ... "9", then "a" the tenth ... "z". Every row must be exactly "width" characters. For an animation give more frames in moreFrames (each a list of rows). The user sees the picture before approving. Use list_prefabs or read_project_file to see what the existing sprites look like first, and keep a consistent style. For larger or painted pictures use generate_image when list_image_providers offers one.',
+    description: 'Draw a picture as a new sprite in the project: up to 256 x 256. Give a palette of colours and then draw with any of: "rows" (pixel art as one text row per row of pixels; each character is a colour: "." is transparent, "1" the first palette colour, "2" the second, ... "9", then "a" the tenth ... "z"), and "layers" from the bottom up, each with rows, or shapes (rectangles, ellipses, paths with fills and outlines that stay editable in the studio), or an svg (drawn at the size of the picture, colours snapped to the palette), plus flood fills. Every row must be exactly "width" characters. For an animation give more frames of the rows in moreFrames. The user sees the picture before approving, and the sprite is opened in the sprite studio for touch-ups. Use read_project_file on existing sprites to see what they look like first, and keep a consistent style. For tiles of the ground use draw_tile instead. For larger or painted pictures use generate_image when list_image_providers offers one.',
     schema: z.object({
       name: z.string().min(1).max(40).describe('Letters, numbers, spaces, - and _.'),
-      width: z.number().int().min(1).max(128),
-      height: z.number().int().min(1).max(128),
-      palette: z.array(z.string().regex(/^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$/)).min(1).max(35).describe('Colours as "#rrggbb" (or "#rrggbbaa").'),
-      rows: z.array(z.string()).min(1).max(128).describe('The first frame, top row first.'),
-      moreFrames: z.array(z.array(z.string()).min(1).max(128)).max(15).optional().describe('Further frames of an animation (same size).'),
+      width: z.number().int().min(1).max(256),
+      height: z.number().int().min(1).max(256),
+      palette: paletteColors.optional().describe('Required unless the only layers are svg ones (then the colours of the drawing become the palette).'),
+      rows: z.array(z.string()).min(1).max(256).optional().describe('The first frame as pixel rows, top row first (a layer called Pixels, below the others).'),
+      moreFrames: z.array(z.array(z.string()).min(1).max(256)).max(15).optional().describe('Further frames of an animation (same size, same palette), for rows.'),
+      layers: z.array(drawLayer).max(12).optional(),
       frameMs: z.number().int().min(20).max(2000).optional().describe('How long each frame shows, in milliseconds (default 120).'),
       replace: z.boolean().optional().describe('True to replace an existing sprite of that name.'),
+    }),
+  },
+  {
+    name: 'draw_tile',
+    kind: 'act',
+    description: 'Make a ground tile that works in the world: a floor tile (a flat diamond) or a block (a top and two sides). Call tile_template first for the size and the faces of this project, then draw on that canvas (same drawing tools as draw_sprite: palette, layers of rows, shapes, svg, fills; anything outside the faces is cut away). "faces" fills the top, left and right with flat colours first (palette numbers) so you only draw the detail. The tile is added to the tile palette (its pictures cut for the top and sides, ready to paint with), shown to the user on a patch of ground to see how it repeats, and opened in the tile studio. It can be painted with at once.',
+    schema: z.object({
+      name: z.string().min(1).max(40).describe('The tile name. Letters, numbers, spaces, - and _.'),
+      kind: z.enum(['floor', 'block']),
+      levels: z.number().min(0.5).max(4).optional().describe('For a block: how many levels tall (0.5 or 1 are the usual).'),
+      palette: paletteColors,
+      faces: z.object({ top: colorNumber.optional(), left: colorNumber.optional(), right: colorNumber.optional() }).optional().describe('Flat base colours for the faces, as palette numbers. For a block the left and right default to a darker version of the top.'),
+      rows: z.array(z.string()).min(1).max(256).optional().describe('Pixel rows of the whole canvas (see tile_template), drawn over the faces.'),
+      layers: z.array(drawLayer).max(12).optional(),
+      props: tileProps.optional(),
+      tileName: z.string().min(1).max(40).optional().describe('The name in the palette if it should differ from the sprite name.'),
+      replace: z.boolean().optional().describe('True to replace a tile and sprites of that name.'),
     }),
   },
   {
@@ -611,6 +674,11 @@ export const TOOLS: ToolSpec[] = [
       width: z.number().int().min(8).max(512),
       height: z.number().int().min(8).max(512),
       reference: z.string().optional().describe('The name of an existing sprite to start from or match the style of.'),
+      as: z.enum(['sprite', 'floor-tile', 'block-tile']).optional().describe('What the picture becomes: a plain sprite (default), or a floor tile or a block tile that goes through the tile import: fitted to the tile shape of this project, its colours matched to the tiles already there, and added to the tile palette.'),
+      source: z.enum(['texture', 'picture']).optional().describe('For a tile: a texture is flat and seen from above (grass, stone: it is laid on the diamond or the block); a picture already has the isometric angle (its background is taken away and it is fitted). Default texture.'),
+      columns: z.number().int().min(1).max(16).optional().describe('For a tile: the picture is a sheet with this many tiles across (default 1).'),
+      rows: z.number().int().min(1).max(16).optional().describe('For a tile: and this many down.'),
+      levels: z.number().min(0.5).max(4).optional().describe('For a block tile: how many levels tall.'),
       replace: z.boolean().optional(),
     }),
   },

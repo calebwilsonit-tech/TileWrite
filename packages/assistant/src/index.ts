@@ -10,4 +10,5 @@ export * from './path-rules';
 export * from './readers';
 export * from './pdf';
 export * from './search';
+export * from './references';
 export * from './approval';

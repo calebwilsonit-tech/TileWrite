@@ -90,7 +90,7 @@ describe('tool definitions', () => {
 
   it('keep reading and changing apart: every tool that changes the project is an act tool', () => {
     const act = TOOLS.filter((t) => t.kind === 'act').map((t) => t.name);
-    expect(act).toEqual(['place_objects', 'update_objects', 'delete_objects', 'paint_tiles', 'connect_wires', 'remove_wires', 'set_event_sheet', 'write_dialogue', 'write_cutscene', 'write_skins', 'write_world_map', 'write_mixer', 'write_ui_layout', 'write_controls', 'set_project_settings', 'edit_event_rows', 'create_prefab', 'set_regions', 'write_translation', 'set_plugins', 'write_table', 'set_variables', 'generate_map', 'write_ui_screen', 'write_script', 'write_project_notes', 'submit_plan', 'draw_sprite', 'generate_image', 'place_blocks', 'set_gravity']);
+    expect(act).toEqual(['place_objects', 'update_objects', 'delete_objects', 'paint_tiles', 'connect_wires', 'remove_wires', 'set_event_sheet', 'write_dialogue', 'write_cutscene', 'write_skins', 'write_world_map', 'write_mixer', 'write_ui_layout', 'write_controls', 'set_project_settings', 'edit_event_rows', 'create_prefab', 'set_regions', 'write_translation', 'set_plugins', 'write_table', 'set_variables', 'generate_map', 'write_ui_screen', 'write_script', 'write_project_notes', 'submit_plan', 'draw_sprite', 'draw_tile', 'generate_image', 'place_blocks', 'set_gravity']);
   });
 
   it('checks the genre tools\' inputs with messages Claude can act on', () => {
@@ -100,6 +100,21 @@ describe('tool definitions', () => {
     expect(checkToolInput('write_table', { name: '1bad', columns: [{ id: 'a' }], rows: [] }).ok).toBe(false);
     expect(checkToolInput('write_table', { name: 'Waves', columns: [{ id: 'count', type: 'number' }], rows: [{ id: 'w1', count: 5 }] }).ok).toBe(true);
     expect(checkToolInput('set_variables', { variables: [] }).ok).toBe(false);
+  });
+
+  it('checks the inputs of the drawing, search and reading tools', () => {
+    const palette = ['#112233', '#ffffff'];
+    expect(checkToolInput('draw_sprite', { name: 'a', width: 8, height: 8, palette, layers: [{ name: 'S', shapes: [{ type: 'rect', x: 0, y: 0, w: 4, h: 4, fill: 1 }, { type: 'ellipse', cx: 4, cy: 4, rx: 2, ry: 2, stroke: 2 }, { type: 'path', points: [{ x: 0, y: 0 }, { x: 3, y: 3 }], closed: false }] }, { name: 'F', fills: [{ x: 1, y: 1, color: 2 }] }, { name: 'V', svg: '<svg/>' }] }).ok).toBe(true);
+    expect(checkToolInput('draw_sprite', { name: 'a', width: 8, height: 8, palette, layers: [{ name: 'S', shapes: [{ type: 'star' }] }] }).ok).toBe(false);
+    expect(checkToolInput('draw_sprite', { name: 'a', width: 300, height: 8, palette, rows: ['.'] }).ok).toBe(false);
+    expect(checkToolInput('draw_tile', { name: 'moss', kind: 'floor', palette, faces: { top: 1 } }).ok).toBe(true);
+    expect(checkToolInput('draw_tile', { name: 'moss', kind: 'wall', palette }).ok).toBe(false);
+    expect(checkToolInput('tile_template', { kind: 'block', levels: 2 }).ok).toBe(true);
+    expect(checkToolInput('search_project', { query: 'gate', kind: 'scenes', where: 'text' }).ok).toBe(true);
+    expect(checkToolInput('search_project', { where: 'everywhere' }).ok).toBe(false);
+    expect(checkToolInput('project_references', { path: 'assets/sprites/tree.sprite.json' }).ok).toBe(true);
+    expect(checkToolInput('generate_image', { provider: 'p', prompt: 'x', name: 'n', width: 64, height: 64, as: 'block-tile', source: 'picture', columns: 2, rows: 2 }).ok).toBe(true);
+    expect(checkToolInput('generate_image', { provider: 'p', prompt: 'x', name: 'n', width: 64, height: 64, as: 'cliff' }).ok).toBe(false);
   });
 
   it('checks the story tools\' inputs with messages Claude can act on', () => {

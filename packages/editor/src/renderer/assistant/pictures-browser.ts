@@ -18,6 +18,19 @@ function pixels(source: CanvasImageSource, width: number, height: number): Raste
   return { width, height, rgba: new Uint8ClampedArray(data.data) };
 }
 
+/** An SVG drawn at exactly w x h (see fitSvgTo, which makes the svg say so). */
+export async function browserRasterizeSvgAt(svg: string, w: number, h: number): Promise<Raster> {
+  const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
+  try {
+    const img = new Image();
+    img.src = url;
+    await img.decode();
+    return pixels(img, w, h);
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
 export async function browserRasterize(bytes: Uint8Array, format: PictureFormat): Promise<Raster> {
   const type = MIME[format];
   if (!type) throw new Error(`the window cannot decode ${format}`);

@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react';
-import { DEFAULT_SETTINGS, MAX_ATTACHMENTS, MAX_PDF_ATTACHMENT_BYTES, buildContext, cleanSettings, formatProjectIndex, pdfFacts, approvalClass, mayRunUnasked, whyAsked, type AssistantSettings, type Attachment, type Mode, type ToolOutput, type Usage, NO_USAGE } from '@tilewright/assistant';
+import { DEFAULT_SETTINGS, MAX_ATTACHMENTS, MAX_PDF_ATTACHMENT_BYTES, buildContext, cleanSettings, pdfFacts, approvalClass, mayRunUnasked, whyAsked, type AssistantSettings, type Attachment, type Mode, type ToolOutput, type Usage, NO_USAGE } from '@tilewright/assistant';
 import { host } from '@tilewright/behaviors';
 import { pluginToolName, toolsOffered } from './plugin-tools';
 import { PictureProblem, bytesToBase64, pictureForClaude } from './pictures';
@@ -9,7 +9,7 @@ export { pluginToolName };
 import { store } from '../app/store';
 import { api, type AssistantEvent, type AssistantStatus, type AssistantToolCall } from '../project/api';
 import { ToolProblem, prepareAction, readNotes, runReadTool, sceneProblems, type Proposal } from './editor-tools';
-import { listProjectFiles } from './file-tools';
+import { projectIndexText } from './file-tools';
 import { rollBack, takeSnapshot, type Snapshot } from './snapshot';
 
 export type ProposalStatus = 'pending' | 'applied' | 'rejected' | 'failed' | 'undone';
@@ -74,6 +74,7 @@ export const TOOL_LABELS: Record<string, string> = {
   list_project_files: 'Looked inside a folder',
   read_project_file: 'Read a file',
   search_project: 'Searched the project',
+  project_references: 'Looked at what uses what',
   list_image_providers: 'Checked which picture makers exist',
 };
 
@@ -436,7 +437,7 @@ class AssistantStore {
     const p = store.state.project;
     if (!p) return '';
     try {
-      return formatProjectIndex(p.project.name, await listProjectFiles(), { perGroup: 12 });
+      return await projectIndexText({ perGroup: 12 });
     } catch {
       return '';
     }

@@ -164,21 +164,28 @@ export const GROUP_IDS: readonly string[] = [...GROUPS.map((g) => g.id), 'other'
  * Names are listed up to a limit per group (with the count when there are more), sorted, so the same project always gives
  * the same text (it sits in the cached start of the conversation).
  */
-export function formatProjectIndex(projectName: string, files: readonly IndexedFile[], opts: { perGroup?: number } = {}): string {
+export function formatProjectIndex(projectName: string, files: readonly IndexedFile[], opts: { perGroup?: number; /** What to add after a file: what uses it or what it uses. */ note?: (path: string) => string; /** Files of the asset kinds that nothing uses. */ unused?: readonly string[] } = {}): string {
   const limit = opts.perGroup ?? 25;
   const sorted = [...files].sort((a, b) => a.path.localeCompare(b.path));
   const taken = new Set<string>();
-  const lines: string[] = [`Files in "${projectName}" (${files.length} in all). Read any of them with read_project_file.`];
+  const lines: string[] = [`Files in "${projectName}" (${files.length} in all). Read any of them with read_project_file${opts.note ? '; search_project finds words in them' : ''}.${opts.note ? ' After a file: what uses it, or what it uses (found by reading the files for exact names; use project_references for the detail).' : ''}`];
+  const withNote = (text: string, path: string): string => {
+    const note = opts.note?.(path);
+    return note ? `${text} - ${note}` : text;
+  };
   for (const g of GROUPS) {
     const mine = sorted.filter((f) => !taken.has(f.path) && g.test(f.path));
     for (const f of mine) taken.add(f.path);
     if (mine.length === 0) continue;
-    const shown = mine.slice(0, limit).map((f) => (f.size !== undefined ? `${f.path} (${kb(f.size)})` : f.path));
+    const shown = mine.slice(0, limit).map((f) => withNote(f.size !== undefined ? `${f.path} (${kb(f.size)})` : f.path, f.path));
     lines.push(`${g.label}: ${mine.length}`, ...shown.map((s) => `  ${s}`), ...(mine.length > shown.length ? [`  ... and ${mine.length - shown.length} more (list_project_files shows a folder)`] : []));
   }
   const rest = sorted.filter((f) => !taken.has(f.path));
   if (rest.length > 0) {
-    lines.push(`Other files: ${rest.length}`, ...rest.slice(0, limit).map((f) => `  ${f.path}`), ...(rest.length > limit ? [`  ... and ${rest.length - limit} more`] : []));
+    lines.push(`Other files: ${rest.length}`, ...rest.slice(0, limit).map((f) => `  ${withNote(f.path, f.path)}`), ...(rest.length > limit ? [`  ... and ${rest.length - limit} more`] : []));
+  }
+  if (opts.unused && opts.unused.length > 0) {
+    lines.push(`Nothing uses these ${opts.unused.length} (pictures, sounds, sprites, tables... that are not placed or named anywhere: to clean up, or not yet used):`, ...opts.unused.slice(0, 12).map((p) => `  ${p}`), ...(opts.unused.length > 12 ? [`  ... and ${opts.unused.length - 12} more`] : []));
   }
   return lines.join('\n');
 }

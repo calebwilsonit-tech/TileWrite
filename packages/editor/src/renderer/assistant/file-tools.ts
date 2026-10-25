@@ -1,4 +1,4 @@
-import { PathProblem, SearchProblem, cleanRelative, filterFiles, findByName, formatSearch, searchText, textMatcher, secretReason, describeAudio, describeUnreadable, extOf, extractPdfText, fileKind, formatProjectIndex, limitText, looksLikeText, pdfFacts, pdfFitsAsDocument, type IndexedFile, type SearchHit, type ToolOutput } from '@tilewright/assistant';
+import { PathProblem, SearchProblem, buildReferences, describeReferences, referenceNote, unusedAssets, type ProjectRefs, type TextFile, cleanRelative, filterFiles, findByName, formatSearch, searchText, textMatcher, secretReason, describeAudio, describeUnreadable, extOf, extractPdfText, fileKind, formatProjectIndex, limitText, looksLikeText, pdfFacts, pdfFitsAsDocument, type IndexedFile, type SearchHit, type ToolOutput } from '@tilewright/assistant';
 import { unzlibSync } from 'fflate';
 import { host } from '@tilewright/behaviors';
 import { compositeFrame, encodePng, parseSprite } from '@tilewright/runtime';
@@ -10,6 +10,7 @@ import { browserRasterize } from './pictures-browser';
 import { previewsFor } from './preview';
 import { analyse, decodeWav, describeLevels, mp3Info, tagLoops, type FileInfo } from './audio';
 import { decodeInBrowser } from './audio-browser';
+import { tileTemplateText } from './image-tools';
 
 /**
  * Claude reading the project's files. Every path Claude names is checked here (`cleanRelative`: nothing that leaves the
@@ -270,14 +271,72 @@ async function searchProject(input: Record<string, unknown>): Promise<ToolOutput
   return text(formatSearch({ query, names, hits, searched, skipped, cut, kind }, { names: 40, hits: limit }));
 }
 
+/** The references of the project, worked out from its text files (kept for a little while: the list of files and sizes is what says it is still current). */
+let cachedRefs: { key: string; at: number; refs: ProjectRefs } | null = null;
+
+export async function projectReferences(files: IndexedFile[]): Promise<ProjectRefs> {
+  const key = `${projectDir()}|${files.map((f) => `${f.path}:${f.size ?? ''}`).join(',')}`;
+  if (cachedRefs && cachedRefs.key === key && Date.now() - cachedRefs.at < 20_000) return cachedRefs.refs;
+  const readable = files.filter((f) => /\.(json|ts|js)$/.test(f.path) && (f.size ?? 0) <= SEARCH_FILE_BYTES).slice(0, SEARCH_FILES);
+  const texts: TextFile[] = [];
+  for (let i = 0; i < readable.length; i += 16) {
+    const batch = await Promise.all(
+      readable.slice(i, i + 16).map(async (f) => {
+        try {
+          return { path: f.path, text: await api().fs.read(absolute(f.path)) };
+        } catch {
+          return null;
+        }
+      }),
+    );
+    for (const t of batch) if (t) texts.push(t);
+  }
+  const refs = { ...buildReferences(files, texts), skipped: files.filter((f) => /\.(json|ts|js)$/.test(f.path)).length - texts.length };
+  cachedRefs = { key, at: Date.now(), refs };
+  return refs;
+}
+
+/** The index of the project's files, with what uses what. Without the references (a project too big to read, a failure) it is the plain list. */
+export async function projectIndexText(opts: { perGroup?: number } = {}): Promise<string> {
+  const p = store.state.project;
+  if (!p) return fail('No project is open.');
+  const files = await listProjectFiles();
+  try {
+    const refs = await projectReferences(files);
+    return formatProjectIndex(p.project.name, files, { ...opts, note: (path) => referenceNote(path, refs), unused: unusedAssets(files, refs) });
+  } catch {
+    return formatProjectIndex(p.project.name, files, opts);
+  }
+}
+
+async function referencesTool(input: Record<string, unknown>): Promise<ToolOutput> {
+  const files = await listProjectFiles();
+  const refs = await projectReferences(files);
+  const path = typeof input.path === 'string' && input.path ? cleanPath(input.path) : '';
+  if (path) {
+    if (!files.some((f) => f.path === path)) return fail(`There is no file "${path}". project_index and search_project show what exists.`);
+    return text(describeReferences(path, refs));
+  }
+  const unused = unusedAssets(files, refs);
+  const busiest = [...refs.usedBy].sort((a, b) => b[1].length - a[1].length).slice(0, 8);
+  const lines = [
+    `References were read from ${refs.read} text files${refs.skipped > 0 ? ` (${refs.skipped} were too big or over the limit and are not counted)` : ''}.`,
+    unused.length > 0
+      ? `Nothing uses these ${unused.length} files (sprites, structures, tables, sounds, pictures):\n${unused.slice(0, 40).map((p) => `  ${p}`).join('\n')}${unused.length > 40 ? `\n  ... and ${unused.length - 40} more` : ''}`
+      : 'Every sprite, structure, table, sound and picture is used by something.',
+    busiest.length > 0 ? `Used by the most files:\n${busiest.map(([p, r]) => `  ${p}: ${r.length}`).join('\n')}` : '',
+    'Ask with a path to see what one file uses and what uses it.',
+  ];
+  return text(lines.filter(Boolean).join('\n'));
+}
+
 /** The reading tools for files. Null when the name is not one of them. */
 export async function runFileRead(name: string, input: Record<string, unknown>): Promise<ToolOutput | null> {
   switch (name) {
-    case 'project_index': {
-      const p = store.state.project;
-      if (!p) return fail('No project is open.');
-      return text(formatProjectIndex(p.project.name, await listProjectFiles()));
-    }
+    case 'project_index':
+      return text(await projectIndexText());
+    case 'project_references':
+      return referencesTool(input);
     case 'list_project_files': {
       const folder = typeof input.folder === 'string' ? input.folder.trim() : '';
       const dir = folder === '' || folder === '.' ? projectDir() : absolute(folder);
@@ -294,6 +353,8 @@ export async function runFileRead(name: string, input: Record<string, unknown>):
     }
     case 'search_project':
       return searchProject(input);
+    case 'tile_template':
+      return text(tileTemplateText(input));
     case 'read_project_file':
       return readProjectFile(String(input.path ?? ''), Number(input.offset ?? 0));
     case 'list_image_providers': {
