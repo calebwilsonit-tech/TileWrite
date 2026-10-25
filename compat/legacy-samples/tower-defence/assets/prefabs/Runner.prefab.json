@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "name": "Runner",
+  "root": {
+    "name": "Runner",
+    "tags": [
+      "enemy"
+    ],
+    "components": {
+      "transform": {
+        "x": 0,
+        "y": 0,
+        "h": 0,
+        "facing": 2
+      },
+      "sprite": {
+        "shape": "box",
+        "color": 14178110,
+        "w": 0.5,
+        "d": 0.5,
+        "height": 0.5,
+        "sortOffset": 0,
+        "visible": true
+      },
+      "collider": {
+        "w": 0.5,
+        "d": 0.5,
+        "height": 1,
+        "solid": true,
+        "trigger": false,
+        "layer": 16,
+        "mask": 65535,
+        "enabled": true,
+        "inside": []
+      },
+      "pushable": {
+        "slideSpeed": 6
+      },
+      "health": {
+        "max": 6,
+        "invulnerableSeconds": 0,
+        "onDeath": "remove",
+        "fallDamage": 1,
+        "team": "auto",
+        "showBar": true
+      },
+      "pathFollower": {
+        "points": "",
+        "routeTag": "route",
+        "speed": 2.5,
+        "removeAtEnd": true
+      },
+      "body": {
+        "vx": 0,
+        "vy": 0,
+        "vz": 0,
+        "radius": 0.25,
+        "height": 1,
+        "state": "ground",
+        "stepUp": 0.6,
+        "stepDown": 1,
+        "ledge": "fall",
+        "pits": "fall",
+        "wade": false,
+        "gravity": 1,
+        "peakZ": 0,
+        "layer": 2,
+        "mask": 65535,
+        "noclip": false,
+        "blockedBy": [],
+        "blockedTerrain": false
+      }
+    },
+    "children": []
+  }
+}

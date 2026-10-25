@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "name": "Footman",
+  "root": {
+    "name": "Footman",
+    "tags": [
+      "unit",
+      "blue"
+    ],
+    "components": {
+      "transform": {
+        "x": 0,
+        "y": 0,
+        "h": 0,
+        "facing": 2
+      },
+      "sprite": {
+        "shape": "box",
+        "color": 5213439,
+        "w": 0.6,
+        "d": 0.6,
+        "height": 1.1,
+        "sortOffset": 0,
+        "visible": true
+      },
+      "collider": {
+        "w": 0.6,
+        "d": 0.6,
+        "height": 1,
+        "solid": true,
+        "trigger": false,
+        "layer": 16,
+        "mask": 65535,
+        "enabled": true,
+        "inside": []
+      },
+      "pushable": {
+        "slideSpeed": 6
+      },
+      "commandable": {
+        "team": "blue",
+        "speed": 3.5,
+        "spacing": 0.7,
+        "attackRange": 1.2,
+        "attackDamage": 3,
+        "attackCooldown": 0.8,
+        "aggro": 4
+      },
+      "body": {
+        "vx": 0,
+        "vy": 0,
+        "vz": 0,
+        "radius": 0.25,
+        "height": 1,
+        "state": "ground",
+        "stepUp": 0.6,
+        "stepDown": 1,
+        "ledge": "fall",
+        "pits": "fall",
+        "wade": false,
+        "gravity": 1,
+        "peakZ": 0,
+        "layer": 2,
+        "mask": 65535,
+        "noclip": false,
+        "blockedBy": [],
+        "blockedTerrain": false
+      },
+      "health": {
+        "max": 14,
+        "invulnerableSeconds": 0,
+        "onDeath": "remove",
+        "fallDamage": 1,
+        "team": "auto",
+        "showBar": true
+      }
+    },
+    "children": []
+  }
+}

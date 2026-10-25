@@ -1,0 +1,222 @@
+{
+  "loadProblems": [],
+  "check": [
+    "error: scenes/main.scene.json: This scene has no player start, so the game has nowhere to begin. Use the Place tool to add one."
+  ],
+  "project": {
+    "schemaVersion": 2,
+    "plugins": "controls,sim",
+    "roundTrip": true
+  },
+  "scenes": {
+    "scenes/main.scene.json": {
+      "entities": 3,
+      "map": "61bf9cec20d289a3",
+      "loadProblems": [],
+      "roundTrip": true,
+      "keys": {
+        "checkpoints": [
+          {
+            "tick": 0,
+            "player": null,
+            "entities": 3,
+            "world": "5cafd7bc8164c76c",
+            "vars": "ebcd16ef008008bd",
+            "screen": "HUD"
+          },
+          {
+            "tick": 60,
+            "player": null,
+            "entities": 3,
+            "world": "5cafd7bc8164c76c",
+            "vars": "5d2b4560f0a7d7a0",
+            "screen": "HUD"
+          },
+          {
+            "tick": 120,
+            "player": null,
+            "entities": 3,
+            "world": "5cafd7bc8164c76c",
+            "vars": "7ede7754f0c56b76",
+            "screen": "HUD"
+          },
+          {
+            "tick": 180,
+            "player": null,
+            "entities": 3,
+            "world": "5cafd7bc8164c76c",
+            "vars": "faf034d7ef11da95",
+            "screen": "HUD"
+          },
+          {
+            "tick": 240,
+            "player": null,
+            "entities": 3,
+            "world": "5cafd7bc8164c76c",
+            "vars": "5ec7119ae735e6c6",
+            "screen": "HUD"
+          },
+          {
+            "tick": 300,
+            "player": null,
+            "entities": 3,
+            "world": "5cafd7bc8164c76c",
+            "vars": "6ca5ca2d5754c6b5",
+            "screen": "HUD"
+          },
+          {
+            "tick": 360,
+            "player": null,
+            "entities": 3,
+            "world": "5cafd7bc8164c76c",
+            "vars": "07d4e3f025b520b0",
+            "screen": "HUD"
+          },
+          {
+            "tick": 420,
+            "player": null,
+            "entities": 3,
+            "world": "5cafd7bc8164c76c",
+            "vars": "e8a4a8ba13dcf6ea",
+            "screen": "HUD"
+          },
+          {
+            "tick": 480,
+            "player": null,
+            "entities": 3,
+            "world": "5cafd7bc8164c76c",
+            "vars": "96a1d4f974653ee2",
+            "screen": "HUD"
+          },
+          {
+            "tick": 540,
+            "player": null,
+            "entities": 3,
+            "world": "5cafd7bc8164c76c",
+            "vars": "b6ba05c7c12ae105",
+            "screen": "HUD>Inventory (modal)"
+          },
+          {
+            "tick": 600,
+            "player": null,
+            "entities": 3,
+            "world": "5cafd7bc8164c76c",
+            "vars": "b6ba05c7c12ae105",
+            "screen": "HUD>Inventory (modal)"
+          },
+          {
+            "tick": 660,
+            "player": null,
+            "entities": 3,
+            "world": "5cafd7bc8164c76c",
+            "vars": "b6ba05c7c12ae105",
+            "screen": "HUD>Inventory (modal)"
+          },
+          {
+            "tick": 660,
+            "player": null,
+            "entities": 3,
+            "world": "5cafd7bc8164c76c",
+            "vars": "b6ba05c7c12ae105",
+            "screen": "HUD>Inventory (modal)"
+          }
+        ],
+        "error": ""
+      },
+      "mouse": {
+        "checkpoints": [
+          {
+            "tick": 0,
+            "player": null,
+            "entities": 3,
+            "world": "5cafd7bc8164c76c",
+            "vars": "ebcd16ef008008bd",
+            "screen": "HUD"
+          },
+          {
+            "tick": 30,
+            "player": null,
+            "entities": 3,
+            "world": "5cafd7bc8164c76c",
+            "vars": "e94fe66ce45d7501",
+            "screen": "HUD"
+          },
+          {
+            "tick": 126,
+            "player": null,
+            "entities": 3,
+            "world": "5cafd7bc8164c76c",
+            "vars": "b46a9e96836337c3",
+            "screen": "HUD"
+          },
+          {
+            "tick": 222,
+            "player": null,
+            "entities": 3,
+            "world": "5cafd7bc8164c76c",
+            "vars": "ffced92d75496741",
+            "screen": "HUD"
+          },
+          {
+            "tick": 318,
+            "player": null,
+            "entities": 3,
+            "world": "5cafd7bc8164c76c",
+            "vars": "7001eeeb60c95740",
+            "screen": "HUD"
+          },
+          {
+            "tick": 414,
+            "player": null,
+            "entities": 3,
+            "world": "5cafd7bc8164c76c",
+            "vars": "a6a4af5f0445e822",
+            "screen": "HUD"
+          },
+          {
+            "tick": 510,
+            "player": null,
+            "entities": 3,
+            "world": "5cafd7bc8164c76c",
+            "vars": "8bbbc93e62305dfb",
+            "screen": "HUD"
+          },
+          {
+            "tick": 640,
+            "player": null,
+            "entities": 3,
+            "world": "5cafd7bc8164c76c",
+            "vars": "bb83d021d7896da6",
+            "screen": "HUD"
+          }
+        ],
+        "error": ""
+      },
+      "saveRoundTrip": "ok"
+    }
+  },
+  "scenarios": {},
+  "scripts": {
+    "typecheck": {},
+    "compile": {},
+    "logs": []
+  },
+  "savedGames": {},
+  "playthroughs": {},
+  "exported": {
+    "files": {
+      "assets/items.json": "0e5e19436438b496",
+      "assets/prefabs/Farm.prefab.json": "933d863690c38e68",
+      "assets/prefabs/House.prefab.json": "43409333c8a52cb8",
+      "assets/prefabs/Market.prefab.json": "6086bd5874d2439f",
+      "assets/prefabs/Wall.prefab.json": "5a35f3b493f1d7f8",
+      "assets/screens.json": "79abcc9bf8f3e43b",
+      "assets/tables/Activities.table.json": "18c508de4d4253a9",
+      "assets/tables/Buildings.table.json": "81dbe62bfd6f7db2",
+      "project.json": "282ec17b916d8627",
+      "scenes/main.scene.json": "73662af4400546f1"
+    },
+    "manifest": "7de3eeb50ddaab14",
+    "settingsProblems": []
+  }
+}

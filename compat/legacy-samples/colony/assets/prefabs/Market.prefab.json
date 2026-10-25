@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "name": "Market",
+  "root": {
+    "name": "Market",
+    "tags": [
+      "market"
+    ],
+    "components": {
+      "transform": {
+        "x": 0,
+        "y": 0,
+        "h": 0,
+        "facing": 2
+      },
+      "sprite": {
+        "shape": "box",
+        "color": 14721098,
+        "w": 1.8,
+        "d": 1.8,
+        "height": 1,
+        "sortOffset": 0,
+        "visible": true
+      },
+      "collider": {
+        "w": 1.8,
+        "d": 1.8,
+        "height": 1,
+        "solid": true,
+        "trigger": false,
+        "layer": 16,
+        "mask": 65535,
+        "enabled": true,
+        "inside": []
+      },
+      "pushable": {
+        "slideSpeed": 6
+      },
+      "producer": {
+        "makes": "gold:6",
+        "uses": "food:1",
+        "seconds": 5,
+        "enabled": true
+      }
+    },
+    "children": []
+  }
+}

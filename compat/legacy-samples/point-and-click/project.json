@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "name": "The Locked Room",
+  "iso": {
+    "tileW": 64,
+    "tileH": 32,
+    "heightPx": 16
+  },
+  "tileset": [
+    {
+      "id": 1,
+      "name": "grass",
+      "top": 7319131,
+      "left": 5212739,
+      "right": 4158006
+    },
+    {
+      "id": 2,
+      "name": "stone",
+      "top": 10725299,
+      "left": 8422543,
+      "right": 6711925
+    },
+    {
+      "id": 3,
+      "name": "sand",
+      "top": 14930062,
+      "left": 12890996,
+      "right": 11049055
+    },
+    {
+      "id": 4,
+      "name": "water",
+      "top": 4886745,
+      "left": 3831476,
+      "right": 3104913
+    },
+    {
+      "id": 5,
+      "name": "brick",
+      "top": 11887946,
+      "left": 9654073,
+      "right": 7880750,
+      "wall": true
+    },
+    {
+      "id": 6,
+      "name": "wood",
+      "top": 10251071,
+      "left": 8213810,
+      "right": 6505255
+    }
+  ],
+  "autotile": [],
+  "scenes": [
+    "scenes/main.scene.json"
+  ],
+  "startScene": "scenes/main.scene.json",
+  "packs": [
+    "controls",
+    "story",
+    "inventory"
+  ]
+}

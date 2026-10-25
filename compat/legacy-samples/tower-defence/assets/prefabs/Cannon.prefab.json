@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "name": "Cannon",
+  "root": {
+    "name": "Cannon",
+    "tags": [
+      "tower",
+      "cannon"
+    ],
+    "components": {
+      "transform": {
+        "x": 0,
+        "y": 0,
+        "h": 0,
+        "facing": 2
+      },
+      "sprite": {
+        "shape": "box",
+        "color": 4475477,
+        "w": 0.8,
+        "d": 0.8,
+        "height": 1.6,
+        "sortOffset": 0,
+        "visible": true
+      },
+      "collider": {
+        "w": 0.8,
+        "d": 0.8,
+        "height": 1,
+        "solid": true,
+        "trigger": false,
+        "layer": 16,
+        "mask": 65535,
+        "enabled": true,
+        "inside": []
+      },
+      "pushable": {
+        "slideSpeed": 6
+      },
+      "rangedAttack": {
+        "target": "enemy",
+        "range": 5,
+        "minRange": 0,
+        "cooldown": 2.2,
+        "windup": 0.1,
+        "volley": 1,
+        "volleyGap": 0.15,
+        "speed": 7,
+        "damage": 9,
+        "lifetime": 2.5,
+        "needSight": false,
+        "prefab": "",
+        "sound": "",
+        "color": 16751164,
+        "hurts": "enemy"
+      }
+    },
+    "children": []
+  }
+}

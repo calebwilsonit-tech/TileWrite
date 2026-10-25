@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "name": "Rat",
+  "root": {
+    "name": "Rat",
+    "tags": [
+      "unit",
+      "red"
+    ],
+    "components": {
+      "transform": {
+        "x": 0,
+        "y": 0,
+        "h": 0,
+        "facing": 2
+      },
+      "sprite": {
+        "shape": "box",
+        "color": 14702187,
+        "w": 0.7,
+        "d": 0.7,
+        "height": 1.2,
+        "sortOffset": 0,
+        "visible": true
+      },
+      "collider": {
+        "w": 0.7,
+        "d": 0.7,
+        "height": 1.2,
+        "solid": true,
+        "trigger": false,
+        "layer": 16,
+        "mask": 65535,
+        "enabled": true,
+        "inside": []
+      },
+      "turnTaker": {
+        "team": "red",
+        "initiative": 1,
+        "apMax": 4,
+        "attackRange": 1,
+        "attackDamage": 3,
+        "attackCost": 2,
+        "heightBonus": 1,
+        "autoEnd": true
+      },
+      "gridMover": {
+        "moveCost": 1,
+        "speed": 6,
+        "stepUp": 1,
+        "maxDrop": 2
+      },
+      "body": {
+        "vx": 0,
+        "vy": 0,
+        "vz": 0,
+        "radius": 0.3,
+        "height": 1.2,
+        "state": "ground",
+        "stepUp": 1,
+        "stepDown": 2,
+        "ledge": "fall",
+        "pits": "fall",
+        "wade": false,
+        "gravity": 1,
+        "peakZ": 0,
+        "layer": 2,
+        "mask": 65535,
+        "noclip": false,
+        "blockedBy": [],
+        "blockedTerrain": false
+      },
+      "health": {
+        "max": 6,
+        "invulnerableSeconds": 0,
+        "onDeath": "remove",
+        "fallDamage": 1,
+        "team": "auto",
+        "showBar": true
+      },
+      "unitAi": {
+        "style": "rush"
+      }
+    },
+    "children": []
+  }
+}

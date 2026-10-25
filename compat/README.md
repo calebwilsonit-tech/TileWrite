@@ -8,6 +8,7 @@ Phase 3, Rule A: **nothing the owner has made may break.** This folder is how th
 | --- | --- | --- |
 | sample | every folder of `samples/` | yes |
 | template | every project under `templates/` | yes |
+| legacy-sample | `compat/legacy-samples/`: six samples exactly as they were before phase 3 (format 1, the list called `packs`, no flags), and one project the harness builds with no list of plugins and no flags at all (the legacy fallback) | yes |
 | code-template | every template of the New project dialog, built fresh into a temporary folder | yes |
 | owner | every project in `compat/projects/` | no (they are the owner's; see `.gitignore`) |
 

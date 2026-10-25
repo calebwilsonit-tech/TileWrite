@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "name": "Waves",
+  "description": "",
+  "columns": [
+    {
+      "id": "name",
+      "label": "Name",
+      "type": "text",
+      "options": [],
+      "table": ""
+    },
+    {
+      "id": "prefab",
+      "label": "prefab",
+      "type": "prefab",
+      "options": [],
+      "table": ""
+    },
+    {
+      "id": "count",
+      "label": "count",
+      "type": "number",
+      "options": [],
+      "table": ""
+    },
+    {
+      "id": "gap",
+      "label": "gap",
+      "type": "number",
+      "options": [],
+      "table": ""
+    },
+    {
+      "id": "delay",
+      "label": "delay",
+      "type": "number",
+      "options": [],
+      "table": ""
+    }
+  ],
+  "rows": [
+    {
+      "id": "w1",
+      "name": "",
+      "prefab": "Runner",
+      "count": 6,
+      "gap": 1.2,
+      "delay": 0
+    },
+    {
+      "id": "w2",
+      "name": "",
+      "prefab": "Runner",
+      "count": 10,
+      "gap": 0.8,
+      "delay": 0
+    },
+    {
+      "id": "w3",
+      "name": "",
+      "prefab": "Brute",
+      "count": 4,
+      "gap": 2,
+      "delay": 0
+    },
+    {
+      "id": "w4",
+      "name": "",
+      "prefab": "Runner",
+      "count": 12,
+      "gap": 0.6,
+      "delay": 0
+    },
+    {
+      "id": "w5",
+      "name": "",
+      "prefab": "Brute",
+      "count": 8,
+      "gap": 1.5,
+      "delay": 0
+    }
+  ]
+}

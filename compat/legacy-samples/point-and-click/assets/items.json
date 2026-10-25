@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "items": [
+    {
+      "id": "key",
+      "name": "Brass key",
+      "description": "",
+      "color": 13421772,
+      "max": 0
+    }
+  ]
+}

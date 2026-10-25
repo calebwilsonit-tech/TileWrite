@@ -1,0 +1,224 @@
+{
+  "loadProblems": [],
+  "check": [
+    "error: scenes/main.scene.json: This scene has no player start, so the game has nowhere to begin. Use the Place tool to add one."
+  ],
+  "project": {
+    "schemaVersion": 2,
+    "plugins": "controls,sim,combat",
+    "roundTrip": true
+  },
+  "scenes": {
+    "scenes/main.scene.json": {
+      "entities": 8,
+      "map": "edc8346cb911d837",
+      "loadProblems": [],
+      "roundTrip": true,
+      "keys": {
+        "checkpoints": [
+          {
+            "tick": 0,
+            "player": null,
+            "entities": 8,
+            "world": "137d35582fbcf264",
+            "vars": "48eee5b21196c4b4",
+            "screen": "HUD"
+          },
+          {
+            "tick": 60,
+            "player": null,
+            "entities": 8,
+            "world": "137d35582fbcf264",
+            "vars": "525cd0a0460f55b0",
+            "screen": "HUD"
+          },
+          {
+            "tick": 120,
+            "player": null,
+            "entities": 8,
+            "world": "137d35582fbcf264",
+            "vars": "525cd0a0460f55b0",
+            "screen": "HUD"
+          },
+          {
+            "tick": 180,
+            "player": null,
+            "entities": 8,
+            "world": "137d35582fbcf264",
+            "vars": "525cd0a0460f55b0",
+            "screen": "HUD"
+          },
+          {
+            "tick": 240,
+            "player": null,
+            "entities": 8,
+            "world": "137d35582fbcf264",
+            "vars": "525cd0a0460f55b0",
+            "screen": "HUD"
+          },
+          {
+            "tick": 300,
+            "player": null,
+            "entities": 8,
+            "world": "137d35582fbcf264",
+            "vars": "525cd0a0460f55b0",
+            "screen": "HUD"
+          },
+          {
+            "tick": 360,
+            "player": null,
+            "entities": 8,
+            "world": "137d35582fbcf264",
+            "vars": "525cd0a0460f55b0",
+            "screen": "HUD"
+          },
+          {
+            "tick": 420,
+            "player": null,
+            "entities": 8,
+            "world": "137d35582fbcf264",
+            "vars": "525cd0a0460f55b0",
+            "screen": "HUD"
+          },
+          {
+            "tick": 480,
+            "player": null,
+            "entities": 8,
+            "world": "137d35582fbcf264",
+            "vars": "525cd0a0460f55b0",
+            "screen": "HUD"
+          },
+          {
+            "tick": 540,
+            "player": null,
+            "entities": 8,
+            "world": "137d35582fbcf264",
+            "vars": "525cd0a0460f55b0",
+            "screen": "HUD>Inventory (modal)"
+          },
+          {
+            "tick": 600,
+            "player": null,
+            "entities": 8,
+            "world": "137d35582fbcf264",
+            "vars": "525cd0a0460f55b0",
+            "screen": "HUD>Inventory (modal)"
+          },
+          {
+            "tick": 660,
+            "player": null,
+            "entities": 8,
+            "world": "137d35582fbcf264",
+            "vars": "525cd0a0460f55b0",
+            "screen": "HUD>Inventory (modal)"
+          },
+          {
+            "tick": 660,
+            "player": null,
+            "entities": 8,
+            "world": "137d35582fbcf264",
+            "vars": "525cd0a0460f55b0",
+            "screen": "HUD>Inventory (modal)"
+          }
+        ],
+        "error": ""
+      },
+      "mouse": {
+        "checkpoints": [
+          {
+            "tick": 0,
+            "player": null,
+            "entities": 8,
+            "world": "137d35582fbcf264",
+            "vars": "48eee5b21196c4b4",
+            "screen": "HUD"
+          },
+          {
+            "tick": 30,
+            "player": null,
+            "entities": 8,
+            "world": "137d35582fbcf264",
+            "vars": "525cd0a0460f55b0",
+            "screen": "HUD"
+          },
+          {
+            "tick": 126,
+            "player": null,
+            "entities": 8,
+            "world": "137d35582fbcf264",
+            "vars": "525cd0a0460f55b0",
+            "screen": "HUD"
+          },
+          {
+            "tick": 222,
+            "player": null,
+            "entities": 8,
+            "world": "137d35582fbcf264",
+            "vars": "525cd0a0460f55b0",
+            "screen": "HUD"
+          },
+          {
+            "tick": 318,
+            "player": null,
+            "entities": 8,
+            "world": "137d35582fbcf264",
+            "vars": "525cd0a0460f55b0",
+            "screen": "HUD"
+          },
+          {
+            "tick": 414,
+            "player": null,
+            "entities": 8,
+            "world": "137d35582fbcf264",
+            "vars": "525cd0a0460f55b0",
+            "screen": "HUD"
+          },
+          {
+            "tick": 510,
+            "player": null,
+            "entities": 8,
+            "world": "137d35582fbcf264",
+            "vars": "525cd0a0460f55b0",
+            "screen": "HUD"
+          },
+          {
+            "tick": 640,
+            "player": null,
+            "entities": 8,
+            "world": "137d35582fbcf264",
+            "vars": "525cd0a0460f55b0",
+            "screen": "HUD"
+          }
+        ],
+        "error": ""
+      },
+      "saveRoundTrip": "ok"
+    }
+  },
+  "scenarios": {},
+  "scripts": {
+    "typecheck": {},
+    "compile": {},
+    "logs": []
+  },
+  "savedGames": {},
+  "playthroughs": {},
+  "exported": {
+    "files": {
+      "assets/items.json": "0e5e19436438b496",
+      "assets/prefabs/ArcherTower.prefab.json": "8e46dd62232b0fdd",
+      "assets/prefabs/Brute.prefab.json": "a339c1db4ee860c3",
+      "assets/prefabs/Cannon.prefab.json": "e7911bf111e25e9b",
+      "assets/prefabs/House.prefab.json": "b4f868b8ec3551d3",
+      "assets/prefabs/Runner.prefab.json": "41b19b62115ccaa7",
+      "assets/prefabs/Wall.prefab.json": "5a35f3b493f1d7f8",
+      "assets/screens.json": "d4c4934cce96d97e",
+      "assets/tables/Buildings.table.json": "33dacd0766c8ab83",
+      "assets/tables/Waves.table.json": "4d21ed1befc19fba",
+      "project.json": "c08fc4eda3ed42ac",
+      "scenes/main.scene.json": "e7c93de4a8e5e5a4"
+    },
+    "manifest": "f414b769f9a955f0",
+    "settingsProblems": []
+  }
+}

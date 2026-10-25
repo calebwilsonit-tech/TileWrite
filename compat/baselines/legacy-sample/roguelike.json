@@ -1,0 +1,300 @@
+{
+  "loadProblems": [],
+  "check": [],
+  "project": {
+    "schemaVersion": 2,
+    "plugins": "combat,inventory,turns,controls",
+    "roundTrip": true
+  },
+  "scenes": {
+    "scenes/main.scene.json": {
+      "entities": 6,
+      "map": "cfca510f176a22fb",
+      "loadProblems": [],
+      "roundTrip": true,
+      "keys": {
+        "checkpoints": [
+          {
+            "tick": 0,
+            "player": {
+              "x": 29.5,
+              "y": 9.5,
+              "h": 0
+            },
+            "entities": 6,
+            "world": "69d78346a4a57800",
+            "vars": "44962d8943e89015",
+            "screen": "HUD"
+          },
+          {
+            "tick": 60,
+            "player": {
+              "x": 29.5,
+              "y": 9.5,
+              "h": 0
+            },
+            "entities": 6,
+            "world": "69d78346a4a57800",
+            "vars": "1d39073d7a7df007",
+            "screen": "HUD"
+          },
+          {
+            "tick": 120,
+            "player": {
+              "x": 29.5,
+              "y": 9.5,
+              "h": 0
+            },
+            "entities": 6,
+            "world": "69d78346a4a57800",
+            "vars": "1d39073d7a7df007",
+            "screen": "HUD"
+          },
+          {
+            "tick": 180,
+            "player": {
+              "x": 29.5,
+              "y": 9.5,
+              "h": 0
+            },
+            "entities": 6,
+            "world": "69d78346a4a57800",
+            "vars": "1d39073d7a7df007",
+            "screen": "HUD"
+          },
+          {
+            "tick": 240,
+            "player": {
+              "x": 29.5,
+              "y": 9.5,
+              "h": 0
+            },
+            "entities": 6,
+            "world": "69d78346a4a57800",
+            "vars": "1d39073d7a7df007",
+            "screen": "HUD"
+          },
+          {
+            "tick": 300,
+            "player": {
+              "x": 29.5,
+              "y": 9.5,
+              "h": 0
+            },
+            "entities": 6,
+            "world": "69d78346a4a57800",
+            "vars": "1d39073d7a7df007",
+            "screen": "HUD"
+          },
+          {
+            "tick": 360,
+            "player": {
+              "x": 29.5,
+              "y": 9.5,
+              "h": 0
+            },
+            "entities": 6,
+            "world": "69d78346a4a57800",
+            "vars": "1d39073d7a7df007",
+            "screen": "HUD"
+          },
+          {
+            "tick": 420,
+            "player": {
+              "x": 29.5,
+              "y": 9.5,
+              "h": 0
+            },
+            "entities": 6,
+            "world": "69d78346a4a57800",
+            "vars": "1d39073d7a7df007",
+            "screen": "HUD"
+          },
+          {
+            "tick": 480,
+            "player": {
+              "x": 29.5,
+              "y": 9.5,
+              "h": 0
+            },
+            "entities": 6,
+            "world": "69d78346a4a57800",
+            "vars": "1d39073d7a7df007",
+            "screen": "HUD"
+          },
+          {
+            "tick": 540,
+            "player": {
+              "x": 29.5,
+              "y": 9.5,
+              "h": 0
+            },
+            "entities": 6,
+            "world": "69d78346a4a57800",
+            "vars": "1d39073d7a7df007",
+            "screen": "HUD>Inventory (modal)"
+          },
+          {
+            "tick": 600,
+            "player": {
+              "x": 29.5,
+              "y": 9.5,
+              "h": 0
+            },
+            "entities": 6,
+            "world": "69d78346a4a57800",
+            "vars": "1d39073d7a7df007",
+            "screen": "HUD>Inventory (modal)"
+          },
+          {
+            "tick": 660,
+            "player": {
+              "x": 29.5,
+              "y": 9.5,
+              "h": 0
+            },
+            "entities": 6,
+            "world": "69d78346a4a57800",
+            "vars": "1d39073d7a7df007",
+            "screen": "HUD>Inventory (modal)"
+          },
+          {
+            "tick": 660,
+            "player": {
+              "x": 29.5,
+              "y": 9.5,
+              "h": 0
+            },
+            "entities": 6,
+            "world": "69d78346a4a57800",
+            "vars": "1d39073d7a7df007",
+            "screen": "HUD>Inventory (modal)"
+          }
+        ],
+        "error": ""
+      },
+      "mouse": {
+        "checkpoints": [
+          {
+            "tick": 0,
+            "player": {
+              "x": 29.5,
+              "y": 9.5,
+              "h": 0
+            },
+            "entities": 6,
+            "world": "69d78346a4a57800",
+            "vars": "44962d8943e89015",
+            "screen": "HUD"
+          },
+          {
+            "tick": 30,
+            "player": {
+              "x": 29.5,
+              "y": 9.5,
+              "h": 0
+            },
+            "entities": 6,
+            "world": "69d78346a4a57800",
+            "vars": "1d39073d7a7df007",
+            "screen": "HUD"
+          },
+          {
+            "tick": 126,
+            "player": {
+              "x": 29.5,
+              "y": 9.5,
+              "h": 0
+            },
+            "entities": 6,
+            "world": "69d78346a4a57800",
+            "vars": "1d39073d7a7df007",
+            "screen": "HUD"
+          },
+          {
+            "tick": 222,
+            "player": {
+              "x": 29.5,
+              "y": 9.5,
+              "h": 0
+            },
+            "entities": 6,
+            "world": "69d78346a4a57800",
+            "vars": "1d39073d7a7df007",
+            "screen": "HUD"
+          },
+          {
+            "tick": 318,
+            "player": {
+              "x": 29.5,
+              "y": 9.5,
+              "h": 0
+            },
+            "entities": 6,
+            "world": "69d78346a4a57800",
+            "vars": "1d39073d7a7df007",
+            "screen": "HUD"
+          },
+          {
+            "tick": 414,
+            "player": {
+              "x": 29.5,
+              "y": 9.5,
+              "h": 0
+            },
+            "entities": 6,
+            "world": "69d78346a4a57800",
+            "vars": "1d39073d7a7df007",
+            "screen": "HUD"
+          },
+          {
+            "tick": 510,
+            "player": {
+              "x": 29.5,
+              "y": 9.5,
+              "h": 0
+            },
+            "entities": 6,
+            "world": "69d78346a4a57800",
+            "vars": "1d39073d7a7df007",
+            "screen": "HUD"
+          },
+          {
+            "tick": 640,
+            "player": {
+              "x": 29.5,
+              "y": 9.5,
+              "h": 0
+            },
+            "entities": 6,
+            "world": "69d78346a4a57800",
+            "vars": "1d39073d7a7df007",
+            "screen": "HUD"
+          }
+        ],
+        "error": ""
+      },
+      "saveRoundTrip": "the player changed: {\"x\":29.5,\"y\":9.5,\"h\":0,\"facing\":2,\"hp\":40} -> {\"x\":29.5,\"y\":9.5,\"h\":0,\"facing\":2,\"hp\":null}"
+    }
+  },
+  "scenarios": {},
+  "scripts": {
+    "typecheck": {},
+    "compile": {},
+    "logs": []
+  },
+  "savedGames": {},
+  "playthroughs": {},
+  "exported": {
+    "files": {
+      "assets/items.json": "0e5e19436438b496",
+      "assets/prefabs/Rat.prefab.json": "0dd29d258d9c5464",
+      "assets/screens.json": "bc9f9714c3ace409",
+      "assets/tables/Loot.table.json": "b4ec4fd46ee93670",
+      "project.json": "a49db5692b8eb3e2",
+      "scenes/main.scene.json": "7c28f03dde462d60"
+    },
+    "manifest": "3bd90cfa6b275fd7",
+    "settingsProblems": []
+  }
+}
