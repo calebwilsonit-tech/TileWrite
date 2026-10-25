@@ -25,6 +25,10 @@ Taking a flag out of the list is the same as `false`. The flags are listed with 
 | the reference game sample (`last-storytender`) | none | It has no `compat` entry. |
 | every new project, and every template | all five | A new project plays the way the engine plays now. |
 
+## The project file's format, and going back
+
+The project file has a format number (`schemaVersion`). Format 2 calls the list of plugins `plugins`; format 1 called it `packs`. A project in an older format opens and plays as it always did, and **nothing on disk changes until you save**. The first save of an older project copies the file as it was to `.tilewright/backup-format-1/project.json` (inside the project folder; Tilewright says so), because an older Tilewright cannot open a newer format. To go back: close Tilewright, put that file back as `project.json`, and open the project in the older Tilewright. The copy is made once and never overwritten.
+
 ## How to switch a flag off again
 
 Project settings, **Compatibility**, untick it. Or remove the name from `"compat"` in `project.json`. The change takes effect the next time the game starts (Play, or an export).

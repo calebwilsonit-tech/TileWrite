@@ -25,6 +25,8 @@ export class UserError extends Error {}
 export interface OpenProject {
   dir: string;
   project: ProjectData;
+  /** The format the file on disk was in, when it was older than this Tilewright's (it was upgraded in memory; the file is not changed until the first save). */
+  migratedFrom?: number;
 }
 
 export const PROJECT_FILE = 'project.json';
@@ -77,11 +79,35 @@ export async function openProject(fs: ProjectFs, dir: string): Promise<OpenProje
   if (!migrated.ok) throw new UserError(migrated.error);
   const parsed = parseProject(migrated.value);
   if (!parsed.ok) throw new UserError(parsed.error);
-  return { dir, project: parsed.value };
+  return { dir, project: parsed.value, ...(migrated.from < parsed.value.schemaVersion ? { migratedFrom: migrated.from } : {}) };
 }
 
-export async function saveProject(fs: ProjectFs, dir: string, project: ProjectData): Promise<void> {
-  await fs.write(joinPath(dir, PROJECT_FILE), projectText(project));
+/**
+ * Save the project file. The first time a project that was made in an older format is saved, the file as it was is copied to
+ * `.tilewright/backup-format-<n>/project.json` (older versions of Tilewright refuse a newer format, so without the copy a project
+ * upgraded by accident could not go back). Returns where the copy went, when one was made now.
+ */
+export async function saveProject(fs: ProjectFs, dir: string, project: ProjectData): Promise<{ backedUp?: string }> {
+  const file = joinPath(dir, PROJECT_FILE);
+  let backedUp: string | undefined;
+  try {
+    if (await fs.exists(file)) {
+      const old = await fs.read(file);
+      const version = (JSON.parse(old) as { schemaVersion?: unknown }).schemaVersion;
+      if (typeof version === 'number' && version < project.schemaVersion) {
+        const copy = joinPath(dir, '.tilewright', `backup-format-${version}`, PROJECT_FILE);
+        if (!(await fs.exists(copy))) {
+          await fs.write(copy, old);
+          backedUp = copy;
+        }
+      }
+    }
+  } catch (e) {
+    // a copy that cannot be made must not be silently skipped: the person is told, and the save does not go ahead over the only old file
+    throw new UserError(`Tilewright could not keep a copy of the project file as it was before upgrading it, so it did not save: ${e instanceof Error ? e.message : String(e)}`);
+  }
+  await fs.write(file, projectText(project));
+  return backedUp ? { backedUp } : {};
 }
 
 export async function loadScene(fs: ProjectFs, dir: string, scenePath: string): Promise<SceneData> {

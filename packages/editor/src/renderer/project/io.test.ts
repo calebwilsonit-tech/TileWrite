@@ -9,6 +9,7 @@ import {
   openProject,
   readAutosave,
   safeFolderName,
+  saveProject,
   saveScene,
   scenePathFor,
   type ProjectFs,
@@ -35,6 +36,50 @@ function memoryFs(): ProjectFs & { files: Map<string, string> } {
     },
   };
 }
+
+describe('a project made in an older format', () => {
+  const OLD = JSON.stringify({ schemaVersion: 1, name: 'Old game', scenes: ['scenes/main.scene.json'], startScene: 'scenes/main.scene.json', packs: ['combat', 'controls'] }, null, 2) + '\n';
+
+  async function oldProject(): Promise<{ fs: ReturnType<typeof memoryFs>; dir: string }> {
+    const fs = memoryFs();
+    const dir = 'C:\\Games\\Old';
+    fs.files.set(`${dir}\\project.json`, OLD);
+    fs.files.set(`${dir}\\scenes\\main.scene.json`, stringifyScene(newScene('Main', 8, 8)));
+    return { fs, dir };
+  }
+
+  it('opens as format 2 (the list is called plugins now) without touching the file on disk', async () => {
+    const { fs, dir } = await oldProject();
+    const opened = await openProject(fs, dir);
+    expect(opened.project.schemaVersion).toBe(2);
+    expect(opened.project.plugins).toEqual(['combat', 'controls']);
+    expect(fs.files.get(`${dir}\\project.json`)).toBe(OLD);
+    expect(opened.migratedFrom).toBe(1);
+  });
+
+  it('is copied as it was, once, before the first save in the new format (an older Tilewright cannot open format 2)', async () => {
+    const { fs, dir } = await oldProject();
+    const opened = await openProject(fs, dir);
+    const first = await saveProject(fs, dir, { ...opened.project, name: 'Renamed' });
+    const backup = `${dir}\\.tilewright\\backup-format-1\\project.json`;
+    expect(fs.files.get(backup)).toBe(OLD);
+    expect(first.backedUp).toContain('backup-format-1');
+    expect(JSON.parse(fs.files.get(`${dir}\\project.json`)!)).toMatchObject({ schemaVersion: 2, name: 'Renamed', plugins: ['combat', 'controls'] });
+    expect(fs.files.get(`${dir}\\project.json`)).not.toContain('"packs"');
+    // the second save does not copy again, and never over the first copy
+    const second = await saveProject(fs, dir, { ...opened.project, name: 'Renamed again' });
+    expect(second.backedUp).toBeUndefined();
+    expect(fs.files.get(backup)).toBe(OLD);
+  });
+
+  it('does nothing for a project that is already in the current format', async () => {
+    const fs = memoryFs();
+    const created = await createProject(fs, 'C:\\Games', 'New one', 'empty');
+    const saved = await saveProject(fs, created.dir, { ...created.project, name: 'Other' });
+    expect(saved.backedUp).toBeUndefined();
+    expect([...fs.files.keys()].some((k) => k.includes('backup-format'))).toBe(false);
+  });
+});
 
 describe('project folders', () => {
   it('cleans names into safe folder names', () => {

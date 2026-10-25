@@ -457,7 +457,16 @@ class AppStore {
     this.set({ recent: await api().recent.list() });
   }
 
+  /** Save the project file; the first save of a project made in an older format keeps a copy of the old file, and says so. */
+  private async saveProjectFile(dir: string, project: ProjectData): Promise<void> {
+    const r = await saveProject(realFs, dir, project);
+    if (r.backedUp) this.notify('info', `The project file was upgraded to the newest format. The old one is kept in ${r.backedUp}.`);
+  }
+
   private async openLoaded(p: OpenProject): Promise<void> {
+    if (p.migratedFrom !== undefined) {
+      this.notify('warn', `This project was made in an older format (${p.migratedFrom}). Tilewright reads it as the newest, and nothing on disk changes until you save. The first save keeps a copy of the project file as it was, because an older Tilewright cannot open the newer format.`);
+    }
     setActivePacks(packsOfProject(p.project));
     setPlayerRequired(p.project.plugins === undefined);
     await api().recent.add(p.dir, p.project.name);
@@ -531,7 +540,7 @@ class AppStore {
       const old = tilesetFromList(p.project.tileset) ?? DEFAULT_TILESET;
       const keep = new Set(tileset.map((t) => t.id));
       const project = { ...p.project, tileset, autotile };
-      await saveProject(realFs, p.dir, project);
+      await this.saveProjectFile(p.dir, project);
       this.set({ project: { ...p, project }, docVersion: this.state.docVersion + 1 });
       const doc = this.doc;
       if (doc) {
@@ -596,7 +605,7 @@ class AppStore {
       const scene = newScene(name.trim() || 'Scene', 32, 32, 1, compatOf(p.project).pauseAction ? [pauseButtonRow()] : []);
       await saveScene(realFs, p.dir, path, scene);
       const project = { ...p.project, scenes: [...p.project.scenes, path] };
-      await saveProject(realFs, p.dir, project);
+      await this.saveProjectFile(p.dir, project);
       this.set({ project: { ...p, project } });
       await this.openScene(path);
     });
@@ -947,7 +956,7 @@ class AppStore {
     if (!p) return false;
     const ok = await this.guard('Saving the project settings', async () => {
       const project = { ...p.project, ...patch };
-      await saveProject(realFs, p.dir, project);
+      await this.saveProjectFile(p.dir, project);
       if (patch.plugins) {
         setActivePacks(patch.plugins);
         setPlayerRequired(this.doc?.entities.some((e) => e.tags.includes('player')) ?? false);
