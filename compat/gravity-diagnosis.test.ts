@@ -2,7 +2,9 @@
  * Phase 3, step 4.2: the owner's two gravity problems, reproduced on their own project ("Upside Down").
  * These tests describe what the project does TODAY, so the write-up in docs/gravity_diagnosis.md stays checkable; when the
  * owner's script is changed (with their approval), the expectations change with it.
- * They are skipped when the owner's project is not in compat/projects.
+ * They are skipped only when the owner's project is not in compat/projects, or its script "Gravity Flip" (what all three are about) is not
+ * there; if the script is there and the walk does not do what it did, they FAIL: that is the point of them. (They are not skipped by what
+ * they find, so an engine change that stops the player gluing to the wall cannot hide as a skip.)
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -13,10 +15,10 @@ import { COMPAT } from './harness/corpus';
 import { scenariosOf } from './scenarios';
 
 const dir = path.join(COMPAT, 'projects', 'Demo');
-const have = fs.existsSync(path.join(dir, 'project.json'));
+const have = fs.existsSync(path.join(dir, 'project.json')) && fs.existsSync(path.join(dir, 'assets', 'scripts', 'Gravity Flip.script.ts'));
 
 describe.skipIf(!have)('the owner\'s gravity project: problem 2, blocks that are not "wall" blocks are passed through', () => {
-  it('while the script holds the player to a surface it walks straight through a blocker cell the engine would stop it at', async (ctx) => {
+  it('while the script holds the player to a surface it walks straight through a blocker cell the engine would stop it at', async () => {
     const p = await loadProject(dir);
     try {
       const wall = scenariosOf(dir)[0]!;
@@ -40,8 +42,6 @@ describe.skipIf(!have)('the owner\'s gravity project: problem 2, blocks that are
           }
         }
       }
-      // the owner has since changed this project (the room and its script are gone): there is nothing left to describe
-      if (glued === 0) return ctx.skip();
       expect(glued).toBeGreaterThan(300);
       expect(insideBlocker, `the player was inside blocker cells ${where.join(' ')} while glued`).toBeGreaterThan(0);
 
