@@ -34,7 +34,7 @@ export function pluginPack(files: Record<string, string>, info: { name: string; 
 
 /** The plugin bundle (what "install from an address" reads) inside a pack from the hub. Throws with a plain message when it is not a plugin. */
 export function pluginBundleOf(pack: Pack): string {
-  if (pack.kind !== 'plugin') throw new Error(`"${pack.name}" is not a plugin; it is a ${pack.kind} pack. Add it to your library instead.`);
+  if (pack.kind !== 'plugin') throw new Error(`"${pack.name}" is not a plugin; it is a ${pack.kind} asset pack. Add it to your library instead.`);
   const files: Record<string, string> = {};
   for (const f of pack.files) {
     if (!f.path.startsWith(PLUGIN_PACK_DIR)) continue;

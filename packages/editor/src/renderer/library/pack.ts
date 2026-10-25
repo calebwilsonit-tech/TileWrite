@@ -65,9 +65,9 @@ export type Pack = z.infer<typeof PackSchema>;
 export function parsePack(json: unknown): { ok: true; pack: Pack } | { ok: false; error: string } {
   if (typeof json !== 'object' || json === null || (json as { format?: unknown }).format !== PACK_FORMAT) return { ok: false, error: 'This file is not a Tilewright asset pack.' };
   const v = (json as { formatVersion?: unknown }).formatVersion;
-  if (typeof v === 'number' && v > PACK_VERSION) return { ok: false, error: 'This pack was made by a newer Tilewright. Update Tilewright to open it.' };
+  if (typeof v === 'number' && v > PACK_VERSION) return { ok: false, error: 'This asset pack was made by a newer Tilewright. Update Tilewright to open it.' };
   const r = PackSchema.safeParse(json);
-  if (!r.success) return { ok: false, error: `The pack is damaged: ${r.error.issues[0]?.path.join('.') ?? ''} ${r.error.issues[0]?.message ?? ''}`.trim() };
+  if (!r.success) return { ok: false, error: `The asset pack is damaged: ${r.error.issues[0]?.path.join('.') ?? ''} ${r.error.issues[0]?.message ?? ''}`.trim() };
   return { ok: true, pack: r.data };
 }
 
@@ -100,22 +100,22 @@ export function checkPack(pack: Pack, project?: { tileW: number; tileH: number }
   const paths = new Set<string>();
   for (const f of pack.files) {
     if (f.path.startsWith('/') || f.path.includes('..') || !f.path.startsWith('assets/')) out.push(`The file "${f.path}" is outside the assets folder, so it cannot be installed.`);
-    if (/\.(ts|js|mjs|cjs)$/.test(f.path) && !pack.code) out.push(`The file "${f.path}" is code but the pack does not say it contains code.`);
-    if (paths.has(f.path)) out.push(`The file "${f.path}" is in the pack twice.`);
+    if (/\.(ts|js|mjs|cjs)$/.test(f.path) && !pack.code) out.push(`The file "${f.path}" is code but the asset pack does not say it contains code.`);
+    if (paths.has(f.path)) out.push(`The file "${f.path}" is in the asset pack twice.`);
     paths.add(f.path);
   }
   const sprites = new Set(pack.files.filter((f) => f.path.endsWith('.sprite.json')).map((f) => nameOf(f.path)));
   const tileIds = new Set(pack.tiles.map((t) => t.id));
   for (const t of pack.tiles) {
     for (const s of [t.art, t.leftArt, t.rightArt, ...(t.anim?.frames ?? [])]) {
-      if (s && !sprites.has(s.split('#')[0]!)) out.push(`The tile "${t.name}" uses the picture "${s}", which is not in the pack.`);
+      if (s && !sprites.has(s.split('#')[0]!)) out.push(`The tile "${t.name}" uses the picture "${s}", which is not in the asset pack.`);
     }
-    if (t.group !== undefined && !tileIds.has(t.group)) out.push(`The tile "${t.name}" is a variant of a tile that is not in the pack.`);
-    for (const v of t.variants ?? []) if (!tileIds.has(v.tile)) out.push(`The tile "${t.name}" has a variant that is not in the pack.`);
+    if (t.group !== undefined && !tileIds.has(t.group)) out.push(`The tile "${t.name}" is a variant of a tile that is not in the asset pack.`);
+    for (const v of t.variants ?? []) if (!tileIds.has(v.tile)) out.push(`The tile "${t.name}" has a variant that is not in the asset pack.`);
   }
-  for (const r of pack.autotile) if (!tileIds.has(r.base) || !tileIds.has(r.result)) out.push(`An autotile rule ("${r.name}") uses a tile that is not in the pack.`);
+  for (const r of pack.autotile) if (!tileIds.has(r.base) || !tileIds.has(r.result)) out.push(`An autotile rule ("${r.name}") uses a tile that is not in the asset pack.`);
   if (pack.tileSize && project && (pack.tileSize.w !== project.tileW || pack.tileSize.h !== project.tileH)) {
-    out.push(`This pack was drawn for ${pack.tileSize.w} x ${pack.tileSize.h} tiles but this project uses ${project.tileW} x ${project.tileH}. It will import, but will not line up until the tile size matches.`);
+    out.push(`This asset pack was drawn for ${pack.tileSize.w} x ${pack.tileSize.h} tiles but this project uses ${project.tileW} x ${project.tileH}. It will import, but will not line up until the tile size matches.`);
   }
   return out;
 }

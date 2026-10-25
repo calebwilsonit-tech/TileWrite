@@ -109,7 +109,7 @@ export class HubClient {
     const meta = await this.call<HubItem>('GET', `/items/${id}`);
     const file = await this.call<unknown>('GET', `/items/${id}/pack`);
     const r = parsePack(file.json);
-    if (!r.ok) throw new HubProblem(`The pack from the hub is not usable: ${r.error}`);
+    if (!r.ok) throw new HubProblem(`The asset pack from the hub is not usable: ${r.error}`);
     return { pack: r.pack, item: meta.json };
   }
 

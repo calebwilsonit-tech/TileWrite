@@ -12,6 +12,8 @@ interface NodeBase {
   id: string;
   /** A name for the node in the editor ('' = describe it from what it does). */
   name?: string;
+  /** Stop the game (in the editor) when an action node starts to run, like a breakpoint on an event row. */
+  breakpoint?: boolean;
   x?: number;
   y?: number;
 }

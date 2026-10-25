@@ -1,5 +1,5 @@
 import type { VisionState } from './ai';
-import { MachineCondition, StateMachine, gatedBehaviours } from '@tilewright/plugin-sdk';
+import { MachineCondition, StateMachine, gatedBehaviours, noteFired } from '@tilewright/plugin-sdk';
 import {
   C,
   facingOfGridDir,
@@ -103,6 +103,8 @@ function enter(ctx: SimContext, e: Entity, m: StateMachine, rt: MachineRuntime, 
     if (s.message) ctx.events.emit('message', { text: ctx.assets.strings.t(s.message) });
     if (s.sound) emitFx(ctx.runtime, { kind: 'sound', name: s.sound });
     ctx.events.emit('state-changed', { entity: e.id, from, to: id, name: s.name });
+    // the same record every other kind of logic leaves: the editor lights it, lists it with the rest and can stop the game here
+    noteFired(ctx, `m:${e.get<{ sceneId?: string }>('meta')?.sceneId ?? String(e.id)}:${id}`, s.breakpoint === true, `${e.name} (state machine) goes from "${from}" to "${s.name}"`);
   }
 }
 

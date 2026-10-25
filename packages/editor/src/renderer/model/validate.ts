@@ -81,7 +81,7 @@ export function validateScene(doc: EditorDoc, sprites?: ReadonlySet<string>, pre
       const pack = knownPackOfBehavior(key);
       if (pack && !getBehavior(key)) {
         const name = listPacks().find((p) => p.id === pack)?.name ?? pack;
-        out.push({ id: `pack-off-${e.id}-${key}`, severity: 'warning', message: `"${e.name}" uses the ${key} behaviour, which belongs to the ${name} pack. That pack is switched off, so it does nothing. Switch it on in Project settings, Packs.`, target: t ? pos('entity', e.id, t) : undefined });
+        out.push({ id: `plugin-off-${e.id}-${key}`, severity: 'warning', message: `"${e.name}" uses the ${key} behaviour, which belongs to the ${name} plugin. That plugin is switched off, so it does nothing. Switch it on in Project settings, Plugins.`, target: t ? pos('entity', e.id, t) : undefined });
       }
     }
     if (!t) continue;
@@ -202,7 +202,7 @@ export function validateScene(doc: EditorDoc, sprites?: ReadonlySet<string>, pre
       (an.actions ?? []).forEach((a, i) => {
         const def = actionDef(a.type);
         if (!def) {
-          out.push({ id: `anode-missing-${e.id}-${i}`, severity: 'warning', message: `"${e.name}" does an action ("${a.type}") that is not available - its pack may be switched off.`, target, fix: { kind: 'remove-action', node: e.id, index: i, label: 'Remove that action' } });
+          out.push({ id: `anode-missing-${e.id}-${i}`, severity: 'warning', message: `"${e.name}" does an action ("${a.type}") that is not available - its plugin may be switched off.`, target, fix: { kind: 'remove-action', node: e.id, index: i, label: 'Remove that action' } });
           return;
         }
         for (const p of def.params) {
@@ -219,7 +219,7 @@ export function validateScene(doc: EditorDoc, sprites?: ReadonlySet<string>, pre
         out.push({ id: `enode-idle-${e.id}`, severity: 'warning', message: `The event node "${e.name}" is not wired to anything, so seeing its event changes nothing.`, target, fix: { kind: 'remove-entity', id: e.id, label: 'Remove the event node' } });
       }
       for (const c of en.conditions ?? []) {
-        if (!conditionDef(c.type)) out.push({ id: `enode-missing-${e.id}-${c.type}`, severity: 'warning', message: `The event node "${e.name}" watches for something ("${c.type}") that is not available - its pack may be switched off.`, target });
+        if (!conditionDef(c.type)) out.push({ id: `enode-missing-${e.id}-${c.type}`, severity: 'warning', message: `The event node "${e.name}" watches for something ("${c.type}") that is not available - its plugin may be switched off.`, target });
       }
     }
   }

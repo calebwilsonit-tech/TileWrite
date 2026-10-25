@@ -21,7 +21,7 @@ Start with the tutorial in the app (the project screen's **Take the tutorial** b
 | Procedural maps (rooms, caves, islands, towns), seeds, new runs, very large maps | [procedural-maps.md](procedural-maps.md) |
 | Buttons, wires, logic nodes and graphs: the three levels of logic, breakpoints | [logic.md](logic.md) |
 | Writing a plugin: the guide, every extension point | [plugins/](plugins/README.md) |
-| Switching plugins on; the older plugin API | [packs-and-plugins.md](packs-and-plugins.md) |
+| Switching plugins on; the older plugin API | [plugins-overview.md](plugins-overview.md) |
 | Design screens, menus, HUDs, inventories, shops: the UI designer | [ui-designer.md](ui-designer.md) |
 | Title screen, project settings, controls, HUD layout and theme | [interface-and-controls.md](interface-and-controls.md) |
 | Translate the game, player settings (zoom, full screen, language) | [translations-and-settings.md](translations-and-settings.md) |

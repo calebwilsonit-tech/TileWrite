@@ -33,12 +33,18 @@ export interface Pack {
   installEditor?(api: PluginApi): void;
 }
 
-/** What the host's editor tables hold (panels, tools and importers a plugin added). */
+/**
+ * What the host's editor tables hold (panels, tools and importers a plugin added).
+ * @deprecated A plain alias of `host.editor`, kept because its name is in the SDK baseline (the SDK only grows). Nothing in the editor calls it any more: read the tables of `host.editor` (or `host.ext`) directly.
+ */
 export function editorExtensions(): EditorExtensions {
   return host.editor;
 }
 
-/** Called whenever plugins are installed or removed. Returns a function that stops listening. */
+/**
+ * Called whenever plugins are installed or removed. Returns a function that stops listening.
+ * @deprecated An alias of `host.onChange` that only reports "installed" and "removed" (the real one also says "enabled", "disabled" and "updated"). Kept for the SDK baseline; nothing in the editor calls it. Use `host.onChange`.
+ */
 export function onPacksChanged(fn: () => void): () => void {
   return host.onChange((c) => {
     if (c.kind === 'installed' || c.kind === 'removed') fn();

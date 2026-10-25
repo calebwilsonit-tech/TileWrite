@@ -1,5 +1,5 @@
 import type { VisionState } from './ai';
-import { TreeNode, BehaviorTree, describeNode } from '@tilewright/plugin-sdk';
+import { TreeNode, BehaviorTree, describeNode, noteFired } from '@tilewright/plugin-sdk';
 import {
   C,
   emitFx,
@@ -81,6 +81,8 @@ interface Run {
   tree: BehaviorTree;
   rt: TreeRuntime;
   byId: Map<string, TreeNode>;
+  /** What each node answered in the tick before: an action that was not asked then is starting now. */
+  before: Record<string, Result>;
   visited: Set<string>;
   flags: ReturnType<typeof aiFlags>;
   moved: boolean;
@@ -214,6 +216,7 @@ function run(r: Run, id: string, depth: number): Result {
       case 'condition':
         return condition(r, n) ? 'success' : 'failure';
       case 'action':
+        if (r.before[id] === undefined) noteFired(r.ctx, `t:${r.e.get<{ sceneId?: string }>('meta')?.sceneId ?? String(r.e.id)}:${id}`, n.breakpoint === true, `${r.e.name} (behaviour tree) starts: ${describeNode(n)}`);
         return act(r, n);
       case 'sequence': {
         for (const c of n.children) {
@@ -313,8 +316,9 @@ export const behaviorTree = behaviorDef<BehaviorTree>({
       if (b && flags.disabled) b.vx = b.vy = 0;
       return;
     }
+    const before = rt.trace;
     rt.trace = {};
-    const r: Run = { ctx, e, tree, rt, byId, visited: new Set(), flags, moved: false };
+    const r: Run = { ctx, e, tree, rt, byId, before, visited: new Set(), flags, moved: false };
     rt.last = run(r, root, 0);
     // a node that was not asked this tick was interrupted: it starts afresh when it is asked again
     for (const id of Object.keys(rt.mem)) if (!r.visited.has(id)) delete rt.mem[id];

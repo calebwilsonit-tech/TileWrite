@@ -23,15 +23,15 @@ test('Phase 2: a new empty project has no player, no rules and no packs; it stil
 
   // the Packs tab lists the engine's parts, all off; switch one on
   await page.getByTestId('btn-project-settings').click();
-  await page.getByTestId('ps-tab-packs').click();
-  for (const id of ['combat', 'inventory', 'story', 'ai', 'lighting', 'storytender', 'turns', 'controls', 'sim']) await expect(page.getByTestId(`pack-toggle-${id}`)).not.toBeChecked();
-  await page.getByTestId('pack-toggle-storytender').click();
-  await expect(page.getByTestId('pack-toggle-storytender')).toBeChecked();
-  await expect(page.getByTestId('pack-toggle-lighting')).toBeChecked(); // it needs lighting
-  await expect(page.getByTestId('pack-storytender')).toContainText('echoRecorder');
+  await page.getByTestId('ps-tab-plugins').click();
+  for (const id of ['combat', 'inventory', 'story', 'ai', 'lighting', 'storytender', 'turns', 'controls', 'sim']) await expect(page.getByTestId(`plugin-toggle-${id}`)).not.toBeChecked();
+  await page.getByTestId('plugin-toggle-storytender').click();
+  await expect(page.getByTestId('plugin-toggle-storytender')).toBeChecked();
+  await expect(page.getByTestId('plugin-toggle-lighting')).toBeChecked(); // it needs lighting
+  await expect(page.getByTestId('plugin-storytender')).toContainText('echoRecorder');
   await expect.poll(() => JSON.parse(fs.readFileSync(path.join(dir, 'project.json'), 'utf8')).plugins.sort()).toEqual(['lighting', 'storytender']);
   // and off again: its dependents leave with it
-  await page.getByTestId('pack-toggle-lighting').click();
+  await page.getByTestId('plugin-toggle-lighting').click();
   await expect.poll(() => JSON.parse(fs.readFileSync(path.join(dir, 'project.json'), 'utf8')).plugins).toEqual([]);
 
   // the controls tab only lists the buttons the packs added (none are on): no "Record an echo" or "Attack"
@@ -39,8 +39,8 @@ test('Phase 2: a new empty project has no player, no rules and no packs; it stil
   await expect(page.getByTestId('ctl-move_left')).toBeVisible();
   await expect(page.getByTestId('ctl-echo')).toHaveCount(0);
   await expect(page.getByTestId('ctl-attack')).toHaveCount(0);
-  await page.getByTestId('ps-tab-packs').click();
-  await page.getByTestId('pack-toggle-storytender').click();
+  await page.getByTestId('ps-tab-plugins').click();
+  await page.getByTestId('plugin-toggle-storytender').click();
   await page.getByTestId('ps-tab-controls').click();
   await expect(page.getByTestId('ctl-echo')).toBeVisible();
   expect(errors).toEqual([]);

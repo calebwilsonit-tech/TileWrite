@@ -299,6 +299,7 @@ export function StateMachineEditor({ machine, has, onChange }: { machine: StateM
           <TextField label="Animation to play on entering (empty = leave it)" value={state.anim} onCommit={(v) => onChange(updateState(machine, state.id, { anim: v.trim() }))} />
           <TextField label="Message to show on entering" testId="sm-message" value={state.message} onCommit={(v) => onChange(updateState(machine, state.id, { message: v }))} />
           <SoundField label="Sound to play on entering" value={state.sound} onCommit={(v) => onChange(updateState(machine, state.id, { sound: v.trim() }))} />
+          <CheckField label="Stop the game when it enters this state (a breakpoint)" testId="sm-breakpoint" value={state.breakpoint === true} onChange={(on) => onChange(updateState(machine, state.id, { breakpoint: on || undefined }))} />
           <button
             className="small"
             data-testid="sm-delete-state"

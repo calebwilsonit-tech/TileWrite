@@ -39,11 +39,11 @@ describe('PDFs', () => {
   });
 
   it('give back their text, from plain and from deflated streams', () => {
-    const page = 'BT /F1 12 Tf 72 700 Td (The Last Storytender) Tj 0 -20 Td (Chapter one: the tower \\(north\\)) Tj ET\nBT 72 640 Td [(Wor) -300 (ld) 20 (map)] TJ ET';
+    const page = 'BT /F1 12 Tf 72 700 Td (The Last Chronicle) Tj 0 -20 Td (Chapter one: the tower \\(north\\)) Tj ET\nBT 72 640 Td [(Wor) -300 (ld) 20 (map)] TJ ET';
     for (const deflated of [false, true]) {
       const r = extractPdfText(pdf([page], { deflated }), inflate);
       expect(r.readable).toBe(true);
-      expect(r.text).toContain('The Last Storytender');
+      expect(r.text).toContain('The Last Chronicle');
       expect(r.text).toContain('Chapter one: the tower (north)');
       expect(r.text).toContain('Wor ldmap');
     }

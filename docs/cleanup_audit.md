@@ -65,3 +65,18 @@ Measured on the development computer (a graphics card, not a low-end machine). "
 | Unit tests, whole run | 1152 tests in 110 files | not run | see the summary in PROGRESS.md |
 
 Reading: the frame rate is the same as phase 2's code gives on the same computer today (57.2 against 56.9 to 57.2), so the interface rewrite (screens as data, the heads-up display as widgets) cost no measurable frame time; the 60.2 written at the end of phase 2 was a better day for the machine, not a faster engine. The logic step is at the edge of the "under 1 ms" figure (0.94 to 0.97) and was not measured more finely in phase 2, so no change in either direction is claimed.
+
+### What a person notices, before phase 3 and after round 2
+
+`node scripts/perf-numbers.mjs` (new; run it on any built checkout) starts the built editor three times and opens and exports the `colony` sample. "Before" is the checkout of `4cd481c` (the commit before phase 3) built and run the same way, twice, one run straight after the other, to show how much the same code differs from one run to the next on this computer.
+
+| What | Before (`4cd481c`), run 1 | Before, run 2 | After (round 2) |
+| --- | --- | --- | --- |
+| Startup: program started to the project list on screen (median of three; the first of three is a cold start) | 756 ms (3330, 756, 694) | 880 ms (880, 1001, 615) | 640 ms (702, 633, 640) |
+| Project load: asking to open the colony sample to its scene ready (median of three) | 1175 ms (1665, 714, 1175) | 703 ms (698, 737, 703) | 786 ms (761, 786, 820) |
+| Memory with the project open, all four processes together | 504.8 MB | 506.6 MB | 525.7 MB |
+| Memory, the window's JavaScript | 45.2 MB | 31.6 MB | 48.1 MB |
+| Export of the colony sample: the folder with the game in it | 369.4 MB (exe 235.6 MB) | 369.4 MB (exe 235.6 MB) | 369.6 MB (exe 235.6 MB) |
+| Export: time the Export dialog took | 22.8 s | 22.0 s | 21.5 s |
+
+Reading, honestly: startup and project load are within the spread the old code shows against itself (load took 703 to 1175 ms on the old code; 761 to 820 after), so no change in either direction is claimed. Memory is about 20 MB higher with the project open (4 percent), which is the plugin host, the screens and the assistant's code being loaded; the JavaScript figure moves by more between two runs of the old code (45 and 32) than between old and new, so it says nothing. The exported game is 0.2 MB bigger (the folder is dominated by the Electron runtime, 235 MB). The editor's own bundle is larger after phase 3 and round 2 by what was added (the plugin manager, the assistant's readers and previews, the tile import), which is not counted separately here. Machine: the development computer, with other programs open, so only compare these figures with each other.

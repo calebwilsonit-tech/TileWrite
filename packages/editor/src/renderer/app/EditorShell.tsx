@@ -10,7 +10,7 @@ import { ToolsPanel } from '../panels/ToolsPanel';
 import { TilesPanel } from '../panels/TilesPanel';
 import { InspectorPanel } from '../panels/InspectorPanel';
 import { LayersPanel } from '../panels/LayersPanel';
-import { ConsolePanel, HistoryPanel, ProblemsPanel, useProblems } from '../panels/BottomPanels';
+import { ConsolePanel, HistoryPanel, ProblemsPanel, TracePanel, useProblems } from '../panels/BottomPanels';
 import { StudioView } from '../studio/StudioView';
 import { AssetsPanel } from '../panels/AssetsPanel';
 import { EventsPanel } from '../panels/EventsPanel';
@@ -52,12 +52,13 @@ const components: Record<string, React.FunctionComponent<IDockviewPanelProps>> =
   assistant: () => <AssistantPanel />,
   problems: () => <ProblemsPanel />,
   console: () => <ConsolePanel />,
+  trace: () => <TracePanel />,
   plugin: (props) => <PluginPanelView panelId={String((props.params as { panelId?: string }).panelId ?? '')} />,
 };
 
 const CodeView = lazy(() => import('../code/CodeView'));
 
-const LAYOUT_VERSION = 12;
+const LAYOUT_VERSION = 13;
 
 function buildDefault(api: DockviewApi): void {
   api.addPanel({ id: 'viewport', component: 'viewport', title: 'Viewport', renderer: 'always' });
@@ -70,6 +71,7 @@ function buildDefault(api: DockviewApi): void {
   api.addPanel({ id: 'assistant', component: 'assistant', title: 'Claude', position: { referencePanel: 'inspector', direction: 'within' } });
   api.addPanel({ id: 'problems', component: 'problems', title: 'Problems', position: { referencePanel: 'viewport', direction: 'below' }, initialHeight: 190 });
   api.addPanel({ id: 'console', component: 'console', title: 'Console', position: { referencePanel: 'problems', direction: 'within' } });
+  api.addPanel({ id: 'trace', component: 'trace', title: 'What fired', position: { referencePanel: 'problems', direction: 'within' } });
   api.addPanel({ id: 'events', component: 'events', title: 'Events', position: { referencePanel: 'problems', direction: 'within' } });
   api.addPanel({ id: 'graphs', component: 'graphs', title: 'Graph', position: { referencePanel: 'problems', direction: 'within' } });
   api.addPanel({ id: 'structures', component: 'structures', title: 'Structures', position: { referencePanel: 'problems', direction: 'within' } });

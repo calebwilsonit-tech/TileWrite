@@ -1,4 +1,6 @@
-import { useDeferredValue, useMemo } from 'react';
+import { useDeferredValue, useEffect, useMemo, useState } from 'react';
+import { firedLog, type FiredEntry, type FiredKind } from '@tilewright/behaviors';
+import { getPlay } from '../viewport/controller';
 import { formatCrashReport } from '@tilewright/runtime';
 import { useApp, store } from '../app/store';
 import { viewportRef } from '../app/commands';
@@ -200,6 +202,62 @@ export function ConsolePanel() {
           {log.map((l, i) => (
             <li key={i} className={l.kind}>
               <time>{new Date(l.time).toLocaleTimeString()}</time> {l.text}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+const FIRED_KIND_LABEL: Record<FiredKind, string> = { row: 'event row', graph: 'graph box', wire: 'wire node', machine: 'state machine', tree: 'behaviour tree' };
+
+/**
+ * What fired, whatever kind of logic it came from: event rows, boxes of graphs, wire nodes, state machines and behaviour trees all
+ * leave the same record, so there is one place to see it. Newest first; the game must be playing (or paused) in the editor.
+ */
+export function TracePanel() {
+  const mode = useApp((s) => s.mode);
+  const [entries, setEntries] = useState<readonly FiredEntry[]>([]);
+  const [tick, setTick] = useState(0);
+  const [only, setOnly] = useState<FiredKind | 'all'>('all');
+  useEffect(() => {
+    if (mode !== 'play') return;
+    const timer = window.setInterval(() => {
+      const play = getPlay();
+      if (!play) return;
+      setEntries([...firedLog(play.sim)]);
+      setTick(play.sim.tick);
+    }, 250);
+    return () => window.clearInterval(timer);
+  }, [mode]);
+  const shown = entries.filter((e) => only === 'all' || e.kind === only).slice(-80).reverse();
+  const now = entries.filter((e) => e.tick === tick).length;
+  return (
+    <div className="panel trace" data-testid="trace-panel">
+      <div className="row">
+        <label>
+          Show{' '}
+          <select data-testid="trace-kind" value={only} onChange={(e) => setOnly(e.target.value as FiredKind | 'all')}>
+            <option value="all">everything</option>
+            {(Object.keys(FIRED_KIND_LABEL) as FiredKind[]).map((k) => (
+              <option key={k} value={k}>
+                {FIRED_KIND_LABEL[k]}s
+              </option>
+            ))}
+          </select>
+        </label>
+        {mode === 'play' && <span className="hint">{now} fired this step</span>}
+      </div>
+      {mode !== 'play' ? (
+        <p className="hint">Play the game to see what fires: event rows, graph boxes, wire nodes, state machines and behaviour trees, newest first. A breakpoint on any of them stops the game here.</p>
+      ) : shown.length === 0 ? (
+        <p className="hint">Nothing has fired yet.</p>
+      ) : (
+        <ul className="plain">
+          {shown.map((e, i) => (
+            <li key={i} className={`fired ${e.kind}`} data-testid="trace-entry">
+              <time>step {e.tick}</time> <strong>{FIRED_KIND_LABEL[e.kind]}</strong> {e.what}
             </li>
           ))}
         </ul>

@@ -19,10 +19,10 @@ test('Round 2: turning a plugin off says what stops working; the Inspector shows
   });
 
   await page.getByTestId('btn-project-settings').click();
-  await page.getByTestId('ps-tab-packs').click();
+  await page.getByTestId('ps-tab-plugins').click();
   // nothing stops working with a plugin nothing uses: it goes off at once
-  await expect(page.getByTestId('pack-toggle-inventory')).toBeChecked();
-  await page.getByTestId('pack-toggle-inventory').click();
+  await expect(page.getByTestId('plugin-toggle-inventory')).toBeChecked();
+  await page.getByTestId('plugin-toggle-inventory').click();
   await expect(page.getByTestId('plugin-stops')).toBeVisible();
   await expect(page.getByTestId('plugin-stops')).toContainText('2 objects with the behaviour pickup');
   await page.screenshot({ path: shot('p4-plugin-stops.png') });
@@ -33,7 +33,7 @@ test('Round 2: turning a plugin off says what stops working; the Inspector shows
   expect(await page.evaluate(() => window.__store!.state.project!.project.plugins)).toEqual(['inventory']);
 
   // "Turn it off anyway" does it, and keeps what the objects carry
-  await page.getByTestId('pack-toggle-inventory').click();
+  await page.getByTestId('plugin-toggle-inventory').click();
   await page.getByTestId('plugin-stops-go').click();
   await expect.poll(() => page.evaluate(() => window.__store!.state.project!.project.plugins)).toEqual([]);
   expect(await page.evaluate(() => window.__store!.doc!.entities.filter((e) => e.components.pickup !== undefined).length)).toBe(2);

@@ -16,10 +16,10 @@ test('Phase 2 sample: real-time strategy - box select, orders, a mine, a barrack
   await createProjectViaUi(page, 'Skirmish', 'empty');
 
   await page.getByTestId('btn-project-settings').click();
-  await page.getByTestId('ps-tab-packs').click();
+  await page.getByTestId('ps-tab-plugins').click();
   for (const p of ['controls', 'combat', 'sim']) {
-    await page.getByTestId(`pack-toggle-${p}`).click();
-    await expect(page.getByTestId(`pack-toggle-${p}`)).toBeChecked();
+    await page.getByTestId(`plugin-toggle-${p}`).click();
+    await expect(page.getByTestId(`plugin-toggle-${p}`)).toBeChecked();
   }
   await page.mouse.click(5, 400);
   await expect(page.getByTestId('project-settings')).toHaveCount(0);

@@ -66,9 +66,9 @@ test('plugins: the examples appear where they belong in the editor', async () =>
 
   // the settings list them with what they need
   await page.evaluate(() => document.dispatchEvent(new CustomEvent('tw:project-settings')));
-  await page.getByTestId('ps-tab-packs').click();
-  await expect(page.getByTestId('pack-example-panel')).toBeVisible();
-  await expect(page.getByTestId('pack-toggle-example-panel')).toBeChecked();
+  await page.getByTestId('ps-tab-plugins').click();
+  await expect(page.getByTestId('plugin-example-panel')).toBeVisible();
+  await expect(page.getByTestId('plugin-toggle-example-panel')).toBeChecked();
   await page.getByTestId('ps-tab-game').click();
   await page.getByRole('button', { name: 'Close', exact: true }).click();
 
@@ -135,7 +135,7 @@ test('plugins: one from a folder must be allowed first, runs its editor part in 
     await window.__plugins!.manager.refresh();
   }, src);
   await page.evaluate(() => document.dispatchEvent(new CustomEvent('tw:project-settings')));
-  await page.getByTestId('ps-tab-packs').click();
+  await page.getByTestId('ps-tab-plugins').click();
   await expect(page.getByTestId('installed-hello-plugin')).toContainText('You have not allowed this plugin to run yet.');
   expect(await page.evaluate(() => window.__plugins!.host.known.has('hello-plugin'))).toBe(false);
 
@@ -178,7 +178,7 @@ test('plugins: one from a folder must be allowed first, runs its editor part in 
   // taking it off the computer: the project still lists it, and says it is missing
   await page.evaluate(() => window.__plugins!.manager.remove('hello-plugin'));
   await page.evaluate(() => document.dispatchEvent(new CustomEvent('tw:project-settings')));
-  await page.getByTestId('ps-tab-packs').click();
+  await page.getByTestId('ps-tab-plugins').click();
   await expect(page.getByTestId('plugins-missing')).toContainText('"hello-plugin"');
   expect(errors).toEqual([]);
   await app.close();

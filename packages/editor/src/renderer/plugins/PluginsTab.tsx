@@ -255,18 +255,18 @@ export function PluginsTab() {
   const card = (p: (typeof all)[number]) => {
     const contents = packContents(p.id);
     return (
-      <fieldset className="story-card" key={p.id} data-testid={`pack-${p.id}`}>
+      <fieldset className="story-card" key={p.id} data-testid={`plugin-${p.id}`}>
         <legend>
           {p.name} <small>v{p.version}</small>
         </legend>
-        <CheckField label={p.description} testId={`pack-toggle-${p.id}`} value={on.has(p.id)} onChange={(v) => set(p.id, v)} />
+        <CheckField label={p.description} testId={`plugin-toggle-${p.id}`} value={on.has(p.id)} onChange={(v) => set(p.id, v)} />
         {p.requires.length > 0 && <p className="hint">Needs: {p.requires.join(', ')}.</p>}
         {contents && contents.behaviors.length > 0 && <p className="hint">Behaviours: {contents.behaviors.join(', ')}.</p>}
       </fieldset>
     );
   };
   return (
-    <div data-testid="ps-packs">
+    <div data-testid="ps-plugins">
       <p className="hint">
         {explicit === undefined
           ? 'This project was made before plugins existed, so everything that came with the editor is switched on. Changing any box makes your choice permanent.'

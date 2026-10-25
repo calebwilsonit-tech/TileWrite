@@ -144,7 +144,7 @@ test('Round 2 section 7: Claude reads PDFs, every kind of picture, scenes, scree
   fs.writeFileSync(path.join(dir, 'assets', 'art', 'mockup.psd'), psd(24, 12, [20, 160, 60]));
   fs.writeFileSync(path.join(dir, 'assets', 'art', 'logo.svg'), '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><rect width="32" height="32" fill="#3060d0"/></svg>');
   fs.writeFileSync(path.join(dir, 'assets', 'art', 'huge.png'), png(4000, 3000, [30, 90, 200]));
-  fs.writeFileSync(path.join(dir, 'docs', 'design.pdf'), pdf(3, ['The Last Storytender', 'Chapter one']));
+  fs.writeFileSync(path.join(dir, 'docs', 'design.pdf'), pdf(3, ['The Last Chronicle', 'Chapter one']));
   fs.writeFileSync(path.join(dir, 'assets', 'audio', 'chime.wav'), wav(1));
   fs.writeFileSync(
     path.join(dir, 'assets', 'dialogues', 'gate.dialogue.json'),

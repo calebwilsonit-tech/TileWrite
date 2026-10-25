@@ -969,7 +969,35 @@ export function noteFired(ctx: SimContext, id: string, breakpoint: boolean, what
   let fired = ctx.runtime.scratch.get('fired') as Map<string, number> | undefined;
   if (!fired) ctx.runtime.scratch.set('fired', (fired = new Map()));
   fired.set(id, ctx.tick);
+  // the same moment goes in one list for every kind of logic, newest last, so a single view can show what fired and when
+  let log = ctx.runtime.scratch.get('firedLog') as FiredEntry[] | undefined;
+  if (!log) ctx.runtime.scratch.set('firedLog', (log = []));
+  log.push({ tick: ctx.tick, id, kind: firedKind(id), what });
+  if (log.length > FIRED_LOG_LIMIT) log.splice(0, log.length - FIRED_LOG_LIMIT);
   if (breakpoint) ctx.events.emit('logic-break', { id, text: what });
+}
+
+/** One thing that fired: an event row, a box of a graph, a wire node, a state of a state machine or an action of a behaviour tree. */
+export interface FiredEntry {
+  tick: number;
+  id: string;
+  kind: FiredKind;
+  what: string;
+}
+
+export type FiredKind = 'row' | 'graph' | 'wire' | 'machine' | 'tree';
+
+/** The most moments kept (the newest). */
+export const FIRED_LOG_LIMIT = 300;
+
+/** What kind of logic an id given to noteFired belongs to, by how the ids are written ("g:" graph boxes, "e:" wire nodes, "m:" state machines, "t:" behaviour trees; anything else is an event row). */
+export function firedKind(id: string): FiredKind {
+  return id.startsWith('g:') ? 'graph' : id.startsWith('e:') ? 'wire' : id.startsWith('m:') ? 'machine' : id.startsWith('t:') ? 'tree' : 'row';
+}
+
+/** The moments kept so far, oldest first. */
+export function firedLog(ctx: Pick<SimContext, 'runtime'>): readonly FiredEntry[] {
+  return (ctx.runtime.scratch.get('firedLog') as FiredEntry[] | undefined) ?? [];
 }
 
 /** Do all (or any) of these conditions hold now? Used by the logic nodes and graph boxes that are not event rows. */

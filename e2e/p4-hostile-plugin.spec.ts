@@ -65,7 +65,7 @@ test('Round 2: the game part of a plugin from outside cannot reach the bridge to
   await page.getByTestId('btn-create-project').click();
   await page.getByTestId('editor-shell').waitFor();
   await page.evaluate(() => document.dispatchEvent(new CustomEvent('tw:project-settings')));
-  await page.getByTestId('ps-tab-packs').click();
+  await page.getByTestId('ps-tab-plugins').click();
   await page.getByTestId('review-hostile-plugin').click();
   await page.getByTestId('allow-hostile-plugin').click();
   await expect(page.getByTestId('plugin-toggle-hostile-plugin')).toBeVisible();

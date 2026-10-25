@@ -124,7 +124,7 @@ export async function previewClashes(pack: Pack): Promise<{ clashes: Clash[]; pr
 export async function installPack(pack: Pack, opts: InstallOptions): Promise<InstallReport> {
   const p = store.state.project;
   if (!p) throw new Error('Open a project first.');
-  if (pack.code && !opts.approveCode) throw new Error('This pack contains code. Tilewright only installs it after you have looked at it and said yes.');
+  if (pack.code && !opts.approveCode) throw new Error('This asset pack contains code. Tilewright only installs it after you have looked at it and said yes.');
   const problems = checkPack(pack, { tileW: p.project.iso.tileW, tileH: p.project.iso.tileH });
   const blocking = problems.filter((x) => !x.includes('will not line up'));
   if (blocking.length > 0) throw new Error(blocking[0]);

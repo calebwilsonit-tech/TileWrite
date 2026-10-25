@@ -190,6 +190,7 @@ export {
   newCondition,
   newNav,
   newRow,
+  noteFired,
   num,
   occupants,
   type OwnedBy,

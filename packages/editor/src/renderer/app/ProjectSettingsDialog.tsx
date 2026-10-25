@@ -16,7 +16,7 @@ import { CheckField, SelectField, TextField } from '../panels/fields';
 import { LayersTab } from './LayersTab';
 import { store, useApp } from './store';
 
-type Tab = 'game' | 'packs' | 'layers' | 'controls' | 'compat';
+type Tab = 'game' | 'plugins' | 'layers' | 'controls' | 'compat';
 
 /**
  * The project's own settings: its name, the first scene, the title screen, and the game's controls (which keys and
@@ -102,9 +102,9 @@ export function ProjectSettingsDialog() {
       <div className="dialog wide" role="dialog" aria-label="Project settings" data-testid="project-settings" style={{ maxHeight: '86vh', overflow: 'auto' }} onMouseDown={(e) => e.stopPropagation()}>
         <h2>Project settings</h2>
         <div className="seg" role="tablist">
-          {(['game', 'packs', 'layers', 'controls', 'compat'] as Tab[]).map((t) => (
+          {(['game', 'plugins', 'layers', 'controls', 'compat'] as Tab[]).map((t) => (
             <button key={t} role="tab" aria-selected={tab === t} className={tab === t ? 'on' : ''} data-testid={`ps-tab-${t}`} onClick={() => setTab(t)}>
-              {t === 'game' ? 'Game' : t === 'packs' ? 'Plugins' : t === 'layers' ? 'Collision layers' : t === 'controls' ? 'Controls' : 'Compatibility'}
+              {t === 'game' ? 'Game' : t === 'plugins' ? 'Plugins' : t === 'layers' ? 'Collision layers' : t === 'controls' ? 'Controls' : 'Compatibility'}
             </button>
           ))}
         </div>
@@ -132,7 +132,7 @@ export function ProjectSettingsDialog() {
           </div>
         )}
 
-        {tab === 'packs' && <PluginsTab />}
+        {tab === 'plugins' && <PluginsTab />}
 
         {tab === 'layers' && <LayersTab />}
 

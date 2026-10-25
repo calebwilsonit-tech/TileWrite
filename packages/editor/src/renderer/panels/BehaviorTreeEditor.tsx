@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { NODE_H, NODE_W, addNode, canHaveChild, duplicateNode, kindColor, layoutTree, moveNode, nodeOf, parentOf, removeNode, setAction, setCondition, startTree, updateNode, wrapNode } from '../model/tree-edit';
 import { getPlay } from '../viewport/controller';
-import { NumberField, SelectField, TextField } from './fields';
+import { CheckField, NumberField, SelectField, TextField } from './fields';
 import { SoundField } from './SoundField';
 import { ACTION_KIND_LABELS, CONDITION_KIND_LABELS, NODE_KIND_LABELS, archerTree, checkTree, describeNode, guardTree, newTreeAction, newTreeCondition, wandererTree, type BehaviorTree, type TreeAction, type TreeCondition, type TreeNode, type TreeNodeKind } from '@tilewright/behaviors';
 
@@ -215,6 +215,7 @@ export function BehaviorTreeEditor({ tree, has, sceneId, onChange }: { tree: Beh
           <legend>{describeNode(node)}</legend>
           <p className="hint">{NODE_KIND_LABELS[node.type]}</p>
           <TextField label="Name (optional)" testId="bt-name" value={node.name ?? ''} placeholder={describeNode({ ...node, name: '' })} onCommit={(v) => edit(updateNode(tree, node.id, { name: v.trim() }))} />
+          {node.type === 'action' && <CheckField label="Stop the game when this starts to run (a breakpoint)" testId="bt-breakpoint" value={node.breakpoint === true} onChange={(on) => edit(updateNode(tree, node.id, { breakpoint: on || undefined }))} />}
           {node.type === 'repeat' && <NumberField label="Times (0 = forever)" testId="bt-count" value={node.count} min={0} step={1} onCommit={(v) => edit(updateNode(tree, node.id, { count: Math.round(v) } as Partial<TreeNode>))} />}
           {node.type === 'cooldown' && <NumberField label="Rests for (seconds)" testId="bt-rest" value={node.seconds} min={0} step={0.5} onCommit={(v) => edit(updateNode(tree, node.id, { seconds: v } as Partial<TreeNode>))} />}
           {node.type === 'condition' && <ConditionFields c={node.condition} onChange={(c) => edit(setCondition(tree, node.id, c))} />}

@@ -41,6 +41,8 @@ export interface MachineState {
   message: string;
   /** Sound played when entering ('' = none). */
   sound: string;
+  /** Stop the game (in the editor) when the object enters this state, like a breakpoint on an event row. */
+  breakpoint?: boolean;
   /** Position in the editor's graph. */
   x?: number;
   y?: number;

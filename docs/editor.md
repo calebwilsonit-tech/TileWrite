@@ -24,6 +24,7 @@ Panels dock, tab, split and float: drag a tab. The layout is remembered; **Comma
 | History | The undo list. |
 | Problems | Mistakes found in the scene, in plain English, with **Go to**. |
 | Console | Messages from the editor and from the game while it runs. |
+| What fired | While the game plays (or is paused), everything that fired, whatever kind of logic it came from: event rows, graph boxes, wire nodes, state machines and behaviour trees, newest first, with a filter by kind. A breakpoint on any of them stops the game there. |
 | Assets | The project's sprites, with search, tags and "find where it is used" (see [sprite-studio.md](sprite-studio.md)); its prefabs; and its sounds and music (see [sound-and-effects.md](sound-and-effects.md)). |
 | Structures | Block-level editing by the box: the marked box of the Box select tool, copy / cut / fill / hollow / replace / remove, saving a region as a structure (a house, a ruin) with the objects in it, and placing structures with the Place structure tool (see [tile-studio.md](tile-studio.md)). |
 | Library | Your personal collection of tiles, props, characters, structures, interface pieces, behaviours and sounds, kept outside any project: save, search, folders and tags, versions, add to a project as a link or a copy, and .twpack files to share (see [asset-library.md](asset-library.md)). |

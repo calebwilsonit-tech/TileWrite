@@ -37,9 +37,9 @@ describe('reading packs', () => {
   it('lists what is inside, and finds broken references and a wrong tile size', () => {
     expect(describePack(pack()).map((e) => `${e.kind}:${e.name}`)).toEqual(['sprite:meadow', 'sprite:meadow_edge', 'tile:Meadow', 'tile:meadow edge-N', 'rule:1 autotile rules']);
     expect(checkPack(pack())).toEqual([]);
-    expect(checkPack(pack({ files: [file('assets/sprites/meadow.sprite.json')] })).some((p) => p.includes('"meadow_edge", which is not in the pack'))).toBe(true);
+    expect(checkPack(pack({ files: [file('assets/sprites/meadow.sprite.json')] })).some((p) => p.includes('"meadow_edge", which is not in the asset pack'))).toBe(true);
     expect(checkPack(pack({ files: [file('../evil.json')] })).some((p) => p.includes('outside the assets folder'))).toBe(true);
-    expect(checkPack(pack({ files: [file('assets/x.js')] })).some((p) => p.includes('code but the pack does not say'))).toBe(true);
+    expect(checkPack(pack({ files: [file('assets/x.js')] })).some((p) => p.includes('code but the asset pack does not say'))).toBe(true);
     expect(checkPack(pack({ tileSize: { w: 32, h: 16 } }), { tileW: 64, tileH: 32 }).some((p) => p.includes('drawn for 32 x 16'))).toBe(true);
   });
 

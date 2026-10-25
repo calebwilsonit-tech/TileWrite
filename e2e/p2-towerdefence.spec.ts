@@ -20,9 +20,9 @@ test('Phase 2 sample: tower defence - waves from a table, placeable and upgradab
 
   // ---- towers shoot and enemies have health: switch on the Combat pack ----
   await page.getByTestId('btn-project-settings').click();
-  await page.getByTestId('ps-tab-packs').click();
-  await page.getByTestId('pack-toggle-combat').click();
-  await expect(page.getByTestId('pack-toggle-combat')).toBeChecked();
+  await page.getByTestId('ps-tab-plugins').click();
+  await page.getByTestId('plugin-toggle-combat').click();
+  await expect(page.getByTestId('plugin-toggle-combat')).toBeChecked();
   await page.mouse.click(5, 400); // click outside to close
   await expect(page.getByTestId('project-settings')).toHaveCount(0);
 

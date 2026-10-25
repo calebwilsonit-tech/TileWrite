@@ -103,7 +103,7 @@ export function LibraryPanel() {
       </div>
 
       <div className="row">
-        <button data-testid="library-import" onClick={() => void guard('Importing the pack', async () => {
+        <button data-testid="library-import" onClick={() => void guard('Importing the asset pack', async () => {
           const r = await importPackFile();
           if (r.error) store.notify('warn', r.error);
           else if (r.item) store.notify('info', `Added "${r.item.name}" to your library.`);
@@ -207,7 +207,7 @@ function AddDialog({ lib, item, onClose }: { lib: Library; item: LibraryItem; on
       ))}
       {pack.code && (
         <label className="field">
-          <input type="checkbox" data-testid="library-approve-code" checked={approved} onChange={(e) => setApproved(e.target.checked)} /> <span>This pack contains code. I have looked at it and I trust it.</span>
+          <input type="checkbox" data-testid="library-approve-code" checked={approved} onChange={(e) => setApproved(e.target.checked)} /> <span>This asset pack contains code. I have looked at it and I trust it.</span>
         </label>
       )}
       <div className="row">
