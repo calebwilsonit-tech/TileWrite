@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react';
-import { DEFAULT_SETTINGS, MAX_ATTACHMENTS, MAX_ATTACHMENT_BYTES, buildContext, cleanSettings, formatProjectIndex, type AssistantSettings, type Attachment, type Mode, type ToolOutput, type Usage, NO_USAGE } from '@tilewright/assistant';
+import { DEFAULT_SETTINGS, MAX_ATTACHMENTS, MAX_ATTACHMENT_BYTES, buildContext, cleanSettings, formatProjectIndex, approvalClass, mayRunUnasked, pluginToolKind, whyAsked, type AssistantSettings, type Attachment, type Mode, type ToolOutput, type Usage, NO_USAGE } from '@tilewright/assistant';
 import { host } from '@tilewright/behaviors';
 import { store } from '../app/store';
 import { api, type AssistantEvent, type AssistantStatus, type AssistantToolCall } from '../project/api';
@@ -335,7 +335,11 @@ class AssistantStore {
       return;
     }
     const looks = (p: Proposal) => (p.images ?? []).map((i) => ({ name: i.name, url: pngUrl(i.png) }));
-    if (this.automatic(call.name)) {
+    // deleting, changing which plugins are on and using the network are asked about even when the person said to just do things
+    const cls = proposal.ask ?? approvalClass(call.name, call.input);
+    const goesAhead = this.automatic(call.name) && mayRunUnasked(cls);
+    if (!goesAhead && this.automatic(call.name) && cls !== 'edit') proposal.lines = [whyAsked(cls), ...proposal.lines];
+    if (goesAhead) {
       // the first change of a run without asking takes a copy of the project, so the run can be rolled back
       if (!this.snapshot) {
         const taken = await takeSnapshot();
@@ -464,7 +468,8 @@ function pluginToolDefs(): { name: string; description: string; input_schema: Re
     name: pluginToolName(t.plugin, t.id),
     description: `${t.description} (A tool added by the plugin "${t.plugin}".)`,
     input_schema: { type: 'object', ...(typeof t.input === 'object' && t.input ? t.input : { properties: {} }) },
-    kind: t.kind === 'change' ? 'act' : 'read',
+    // a plugin cannot make its tool skip the question by calling it "read": that depends on what the plugin was allowed to do
+    kind: pluginToolKind(t.kind, host.permissionsOf(t.plugin).granted),
   }));
 }
 
@@ -474,6 +479,7 @@ async function preparePluginAction(name: string, input: Record<string, unknown>)
   if (!def) return null;
   return {
     tool: name,
+    ask: 'plugins',
     title: `${def.plugin}: ${def.id.replace(/_/g, ' ')}`,
     lines: [def.preview ? def.preview(input) : `Runs the plugin's tool "${def.id}" (from "${def.plugin}").`],
     async apply() {

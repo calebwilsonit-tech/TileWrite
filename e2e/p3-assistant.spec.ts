@@ -287,6 +287,30 @@ test('Phase 3: the permission levels, a plan before big changes, rolling a run b
   await expect(page.getByTestId('chat-assistant').last()).toContainText('Placed.');
   expect(await sceneCount()).toBe(before + 1);
 
+  // ---- even then, taking things away, changing plugins and using the network are asked about ----
+  await page.getByTestId('assistant-new').click();
+  await page.locator('.dv-tab', { hasText: 'Claude' }).click();
+  await page.getByTestId('assistant-permission').selectOption('auto');
+  const withD = await sceneCount();
+  mock.enqueue(
+    { content: [tool('d1', 'delete_objects', { targets: ['Crate D'] })] },
+    { content: [{ type: 'text', text: 'Waiting for you.' }] },
+  );
+  await send(page, 'Take the crate away.');
+  const askDelete = page.getByTestId('proposal').last();
+  await expect(askDelete).toContainText('always asks before it takes something away');
+  await expect(askDelete.getByTestId('proposal-auto')).toHaveCount(0);
+  expect(await sceneCount()).toBe(withD); // nothing was taken away yet
+  await askDelete.getByTestId('proposal-reject').click();
+  await expect(page.getByTestId('chat-assistant').last()).toContainText('Waiting for you.');
+  expect(await sceneCount()).toBe(withD);
+  mock.enqueue({ content: [tool('d2', 'set_plugins', { enable: ['example-assistant'] })] }, { content: [{ type: 'text', text: 'Asked.' }] });
+  await send(page, 'Turn on a plugin.');
+  await expect(page.getByTestId('proposal').last()).toContainText('always asks before it changes which plugins are on');
+  expect(await page.evaluate(() => window.__store!.state.project!.project.plugins ?? [])).not.toContain('example-assistant');
+  await page.getByTestId('proposal').last().getByTestId('proposal-reject').click();
+  await expect(page.getByTestId('chat-assistant').last()).toContainText('Asked.');
+
   // ---- a run that costs more than the limit is stopped, with the tools it asked for answered ----
   await page.getByTestId('assistant-new').click();
   await page.getByTestId('assistant-permission').selectOption('ask');

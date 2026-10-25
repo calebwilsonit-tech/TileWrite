@@ -1,4 +1,4 @@
-import type { DiffLine } from '@tilewright/assistant';
+import type { ApprovalClass, DiffLine } from '@tilewright/assistant';
 import { store } from '../app/store';
 import type { EditorDoc } from '../model/doc';
 
@@ -14,6 +14,8 @@ export interface Proposal {
   images?: { name: string; png: Uint8Array }[];
   /** A plan the person approves before Claude changes anything (see the permission levels). */
   plan?: { steps: string[]; risks: string[] };
+  /** Set when this change is always asked about, whatever the permission level (a plugin's own tool, for example). */
+  ask?: ApprovalClass;
   /** Does the change; returns what to tell Claude. */
   apply(): Promise<string>;
   /** Take it back (only offered right after applying). */

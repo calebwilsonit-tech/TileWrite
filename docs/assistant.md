@@ -72,11 +72,13 @@ Code is in `packages/assistant` (prompt, tool schemas, the conversation loop, mo
 | Look only | Claude reads and checks. Every change is refused and Claude is told why. |
 | Ask me for every change | Every change is shown first and waits for your yes (the way it has always been). |
 | Plan first, then do it | Claude must send a plan (a title, steps, anything hard to undo). Nothing changes until you approve it; then it carries on without asking about each step. |
-| Do it, I can undo | Changes go in at once. |
+| Do it, I can undo | Edits inside the project go in at once. |
+
+**What is always asked, at every level.** Even when you have said "do it" or approved a plan, Claude still shows a card and waits for your yes before it **takes something away** (deleting objects, removing wires or event rows or behaviours, removing the world map or blocks, resetting the screen layout or controls), before it **changes which plugins are on**, before it runs **a tool a plugin added**, and before it **uses the network** (`generate_image`, which a service may charge for). The card says which of these it is. The rule is `packages/assistant/src/approval.ts` (tested on its own, and a test fails when a new tool with a risky name is not classified).
 At the last two levels a copy of the project is taken before the first change of a question, and an **Roll back this whole run** button appears when it finishes: the project goes back to exactly how it was (files changed are restored, files made are removed, the project is opened again). A project too big to copy (over 120 MB) makes Claude ask about each change instead.
 
 **What a question may cost.** *More settings* has the most one question may cost (default $2; 0 for none). The footer shows this conversation's tokens and cost, and what the last question has cost so far against the limit. When the limit is reached Claude stops, the tools it had asked for are answered ("not run"), and you can ask it to carry on.
 
 **Blocks and gravity.** `place_blocks` (boxes of cells, stairs, ramps, removing) and `set_gravity` (which way, and whether the game may place and break blocks while it runs) do what the Blocks tool and the scene settings do, as one undo step each.
 
-**Plugins** add tools with `api.assistantTool` (a tool that only reads runs at once; one that changes things is shown as a card like any other change), readers with `api.fileReader` and picture makers with `api.imageProvider`.
+**Plugins** add tools with `api.assistantTool` (a tool that only reads runs at once, but only when its plugin was not granted anything beyond reading the project: a plugin that can write, use the network or run programs cannot make its own tool skip the question by calling it "read"; one that changes things is shown as a card, always, even at the "do it" level), readers with `api.fileReader` and picture makers with `api.imageProvider`.
