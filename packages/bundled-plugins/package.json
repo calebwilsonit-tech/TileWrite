@@ -13,6 +13,7 @@
     "@tilewright/plugin-controls": "*",
     "@tilewright/plugin-inventory": "*",
     "@tilewright/plugin-lighting": "*",
+    "@tilewright/plugin-parchment": "*",
     "@tilewright/plugin-prebuilt-screens": "*",
     "@tilewright/plugin-sim": "*",
     "@tilewright/plugin-story": "*",

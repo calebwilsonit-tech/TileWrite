@@ -95,7 +95,10 @@ export function setLegacyPacks(ids: readonly string[]): void {
 export const legacyPacks = (): readonly string[] => legacy;
 
 /** The packs a project file asks for (a file with no list is a project from before plugins existed). */
-export const packsOfProject = (project: { plugins?: readonly string[] | undefined }): readonly string[] => project.plugins ?? legacy;
+export const packsOfProject = (project: { plugins?: readonly string[] | undefined }): readonly string[] => (project.plugins ? [...new Set(project.plugins.map((id) => RENAMED_PLUGINS[id] ?? id))] : legacy);
+
+/** Plugins that changed their id: a project that lists the old one gets the new one. (The Parchment UI kit was an example, `example-parchment-ui`, before it shipped with the editor.) */
+export const RENAMED_PLUGINS: Readonly<Record<string, string>> = { 'example-parchment-ui': 'parchment' };
 
 /** Use a project's plugins and the collision layers it names (what opening a project and playing it start with). */
 export function useProject(project: { plugins?: readonly string[] | undefined; collisionLayers?: readonly ProjectLayerData[] | undefined }): void {
@@ -108,7 +111,7 @@ export function useProject(project: { plugins?: readonly string[] | undefined; c
  * before packs existed gets, so it plays as it always did. A name nobody knows is skipped (the project check says so).
  */
 export function setActivePacks(ids: readonly string[] | undefined): void {
-  const want = new Set(ids ?? [...host.known.values()].filter((p) => p.manifest.builtin).map((p) => p.manifest.id));
+  const want = new Set(ids ?? [...host.known.values()].filter((p) => p.manifest.builtin && p.manifest.defaultOn).map((p) => p.manifest.id));
   for (const p of host.known.values()) if (p.manifest.essential) want.add(p.manifest.id);
   for (const id of host.active()) if (!want.has(id)) host.uninstall(id);
   for (const id of want) {

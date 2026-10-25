@@ -73,6 +73,8 @@ export interface Attachment {
 
 /** Most pictures one question may carry, and the most one may weigh (the API takes 5 MB each). */
 export const MAX_ATTACHMENTS = 6;
+/** The most tools of plugins (and the lists of their kinds of data) one conversation is given. */
+export const MAX_EXTRA_TOOLS = 100;
 export const MAX_ATTACHMENT_BYTES = 3_500_000;
 
 export interface TurnResult {

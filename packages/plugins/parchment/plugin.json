@@ -1,0 +1,18 @@
+{
+  "id": "parchment",
+  "name": "Parchment UI kit",
+  "version": "1.0.0",
+  "description": "Gives the game's menus and heads-up display an old-paper look, and brings a binder inventory, a chapter map, a pause menu with Travel and Restart pages, a title that picks a difficulty and a full heads-up display.",
+  "author": "Tilewright",
+  "license": "MIT",
+  "engine": "^1.0.0",
+  "dependencies": {
+    "prebuilt-screens": "^1.0.0"
+  },
+  "permissions": [],
+  "entry": {
+    "runtime": "src/index.ts"
+  },
+  "builtin": true,
+  "defaultOn": false
+}

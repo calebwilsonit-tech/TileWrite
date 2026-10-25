@@ -10,7 +10,7 @@ test('Phase 3: the Parchment UI kit gives the pause menu an old-paper look, and 
     await page.keyboard.press(k);
   };
   await createProjectViaUi(page, 'Paper', 'empty');
-  await page.evaluate(() => window.__store!.updateProjectSettings({ plugins: ['example-parchment-ui'] }));
+  await page.evaluate(() => window.__store!.updateProjectSettings({ plugins: ['parchment'] }));
   await page.getByTestId('btn-play').click();
   await page.waitForFunction(() => window.__play !== undefined);
   await key('p');

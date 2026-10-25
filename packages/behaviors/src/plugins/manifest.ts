@@ -64,6 +64,8 @@ export const PluginManifestSchema = z.object({
   assets: z.string().max(200).default(''),
   /** True for the plugins that ship with the editor. */
   builtin: z.boolean().default(false),
+  /** False for a plugin that ships with the editor but is on only where a project chooses it (a look, not a part of every game). */
+  defaultOn: z.boolean().default(true),
   /** True for a plugin every project has on (a project cannot turn it off): the screens a game cannot run without. */
   essential: z.boolean().default(false),
 });

@@ -75,13 +75,21 @@ export function pluginsForGame(): { bundle: { format: 1; plugins: { manifest: Re
   const problems: ExportProblem[] = [];
   const bundle = { format: 1 as const, plugins: [] as { manifest: Record<string, unknown>; code: string; granted: string[] }[] };
   const p = store.state.project;
-  for (const id of p?.project.plugins ?? []) {
+  // the plugins the project lists, and the plugins those need (a bundled plugin is in the player; the others are shipped with the game)
+  const wanted: string[] = [];
+  const visit = (id: string): void => {
+    if (wanted.includes(id)) return;
+    wanted.push(id);
+    for (const dep of Object.keys(host.known.get(id)?.manifest.dependencies ?? {})) visit(dep);
+  };
+  for (const id of p?.project.plugins ?? []) visit(id);
+  for (const id of wanted) {
     const known = host.known.get(id);
     if (!known) {
       problems.push({ severity: 'error', text: `The game needs the plugin "${id}", which is not installed on this computer. Install it, or switch it off in Project settings.` });
       continue;
     }
-    if (known.manifest.builtin || id.startsWith('example-')) continue; // these are in the player
+    if (known.manifest.builtin) continue; // these are in the player
     const chosen = pluginManager.chosen(id);
     if (!chosen?.pkg || chosen.state !== 'ready') {
       problems.push({ severity: 'error', text: `The plugin "${id}" has not been allowed to run here, so it cannot go into the game.` });

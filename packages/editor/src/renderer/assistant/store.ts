@@ -1,6 +1,9 @@
 import { useSyncExternalStore } from 'react';
-import { DEFAULT_SETTINGS, MAX_ATTACHMENTS, MAX_ATTACHMENT_BYTES, buildContext, cleanSettings, formatProjectIndex, approvalClass, mayRunUnasked, pluginToolKind, whyAsked, type AssistantSettings, type Attachment, type Mode, type ToolOutput, type Usage, NO_USAGE } from '@tilewright/assistant';
-import { dataKinds, dataToolOf, host } from '@tilewright/behaviors';
+import { DEFAULT_SETTINGS, MAX_ATTACHMENTS, MAX_ATTACHMENT_BYTES, buildContext, cleanSettings, formatProjectIndex, approvalClass, mayRunUnasked, whyAsked, type AssistantSettings, type Attachment, type Mode, type ToolOutput, type Usage, NO_USAGE } from '@tilewright/assistant';
+import { host } from '@tilewright/behaviors';
+import { pluginToolName, toolsOffered } from './plugin-tools';
+
+export { pluginToolName };
 import { store } from '../app/store';
 import { api, type AssistantEvent, type AssistantStatus, type AssistantToolCall } from '../project/api';
 import { ToolProblem, prepareAction, readNotes, runReadTool, sceneProblems, type Proposal } from './editor-tools';
@@ -208,7 +211,9 @@ class AssistantStore {
       notes: await readNotes(),
       files: store.state.project !== null ? await this.filesIndex() : '',
     });
-    const r = await api().assistant.send({ text: trimmed, mode, context, settings: this.state.settings, notes: host.assistantNotes(), attachments: attachments.map((a) => ({ name: a.name, mediaType: a.mediaType, data: a.data })), pluginTools: pluginToolDefs() });
+    const offered = toolsOffered();
+    if (offered.leftOut.length > 0) this.push({ kind: 'notice', id: nextId('n'), level: 'warn', text: `Claude is given the first ${offered.sent.length} of the ${offered.sent.length + offered.leftOut.length} tools that plugins add. Left out: ${offered.leftOut.join(', ')}. Turn off a plugin you do not need here to make room.` });
+    const r = await api().assistant.send({ text: trimmed, mode, context, settings: this.state.settings, notes: host.assistantNotes(), attachments: attachments.map((a) => ({ name: a.name, mediaType: a.mediaType, data: a.data })), pluginTools: offered.sent });
     if (!r.started) this.set({ busy: false });
   }
 
@@ -456,22 +461,6 @@ async function resultOf(proposal: Proposal, words: string): Promise<{ content: u
   const blocks: ToolOutput['content'] = [{ type: 'text', text: words }];
   for (const i of proposal.images.slice(0, 2)) (blocks as { type: string }[]).push({ type: 'image', source: { type: 'base64', media_type: 'image/png', data: pngUrl(i.png).slice(22) } } as never);
   return { content: blocks };
-}
-
-/** The assistant tools plugins add, as the model sees them: a name that cannot clash with the editor's, and the plugin's own wording. */
-export function pluginToolName(plugin: string, id: string): string {
-  return `${plugin}__${id}`.replace(/[^A-Za-z0-9_-]/g, '_').slice(0, 64);
-}
-
-function pluginToolDefs(): { name: string; description: string; input_schema: Record<string, unknown>; kind: 'read' | 'act' }[] {
-  const lists = dataKinds().map(dataToolOf);
-  return [...lists, ...[...host.ext.assistantTools.values()].slice(0, 20 - lists.length).map((t) => ({
-    name: pluginToolName(t.plugin, t.id),
-    description: `${t.description} (A tool added by the plugin "${t.plugin}".)`,
-    input_schema: { type: 'object', ...(typeof t.input === 'object' && t.input ? t.input : { properties: {} }) },
-    // a plugin cannot make its tool skip the question by calling it "read": that depends on what the plugin was allowed to do
-    kind: pluginToolKind(t.kind, host.permissionsOf(t.plugin).granted),
-  }))];
 }
 
 /** A plugin's own tool as a change to approve (or null when the name is not a plugin's tool). */

@@ -133,3 +133,19 @@ describe('packs', () => {
     expect(isPackInstalled('broken-pack')).toBe(false);
   });
 });
+
+describe('plugins that changed their id', () => {
+  it('a project that lists the old id gets the new plugin, once', async () => {
+    const { packsOfProject } = await import('@tilewright/behaviors');
+    expect(packsOfProject({ plugins: ['combat', 'example-parchment-ui'] })).toEqual(['combat', 'parchment']);
+    expect(packsOfProject({ plugins: ['parchment', 'example-parchment-ui'] })).toEqual(['parchment']);
+  });
+
+  it('a plugin that is on only where a project chooses it (the Parchment UI kit) is not on by default', () => {
+    setActivePacks(undefined);
+    expect(activePackIds()).not.toContain('parchment');
+    expect(activePackIds()).toContain('combat');
+    setActivePacks(['parchment']);
+    expect(activePackIds()).toContain('parchment');
+  });
+});

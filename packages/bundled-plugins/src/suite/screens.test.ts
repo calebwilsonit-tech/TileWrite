@@ -15,7 +15,7 @@ import {
   type UiBridge,
   type ViewNode,
 } from '@tilewright/behaviors';
-import { parchmentPlugin } from '@tilewright/plugin-examples';
+import { parchmentPlugin } from '@tilewright/plugin-parchment';
 import '@tilewright/bundled-plugins';
 
 /** The game as the screens see it: the project's (empty) designer file plus the screens the plugins ship, and a bridge to a made-up host. */
@@ -415,11 +415,11 @@ describe('the heads-up display', () => {
 describe('the Parchment UI kit (a plugin that re-skins the game\u2019s screens)', () => {
   it('plays the roles it offers with a higher priority, keeps what the screens do, and goes away when turned off', () => {
     host.register(parchmentPlugin);
-    host.install('example-parchment-ui');
+    host.install('parchment');
     try {
       const doc = withPluginScreens(UiDocSchema.parse({}));
       const pause = doc.screens.find((s) => s.role === 'pause')!;
-      expect(pause.from?.plugin).toBe('example-parchment-ui');
+      expect(pause.from?.plugin).toBe('parchment');
       expect(pause.root.children[0]!.style).toMatchObject({ fill: '#e8d9b5', borderWidth: 4 });
       // the flourish widget sits under the heading
       expect(pause.root.children[0]!.children.map((c) => c.name).slice(0, 3)).toEqual(['Heading', 'Flourish', 'Resume']);
@@ -435,7 +435,7 @@ describe('the Parchment UI kit (a plugin that re-skins the game\u2019s screens)'
       const own = UiDocSchema.parse({ screens: [{ ...defs('pause'), id: 'mine', name: 'Pause', role: undefined }] });
       expect(withPluginScreens(own).screens.filter((s) => s.role === 'pause' || s.name === 'Pause')).toHaveLength(1);
     } finally {
-      host.uninstall('example-parchment-ui');
+      host.uninstall('parchment');
     }
     expect(withPluginScreens(UiDocSchema.parse({})).screens.find((s) => s.role === 'pause')!.from?.plugin).toBe('prebuilt-screens');
   });

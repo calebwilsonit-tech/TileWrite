@@ -1,0 +1,15 @@
+{
+  "name": "@tilewright/plugin-parchment",
+  "version": "1.0.0",
+  "private": true,
+  "description": "The Parchment UI kit: an old-paper look for the game's screens.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@tilewright/plugin-sdk": "*"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

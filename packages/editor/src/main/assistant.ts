@@ -1,7 +1,7 @@
 import { app, ipcMain, safeStorage, type WebContents } from 'electron';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { Conversation, MAX_ATTACHMENTS, MAX_ATTACHMENT_BYTES, cleanSettings, type AssistantSettings, type Attachment, type ExtraTool, type Mode, type ModelClient, type RunTool, type ToolOutput, type TurnResult, type Usage, userTurnText } from '@tilewright/assistant';
+import { Conversation, MAX_ATTACHMENTS, MAX_EXTRA_TOOLS, MAX_ATTACHMENT_BYTES, cleanSettings, type AssistantSettings, type Attachment, type ExtraTool, type Mode, type ModelClient, type RunTool, type ToolOutput, type TurnResult, type Usage, userTurnText } from '@tilewright/assistant';
 import { createModelClient, friendlyError } from '@tilewright/assistant/src/sdk-client';
 import { providerFetch, type ProviderFetchRequest } from './provider-fetch';
 
@@ -90,7 +90,7 @@ function cleanAttachments(raw: unknown): Attachment[] {
   return out;
 }
 
-/** The tools plugins add: names the API accepts, a description, an object schema; at most 20. */
+/** The tools plugins add: names the API accepts, a description, an object schema; at most MAX_EXTRA_TOOLS (the editor tells the person when some are left out). */
 function cleanExtraTools(raw: unknown): ExtraTool[] {
   if (!Array.isArray(raw)) return [];
   const out: ExtraTool[] = [];
@@ -99,7 +99,7 @@ function cleanExtraTools(raw: unknown): ExtraTool[] {
     if (!r || typeof r.name !== 'string' || !/^[A-Za-z0-9_-]{1,64}$/.test(r.name) || typeof r.description !== 'string') continue;
     if (!r.input_schema || typeof r.input_schema !== 'object' || (r.input_schema as { type?: unknown }).type !== 'object') continue;
     out.push({ name: r.name, description: r.description.slice(0, 1500), input_schema: r.input_schema, kind: r.kind === 'act' ? 'act' : 'read' });
-    if (out.length >= 20) break;
+    if (out.length >= MAX_EXTRA_TOOLS) break;
   }
   return out;
 }

@@ -8,9 +8,12 @@
   "engine": "^1.0.0",
   "dependencies": {},
   "permissions": [],
-  "data": ["assets/items.json"],
+  "data": [
+    "assets/items.json"
+  ],
   "entry": {
-    "runtime": "src/index.ts"
+    "runtime": "src/index.ts",
+    "editor": "src/editor.ts"
   },
   "builtin": true
 }

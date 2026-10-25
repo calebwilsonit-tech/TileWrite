@@ -4,6 +4,7 @@ import { combatPlugin } from '@tilewright/plugin-combat';
 import { controlsPlugin } from '@tilewright/plugin-controls';
 import { inventoryPlugin } from '@tilewright/plugin-inventory';
 import { lightingPlugin } from '@tilewright/plugin-lighting';
+import { parchmentPlugin } from '@tilewright/plugin-parchment';
 import { prebuiltScreensPlugin } from '@tilewright/plugin-prebuilt-screens';
 import { simPlugin } from '@tilewright/plugin-sim';
 import { storyPlugin } from '@tilewright/plugin-story';
@@ -22,6 +23,7 @@ export const BUNDLED_PLUGINS: readonly PluginDefinition[] = [
   controlsPlugin,
   simPlugin,
   prebuiltScreensPlugin,
+  parchmentPlugin,
 ];
 
 /** Make the bundled plugins known to the host (they are not on until a project turns them on). */
@@ -40,6 +42,7 @@ export * from '@tilewright/plugin-combat';
 export * from '@tilewright/plugin-controls';
 export * from '@tilewright/plugin-inventory';
 export * from '@tilewright/plugin-lighting';
+export * from '@tilewright/plugin-parchment';
 export * from '@tilewright/plugin-prebuilt-screens';
 export * from '@tilewright/plugin-sim';
 export * from '@tilewright/plugin-story';

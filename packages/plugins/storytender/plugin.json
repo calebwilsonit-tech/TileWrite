@@ -11,7 +11,8 @@
   },
   "permissions": [],
   "entry": {
-    "runtime": "src/index.ts"
+    "runtime": "src/index.ts",
+    "editor": "src/editor.ts"
   },
   "builtin": true,
   "samples": "samples"

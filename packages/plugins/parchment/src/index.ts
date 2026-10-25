@@ -1,4 +1,5 @@
 import { definePlugin, type PluginDefinition, type UiNode, type UiScreen, type WidgetDef } from '@tilewright/plugin-sdk';
+import manifest from '../plugin.json' with { type: 'json' };
 
 /**
  * The Parchment UI kit: a plugin that gives every menu of the game an old-paper look. It builds nothing from scratch. It takes
@@ -21,7 +22,7 @@ const ROLES = ['title', 'pause', 'inventory', 'map', 'save', 'load', 'settings',
 
 /** A small flourish under a heading: a plugin widget, so any screen can use it. */
 export const flourishWidget: WidgetDef = {
-  id: 'example-parchment-flourish',
+  id: 'parchment-flourish',
   label: 'Flourish (a line with a star in the middle)',
   defaults: { w: 200, h: 18, wMode: 'fill', hMode: 'auto' },
   render(el) {
@@ -56,22 +57,14 @@ export function parchmentScreen(base: UiScreen): UiScreen {
   const box = screen.root.children[0];
   if (box && box.children[0]) {
     // under the first thing in the box (the heading, or the title's name and line)
-    const flourish: UiNode = { ...box.children[0], id: `${screen.id}.flourish`, name: 'Flourish', type: 'plugin', source: 'example-parchment-flourish', text: '', wMode: 'fill', hMode: 'auto', children: [], on: { click: [], hover: [], change: [] }, style: {} };
+    const flourish: UiNode = { ...box.children[0], id: `${screen.id}.flourish`, name: 'Flourish', type: 'plugin', source: 'parchment-flourish', text: '', wMode: 'fill', hMode: 'auto', children: [], on: { click: [], hover: [], change: [] }, style: {} };
     box.children.splice(1, 0, flourish);
   }
   return { ...screen, id: `parchment-${base.id}`, name: base.name };
 }
 
 export const parchmentPlugin: PluginDefinition = definePlugin(
-  {
-    id: 'example-parchment-ui',
-    name: 'Example: Parchment UI kit',
-    version: '1.0.0',
-    description: 'Gives the game’s menus an old-paper look: re-draws the screens the Prebuilt screens plugin offers, with a flourish under each heading.',
-    author: 'Tilewright examples',
-    license: 'MIT',
-    dependencies: { 'prebuilt-screens': '^1.0.0' },
-  },
+  manifest,
   {
     install(api) {
       api.widget(flourishWidget);
