@@ -36,3 +36,74 @@ export function cleanRelative(rel: string): string {
   if (parts.length === 0) throw new PathProblem('The path names the project folder itself; name a file or a folder inside it.');
   return parts.join('/');
 }
+
+/**
+ * Files that very likely hold a secret (a password, a key, a token). The assistant neither reads nor lists them, whatever they are
+ * called inside the project; the person can add more patterns in Project settings. A pattern is matched against the whole path and
+ * against each part of it: `*` is any run of letters, `**` as a part means "everything below", and case does not matter.
+ */
+export const SECRET_PATTERNS: readonly string[] = [
+  '.env',
+  '.env.*',
+  '*.env',
+  '*.pem',
+  '*.key',
+  '*.p12',
+  '*.pfx',
+  '*.jks',
+  '*.keystore',
+  '*.ppk',
+  '*.kdbx',
+  '*.secret',
+  '*.secrets',
+  'secrets.*',
+  'secret.*',
+  'id_rsa*',
+  'id_dsa*',
+  'id_ecdsa*',
+  'id_ed25519*',
+  '.npmrc',
+  '.pypirc',
+  '.netrc',
+  '.git-credentials',
+  '.htpasswd',
+  'credentials',
+  'credentials.*',
+  'service-account*.json',
+  'kubeconfig',
+  '.ssh/**',
+  '.aws/**',
+  '.gnupg/**',
+  '.docker/config.json',
+  '.git/**',
+];
+
+const globCache = new Map<string, RegExp>();
+
+function globToRegExp(pattern: string): RegExp {
+  let re = globCache.get(pattern);
+  if (!re) {
+    const body = pattern
+      .replace(/\\/g, '/')
+      .split('/')
+      .map((part) => (part === '**' ? '.*' : part.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '[^/]*').replace(/\?/g, '[^/]')))
+      .join('/');
+    re = new RegExp(`^${body}$`, 'i');
+    globCache.set(pattern, re);
+  }
+  return re;
+}
+
+/** Why a path may not be read or listed (worded for Claude and the person), or null when it may. `rel` is already tidied by `cleanRelative`. */
+export function secretReason(rel: string, extra: readonly string[] = []): string | null {
+  const parts = rel.replace(/\\/g, '/').split('/').filter(Boolean);
+  const whole = parts.join('/');
+  for (const pattern of [...SECRET_PATTERNS, ...extra]) {
+    const p = pattern.trim();
+    if (!p) continue;
+    const re = globToRegExp(p);
+    const hit = p.includes('/') ? re.test(whole) || (p.endsWith('/**') && new RegExp(`(^|/)${globToRegExp(p).source.slice(1, -1)}$`, 'i').test(whole)) : parts.some((part) => re.test(part));
+    if (hit) return `"${whole}" is kept from the assistant because it may hold a secret (it matches "${p}"). The person can change the list in Project settings.`;
+  }
+  return null;
+}

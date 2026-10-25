@@ -284,6 +284,8 @@ export const ProjectSchema = z.object({
   title: z.object({ enabled: z.boolean().default(false), subtitle: z.string().default('') }).optional(),
   /** The plugins this game uses. Missing means the built-in set, as before plugins could be chosen. (Called `packs` in project format 1.) */
   plugins: z.array(z.string()).optional(),
+  /** Patterns for files the assistant may not read or list, added to its built-in list of files that may hold secrets (.env, *.pem, ...). */
+  assistantDeny: z.array(z.string().min(1).max(200)).max(100).optional(),
   /** Compatibility flags (see compat.ts): behaviour that changed after projects were made. Missing flags are off, as the project always played. */
   compat: z.record(z.string(), z.boolean()).optional(),
 });

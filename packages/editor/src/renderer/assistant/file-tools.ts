@@ -1,4 +1,4 @@
-import { PathProblem, cleanRelative, describeAudio, describeUnreadable, extOf, fileKind, formatProjectIndex, limitText, looksLikeText, sniffImage, type IndexedFile, type ToolOutput } from '@tilewright/assistant';
+import { PathProblem, cleanRelative, secretReason, describeAudio, describeUnreadable, extOf, fileKind, formatProjectIndex, limitText, looksLikeText, sniffImage, type IndexedFile, type ToolOutput } from '@tilewright/assistant';
 import { host } from '@tilewright/behaviors';
 import { compositeFrame, encodePng, parseSprite } from '@tilewright/runtime';
 import { store } from '../app/store';
@@ -25,9 +25,15 @@ function projectDir(): string {
   return p.dir;
 }
 
+/** What the person added in Project settings to the built-in list of files the assistant may not read. */
+const extraDeny = (): readonly string[] => store.state.project?.project.assistantDeny ?? [];
+
 function cleanPath(rel: string): string {
   try {
-    return cleanRelative(rel);
+    const clean = cleanRelative(rel);
+    const secret = secretReason(clean, extraDeny());
+    if (secret) throw new PathProblem(secret);
+    return clean;
   } catch (e) {
     if (e instanceof PathProblem) return fail(e.message);
     throw e;
@@ -39,6 +45,7 @@ const absolute = (rel: string): string => joinPath(projectDir(), ...cleanPath(re
 /** Every file of the project (skipping saves, exports and tool folders), with sizes. */
 export async function listProjectFiles(dir?: string): Promise<IndexedFile[]> {
   const root = dir ?? projectDir();
+  const deny = extraDeny();
   const out: IndexedFile[] = [];
   const walk = async (dir: string, rel: string): Promise<void> => {
     if (out.length >= MAX_FILES) return;
@@ -53,7 +60,7 @@ export async function listProjectFiles(dir?: string): Promise<IndexedFile[]> {
       const path = rel ? `${rel}/${e.name}` : e.name;
       if (e.dir) {
         if (!SKIPPED.has(e.name)) await walk(joinPath(dir, e.name), path);
-      } else out.push({ path, size: e.size });
+      } else if (!secretReason(path, deny)) out.push({ path, size: e.size });
     }
   };
   await walk(root, '');
@@ -158,7 +165,9 @@ export async function runFileRead(name: string, input: Record<string, unknown>):
       } catch {
         return fail(`There is no folder "${folder}". project_index shows what exists.`);
       }
-      const shown = entries.filter((e) => !(e.dir && SKIPPED.has(e.name))).sort((a, b) => Number(b.dir) - Number(a.dir) || a.name.localeCompare(b.name));
+      const above = folder === '' || folder === '.' ? '' : `${cleanPath(folder)}/`;
+      const deny = extraDeny();
+      const shown = entries.filter((e) => !(e.dir && SKIPPED.has(e.name)) && !secretReason(`${above}${e.name}`, deny)).sort((a, b) => Number(b.dir) - Number(a.dir) || a.name.localeCompare(b.name));
       return text(shown.length === 0 ? '(empty)' : shown.map((e) => (e.dir ? `${e.name}/` : `${e.name}${e.size !== undefined ? ` (${e.size} bytes)` : ''}`)).join('\n'));
     }
     case 'read_project_file':

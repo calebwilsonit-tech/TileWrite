@@ -1,5 +1,5 @@
 import nodePath from 'node:path';
-import { PathProblem, cleanRelative } from './path-rules';
+import { PathProblem, cleanRelative, secretReason } from './path-rules';
 
 
 /**
@@ -12,7 +12,7 @@ import { PathProblem, cleanRelative } from './path-rules';
  * are tested on any computer.
  */
 
-export { PathProblem, cleanRelative };
+export { PathProblem, cleanRelative, secretReason };
 
 export type PathLib = typeof nodePath.posix | typeof nodePath.win32;
 
@@ -35,9 +35,13 @@ export function isInside(root: string, target: string, lib: PathLib = nodePath):
  * the result is confirmed to be below `root` by name, and (when `fs` is given) by where it really is: a link inside the
  * project that leads outside is refused, whether the link is the file itself or a folder on the way to it.
  */
-export function resolveInsideProject(root: string, rel: string, opts: { lib?: PathLib; fs?: RealFs } = {}): string {
+export function resolveInsideProject(root: string, rel: string, opts: { lib?: PathLib; fs?: RealFs; /** More patterns to keep from the assistant (the built-in list of secret files always applies). Leave out to skip the secret-file check. */ deny?: readonly string[] } = {}): string {
   const lib = opts.lib ?? nodePath;
   const clean = cleanRelative(rel);
+  if (opts.deny) {
+    const reason = secretReason(clean, opts.deny);
+    if (reason) throw new PathProblem(reason);
+  }
   const full = lib.resolve(root, ...clean.split('/'));
   if (!isInside(root, full, lib)) throw new PathProblem('That path leads outside the project folder.');
   if (opts.fs) checkReal(root, full, opts.fs, lib);

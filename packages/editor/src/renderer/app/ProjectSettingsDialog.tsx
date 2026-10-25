@@ -31,6 +31,7 @@ export function ProjectSettingsDialog() {
   const [start, setStart] = useState('');
   const [titleOn, setTitleOn] = useState(false);
   const [subtitle, setSubtitle] = useState('');
+  const [deny, setDeny] = useState('');
   const [capturing, setCapturing] = useState<string | null>(null);
   const [fresh, setFresh] = useState({ id: '', label: '' });
   const [saved, setSaved] = useState(false);
@@ -43,6 +44,7 @@ export function ProjectSettingsDialog() {
       setStart(p.startScene);
       setTitleOn(p.title?.enabled ?? false);
       setSubtitle(p.title?.subtitle ?? '');
+      setDeny((p.assistantDeny ?? []).join('\n'));
       setTab((which as CustomEvent<Tab> | undefined)?.detail === 'controls' ? 'controls' : 'game');
       setSaved(false);
       setOpen(true);
@@ -60,7 +62,7 @@ export function ProjectSettingsDialog() {
   const nameProblem = name.trim() === '' ? 'The game needs a name.' : '';
   const save = async (): Promise<void> => {
     if (nameProblem) return;
-    const ok = await store.updateProjectSettings({ name: name.trim(), startScene: start, title: { enabled: titleOn, subtitle } });
+    const ok = await store.updateProjectSettings({ name: name.trim(), startScene: start, title: { enabled: titleOn, subtitle }, assistantDeny: deny.split('\n').map((l) => l.trim()).filter(Boolean) });
     setSaved(ok);
   };
 
@@ -113,6 +115,11 @@ export function ProjectSettingsDialog() {
             <SelectField<string> label="Scene the game starts in" testId="ps-start" value={start} options={project.project.scenes.map((s) => ({ value: s, label: s.replace(/^.*\//, '').replace('.scene.json', '') }))} onChange={setStart} />
             <CheckField label="Show a title screen first (New game, Continue, Load game, Settings, Quit)" testId="ps-title-enabled" value={titleOn} onChange={setTitleOn} />
             {titleOn && <TextField label="Line under the title" testId="ps-subtitle" value={subtitle} onCommit={setSubtitle} placeholder="A tale of the old road" />}
+            <label className="field">
+              <span>Files the assistant may not read (one pattern a line)</span>
+              <textarea data-testid="ps-assistant-deny" rows={3} value={deny} onChange={(e) => setDeny(e.target.value)} placeholder="private/**" />
+            </label>
+            <p className="hint">Files that may hold secrets (.env, *.pem, *.key, SSH and cloud credentials, .git) are always kept from the assistant, in every project. Add your own patterns here: * is any run of letters, and private/** is everything below private.</p>
             <p className="hint">The title screen shows when you press Play with no scene or spot chosen, and in the exported game. Continue appears once the player has a save.</p>
             <div className="row end">
               {saved && <span data-testid="ps-saved">Saved.</span>}

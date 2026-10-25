@@ -65,6 +65,13 @@ test('Phase 3: Claude reads the project (every kind of file, nothing outside it)
   fs.writeFileSync(path.join(projectDir, 'assets', 'art', 'dot.png'), PNG_1);
   fs.writeFileSync(path.join(projectDir, 'assets', 'todo.md'), '# To do\nAdd a second room.\n');
   fs.writeFileSync(path.join(path.dirname(projectDir), 'secret.txt'), 'the secret');
+  // files that hold secrets inside the project: a built-in kind, and one the person added to the list in Project settings
+  fs.mkdirSync(path.join(projectDir, 'keys'), { recursive: true });
+  fs.mkdirSync(path.join(projectDir, 'private'), { recursive: true });
+  fs.writeFileSync(path.join(projectDir, '.env'), 'API_TOKEN=hunter2');
+  fs.writeFileSync(path.join(projectDir, 'keys', 'server.pem'), 'PRIVATE-KEY-BODY');
+  fs.writeFileSync(path.join(projectDir, 'private', 'notes.txt'), 'my private notes');
+  await page.evaluate(() => window.__store!.updateProjectSettings({ assistantDeny: ['private/**'] }));
 
   mock.enqueue(
     {
@@ -79,6 +86,10 @@ test('Phase 3: Claude reads the project (every kind of file, nothing outside it)
         tool('f8', 'read_project_file', { path: 'project.json:stream' }),
         tool('f9', 'read_project_file', { path: 'assets/nothing-here.json' }),
         tool('f10', 'list_project_files', { folder: 'assets' }),
+        tool('f11', 'read_project_file', { path: '.env' }),
+        tool('f12', 'read_project_file', { path: 'keys/server.pem' }),
+        tool('f13', 'read_project_file', { path: 'private/notes.txt' }),
+        tool('f14', 'list_project_files', {}),
       ],
     },
     { content: [{ type: 'text', text: 'I looked at everything I could.' }] },
@@ -109,6 +120,13 @@ test('Phase 3: Claude reads the project (every kind of file, nothing outside it)
   expect(by('f9').error).toBe(true);
   expect(by('f9').text).toContain('There is no file');
   expect(by('f10').text).toContain('audio/');
+  // a file that may hold a secret is refused, whatever its name, and is left out of the lists; the person's own patterns count too
+  for (const id of ['f11', 'f12', 'f13']) {
+    expect(by(id).error, id).toBe(true);
+    expect(by(id).text, id).toContain('may hold a secret');
+    expect(by(id).text, id).not.toMatch(/hunter2|PRIVATE-KEY-BODY|my private notes/);
+  }
+  for (const id of ['f1', 'f14']) expect(by(id).text, id).not.toMatch(/\.env|server\.pem|notes\.txt/);
   // the first message of the conversation carries the list of files
   expect(mock.requests[0]!.body.messages[0].content[0].text).toContain('Files in "Files"');
 

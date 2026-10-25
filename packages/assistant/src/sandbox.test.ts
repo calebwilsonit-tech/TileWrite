@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { secretReason } from './path-rules';
 import { PathProblem, cleanRelative, isInside, resolveInsideAny, resolveInsideProject } from './sandbox';
 
 const bad = (rel: string): string => {
@@ -169,5 +170,44 @@ describe('a link to a folder above the project', () => {
     } finally {
       fs.rmSync(tmp, { recursive: true, force: true });
     }
+  });
+});
+
+describe('files that may hold secrets', () => {
+  it.each([
+    ['.env'],
+    ['config/.env'],
+    ['.env.production'],
+    ['prod.env'],
+    ['keys/server.pem'],
+    ['deploy.KEY'],
+    ['certs/me.p12'],
+    ['home/id_rsa'],
+    ['home/id_rsa.pub'],
+    ['.npmrc'],
+    ['.aws/credentials'],
+    ['tools/.ssh/config'],
+    ['.git/config'],
+    ['credentials.json'],
+    ['service-account-prod.json'],
+    ['vault.kdbx'],
+  ])('keeps %s from the assistant', (rel) => {
+    expect(secretReason(rel), rel).toMatch(/may hold a secret/);
+  });
+
+  it.each([['assets/screens.json'], ['scenes/main.scene.json'], ['assets/sprites/key.sprite.json'], ['assets/keyboard.json'], ['environment.json'], ['scripts/Envelope.ts'], ['assets/dotenv-notes.md']])('does not mistake %s for one', (rel) => {
+    expect(secretReason(rel), rel).toBeNull();
+  });
+
+  it('is extended by the patterns in Project settings', () => {
+    expect(secretReason('notes/passwords.txt')).toBeNull();
+    expect(secretReason('notes/passwords.txt', ['passwords.*'])).toMatch(/passwords/);
+    expect(secretReason('private/anything/at/all.json', ['private/**'])).toMatch(/private/);
+  });
+
+  it('is part of resolving a name inside the project', () => {
+    expect(() => resolveInsideProject('/p/game', 'config/.env', { lib: path.posix, deny: [] })).toThrow(/may hold a secret/);
+    expect(resolveInsideProject('/p/game', 'config/app.json', { lib: path.posix, deny: [] })).toBe('/p/game/config/app.json');
+    expect(() => resolveInsideProject('/p/game', 'notes/pw.txt', { lib: path.posix, deny: ['pw.txt'] })).toThrow(/pw\.txt/);
   });
 });
