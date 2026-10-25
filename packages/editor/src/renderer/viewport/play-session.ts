@@ -221,16 +221,17 @@ export class PlaySession {
     sim.events.on('travel-place-request', (e) => {
       const node = sim.assets.worldMap?.nodes.find((n) => n.id === String(e.place ?? ''));
       if (!node) return;
-      // a place whose unlock rule says where to arrive (a plugin rule, for example a checkpoint)
-      const post = host.ext.unlockRules.get(node.unlock.kind)?.arrival?.(sim.runtime.vars, node);
-      if (post) this.hostObj.travelTo(post);
+      // a place whose unlock rule says where to arrive (a plugin rule)
+      const arrival = host.ext.unlockRules.get(node.unlock.kind)?.arrival?.(sim.runtime.vars, node);
+      if (arrival) this.hostObj.travelTo(arrival);
       else this.hostObj.travelToScene(node.scene, node.spawn);
       // travelling ends the menus that led to it
       for (const role of ['map', 'pause', 'title']) closeScreen(sim, `role:${role}`);
     });
-    sim.events.on('travel-post-request', (e) => this.hostObj.travelTo({ scene: String(e.scene ?? ''), id: String(e.id ?? ''), name: String(e.name ?? ''), x: Number(e.x), y: Number(e.y), h: Number(e.h ?? 0) }));
+    // any plugin can ask to be taken to a place (a scene, and where in it): a list of places it keeps, a block of its own
+    sim.events.on('travel-request', (e) => this.hostObj.travelTo({ scene: String(e.scene ?? ''), id: String(e.id ?? ''), name: String(e.name ?? ''), x: Number(e.x), y: Number(e.y), h: Number(e.h ?? 0) }));
+    // an event a plugin declares with `autosave` saves the game when it happens
     for (const e of host.ext.events.values()) if (e.autosave) sim.events.on(e.id, () => void this.saveTo('autosave'));
-    sim.events.on('rested', () => void this.saveTo('autosave'));
 
     const cam = renderer.camera;
     cam.deadzoneW = 50;

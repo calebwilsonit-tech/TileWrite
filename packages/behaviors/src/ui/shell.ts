@@ -1,6 +1,6 @@
 import type { GameSettings, InputMapDef, SlotInfo, Simulation, UiLayout } from '@tilewright/runtime';
 
-/** A place the player can be sent back to or travel to: where they rested, with the scene it is in. */
+/** A place the player can be sent back to or travel to: where they respawn, with the scene it is in. */
 export interface CheckpointRef {
   scene: string;
   id: string;

@@ -69,8 +69,8 @@ describe('editing a world map', () => {
   });
 
   it('changes a place without touching the others', () => {
-    const m = updatePlace(base, 'old-tower', { icon: 'tower', unlock: { kind: 'lantern' } });
-    expect(m.nodes[2]).toMatchObject({ icon: 'tower', unlock: { kind: 'lantern' } });
+    const m = updatePlace(base, 'old-tower', { icon: 'tower', unlock: { kind: 'plugin-rule' } });
+    expect(m.nodes[2]).toMatchObject({ icon: 'tower', unlock: { kind: 'plugin-rule' } });
     expect(m.nodes[1]).toEqual(base.nodes[1]);
     expect(newWorldMap().nodes).toEqual([]);
   });

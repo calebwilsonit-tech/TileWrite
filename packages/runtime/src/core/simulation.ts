@@ -48,9 +48,9 @@ export interface Assets {
   tileset?: TileSet;
 }
 
-/** A checkpoint: a place the player rested at, where death sends them. */
+/** A respawn point: a place a plugin remembers for the player, where defeat sends them. */
 export interface Checkpoint {
-  /** Scene file the post is in. */
+  /** Scene file the place is in. */
   scene: string;
   x: number;
   y: number;

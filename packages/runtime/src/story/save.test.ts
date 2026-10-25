@@ -55,11 +55,11 @@ function memory(): SaveStorage & { files: Map<string, string> } {
 }
 
 describe('serializeGame and applySave', () => {
-  it('keeps flags, inventory, the lantern, the player and the state of persistent objects', () => {
+  it('keeps flags, inventory, the respawn point, the player and the state of persistent objects', () => {
     const a = game();
     a.runtime.vars.gold = 12;
     a.runtime.vars['item:key'] = 2;
-    a.runtime.checkpoint = { scene: 'scenes/main.scene.json', x: 3.5, y: 3.5, h: 0, name: 'Lantern' };
+    a.runtime.checkpoint = { scene: 'scenes/main.scene.json', x: 3.5, y: 3.5, h: 0, name: 'Respawn' };
     a.runtime.difficulty = 'hard';
     const p = a.world.withTag('player')[0]!.get<TransformIso>(C.Transform)!;
     p.x = 8.2;
@@ -77,7 +77,7 @@ describe('serializeGame and applySave', () => {
     expect(b.runtime.vars.gold).toBe(12);
     expect(b.runtime.vars['item:key']).toBe(2);
     expect(b.runtime.difficulty).toBe('hard');
-    expect(b.runtime.checkpoint?.name).toBe('Lantern');
+    expect(b.runtime.checkpoint?.name).toBe('Respawn');
     const bp = b.world.withTag('player')[0]!.get<TransformIso>(C.Transform)!;
     expect([bp.x, bp.y]).toEqual([8.2, 4.1]);
     b.world.flush();

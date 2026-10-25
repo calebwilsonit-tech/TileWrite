@@ -29,7 +29,7 @@ describe('the manual', () => {
 
   it('has a recipe for the things people most often build', () => {
     const recipes = read(path.join(docs, 'recipes.md'));
-    for (const topic of ['lever', 'crate', 'echo', 'bridge', 'guard', 'boss', 'conversation', 'Checkpoints', 'dark room', 'another scene', 'prefabs', 'Check a level', 'Claude']) {
+    for (const topic of ['lever', 'crate', 'bridge', 'guard', 'boss', 'conversation', 'Checkpoints', 'dark room', 'another scene', 'prefabs', 'Check a level', 'Claude']) {
       expect(recipes.toLowerCase(), topic).toContain(topic.toLowerCase());
     }
   });

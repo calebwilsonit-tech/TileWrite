@@ -23,7 +23,7 @@ function game(over: Partial<UiBridge> = {}): { sim: Simulation; settings: Record
   sim.assets.ui = withPluginScreens(UiDocSchema.parse({}));
   const settings: Record<string, VariableValue> = { master: 0.8, music: 0.8, sfx: 0.8, voice: 0.8, difficulty: 'normal', screenShake: true, cameraZoom: 1, showFps: false, fullscreen: false, skin: '', language: 'en' };
   const events: [string, Record<string, unknown>][] = [];
-  for (const name of ['save-request', 'load-request', 'restart-request', 'quit-request', 'travel-place-request', 'travel-post-request', 'reset-controls-request', 'message']) sim.events.on(name, (e) => events.push([name, e]));
+  for (const name of ['save-request', 'load-request', 'restart-request', 'quit-request', 'travel-place-request', 'travel-request', 'reset-controls-request', 'message']) sim.events.on(name, (e) => events.push([name, e]));
   const bridge: UiBridge = { getSetting: (k) => settings[k], setSetting: (k, v) => void (settings[k] = v), ...over };
   setUiBridge(sim, bridge);
   return { sim, settings, events, bridge };
@@ -347,7 +347,7 @@ describe('Map and Travel', () => {
     const rows = rowsOf(sim, 'post');
     expect(rows.map((n) => [n.scope['post.name'], n.scope['post.place']])).toEqual([['Home post', 'this area'], ['Edge post', 'forest']]);
     activateWidget(sim, rows[1]!);
-    expect(events.map((e) => e[0])).toEqual(['travel-post-request']);
+    expect(events.map((e) => e[0])).toEqual(['travel-request']);
     expect(events[0]![1]).toMatchObject({ scene: 'forest.scene.json', id: 'p2', name: 'Edge post', x: 10, y: 11, h: 0 });
     expect(stack(sim)).toEqual([]);
   });

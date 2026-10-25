@@ -26,7 +26,7 @@ describe('export settings', () => {
 
 describe('names', () => {
   it('make safe file names', () => {
-    expect(fileSafeName('The Last: Storytender?')).toBe('The Last Storytender');
+    expect(fileSafeName('The Great: Journey?')).toBe('The Great Journey');
     expect(fileSafeName('  ..a/b\\c.. ')).toBe('abc');
     expect(fileSafeName('CON')).toBe('CON_');
     expect(fileSafeName('???')).toBe('Game');

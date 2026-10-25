@@ -334,7 +334,7 @@ describe('actions', () => {
 describe('plain English', () => {
   const names = { entity: (id: string) => ({ lamp: 'Lamp', zone: 'Door area' })[id] };
 
-  it('reads a row as a sentence', () => {
+  it('reads a row as words', () => {
     const r = row({
       id: 'r',
       conditions: [cond('inside', { who: 'player', zone: 'id:zone' }), cond('variable', { name: 'keys', op: '>=', value: '1' })],

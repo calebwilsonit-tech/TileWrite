@@ -34,7 +34,7 @@ export const travelToPost: ActionDef = {
       const text = String(p[k] ?? '');
       return text.includes('{') ? text.replace(/\{([^}]+)\}/g, (_m, name: string) => String(ctx.runtime.vars[name.trim()] ?? '')) : text;
     };
-    ctx.events.emit('travel-post-request', { scene: fill('scene'), id: fill('id'), name: fill('name'), x: Number(fill('x')), y: Number(fill('y')), h: Number(fill('h')) });
+    ctx.events.emit('travel-request', { scene: fill('scene'), id: fill('id'), name: fill('name'), x: Number(fill('x')), y: Number(fill('y')), h: Number(fill('h')) });
   },
 };
 

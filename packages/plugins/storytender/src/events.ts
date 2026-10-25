@@ -6,5 +6,5 @@ export const events: EventDef[] = [
   { id: 'sentence-changed', label: 'a sentence stone changes its word' },
   { id: 'text-formatted', label: 'a text block is reformatted' },
   { id: 'lantern-lit', autosave: true, label: 'a lantern is lit' },
-  { id: 'rested', label: 'the player rests at a lantern' },
+  { id: 'rested', autosave: true, label: 'the player rests at a lantern' },
 ];
