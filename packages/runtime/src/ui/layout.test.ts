@@ -2,8 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { anchorAt, checkUiLayout, completeLayout, defaultUiLayout, fillVariables, newCustomWidget, offsetsFor, themeVars, UiLayoutSchema, widgetCss } from './layout';
 
 describe('interface layout', () => {
-  it('starts with every built-in piece where the game puts it', () => {
-    const l = defaultUiLayout();
+  it('starts with the engine\'s own piece and the pieces plugins offer, where the game puts them', () => {
+    expect(defaultUiLayout().widgets.map((w) => w.id)).toEqual(['toasts']); // the engine knows no other
+    const l = defaultUiLayout(['hearts', 'lightbar', 'slots', 'bosses']);
     expect(l.widgets.map((w) => w.id)).toEqual(['hearts', 'lightbar', 'slots', 'bosses', 'toasts']);
     expect(l.widgets.every((w) => w.anchor === 'default' && w.visible)).toBe(true);
     expect(widgetCss(l.widgets[0]!)).toEqual({});
@@ -11,7 +12,9 @@ describe('interface layout', () => {
 
   it('a file that leaves a piece out still shows it', () => {
     const parsed = UiLayoutSchema.parse({ widgets: [{ id: 'hearts', kind: 'hearts', anchor: 'tr', x: 4, y: 4 }] });
-    expect(completeLayout(parsed).widgets.map((w) => w.kind)).toEqual(['hearts', 'lightbar', 'slots', 'bosses', 'toasts']);
+    expect(completeLayout(parsed, ['hearts', 'lightbar', 'slots', 'bosses']).widgets.map((w) => w.kind)).toEqual(['hearts', 'lightbar', 'slots', 'bosses', 'toasts']);
+    // a file that names a piece no plugin offers (the plugin is off) keeps it, and is still read
+    expect(completeLayout(parsed).widgets.map((w) => w.kind)).toEqual(['hearts', 'toasts']);
   });
 
   it('turns a theme into CSS variables', () => {
@@ -64,7 +67,7 @@ describe('interface layout', () => {
         { id: 't2', kind: 'text', text: 'x {nope}' },
       ],
     });
-    const p = checkUiLayout(l, { variables: new Set(['coins']) }).join('\n');
+    const p = checkUiLayout(l, { variables: new Set(['coins']), pieces: [{ piece: 'hearts', name: 'Hearts', hiddenWarning: 'The hearts are hidden, so the player cannot see their health.' }] }).join('\n');
     expect(p).toContain('Two pieces of the screen are both called "a"');
     expect(p).toContain('no flag or counter chosen');
     expect(p).toContain('"ghost", which nothing in your game ever sets');
@@ -73,5 +76,11 @@ describe('interface layout', () => {
     expect(p).toContain('hearts are hidden');
     expect(p).toContain('Messages are hidden');
     expect(checkUiLayout(defaultUiLayout())).toEqual([]);
+    // a piece a plugin offers says what is wrong when it is hidden, in its own words
+    const pieces = [{ piece: 'hearts', name: 'Hearts', hiddenWarning: 'The hearts are hidden.' }];
+    const hidden = defaultUiLayout(['hearts']);
+    hidden.widgets[0]!.visible = false;
+    expect(checkUiLayout(hidden, { pieces })).toContain('The hearts are hidden.');
+    expect(checkUiLayout(hidden)).not.toContain('The hearts are hidden.');
   });
 });

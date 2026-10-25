@@ -47,14 +47,17 @@ export const UiThemeSchema = z.object({
 });
 export type UiTheme = z.infer<typeof UiThemeSchema>;
 
-export const BUILTIN_WIDGETS = ['hearts', 'lightbar', 'slots', 'bosses', 'toasts'] as const;
-export const WIDGET_KINDS = [...BUILTIN_WIDGETS, 'counter', 'bar', 'text'] as const;
-export type WidgetKind = (typeof WIDGET_KINDS)[number];
-export const WIDGET_NAMES: Record<WidgetKind, string> = {
-  hearts: 'Hearts',
-  lightbar: 'Light bar',
-  slots: 'Quick slots',
-  bosses: 'Boss health bars',
+/**
+ * The pieces the engine itself draws. Every other piece of the heads-up display (hearts, quick slots, a light bar...) is a widget that a
+ * plugin offers (`WidgetDef.hud`), listed in the layout while that plugin is on; a layout file may still name one, whichever plugin it came from.
+ */
+export const BUILTIN_WIDGETS = ['toasts'] as const;
+/** The pieces a project makes itself. */
+export const CUSTOM_WIDGETS = ['counter', 'bar', 'text'] as const;
+/** @deprecated The kinds the engine itself knows (plugins add more: see `hudPieces`). Kept because the plugin SDK only grows. */
+export const WIDGET_KINDS = [...BUILTIN_WIDGETS, ...CUSTOM_WIDGETS] as const;
+export type WidgetKind = string;
+export const WIDGET_NAMES: Record<string, string> = {
   toasts: 'Messages',
   counter: 'Counter (a label and a number)',
   bar: 'Bar (fills as a number grows)',
@@ -63,7 +66,8 @@ export const WIDGET_NAMES: Record<WidgetKind, string> = {
 
 export const UiWidgetSchema = z.object({
   id: z.string().regex(/^[A-Za-z0-9_-]{1,32}$/, 'Names use letters, numbers, - and _'),
-  kind: z.enum(WIDGET_KINDS),
+  /** `toasts`, `counter`, `bar`, `text`, or the name of a piece a plugin offers. */
+  kind: z.string().regex(/^[A-Za-z0-9_-]{1,32}$/, 'A kind is letters, numbers, - and _'),
   anchor: z.enum(ANCHORS).default('default'),
   /** Distance in pixels from the anchor's edge (or from the middle for a middle anchor). */
   x: z.number().int().min(-2000).max(2000).default(0),
@@ -89,18 +93,21 @@ export const UiLayoutSchema = z.object({
 });
 export type UiLayout = z.infer<typeof UiLayoutSchema>;
 
-export const builtinWidget = (kind: (typeof BUILTIN_WIDGETS)[number]): UiWidget => UiWidgetSchema.parse({ id: kind, kind });
+export const builtinWidget = (kind: string): UiWidget => UiWidgetSchema.parse({ id: kind, kind });
 
-/** The layout of a game that never opened the editor: the game's own pieces where the game puts them. */
-export function defaultUiLayout(): UiLayout {
-  return { schemaVersion: CURRENT_SCHEMA_VERSION, theme: UiThemeSchema.parse({}), widgets: BUILTIN_WIDGETS.map(builtinWidget) };
+/**
+ * The layout of a game that never opened the editor: the pieces the plugins offer (`pieces`, in the order they stand) and the engine's
+ * own, where the game puts them.
+ */
+export function defaultUiLayout(pieces: readonly string[] = []): UiLayout {
+  return { schemaVersion: CURRENT_SCHEMA_VERSION, theme: UiThemeSchema.parse({}), widgets: [...pieces, ...BUILTIN_WIDGETS].map(builtinWidget) };
 }
 
-/** The layout with every built-in piece present (a file that left one out still shows it). */
-export function completeLayout(l: UiLayout | null | undefined): UiLayout {
-  const base = l ?? defaultUiLayout();
+/** The layout with every piece present (a file that left one out still shows it). `pieces` are the ones the plugins that are on offer. */
+export function completeLayout(l: UiLayout | null | undefined, pieces: readonly string[] = []): UiLayout {
+  const base = l ?? defaultUiLayout(pieces);
   const have = new Set(base.widgets.map((w) => w.kind));
-  const missing = BUILTIN_WIDGETS.filter((k) => !have.has(k)).map(builtinWidget);
+  const missing = [...pieces, ...BUILTIN_WIDGETS].filter((k) => !have.has(k)).map(builtinWidget);
   return { ...base, widgets: [...base.widgets, ...missing] };
 }
 
@@ -188,14 +195,15 @@ export function fillVariables(text: string, vars: Record<string, VariableValue>)
 }
 
 /** Mistakes in the interface layout, in plain English. */
-export function checkUiLayout(l: UiLayout, known: { variables?: ReadonlySet<string> } = {}): string[] {
+export function checkUiLayout(l: UiLayout, known: { variables?: ReadonlySet<string>; /** The pieces plugins offer, for their names and what to say when one is hidden. */ pieces?: readonly { piece: string; name: string; hiddenWarning?: string }[] } = {}): string[] {
   const out: string[] = [];
   const ids = new Set<string>();
   const unknown = (name: string): boolean => !!known.variables && known.variables.size > 0 && !known.variables.has(name);
   for (const w of l.widgets) {
     if (ids.has(w.id)) out.push(`Two pieces of the screen are both called "${w.id}".`);
     ids.add(w.id);
-    const name = (BUILTIN_WIDGETS as readonly string[]).includes(w.kind) ? WIDGET_NAMES[w.kind] : `"${w.label || w.id}"`;
+    const piece = known.pieces?.find((p) => p.piece === w.kind);
+    const name = piece?.name ?? (BUILTIN_WIDGETS as readonly string[]).includes(w.kind) ? (piece?.name ?? WIDGET_NAMES[w.kind] ?? w.kind) : `"${w.label || w.id}"`;
     if (w.kind === 'counter' || w.kind === 'bar') {
       if (w.variable === '') out.push(`${name} has no flag or counter chosen, so it would always show 0.`);
       else if (unknown(w.variable)) out.push(`${name} shows "${w.variable}", which nothing in your game ever sets.`);
@@ -204,7 +212,7 @@ export function checkUiLayout(l: UiLayout, known: { variables?: ReadonlySet<stri
     if (w.kind === 'text') for (const m of w.text.matchAll(/\{([A-Za-z0-9_:.-]+)\}/g)) if (unknown(m[1]!)) out.push(`${name} shows {${m[1]}}, which nothing in your game ever sets.`);
   }
   const shown = (kind: string): boolean => l.widgets.some((w) => w.kind === kind && w.visible);
-  if (!shown('hearts')) out.push('The hearts are hidden, so the player cannot see their health.');
+  for (const p of known.pieces ?? []) if (p.hiddenWarning && l.widgets.some((w) => w.kind === p.piece) && !shown(p.piece)) out.push(p.hiddenWarning);
   if (!shown('toasts')) out.push('Messages are hidden, so "Received an item" and other notices will not be seen.');
   return out;
 }

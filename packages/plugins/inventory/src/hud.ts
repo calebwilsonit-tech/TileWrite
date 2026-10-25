@@ -5,6 +5,7 @@ const hex = (n: number): string => `#${n.toString(16).padStart(6, '0')}`;
 /** The four quick slots: the key that uses each, the item in it and how many. Shown only once an item has been put in one. */
 export const quickSlotsWidget: WidgetDef = {
   id: 'quick-slots',
+  hud: { piece: 'slots', name: 'Quick slots', order: 2 },
   label: 'Quick slots (the items on the number keys)',
   defaults: { w: 200, h: 48, wMode: 'auto', hMode: 'auto' },
   css: `.tw-slots { display: flex; gap: 6px; text-shadow: 0 1px 3px #000; }

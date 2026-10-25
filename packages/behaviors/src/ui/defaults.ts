@@ -18,6 +18,29 @@ export interface ScreenContext {
   layout?: UiLayout | null;
 }
 
+/** A piece of the heads-up display that a plugin's widget offers: the name the interface layout calls it by, and the widget that draws it. */
+export interface HudPiece {
+  piece: string;
+  name: string;
+  hiddenWarning?: string;
+  widget: string;
+  label: string;
+  order: number;
+  width: number;
+  fillsRow: boolean;
+  plugin: string;
+}
+
+/** The pieces the plugins that are on offer for the heads-up display, in the order they stand on the default anchor. */
+export function hudPieces(): HudPiece[] {
+  const out: HudPiece[] = [];
+  for (const w of host.ext.widgets.values()) if (w.hud) out.push({ piece: w.hud.piece, name: w.hud.name, ...(w.hud.hiddenWarning ? { hiddenWarning: w.hud.hiddenWarning } : {}), widget: w.id, label: w.label, order: w.hud.order, width: w.hud.width ?? 160, fillsRow: w.hud.fillsRow === true, plugin: w.plugin });
+  return out.sort((a, b) => a.order - b.order || a.piece.localeCompare(b.piece));
+}
+
+/** The names the interface layout calls those pieces by (what `completeLayout` adds when a layout leaves one out). */
+export const hudPieceKinds = (): string[] => hudPieces().map((p) => p.piece);
+
 /** The screen a plugin offers, ready to put in a project (with the role it plays and where it came from). For a screen that follows the project, `project` says which. */
 export function offeredScreen(pluginId: string, id: string, project?: ScreenContext): UiScreen | null {
   const def = host.ext.screens.get(id);

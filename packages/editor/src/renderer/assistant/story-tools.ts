@@ -1,5 +1,6 @@
 import { CutsceneSchema, DialogueSchema, ItemSchema, LanguageSchema, MinigameSchema, MixerSchema, ProjectInputSchema, SkinSchema, UiLayoutSchema, WorldMapSchema, checkProjectInput, checkUiLayout, completeLayout, defaultUiLayout, checkCutscene, checkDialogue, checkMinigame, checkMixer, checkWorldMap, newLanguage, type CutsceneData, type DialogueData, type ItemData, type ProjectInput, type UiLayout, type MinigameData, type MixerData, type RegionData, type SkinData, type WorldMapData } from '@tilewright/runtime';
 import { lineDiff, type ToolOutput } from '@tilewright/assistant';
+import { hudPieceKinds, hudPieces } from '@tilewright/behaviors';
 import { store } from '../app/store';
 import { assetFs } from '../project/assetFs';
 import { collectStrings, coverage, deleteLanguage, interfaceTexts, loadLanguages, saveLanguage } from '../project/localization';
@@ -59,7 +60,7 @@ export async function runStoryRead(name: string, input: Record<string, unknown>)
             minigames: store.minigames.map((m) => ({ ...m, problems: checkMinigame(m, { items: knownItems() }) })),
             skins: store.skins,
             worldMap: store.worldMap ? { ...store.worldMap, problems: checkWorldMap(store.worldMap, store.state.project?.project.scenes ?? []) } : null,
-            interface: { layout: store.uiLayout, problems: checkUiLayout(store.uiLayout) },
+            interface: { layout: store.uiLayout, problems: checkUiLayout(store.uiLayout, { pieces: hudPieces() }) },
             controls: { input: store.input, problems: checkProjectInput(store.input) },
             title: store.state.project?.project.title ?? { enabled: false, subtitle: '' },
             mixer: { buses: studio.mixer.buses, ducking: studio.mixer.ducking, soundSettings: Object.keys(studio.mixer.sounds), musicSettings: Object.keys(studio.mixer.music), sounds: studio.sounds.map((s) => s.name), problems: checkMixer(studio.mixer, new Set(studio.sounds.map((s) => s.name))) },
@@ -308,15 +309,15 @@ function writeUiLayout(input: Record<string, unknown>): Proposal {
   const previous: UiLayout = store.uiLayout;
   const parsed = UiLayoutSchema.safeParse(
     input.reset === true
-      ? defaultUiLayout()
+      ? defaultUiLayout(hudPieceKinds())
       : { theme: { ...previous.theme, ...((input.theme as object | undefined) ?? {}) }, widgets: input.widgets ?? previous.widgets },
   );
   if (!parsed.success) return fail(`The layout is not valid: ${parsed.error.issues.slice(0, 3).map((i) => `${i.path.join('.')}: ${i.message}`).join('; ')}`);
-  const next = completeLayout(parsed.data);
+  const next = completeLayout(parsed.data, hudPieceKinds());
   const ids = next.widgets.map((w) => w.id);
   const dup = ids.find((id, i) => ids.indexOf(id) !== i);
   if (dup) fail(`Two pieces share the id "${dup}".`);
-  const problems = checkUiLayout(next);
+  const problems = checkUiLayout(next, { pieces: hudPieces() });
   return {
     tool: 'write_ui_layout',
     title: 'Change the screen layout and theme',

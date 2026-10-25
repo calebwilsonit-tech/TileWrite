@@ -115,10 +115,32 @@ export interface WidgetDef {
   /** Style rules for the elements `render` makes. Added once to the page while the widget is in use. */
   css?: string;
   /**
+   * Makes the widget a piece of the heads-up display that the interface layout (Story, Interface) can place, show and hide: the layout
+   * names it by `piece`, and it is listed there while the plugin is on. (A plugin's own pieces are how hearts, quick slots and the like
+   * get onto the screen: the engine itself has none.)
+   */
+  hud?: HudPieceInfo;
+  /**
    * Fill in the element for this widget on every frame; return a function to clean up. Plain DOM. `ctx` is what the game
    * lets a widget see (the running game) and ask for (`request` announces an event, like a button's action would).
    */
   render(el: HTMLElement, node: UiNode, values: Record<string, string | number | boolean>, ctx?: WidgetContext): void | (() => void);
+}
+
+/** What a widget says about itself when it can be placed in the heads-up display. */
+export interface HudPieceInfo {
+  /** The name the interface layout (assets/ui.json) calls it by. */
+  piece: string;
+  /** What the layout list and the checks call it ("Hearts"). */
+  name: string;
+  /** What the Problems panel says when the piece is hidden in the layout, if hiding it is probably a mistake. */
+  hiddenWarning?: string;
+  /** Where it stands among the pieces on the default anchor, top to bottom (lower is higher up). */
+  order: number;
+  /** How wide it is when pinned somewhere (pixels; 160 when left out). */
+  width?: number;
+  /** On the default anchor it takes the whole width of the screen (a boss's bar). */
+  fillsRow?: boolean;
 }
 
 export interface WidgetContext {

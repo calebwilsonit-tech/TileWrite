@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerE
 import {
   ANCHORS,
   ANCHOR_NAMES,
-  BUILTIN_WIDGETS,
   FONTS,
   WIDGET_NAMES,
   anchorAt,
@@ -16,6 +15,7 @@ import {
   type UiTheme,
   type UiWidget,
 } from '@tilewright/runtime';
+import { hudPieceKinds, hudPieces, type HudPiece } from '@tilewright/behaviors';
 import { store, useApp } from '../app/store';
 import { CheckField, NumberField, SelectField, TextField } from './fields';
 
@@ -28,35 +28,10 @@ const SCREENS = [
 
 
 /** A stand-in for what a piece of the screen shows. */
-function Mock({ w, theme }: { w: UiWidget; theme: UiTheme }) {
+function Mock({ w, theme, piece }: { w: UiWidget; theme: UiTheme; piece: HudPiece | undefined }) {
+  // a piece a plugin offers is shown as a labelled box of its width: only the plugin knows what it draws
+  if (piece) return <div style={{ width: piece.width, padding: '4px 8px', fontSize: 14, border: '1px dashed #ffffff66', borderRadius: Math.min(theme.radius, 10), background: '#14161bcc', textAlign: 'center' }}>{piece.name}</div>;
   switch (w.kind) {
-    case 'hearts':
-      return <div style={{ fontSize: 22, letterSpacing: 3, color: '#ff5d6c' }}>♥♥♥<span style={{ color: '#8a8f9c' }}>♡</span></div>;
-    case 'lightbar':
-      return (
-        <div style={{ width: 160, height: 10, background: '#1b1d24', border: '1px solid #000', borderRadius: 6, overflow: 'hidden' }}>
-          <div style={{ width: '65%', height: '100%', background: 'linear-gradient(90deg, #d9a21a, #ffe27a)' }} />
-        </div>
-      );
-    case 'slots':
-      return (
-        <div style={{ display: 'flex', gap: 6 }}>
-          {[1, 2, 3, 4].map((n) => (
-            <div key={n} style={{ width: 44, height: 44, border: '2px solid #ffffff55', borderRadius: Math.min(theme.radius, 14), background: '#14161bcc', fontSize: 11, padding: '1px 4px' }}>
-              {n}
-            </div>
-          ))}
-        </div>
-      );
-    case 'bosses':
-      return (
-        <div style={{ width: 320, textAlign: 'center', fontSize: 13 }}>
-          Boss
-          <div style={{ height: 10, background: '#1b1d24', border: '1px solid #000', borderRadius: 6, marginTop: 3, overflow: 'hidden' }}>
-            <div style={{ width: '70%', height: '100%', background: 'linear-gradient(90deg, #b3366e, #e0566b)' }} />
-          </div>
-        </div>
-      );
     case 'toasts':
       return <div style={{ background: '#14161bdd', borderLeft: `4px solid ${theme.highlight}`, padding: '7px 12px', borderRadius: Math.min(theme.radius, 8), fontSize: 14 }}>Received Bread</div>;
     case 'counter':
@@ -85,9 +60,12 @@ function Mock({ w, theme }: { w: UiWidget; theme: UiTheme }) {
  */
 export function InterfaceEditor() {
   useApp((s) => s.storyVersion);
-  const layout = completeLayout(store.uiLayout);
+  const pieces = hudPieces();
+  const kinds = pieces.map((p) => p.piece);
+  const pieceOf = (kind: string): HudPiece | undefined => pieces.find((p) => p.piece === kind);
+  const layout = completeLayout(store.uiLayout, kinds);
   const theme = layout.theme;
-  const [sel, setSel] = useState<string>('hearts');
+  const [sel, setSel] = useState<string>(kinds[0] ?? 'toasts');
   const [screenId, setScreenId] = useState<(typeof SCREENS)[number]['id']>('hd');
   const [big, setBig] = useState(false);
   const screen = SCREENS.find((s) => s.id === screenId)!;
@@ -95,7 +73,7 @@ export function InterfaceEditor() {
   const k = previewWidth / screen.w;
   const stage = useRef<HTMLDivElement>(null);
   const drag = useRef<{ id: string; sx: number; sy: number; left: number; top: number; w: number; h: number } | null>(null);
-  const problems = useMemo(() => checkUiLayout(layout), [layout]);
+  const problems = useMemo(() => checkUiLayout(layout, { pieces }), [layout, pieces]);
   const current = layout.widgets.find((w) => w.id === sel) ?? layout.widgets[0]!;
 
   const setWidget = (id: string, patch: Partial<UiWidget>): void => store.setUiLayout({ ...layout, widgets: layout.widgets.map((w) => (w.id === id ? { ...w, ...patch } : w)) });
@@ -109,8 +87,10 @@ export function InterfaceEditor() {
       const top = d.top + (e.clientY - d.sy) / k;
       const anchor = anchorAt((left + d.w / 2) / screen.w, (top + d.h / 2) / screen.h);
       const { x, y } = offsetsFor(anchor, { left, top, w: d.w, h: d.h }, { w: screen.w, h: screen.h });
-      const w = store.uiLayout.widgets.find((v) => v.id === d.id);
-      if (w && (w.anchor !== anchor || w.x !== x || w.y !== y)) store.setUiLayout({ ...store.uiLayout, widgets: store.uiLayout.widgets.map((v) => (v.id === d.id ? { ...v, anchor, x: Math.max(-2000, Math.min(2000, x)), y: Math.max(-2000, Math.min(2000, y)) } : v)) });
+      // (the layout as it is now, with the pieces the plugins offer, even ones the file never had)
+      const now = completeLayout(store.uiLayout, hudPieceKinds());
+      const w = now.widgets.find((v) => v.id === d.id);
+      if (w && (w.anchor !== anchor || w.x !== x || w.y !== y)) store.setUiLayout({ ...now, widgets: now.widgets.map((v) => (v.id === d.id ? { ...v, anchor, x: Math.max(-2000, Math.min(2000, x)), y: Math.max(-2000, Math.min(2000, y)) } : v)) });
     };
     const up = (): void => {
       drag.current = null;
@@ -139,13 +119,15 @@ export function InterfaceEditor() {
       onPointerDown={(e) => startDrag(e, w)}
       style={{ ...style, cursor: 'grab', outline: w.id === current.id ? '2px solid #6aa8ff' : '1px dashed #ffffff44', outlineOffset: 2, opacity: w.visible ? 1 : 0.3, textShadow: '0 1px 3px #000' }}
     >
-      <Mock w={w} theme={theme} />
+      <Mock w={w} theme={theme} piece={pieceOf(w.kind)} />
     </div>
   );
   const css = (w: UiWidget): CSSProperties => cssOf(widgetCss(w, theme.scale));
   const flow = layout.widgets.filter((w) => w.anchor === 'default' && w.kind !== 'toasts');
   const pinned = layout.widgets.filter((w) => w.anchor !== 'default' || w.kind === 'toasts');
   const custom = current.kind === 'counter' || current.kind === 'bar' || current.kind === 'text';
+  /** What a piece is called in the list: a plugin's own name for it, the engine's for messages, the project's label for the ones it made. */
+  const nameOf = (w: UiWidget): string => pieceOf(w.kind)?.name ?? WIDGET_NAMES[w.kind] ?? (w.label || w.id);
 
   return (
     <div className={big ? 'story-body dg-overlay' : 'story-body'} data-testid="interface-tab">
@@ -174,7 +156,7 @@ export function InterfaceEditor() {
           }}
         >
           <div style={{ position: 'absolute', top: 10, left: 12, right: 12, display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-start', pointerEvents: 'none' }}>
-            {flow.map((w) => piece(w, { ...css(w), pointerEvents: 'auto', alignSelf: w.kind === 'bosses' ? 'center' : 'flex-start' }))}
+            {flow.map((w) => piece(w, { ...css(w), pointerEvents: 'auto', alignSelf: pieceOf(w.kind)?.fillsRow ? 'center' : 'flex-start' }))}
           </div>
           {pinned.map((w) => piece(w, w.anchor === 'default' ? { position: 'absolute', right: 14, bottom: 14, ...css(w) } : css(w)))}
         </div>
@@ -183,7 +165,7 @@ export function InterfaceEditor() {
       <div className="row wrap">
         {layout.widgets.map((w) => (
           <button key={w.id} className={w.id === current.id ? 'small on' : 'small'} data-testid={`ui-pick-${w.id}`} onClick={() => setSel(w.id)}>
-            {(BUILTIN_WIDGETS as readonly string[]).includes(w.kind) ? WIDGET_NAMES[w.kind] : w.label || w.id}
+            {nameOf(w)}
           </button>
         ))}
       </div>
@@ -205,7 +187,7 @@ export function InterfaceEditor() {
       </div>
 
       <fieldset className="story-card" data-testid="ui-selected">
-        <legend>{(BUILTIN_WIDGETS as readonly string[]).includes(current.kind) ? WIDGET_NAMES[current.kind] : current.label || current.id}</legend>
+        <legend>{nameOf(current)}</legend>
         <SelectField<Anchor> label="Pinned to" testId="ui-anchor" value={current.anchor} options={ANCHORS.map((a) => ({ value: a, label: ANCHOR_NAMES[a] }))} onChange={(a) => setWidget(current.id, { anchor: a })} />
         {current.anchor !== 'default' && (
           <>
@@ -235,14 +217,14 @@ export function InterfaceEditor() {
               data-testid="ui-delete"
               onClick={() => {
                 store.setUiLayout({ ...layout, widgets: layout.widgets.filter((w) => w.id !== current.id) });
-                setSel('hearts');
+                setSel(kinds[0] ?? 'toasts');
               }}
             >
               Delete this piece
             </button>
           </>
         )}
-        {current.anchor !== 'default' && (BUILTIN_WIDGETS as readonly string[]).includes(current.kind) && (
+        {current.anchor !== 'default' && !custom && (
           <button className="small" data-testid="ui-unpin" onClick={() => setWidget(current.id, { anchor: 'default', x: 0, y: 0 })}>
             Put it back where the game puts it
           </button>
@@ -268,7 +250,7 @@ export function InterfaceEditor() {
         ))}
         <NumberField label="Roundness of corners" testId="ui-theme-radius" value={theme.radius} min={0} max={28} onCommit={(v) => setTheme({ radius: Math.round(v) })} />
         <NumberField label="Size of menus, conversation and display (1 = normal)" testId="ui-theme-scale" value={theme.scale} step={0.05} min={0.75} max={2} onCommit={(v) => setTheme({ scale: Math.round(v * 100) / 100 })} />
-        <button className="small" data-testid="ui-theme-reset" onClick={() => store.setUiLayout({ ...layout, theme: defaultUiLayout().theme })}>
+        <button className="small" data-testid="ui-theme-reset" onClick={() => store.setUiLayout({ ...layout, theme: defaultUiLayout(kinds).theme })}>
           Back to the standard theme
         </button>
       </fieldset>
@@ -280,7 +262,7 @@ export function InterfaceEditor() {
           ))}
         </ul>
       )}
-      <button className="small" data-testid="ui-reset" onClick={() => store.setUiLayout(defaultUiLayout())}>
+      <button className="small" data-testid="ui-reset" onClick={() => store.setUiLayout(defaultUiLayout(kinds))}>
         Reset everything to the standard screen
       </button>
     </div>

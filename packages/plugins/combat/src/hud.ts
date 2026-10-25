@@ -10,6 +10,7 @@ const SHADOW = 'text-shadow: 0 1px 3px #000;';
 
 export const heartsWidget: WidgetDef = {
   id: 'hearts',
+  hud: { piece: 'hearts', name: 'Hearts', order: 0, hiddenWarning: 'The hearts are hidden, so the player cannot see their health.' },
   label: 'Hearts (the player’s health)',
   defaults: { w: 160, h: 30, wMode: 'auto', hMode: 'auto' },
   css: `.tw-hearts { font-size: 22px; letter-spacing: 3px; ${SHADOW} } .tw-hearts .full { color: #ff5d6c; } .tw-hearts .empty { color: #8a8f9c; }`,
@@ -36,6 +37,7 @@ export const heartsWidget: WidgetDef = {
 
 export const bossBarsWidget: WidgetDef = {
   id: 'boss-bars',
+  hud: { piece: 'bosses', name: 'Boss health bars', order: 3, width: 320, fillsRow: true },
   label: 'Boss health bars (one for each boss that is awake)',
   defaults: { w: 400, h: 40, wMode: 'fill', hMode: 'auto' },
   css: `.tw-bosses { ${SHADOW} }

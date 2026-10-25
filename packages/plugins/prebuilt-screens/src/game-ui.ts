@@ -1,3 +1,4 @@
+import { hudPieceKinds } from '@tilewright/plugin-sdk';
 import { MINIGAME_CSS, MINIGAME_STRINGS, MinigameView } from './minigame-ui';
 import { screenWords } from './screens';
 import { WORLD_MAP_CSS } from './world-map';
@@ -117,7 +118,7 @@ export class GameUi implements GameUiLike {
   /** Night and dusk: a colour over the picture. */
   private readonly tint = el('div', 'tw-tint');
   private dialogueEl: HTMLElement | null = null;
-  private layout: UiLayout = defaultUiLayout();
+  private layout: UiLayout = defaultUiLayout(hudPieceKinds());
   /** Inline styles put on a piece by the layout, so the next layout can take them off again. */
   private readonly applied = new Map<HTMLElement, string[]>();
   private readonly minigame: MinigameView;
@@ -172,7 +173,7 @@ export class GameUi implements GameUiLike {
     this.root.prepend(this.tint);
     this.root.append(this.style, this.toasts, this.fade, this.skip, this.selectBox);
     parent.appendChild(this.root);
-    this.setLayout(defaultUiLayout());
+    this.setLayout(defaultUiLayout(hudPieceKinds()));
     const ev = host.sim.events;
     this.offs.push(
       ev.on('message', (e) => this.toast(this.tr(String(e.text ?? '')))),
@@ -216,7 +217,7 @@ export class GameUi implements GameUiLike {
 
   /** Use this theme and arrangement of the heads-up display: the theme is the page's look, the arrangement becomes the HUD screen. */
   setLayout(layout: UiLayout): void {
-    this.layout = completeLayout(layout);
+    this.layout = completeLayout(layout, hudPieceKinds());
     for (const [k, v] of Object.entries(themeVars(this.layout.theme))) this.root.style.setProperty(k, v);
     const sim = this.host.sim;
     sim.assets.ui = withPluginScreens(sim.assets.ui, { layout: this.layout });

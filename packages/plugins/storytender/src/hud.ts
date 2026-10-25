@@ -3,6 +3,7 @@ import type { WidgetDef } from '@tilewright/plugin-sdk';
 /** The lantern's fuel: a bar that is full while the lantern is, and turns orange when it is nearly out. Shown only while the player carries a light. */
 export const lightBarWidget: WidgetDef = {
   id: 'light-bar',
+  hud: { piece: 'lightbar', name: 'Light bar', order: 1 },
   label: 'Light bar (how much light the lantern has left)',
   defaults: { w: 160, h: 12, wMode: 'auto', hMode: 'auto' },
   css: `.tw-lightbar { width: 160px; height: 10px; background: #1b1d24; border: 1px solid #000; border-radius: 6px; overflow: hidden; }

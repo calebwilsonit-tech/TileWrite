@@ -1,3 +1,4 @@
+import { hudPieceKinds } from '@tilewright/behaviors';
 import {
   CutsceneSchema,
   DialogueSchema,
@@ -142,12 +143,12 @@ export async function saveProjectInput(fs: AssetFs, dir: string, input: ProjectI
 export async function loadUiLayout(fs: AssetFs, dir: string): Promise<{ layout: UiLayout; problems: string[] }> {
   const file = joinPath(dir, UI_FILE);
   try {
-    if (!(await fs.exists(file))) return { layout: defaultUiLayout(), problems: [] };
+    if (!(await fs.exists(file))) return { layout: defaultUiLayout(hudPieceKinds()), problems: [] };
     const r = UiLayoutSchema.safeParse(JSON.parse(await fs.read(file)));
-    if (!r.success) return { layout: defaultUiLayout(), problems: [`The interface file is not valid: ${r.error.issues[0]?.message ?? 'unknown problem'}.`] };
-    return { layout: completeLayout(r.data), problems: [] };
+    if (!r.success) return { layout: defaultUiLayout(hudPieceKinds()), problems: [`The interface file is not valid: ${r.error.issues[0]?.message ?? 'unknown problem'}.`] };
+    return { layout: completeLayout(r.data, hudPieceKinds()), problems: [] };
   } catch (e) {
-    return { layout: defaultUiLayout(), problems: [`The interface file could not be read (${(e as Error).message}).`] };
+    return { layout: defaultUiLayout(hudPieceKinds()), problems: [`The interface file could not be read (${(e as Error).message}).`] };
   }
 }
 

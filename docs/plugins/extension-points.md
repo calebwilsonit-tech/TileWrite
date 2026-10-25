@@ -21,7 +21,7 @@ A plugin's `install(api)` is the **game part** (runs in the editor and in the ex
 | `api.scriptMethod(def)` | A method scripts can call (the script API names `damage`, `heal`, `startDialogue`, `playCutscene` are implemented this way). | `game.ts` shout |
 | `api.unlockRule(def)` | A way a place on the world map can unlock. | `game.ts` key |
 | `api.bridgeSource(def)` | Cells that can be walked over a pit because of something the plugin brings; the checks and the playbot ask. | `game.ts` planks |
-| `api.widget(def)` | A kind of widget for the UI designer, drawn by the plugin every frame. | `ui.ts` clock |
+| `api.widget(def)` | A kind of widget for the UI designer, drawn by the plugin every frame. Give it `hud: { piece, name, order }` and it is also a piece of the heads-up display that the interface layout (Story, Interface) can place, show and hide while the plugin is on (the combat plugin's hearts and boss bars, the inventory's quick slots are such pieces). | `ui.ts` clock |
 | `api.screen(def)`, `api.screenRole(def)` | A screen a project can copy and make its own (`role` says what it plays: title, pause, inventory...; a project with no screen for a role plays with the plugin's), and what a screen can be used as. | `ui.ts` credits |
 | `api.listSource(def)` | Rows for lists and grids in screens, named in a widget's *source* (`pets`, or `pets:argument`). The engine itself offers `saves`, `controls`, `places`, `quickslots`, `items` and tables. | `ui.ts` list |
 | `api.menuEntry(def)` | A row in a menu another plugin's screen lists: the Pause menu's `menu:pause` list shows every entry with `menu: "pause"` (the world map and "Travel" are entries), and choosing it opens the screen that plays the role in `opens`. | `ui.ts` menu |

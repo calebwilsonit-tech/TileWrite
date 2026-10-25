@@ -1,4 +1,5 @@
 import '../../bundled';
+import { hudPieces } from '@tilewright/behaviors';
 import { checkDialogue, checkProjectInput, checkUiLayout, type ProjectInput, type UiLayout } from '@tilewright/runtime';
 import { checkCutscene, checkMinigame, checkMixer, checkWorldMap, expandEntities, type WorldMapData, type MixerData, type MinigameData, type SkinData, type CutsceneData, type DialogueData, type LanguageData, type EventRow, type ItemData, type PrefabData, type ProjectData, type SceneData, type TableData } from '@tilewright/runtime';
 import { analyseLevel, analysePushPuzzles } from '@tilewright/playbot';
@@ -155,7 +156,7 @@ export async function checkProject(
   for (const m of minigames) for (const text of checkMinigame(m, { items: itemIds })) out.push({ id: `minigame:${m.name}:${text}`, severity: 'warning', scene: '', message: text });
   for (const text of tileArtProblems(tiles, spriteNames)) out.push({ id: `tile-art:${text}`, severity: 'warning', scene: '', message: text });
   if (extras.input) for (const text of checkProjectInput(extras.input)) out.push({ id: `controls:${text}`, severity: 'warning', scene: '', message: `Controls: ${text}` });
-  if (extras.layout) for (const text of checkUiLayout(extras.layout)) out.push({ id: `interface:${text}`, severity: 'warning', scene: '', message: `Interface: ${text}` });
+  if (extras.layout) for (const text of checkUiLayout(extras.layout, { pieces: hudPieces() })) out.push({ id: `interface:${text}`, severity: 'warning', scene: '', message: `Interface: ${text}` });
   for (const text of skinProblems(skins, { sprites: spriteNames, items: itemIds })) out.push({ id: `skin:${text}`, severity: 'warning', scene: '', message: text });
   return out;
 }

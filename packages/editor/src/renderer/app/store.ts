@@ -13,7 +13,7 @@ import { analyseLevel, analysePushPuzzles, type LevelIssue } from '@tilewright/p
 import { checkProject, type ProjectProblem } from '../project/check';
 import { deletePlaythrough, listPlaythroughs, loadPlaythrough, nextPlaythroughName, savePlaythrough } from '../project/playthroughs';
 import { Game, newPlaythrough, replayPlaythrough, type GameSetup } from '@tilewright/playbot';
-import { eventsToScript, packsOfProject, setActivePacks, syncCustomBlocks } from '@tilewright/behaviors';
+import { eventsToScript, hudPieceKinds, packsOfProject, setActivePacks, syncCustomBlocks } from '@tilewright/behaviors';
 import { reloadScripts, type BreakHit, type ScriptProblemEntry } from '../code/script-manager';
 import { deleteScript as deleteScriptFile, loadScripts as loadScriptFiles, saveScript as saveScriptFile } from '../project/scripts';
 import { setPlayerRequired } from '../model/validate';
@@ -35,7 +35,7 @@ import {
   type OpenProject,
   type ProjectFs,
 } from '../project/io';
-import { DEFAULT_TILESET, emptyUiDoc, type UiDoc, defaultUiLayout, type CustomBehaviorData, type CustomComponentData, type EventDef, type TableData, emptyProjectInput, groupOf, newScene, pauseButtonRow, compatOf, tilesetFromList, type AutotileRuleData, type ProjectData, type ProjectInput, type UiLayout, type MinigameData, type SkinData, type WorldMapData, type TileDefData } from '@tilewright/runtime';
+import { DEFAULT_TILESET, emptyUiDoc, type UiDoc, defaultUiLayout, completeLayout, type CustomBehaviorData, type CustomComponentData, type EventDef, type TableData, emptyProjectInput, groupOf, newScene, pauseButtonRow, compatOf, tilesetFromList, type AutotileRuleData, type ProjectData, type ProjectInput, type UiLayout, type MinigameData, type SkinData, type WorldMapData, type TileDefData } from '@tilewright/runtime';
 
 /** Everything the Story panel edits, as it is at one moment (the parts are replaced, never changed in place). */
 interface StorySnapshot {
@@ -839,7 +839,7 @@ class AppStore {
     for (const b of this.customBehaviors) await saveCustomBehavior(assetFs, p.dir, b);
     if (this.eventDefs.length > 0 || (await assetFs.exists(joinPath(p.dir, 'assets/events.json')))) await saveEventDefs(assetFs, p.dir, this.eventDefs);
     if (this.input.actions.length > 0 || Object.keys(this.input.overrides).length > 0 || (await assetFs.exists(joinPath(p.dir, 'assets/input.json')))) await saveProjectInput(assetFs, p.dir, this.input);
-    if (JSON.stringify(this.uiLayout) !== JSON.stringify(defaultUiLayout()) || (await assetFs.exists(joinPath(p.dir, 'assets/ui.json')))) await saveUiLayout(assetFs, p.dir, this.uiLayout);
+    if (JSON.stringify(completeLayout(this.uiLayout, hudPieceKinds())) !== JSON.stringify(defaultUiLayout(hudPieceKinds())) || (await assetFs.exists(joinPath(p.dir, 'assets/ui.json')))) await saveUiLayout(assetFs, p.dir, this.uiLayout);
     if (this.uiDoc.screens.length > 0 || this.uiDoc.prefabs.length > 0 || (await assetFs.exists(joinPath(p.dir, 'assets/screens.json')))) await saveUiDoc(assetFs, p.dir, this.uiDoc);
     for (const d of this.story.dialogues.values()) await saveDialogue(assetFs, p.dir, d);
     for (const c of this.story.cutscenes.values()) await saveCutscene(assetFs, p.dir, c);
