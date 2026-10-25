@@ -211,7 +211,8 @@ test('Phase 2 sample: UI showcase - title, settings, pause, bound HUD, inventory
   await expect(page.getByTestId('tw-screen-Title')).toBeVisible();
   await page.screenshot({ path: shot('p2-ui-title.png') });
   await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur()); // keys go to the game, not to the toolbar button just clicked
-  for (let i = 0; i < 3; i++) {
+  // (a new project has the menu keys flag: the first row is already chosen when the menu opens, so two presses reach the third row)
+  for (let i = 0; i < 2; i++) {
     await page.keyboard.press('ArrowDown');
     await page.waitForTimeout(120);
   }
@@ -219,8 +220,7 @@ test('Phase 2 sample: UI showcase - title, settings, pause, bound HUD, inventory
   await page.waitForTimeout(300);
   await expect(page.getByTestId('tw-screen-Settings')).toBeVisible();
   // ---- with a gamepad: the pad's right button on the first slider moves it ----
-  await page.keyboard.press('ArrowDown'); // focus the first widget (the Music slider)
-  await page.waitForTimeout(150);
+  await page.waitForTimeout(150); // (the first widget, the Music slider, is already chosen)
   const before = await page.evaluate(() => JSON.parse(localStorage.getItem('tilewright.settings') ?? '{}').music ?? 1);
   await pad(page, [14]); // d-pad left
   await page.waitForTimeout(250);

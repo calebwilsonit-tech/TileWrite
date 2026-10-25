@@ -158,7 +158,7 @@ export class GameUi implements GameUiLike {
           this.screens.captured();
         });
       },
-      bindingText: (action) => (host.bindings()[action] ?? []).map((b) => bindingLabel(b)).join(' / '),
+      bindingText: (action) => (host.bindings()[action] ?? []).map((b) => bindingLabel(b)).join(', '),
       spriteUrl: (name) => host.spriteUrl?.(name) ?? this.spriteFrameUrl(name),
       saves: () => this.slotCache,
       refreshSaves: () => void this.refreshSlots(),

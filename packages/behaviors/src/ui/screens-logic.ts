@@ -497,6 +497,25 @@ export function adjustWidget(sim: Simulation, n: ViewNode, delta: -1 | 1): boole
   return true;
 }
 
+/**
+ * Left or right on a choice (a drop-down) or a tick box: the next or the earlier option, wrapping round, and a tick box flips. The
+ * menus always did this (a row of settings changes with the arrow keys and the pad). Returns whether anything changed.
+ */
+export function stepWidget(sim: Simulation, n: ViewNode, delta: -1 | 1): boolean {
+  if (!n.visible || !n.enabled) return false;
+  if (n.node.type === 'dropdown' && n.options.length > 0) {
+    const i = Math.max(0, n.options.indexOf(n.choice));
+    setChoice(sim, n, n.options[(i + delta + n.options.length) % n.options.length]!);
+    return true;
+  }
+  if (n.node.type === 'toggle') {
+    if (n.node.value) writeTarget(sim, n.node.value, n.value === 0);
+    run(sim, n, 'change');
+    return true;
+  }
+  return false;
+}
+
 export function setSlider(sim: Simulation, n: ViewNode, value: number): void {
   const step = n.node.step > 0 ? n.node.step : 1;
   const stepped = Math.round((value - n.node.min) / step) * step + n.node.min;

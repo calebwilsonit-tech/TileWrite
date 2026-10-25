@@ -8,6 +8,7 @@ import {
   setChoice,
   setSlider,
   setUiBridge,
+  stepWidget,
   walkView,
   withPluginScreens,
   type UiBridge,
@@ -207,6 +208,23 @@ describe('Settings', () => {
     expect(settings.difficulty).toBe('hard');
     const shown = visible(sim).map((n) => n.node.id);
     for (const hidden of ['fullscreen', 'skin', 'language']) expect(shown, hidden).not.toContain(hidden);
+  });
+
+  it('left and right on a choice go to the earlier or next option and wrap round, and on a tick box flip it (as the menus always did)', () => {
+    const { sim, settings } = game();
+    open(sim, 'settings');
+    const choice = (): ViewNode => byId(sim, 'difficulty.choice');
+    expect(stepWidget(sim, choice(), 1)).toBe(true);
+    expect(settings.difficulty).toBe('hard');
+    stepWidget(sim, choice(), 1);
+    expect(settings.difficulty).toBe('easy'); // past the last is the first
+    stepWidget(sim, choice(), -1);
+    expect(settings.difficulty).toBe('hard'); // before the first is the last
+    expect(stepWidget(sim, byId(sim, 'shake.box'), -1)).toBe(true);
+    expect(settings.screenShake).toBe(false);
+    stepWidget(sim, byId(sim, 'shake.box'), 1);
+    expect(settings.screenShake).toBe(true);
+    expect(stepWidget(sim, byId(sim, 'master.slider'), 1)).toBe(false); // a slider is moved by setSlider, not stepped
   });
 
   it('Full screen, Appearance and Language appear when the host offers them, and name the choices as the player reads them', () => {

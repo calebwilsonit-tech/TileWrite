@@ -1,0 +1,1330 @@
+[
+  {
+    "step": "[no save] title (without a save)",
+    "waits": true,
+    "title": "Titles",
+    "rows": [
+      {
+        "label": "New game",
+        "detail": "",
+        "focused": true
+      },
+      {
+        "label": "Load game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Settings",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Quit",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true
+    }
+  },
+  {
+    "step": "[no save] title: down 1",
+    "waits": true,
+    "title": "Titles",
+    "rows": [
+      {
+        "label": "New game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Load game",
+        "detail": "",
+        "focused": true
+      },
+      {
+        "label": "Settings",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Quit",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true
+    }
+  },
+  {
+    "step": "[no save] title: down 2",
+    "waits": true,
+    "title": "Titles",
+    "rows": [
+      {
+        "label": "New game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Load game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Settings",
+        "detail": "",
+        "focused": true
+      },
+      {
+        "label": "Quit",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true
+    }
+  },
+  {
+    "step": "[no save] title: down 3",
+    "waits": true,
+    "title": "Titles",
+    "rows": [
+      {
+        "label": "New game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Load game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Settings",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Quit",
+        "detail": "",
+        "focused": true
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true
+    }
+  },
+  {
+    "step": "[no save] title: down 4",
+    "waits": true,
+    "title": "Titles",
+    "rows": [
+      {
+        "label": "New game",
+        "detail": "",
+        "focused": true
+      },
+      {
+        "label": "Load game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Settings",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Quit",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true
+    }
+  },
+  {
+    "step": "[no save] title: up",
+    "waits": true,
+    "title": "Titles",
+    "rows": [
+      {
+        "label": "New game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Load game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Settings",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Quit",
+        "detail": "",
+        "focused": true
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true
+    }
+  },
+  {
+    "step": "[no save] title: Esc does nothing",
+    "waits": true,
+    "title": "Titles",
+    "rows": [
+      {
+        "label": "New game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Load game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Settings",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Quit",
+        "detail": "",
+        "focused": true
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true
+    }
+  },
+  {
+    "step": "[no save] title: \"Load game\" opened",
+    "waits": true,
+    "title": "Load game",
+    "rows": [
+      {
+        "label": "Autosave",
+        "detail": "empty",
+        "focused": true
+      },
+      {
+        "label": "Slot 1",
+        "detail": "empty",
+        "focused": false
+      },
+      {
+        "label": "Slot 2",
+        "detail": "empty",
+        "focused": false
+      },
+      {
+        "label": "Slot 3",
+        "detail": "empty",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true
+    }
+  },
+  {
+    "step": "[no save] title: Esc from \"Load game\" goes back to the title",
+    "waits": true,
+    "title": "Titles",
+    "rows": [
+      {
+        "label": "New game",
+        "detail": "",
+        "focused": true
+      },
+      {
+        "label": "Load game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Settings",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Quit",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true
+    }
+  },
+  {
+    "step": "[no save] title: \"Settings\" opened",
+    "waits": true,
+    "title": "Settings",
+    "rows": [
+      {
+        "label": "Master volume",
+        "detail": "80%",
+        "focused": true
+      },
+      {
+        "label": "Music volume",
+        "detail": "70%",
+        "focused": false
+      },
+      {
+        "label": "Effects volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Voice volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Difficulty",
+        "detail": "normal",
+        "focused": false
+      },
+      {
+        "label": "Screen shake and hit freeze",
+        "detail": "on",
+        "focused": false
+      },
+      {
+        "label": "Camera zoom",
+        "detail": "100%",
+        "focused": false
+      },
+      {
+        "label": "Show frame rate",
+        "detail": "off",
+        "focused": false
+      },
+      {
+        "label": "Controls",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true
+    }
+  },
+  {
+    "step": "[no save] title: Esc from \"Settings\" goes back to the title",
+    "waits": true,
+    "title": "Titles",
+    "rows": [
+      {
+        "label": "New game",
+        "detail": "",
+        "focused": true
+      },
+      {
+        "label": "Load game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Settings",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Quit",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true
+    }
+  },
+  {
+    "step": "[no save] title: on \"New game\"",
+    "waits": true,
+    "title": "Titles",
+    "rows": [
+      {
+        "label": "New game",
+        "detail": "",
+        "focused": true
+      },
+      {
+        "label": "Load game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Settings",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Quit",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true
+    }
+  },
+  {
+    "step": "[no save] title: New game chosen",
+    "waits": false,
+    "title": "",
+    "rows": [],
+    "hints": [],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true
+    }
+  },
+  {
+    "step": "[with a save] title (with a save)",
+    "waits": true,
+    "title": "Titles",
+    "rows": [
+      {
+        "label": "Continue",
+        "detail": "main, 1 min",
+        "focused": true
+      },
+      {
+        "label": "New game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Load game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Settings",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Quit",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true
+    }
+  },
+  {
+    "step": "[with a save] title: down 1",
+    "waits": true,
+    "title": "Titles",
+    "rows": [
+      {
+        "label": "Continue",
+        "detail": "main, 1 min",
+        "focused": false
+      },
+      {
+        "label": "New game",
+        "detail": "",
+        "focused": true
+      },
+      {
+        "label": "Load game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Settings",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Quit",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true
+    }
+  },
+  {
+    "step": "[with a save] title: down 2",
+    "waits": true,
+    "title": "Titles",
+    "rows": [
+      {
+        "label": "Continue",
+        "detail": "main, 1 min",
+        "focused": false
+      },
+      {
+        "label": "New game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Load game",
+        "detail": "",
+        "focused": true
+      },
+      {
+        "label": "Settings",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Quit",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true
+    }
+  },
+  {
+    "step": "[with a save] title: down 3",
+    "waits": true,
+    "title": "Titles",
+    "rows": [
+      {
+        "label": "Continue",
+        "detail": "main, 1 min",
+        "focused": false
+      },
+      {
+        "label": "New game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Load game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Settings",
+        "detail": "",
+        "focused": true
+      },
+      {
+        "label": "Quit",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true
+    }
+  },
+  {
+    "step": "[with a save] title: down 4",
+    "waits": true,
+    "title": "Titles",
+    "rows": [
+      {
+        "label": "Continue",
+        "detail": "main, 1 min",
+        "focused": false
+      },
+      {
+        "label": "New game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Load game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Settings",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Quit",
+        "detail": "",
+        "focused": true
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true
+    }
+  },
+  {
+    "step": "[with a save] title: down 5",
+    "waits": true,
+    "title": "Titles",
+    "rows": [
+      {
+        "label": "Continue",
+        "detail": "main, 1 min",
+        "focused": true
+      },
+      {
+        "label": "New game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Load game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Settings",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Quit",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true
+    }
+  },
+  {
+    "step": "[with a save] title: up",
+    "waits": true,
+    "title": "Titles",
+    "rows": [
+      {
+        "label": "Continue",
+        "detail": "main, 1 min",
+        "focused": false
+      },
+      {
+        "label": "New game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Load game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Settings",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Quit",
+        "detail": "",
+        "focused": true
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true
+    }
+  },
+  {
+    "step": "[with a save] title: Esc does nothing",
+    "waits": true,
+    "title": "Titles",
+    "rows": [
+      {
+        "label": "Continue",
+        "detail": "main, 1 min",
+        "focused": false
+      },
+      {
+        "label": "New game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Load game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Settings",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Quit",
+        "detail": "",
+        "focused": true
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true
+    }
+  },
+  {
+    "step": "[with a save] title: \"Load game\" opened",
+    "waits": true,
+    "title": "Load game",
+    "rows": [
+      {
+        "label": "Autosave",
+        "detail": "empty",
+        "focused": true
+      },
+      {
+        "label": "Slot 1",
+        "detail": "main, 1 min - 2026-10-25 13:21",
+        "focused": false
+      },
+      {
+        "label": "Slot 2",
+        "detail": "empty",
+        "focused": false
+      },
+      {
+        "label": "Slot 3",
+        "detail": "empty",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true
+    }
+  },
+  {
+    "step": "[with a save] title: Esc from \"Load game\" goes back to the title",
+    "waits": true,
+    "title": "Titles",
+    "rows": [
+      {
+        "label": "Continue",
+        "detail": "main, 1 min",
+        "focused": true
+      },
+      {
+        "label": "New game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Load game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Settings",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Quit",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true
+    }
+  },
+  {
+    "step": "[with a save] title: \"Settings\" opened",
+    "waits": true,
+    "title": "Settings",
+    "rows": [
+      {
+        "label": "Master volume",
+        "detail": "80%",
+        "focused": true
+      },
+      {
+        "label": "Music volume",
+        "detail": "70%",
+        "focused": false
+      },
+      {
+        "label": "Effects volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Voice volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Difficulty",
+        "detail": "normal",
+        "focused": false
+      },
+      {
+        "label": "Screen shake and hit freeze",
+        "detail": "on",
+        "focused": false
+      },
+      {
+        "label": "Camera zoom",
+        "detail": "100%",
+        "focused": false
+      },
+      {
+        "label": "Show frame rate",
+        "detail": "off",
+        "focused": false
+      },
+      {
+        "label": "Controls",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true
+    }
+  },
+  {
+    "step": "[with a save] title: Esc from \"Settings\" goes back to the title",
+    "waits": true,
+    "title": "Titles",
+    "rows": [
+      {
+        "label": "Continue",
+        "detail": "main, 1 min",
+        "focused": true
+      },
+      {
+        "label": "New game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Load game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Settings",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Quit",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true
+    }
+  },
+  {
+    "step": "[with a save] title: on \"New game\"",
+    "waits": true,
+    "title": "Titles",
+    "rows": [
+      {
+        "label": "Continue",
+        "detail": "main, 1 min",
+        "focused": false
+      },
+      {
+        "label": "New game",
+        "detail": "",
+        "focused": true
+      },
+      {
+        "label": "Load game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Settings",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Quit",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true
+    }
+  },
+  {
+    "step": "[with a save] title: New game chosen",
+    "waits": false,
+    "title": "",
+    "rows": [],
+    "hints": [],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true
+    }
+  }
+]

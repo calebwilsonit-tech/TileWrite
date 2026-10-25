@@ -10,6 +10,7 @@ import {
   openScreens,
   setChoice,
   setSlider,
+  stepWidget,
   swapRows,
   uiBridge,
   walkView,
@@ -197,6 +198,8 @@ export class UiScreens {
   private current = new Map<string, ViewNode>();
   private readonly tooltip = document.createElement('div');
   private focusKey = '';
+  private autoFocusOn = '';
+  private autoFocus = true;
   /** The widgets that can have the focus on the screen on top, as of the last step (what `claimInput` looks at before the next one). */
   private focusableKeys = new Set<string>();
   private readonly claim = (snapshot: Readonly<Record<string, number>>): string[] => claimedButtons(snapshot, this.focusKey, this.focusableKeys);
@@ -494,6 +497,7 @@ export class UiScreens {
       const fires = isFocusable(vn) && !['slider', 'dropdown'].includes(vn.node.type);
       if (!fires) return;
       e.stopPropagation();
+      this.autoFocus = false; // the player chose a row with the mouse
       this.focusKey = key;
       const anim = vn.node.anim.find((a) => a.on === 'click');
       if (anim) el.animate(KEYFRAMES(anim), { duration: anim.ms, easing: 'ease-out' });
@@ -768,11 +772,22 @@ export class UiScreens {
   private navigate(view: ViewNode, screen: UiScreen): void {
     const ui = this.sim.uiInput;
     const all = focusables(view);
-    // (a heads-up display's buttons are clicked, not walked to with the keyboard: its focus does not take the button away from the game)
-    this.focusableKeys = screenIsOverlay(screen) ? new Set() : new Set(all.map((f) => f.key));
+    // (the screens plugins ship, and copies of them, always worked as the game's own menus do; a screen made in the designer does when the project has the flag `menuKeys`)
+    const menuKeys = this.sim.compat.menuKeys || screen.from !== undefined;
+    // a menu starts with its first row chosen (the keyboard and the pad act on it at once); a heads-up display's buttons are clicked, not walked to with the keyboard:
+    // its focus does not take the button away from the game
+    const menu = menuKeys && !screenIsOverlay(screen);
+    this.focusableKeys = menu ? new Set(all.map((f) => f.key)) : new Set();
     if (all.length === 0) return;
     if (this.capturingKey) return;
     let cur = all.find((f) => f.key === this.focusKey) ?? null;
+    // (until the player has moved the focus themselves it stays on the first row, even when that row only turns up a moment after the
+    // screen opened: a Continue that appears once the saves have been read)
+    if (this.autoFocusOn !== screen.name) {
+      this.autoFocusOn = screen.name;
+      this.autoFocus = true;
+    }
+    if (menu && (this.autoFocus || !cur)) cur = all[0]!;
     const dirs: [string, 'up' | 'down' | 'left' | 'right'][] = [
       ['move_up', 'up'],
       ['move_down', 'down'],
@@ -781,6 +796,7 @@ export class UiScreens {
     ];
     for (const [action, dir] of dirs) {
       if (!ui.pressed(action)) continue;
+      this.autoFocus = false;
       if (!cur) {
         cur = all[0]!;
         break;
@@ -795,11 +811,14 @@ export class UiScreens {
         setSlider(this.sim, cur, cur.value + (dir === 'left' ? -1 : 1) * cur.node.step);
         break;
       }
-      cur = this.nearest(cur, dir, all) ?? cur;
+      if (menuKeys && (dir === 'left' || dir === 'right') && stepWidget(this.sim, cur, dir === 'left' ? -1 : 1)) break;
+      // past the last row of a menu is the first one again, and before the first one the last (as the menus always did)
+      cur = this.nearest(cur, dir, all, menuKeys) ?? (menu && (dir === 'up' || dir === 'down') ? (dir === 'down' ? all[0]! : all[all.length - 1]!) : cur);
       break;
     }
     if (cur) this.focusKey = cur.key;
     if (cur && ui.pressed('interact')) {
+      this.autoFocus = false;
       if (cur.node.type === 'keybind') this.capturingKey = cur.key;
       activateWidget(this.sim, cur);
       ui.consume('interact'); // the press went to the widget: nothing after it in this tick acts on it too
@@ -807,7 +826,7 @@ export class UiScreens {
   }
 
   /** The widget closest in a direction, by where they are on screen. */
-  private nearest(from: ViewNode, dir: 'up' | 'down' | 'left' | 'right', all: ViewNode[]): ViewNode | null {
+  private nearest(from: ViewNode, dir: 'up' | 'down' | 'left' | 'right', all: ViewNode[], menuKeys: boolean): ViewNode | null {
     const a = this.live.get(from.key)?.el.getBoundingClientRect();
     if (!a) return null;
     const ax = a.left + a.width / 2;
@@ -823,7 +842,10 @@ export class UiScreens {
       const along = dir === 'up' ? -dy : dir === 'down' ? dy : dir === 'left' ? -dx : dx;
       const across = dir === 'up' || dir === 'down' ? Math.abs(dx) : Math.abs(dy);
       if (along <= 1) continue;
-      const s = along + across * 2;
+      // left and right stay on their own line: a row with nothing to adjust does not send the focus to another row
+      if (menuKeys && (dir === 'left' || dir === 'right') && Math.abs(dy) > Math.max(a.height, r.height) / 2) continue;
+      // up and down go to the next row, whatever its width (a tick box on the right of its row must not be jumped over); left and right keep to their own line
+      const s = along + across * (menuKeys && (dir === 'up' || dir === 'down') ? 0.25 : 2);
       if (s < score) {
         score = s;
         best = o;
@@ -835,6 +857,7 @@ export class UiScreens {
   private paintFocus(): void {
     for (const [key, l] of this.live) {
       const on = key === this.focusKey;
+      l.el.dataset.focus = on ? '1' : '0'; // (also how the tests and the menu comparison see where the focus is)
       if (l.el.classList.contains('focused') !== on) {
         l.el.classList.toggle('focused', on && !this.current.get(key)?.node.states.focus);
         const vn = this.current.get(key);

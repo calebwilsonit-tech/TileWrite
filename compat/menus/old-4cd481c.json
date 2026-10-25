@@ -1,0 +1,6053 @@
+[
+  {
+    "step": "in the game, nothing open",
+    "waits": false,
+    "title": "",
+    "rows": [],
+    "hints": [],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0"
+    }
+  },
+  {
+    "step": "Esc: the menu opens",
+    "waits": true,
+    "title": "Paused",
+    "rows": [
+      {
+        "label": "Resume",
+        "detail": "",
+        "focused": true
+      },
+      {
+        "label": "Inventory",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Map",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Travel to a lit lantern",
+        "detail": "2 lit",
+        "focused": false
+      },
+      {
+        "label": "Save game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Load game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Settings",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Restart this area",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Quit",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0"
+    }
+  },
+  {
+    "step": "down 1",
+    "waits": true,
+    "title": "Paused",
+    "rows": [
+      {
+        "label": "Resume",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Inventory",
+        "detail": "",
+        "focused": true
+      },
+      {
+        "label": "Map",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Travel to a lit lantern",
+        "detail": "2 lit",
+        "focused": false
+      },
+      {
+        "label": "Save game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Load game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Settings",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Restart this area",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Quit",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0"
+    }
+  },
+  {
+    "step": "down 2",
+    "waits": true,
+    "title": "Paused",
+    "rows": [
+      {
+        "label": "Resume",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Inventory",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Map",
+        "detail": "",
+        "focused": true
+      },
+      {
+        "label": "Travel to a lit lantern",
+        "detail": "2 lit",
+        "focused": false
+      },
+      {
+        "label": "Save game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Load game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Settings",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Restart this area",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Quit",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0"
+    }
+  },
+  {
+    "step": "down 3",
+    "waits": true,
+    "title": "Paused",
+    "rows": [
+      {
+        "label": "Resume",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Inventory",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Map",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Travel to a lit lantern",
+        "detail": "2 lit",
+        "focused": true
+      },
+      {
+        "label": "Save game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Load game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Settings",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Restart this area",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Quit",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0"
+    }
+  },
+  {
+    "step": "down 4",
+    "waits": true,
+    "title": "Paused",
+    "rows": [
+      {
+        "label": "Resume",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Inventory",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Map",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Travel to a lit lantern",
+        "detail": "2 lit",
+        "focused": false
+      },
+      {
+        "label": "Save game",
+        "detail": "",
+        "focused": true
+      },
+      {
+        "label": "Load game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Settings",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Restart this area",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Quit",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0"
+    }
+  },
+  {
+    "step": "down 5",
+    "waits": true,
+    "title": "Paused",
+    "rows": [
+      {
+        "label": "Resume",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Inventory",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Map",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Travel to a lit lantern",
+        "detail": "2 lit",
+        "focused": false
+      },
+      {
+        "label": "Save game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Load game",
+        "detail": "",
+        "focused": true
+      },
+      {
+        "label": "Settings",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Restart this area",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Quit",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0"
+    }
+  },
+  {
+    "step": "down 6",
+    "waits": true,
+    "title": "Paused",
+    "rows": [
+      {
+        "label": "Resume",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Inventory",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Map",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Travel to a lit lantern",
+        "detail": "2 lit",
+        "focused": false
+      },
+      {
+        "label": "Save game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Load game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Settings",
+        "detail": "",
+        "focused": true
+      },
+      {
+        "label": "Restart this area",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Quit",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0"
+    }
+  },
+  {
+    "step": "down 7",
+    "waits": true,
+    "title": "Paused",
+    "rows": [
+      {
+        "label": "Resume",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Inventory",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Map",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Travel to a lit lantern",
+        "detail": "2 lit",
+        "focused": false
+      },
+      {
+        "label": "Save game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Load game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Settings",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Restart this area",
+        "detail": "",
+        "focused": true
+      },
+      {
+        "label": "Quit",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0"
+    }
+  },
+  {
+    "step": "down 8",
+    "waits": true,
+    "title": "Paused",
+    "rows": [
+      {
+        "label": "Resume",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Inventory",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Map",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Travel to a lit lantern",
+        "detail": "2 lit",
+        "focused": false
+      },
+      {
+        "label": "Save game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Load game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Settings",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Restart this area",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Quit",
+        "detail": "",
+        "focused": true
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0"
+    }
+  },
+  {
+    "step": "down 9",
+    "waits": true,
+    "title": "Paused",
+    "rows": [
+      {
+        "label": "Resume",
+        "detail": "",
+        "focused": true
+      },
+      {
+        "label": "Inventory",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Map",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Travel to a lit lantern",
+        "detail": "2 lit",
+        "focused": false
+      },
+      {
+        "label": "Save game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Load game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Settings",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Restart this area",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Quit",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0"
+    }
+  },
+  {
+    "step": "down 10",
+    "waits": true,
+    "title": "Paused",
+    "rows": [
+      {
+        "label": "Resume",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Inventory",
+        "detail": "",
+        "focused": true
+      },
+      {
+        "label": "Map",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Travel to a lit lantern",
+        "detail": "2 lit",
+        "focused": false
+      },
+      {
+        "label": "Save game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Load game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Settings",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Restart this area",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Quit",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0"
+    }
+  },
+  {
+    "step": "up (wraps to the last row)",
+    "waits": true,
+    "title": "Paused",
+    "rows": [
+      {
+        "label": "Resume",
+        "detail": "",
+        "focused": true
+      },
+      {
+        "label": "Inventory",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Map",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Travel to a lit lantern",
+        "detail": "2 lit",
+        "focused": false
+      },
+      {
+        "label": "Save game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Load game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Settings",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Restart this area",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Quit",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0"
+    }
+  },
+  {
+    "step": "Esc: the menu closes",
+    "waits": false,
+    "title": "",
+    "rows": [],
+    "hints": [],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0"
+    }
+  },
+  {
+    "step": "pause, on \"Inventory\"",
+    "waits": true,
+    "title": "Paused",
+    "rows": [
+      {
+        "label": "Resume",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Inventory",
+        "detail": "",
+        "focused": true
+      },
+      {
+        "label": "Map",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Travel to a lit lantern",
+        "detail": "2 lit",
+        "focused": false
+      },
+      {
+        "label": "Save game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Load game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Settings",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Restart this area",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Quit",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0"
+    }
+  },
+  {
+    "step": "\"Inventory\": opened",
+    "waits": true,
+    "title": "Inventory",
+    "rows": [
+      {
+        "label": "Brass key x1",
+        "detail": "Opens something.",
+        "focused": true
+      },
+      {
+        "label": "Potion x3",
+        "detail": "A small potion. - press E to use",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "E: use A / D: choose its quick slot Esc: back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0"
+    }
+  },
+  {
+    "step": "inventory: quick slot, right",
+    "waits": true,
+    "title": "Inventory",
+    "rows": [
+      {
+        "label": "Brass key x1",
+        "detail": "Opens something. - slot 1",
+        "focused": true
+      },
+      {
+        "label": "Potion x3",
+        "detail": "A small potion. - press E to use",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "E: use A / D: choose its quick slot Esc: back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": "key"
+    }
+  },
+  {
+    "step": "inventory: quick slot, left",
+    "waits": true,
+    "title": "Inventory",
+    "rows": [
+      {
+        "label": "Brass key x1",
+        "detail": "Opens something.",
+        "focused": true
+      },
+      {
+        "label": "Potion x3",
+        "detail": "A small potion. - press E to use",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "E: use A / D: choose its quick slot Esc: back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "inventory: use",
+    "waits": true,
+    "title": "Inventory",
+    "rows": [
+      {
+        "label": "Brass key x1",
+        "detail": "Opens something.",
+        "focused": true
+      },
+      {
+        "label": "Potion x3",
+        "detail": "A small potion. - press E to use",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "E: use A / D: choose its quick slot Esc: back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "leaving \"Inventory\" 1",
+    "waits": true,
+    "title": "Inventory",
+    "rows": [
+      {
+        "label": "Brass key x1",
+        "detail": "Opens something.",
+        "focused": true
+      },
+      {
+        "label": "Potion x3",
+        "detail": "A small potion. - press E to use",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "E: use A / D: choose its quick slot Esc: back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "leaving \"Inventory\" 2",
+    "waits": true,
+    "title": "Paused",
+    "rows": [
+      {
+        "label": "Resume",
+        "detail": "",
+        "focused": true
+      },
+      {
+        "label": "Inventory",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Map",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Travel to a lit lantern",
+        "detail": "2 lit",
+        "focused": false
+      },
+      {
+        "label": "Save game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Load game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Settings",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Restart this area",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Quit",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "leaving \"Inventory\" 3",
+    "waits": false,
+    "title": "",
+    "rows": [],
+    "hints": [],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "left \"Inventory\"",
+    "waits": false,
+    "title": "",
+    "rows": [],
+    "hints": [],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "pause, on \"Map\"",
+    "waits": true,
+    "title": "Paused",
+    "rows": [
+      {
+        "label": "Resume",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Inventory",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Map",
+        "detail": "",
+        "focused": true
+      },
+      {
+        "label": "Travel to a lit lantern",
+        "detail": "2 lit",
+        "focused": false
+      },
+      {
+        "label": "Save game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Load game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Settings",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Restart this area",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Quit",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "\"Map\": opened",
+    "waits": true,
+    "title": "The Road",
+    "rows": [
+      {
+        "label": "Hub",
+        "detail": "you are here",
+        "focused": true
+      },
+      {
+        "label": "Cave",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "Arrows or W A S D: choose a place E or click: travel Esc: back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "Map: down",
+    "waits": true,
+    "title": "The Road",
+    "rows": [
+      {
+        "label": "Hub",
+        "detail": "you are here",
+        "focused": true
+      },
+      {
+        "label": "Cave",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "Arrows or W A S D: choose a place E or click: travel Esc: back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "leaving \"Map\" 1",
+    "waits": true,
+    "title": "The Road",
+    "rows": [
+      {
+        "label": "Hub",
+        "detail": "you are here",
+        "focused": true
+      },
+      {
+        "label": "Cave",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "Arrows or W A S D: choose a place E or click: travel Esc: back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "leaving \"Map\" 2",
+    "waits": true,
+    "title": "Paused",
+    "rows": [
+      {
+        "label": "Resume",
+        "detail": "",
+        "focused": true
+      },
+      {
+        "label": "Inventory",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Map",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Travel to a lit lantern",
+        "detail": "2 lit",
+        "focused": false
+      },
+      {
+        "label": "Save game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Load game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Settings",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Restart this area",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Quit",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "leaving \"Map\" 3",
+    "waits": false,
+    "title": "",
+    "rows": [],
+    "hints": [],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "left \"Map\"",
+    "waits": false,
+    "title": "",
+    "rows": [],
+    "hints": [],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "pause, on \"Travel to a lit lantern\"",
+    "waits": true,
+    "title": "Paused",
+    "rows": [
+      {
+        "label": "Resume",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Inventory",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Map",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Travel to a lit lantern",
+        "detail": "2 lit",
+        "focused": true
+      },
+      {
+        "label": "Save game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Load game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Settings",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Restart this area",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Quit",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "\"Travel to a lit lantern\": opened",
+    "waits": true,
+    "title": "Travel to a lit lantern",
+    "rows": [
+      {
+        "label": "Cave lantern",
+        "detail": "cave",
+        "focused": true
+      },
+      {
+        "label": "Hub lantern",
+        "detail": "main",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "Travel to a lit lantern: down",
+    "waits": true,
+    "title": "Travel to a lit lantern",
+    "rows": [
+      {
+        "label": "Cave lantern",
+        "detail": "cave",
+        "focused": false
+      },
+      {
+        "label": "Hub lantern",
+        "detail": "main",
+        "focused": true
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "leaving \"Travel to a lit lantern\" 1",
+    "waits": true,
+    "title": "Travel to a lit lantern",
+    "rows": [
+      {
+        "label": "Cave lantern",
+        "detail": "cave",
+        "focused": false
+      },
+      {
+        "label": "Hub lantern",
+        "detail": "main",
+        "focused": true
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "leaving \"Travel to a lit lantern\" 2",
+    "waits": true,
+    "title": "Paused",
+    "rows": [
+      {
+        "label": "Resume",
+        "detail": "",
+        "focused": true
+      },
+      {
+        "label": "Inventory",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Map",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Travel to a lit lantern",
+        "detail": "2 lit",
+        "focused": false
+      },
+      {
+        "label": "Save game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Load game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Settings",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Restart this area",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Quit",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "leaving \"Travel to a lit lantern\" 3",
+    "waits": false,
+    "title": "",
+    "rows": [],
+    "hints": [],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "left \"Travel to a lit lantern\"",
+    "waits": false,
+    "title": "",
+    "rows": [],
+    "hints": [],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "pause, on \"Save game\"",
+    "waits": true,
+    "title": "Paused",
+    "rows": [
+      {
+        "label": "Resume",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Inventory",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Map",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Travel to a lit lantern",
+        "detail": "2 lit",
+        "focused": false
+      },
+      {
+        "label": "Save game",
+        "detail": "",
+        "focused": true
+      },
+      {
+        "label": "Load game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Settings",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Restart this area",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Quit",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "\"Save game\": opened",
+    "waits": true,
+    "title": "Save game",
+    "rows": [
+      {
+        "label": "Slot 1",
+        "detail": "empty",
+        "focused": true
+      },
+      {
+        "label": "Slot 2",
+        "detail": "empty",
+        "focused": false
+      },
+      {
+        "label": "Slot 3",
+        "detail": "empty",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "Save game: first row chosen",
+    "waits": true,
+    "title": "Save game",
+    "rows": [
+      {
+        "label": "Slot 1",
+        "detail": "main, 1 min - 2026-10-25 13:20",
+        "focused": true
+      },
+      {
+        "label": "Slot 2",
+        "detail": "empty",
+        "focused": false
+      },
+      {
+        "label": "Slot 3",
+        "detail": "empty",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "Saved to slot 1.",
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "Save game: down",
+    "waits": true,
+    "title": "Save game",
+    "rows": [
+      {
+        "label": "Slot 1",
+        "detail": "main, 1 min - 2026-10-25 13:20",
+        "focused": false
+      },
+      {
+        "label": "Slot 2",
+        "detail": "empty",
+        "focused": true
+      },
+      {
+        "label": "Slot 3",
+        "detail": "empty",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "Saved to slot 1.",
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "leaving \"Save game\" 1",
+    "waits": true,
+    "title": "Save game",
+    "rows": [
+      {
+        "label": "Slot 1",
+        "detail": "main, 1 min - 2026-10-25 13:20",
+        "focused": false
+      },
+      {
+        "label": "Slot 2",
+        "detail": "empty",
+        "focused": true
+      },
+      {
+        "label": "Slot 3",
+        "detail": "empty",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "Saved to slot 1.",
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "leaving \"Save game\" 2",
+    "waits": true,
+    "title": "Paused",
+    "rows": [
+      {
+        "label": "Resume",
+        "detail": "",
+        "focused": true
+      },
+      {
+        "label": "Inventory",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Map",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Travel to a lit lantern",
+        "detail": "2 lit",
+        "focused": false
+      },
+      {
+        "label": "Save game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Load game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Settings",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Restart this area",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Quit",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "leaving \"Save game\" 3",
+    "waits": false,
+    "title": "",
+    "rows": [],
+    "hints": [],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "left \"Save game\"",
+    "waits": false,
+    "title": "",
+    "rows": [],
+    "hints": [],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "pause, on \"Load game\"",
+    "waits": true,
+    "title": "Paused",
+    "rows": [
+      {
+        "label": "Resume",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Inventory",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Map",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Travel to a lit lantern",
+        "detail": "2 lit",
+        "focused": false
+      },
+      {
+        "label": "Save game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Load game",
+        "detail": "",
+        "focused": true
+      },
+      {
+        "label": "Settings",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Restart this area",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Quit",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "\"Load game\": opened",
+    "waits": true,
+    "title": "Load game",
+    "rows": [
+      {
+        "label": "Autosave",
+        "detail": "empty",
+        "focused": true
+      },
+      {
+        "label": "Slot 1",
+        "detail": "main, 1 min - 2026-10-25 13:20",
+        "focused": false
+      },
+      {
+        "label": "Slot 2",
+        "detail": "empty",
+        "focused": false
+      },
+      {
+        "label": "Slot 3",
+        "detail": "empty",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "Load game: down",
+    "waits": true,
+    "title": "Load game",
+    "rows": [
+      {
+        "label": "Autosave",
+        "detail": "empty",
+        "focused": false
+      },
+      {
+        "label": "Slot 1",
+        "detail": "main, 1 min - 2026-10-25 13:20",
+        "focused": true
+      },
+      {
+        "label": "Slot 2",
+        "detail": "empty",
+        "focused": false
+      },
+      {
+        "label": "Slot 3",
+        "detail": "empty",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "leaving \"Load game\" 1",
+    "waits": true,
+    "title": "Load game",
+    "rows": [
+      {
+        "label": "Autosave",
+        "detail": "empty",
+        "focused": false
+      },
+      {
+        "label": "Slot 1",
+        "detail": "main, 1 min - 2026-10-25 13:20",
+        "focused": true
+      },
+      {
+        "label": "Slot 2",
+        "detail": "empty",
+        "focused": false
+      },
+      {
+        "label": "Slot 3",
+        "detail": "empty",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "leaving \"Load game\" 2",
+    "waits": true,
+    "title": "Paused",
+    "rows": [
+      {
+        "label": "Resume",
+        "detail": "",
+        "focused": true
+      },
+      {
+        "label": "Inventory",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Map",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Travel to a lit lantern",
+        "detail": "2 lit",
+        "focused": false
+      },
+      {
+        "label": "Save game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Load game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Settings",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Restart this area",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Quit",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "leaving \"Load game\" 3",
+    "waits": false,
+    "title": "",
+    "rows": [],
+    "hints": [],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "left \"Load game\"",
+    "waits": false,
+    "title": "",
+    "rows": [],
+    "hints": [],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "pause, on \"Settings\"",
+    "waits": true,
+    "title": "Paused",
+    "rows": [
+      {
+        "label": "Resume",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Inventory",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Map",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Travel to a lit lantern",
+        "detail": "2 lit",
+        "focused": false
+      },
+      {
+        "label": "Save game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Load game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Settings",
+        "detail": "",
+        "focused": true
+      },
+      {
+        "label": "Restart this area",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Quit",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "\"Settings\": opened",
+    "waits": true,
+    "title": "Settings",
+    "rows": [
+      {
+        "label": "Master volume",
+        "detail": "80%",
+        "focused": true
+      },
+      {
+        "label": "Music volume",
+        "detail": "70%",
+        "focused": false
+      },
+      {
+        "label": "Effects volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Voice volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Difficulty",
+        "detail": "normal",
+        "focused": false
+      },
+      {
+        "label": "Screen shake and hit freeze",
+        "detail": "on",
+        "focused": false
+      },
+      {
+        "label": "Camera zoom",
+        "detail": "100%",
+        "focused": false
+      },
+      {
+        "label": "Show frame rate",
+        "detail": "off",
+        "focused": false
+      },
+      {
+        "label": "Controls",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "settings row 1 (Master volume)",
+    "waits": true,
+    "title": "Settings",
+    "rows": [
+      {
+        "label": "Master volume",
+        "detail": "80%",
+        "focused": true
+      },
+      {
+        "label": "Music volume",
+        "detail": "70%",
+        "focused": false
+      },
+      {
+        "label": "Effects volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Voice volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Difficulty",
+        "detail": "normal",
+        "focused": false
+      },
+      {
+        "label": "Screen shake and hit freeze",
+        "detail": "on",
+        "focused": false
+      },
+      {
+        "label": "Camera zoom",
+        "detail": "100%",
+        "focused": false
+      },
+      {
+        "label": "Show frame rate",
+        "detail": "off",
+        "focused": false
+      },
+      {
+        "label": "Controls",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "settings row 1: right",
+    "waits": true,
+    "title": "Settings",
+    "rows": [
+      {
+        "label": "Master volume",
+        "detail": "90%",
+        "focused": true
+      },
+      {
+        "label": "Music volume",
+        "detail": "70%",
+        "focused": false
+      },
+      {
+        "label": "Effects volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Voice volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Difficulty",
+        "detail": "normal",
+        "focused": false
+      },
+      {
+        "label": "Screen shake and hit freeze",
+        "detail": "on",
+        "focused": false
+      },
+      {
+        "label": "Camera zoom",
+        "detail": "100%",
+        "focused": false
+      },
+      {
+        "label": "Show frame rate",
+        "detail": "off",
+        "focused": false
+      },
+      {
+        "label": "Controls",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.9,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "settings row 1: left, left",
+    "waits": true,
+    "title": "Settings",
+    "rows": [
+      {
+        "label": "Master volume",
+        "detail": "70%",
+        "focused": true
+      },
+      {
+        "label": "Music volume",
+        "detail": "70%",
+        "focused": false
+      },
+      {
+        "label": "Effects volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Voice volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Difficulty",
+        "detail": "normal",
+        "focused": false
+      },
+      {
+        "label": "Screen shake and hit freeze",
+        "detail": "on",
+        "focused": false
+      },
+      {
+        "label": "Camera zoom",
+        "detail": "100%",
+        "focused": false
+      },
+      {
+        "label": "Show frame rate",
+        "detail": "off",
+        "focused": false
+      },
+      {
+        "label": "Controls",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.7,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "settings row 2 (Music volume)",
+    "waits": true,
+    "title": "Settings",
+    "rows": [
+      {
+        "label": "Master volume",
+        "detail": "80%",
+        "focused": false
+      },
+      {
+        "label": "Music volume",
+        "detail": "70%",
+        "focused": true
+      },
+      {
+        "label": "Effects volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Voice volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Difficulty",
+        "detail": "normal",
+        "focused": false
+      },
+      {
+        "label": "Screen shake and hit freeze",
+        "detail": "on",
+        "focused": false
+      },
+      {
+        "label": "Camera zoom",
+        "detail": "100%",
+        "focused": false
+      },
+      {
+        "label": "Show frame rate",
+        "detail": "off",
+        "focused": false
+      },
+      {
+        "label": "Controls",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "settings row 2: right",
+    "waits": true,
+    "title": "Settings",
+    "rows": [
+      {
+        "label": "Master volume",
+        "detail": "80%",
+        "focused": false
+      },
+      {
+        "label": "Music volume",
+        "detail": "80%",
+        "focused": true
+      },
+      {
+        "label": "Effects volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Voice volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Difficulty",
+        "detail": "normal",
+        "focused": false
+      },
+      {
+        "label": "Screen shake and hit freeze",
+        "detail": "on",
+        "focused": false
+      },
+      {
+        "label": "Camera zoom",
+        "detail": "100%",
+        "focused": false
+      },
+      {
+        "label": "Show frame rate",
+        "detail": "off",
+        "focused": false
+      },
+      {
+        "label": "Controls",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.8,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "settings row 2: left, left",
+    "waits": true,
+    "title": "Settings",
+    "rows": [
+      {
+        "label": "Master volume",
+        "detail": "80%",
+        "focused": false
+      },
+      {
+        "label": "Music volume",
+        "detail": "60%",
+        "focused": true
+      },
+      {
+        "label": "Effects volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Voice volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Difficulty",
+        "detail": "normal",
+        "focused": false
+      },
+      {
+        "label": "Screen shake and hit freeze",
+        "detail": "on",
+        "focused": false
+      },
+      {
+        "label": "Camera zoom",
+        "detail": "100%",
+        "focused": false
+      },
+      {
+        "label": "Show frame rate",
+        "detail": "off",
+        "focused": false
+      },
+      {
+        "label": "Controls",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.6,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "settings row 3 (Effects volume)",
+    "waits": true,
+    "title": "Settings",
+    "rows": [
+      {
+        "label": "Master volume",
+        "detail": "80%",
+        "focused": false
+      },
+      {
+        "label": "Music volume",
+        "detail": "70%",
+        "focused": false
+      },
+      {
+        "label": "Effects volume",
+        "detail": "90%",
+        "focused": true
+      },
+      {
+        "label": "Voice volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Difficulty",
+        "detail": "normal",
+        "focused": false
+      },
+      {
+        "label": "Screen shake and hit freeze",
+        "detail": "on",
+        "focused": false
+      },
+      {
+        "label": "Camera zoom",
+        "detail": "100%",
+        "focused": false
+      },
+      {
+        "label": "Show frame rate",
+        "detail": "off",
+        "focused": false
+      },
+      {
+        "label": "Controls",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "settings row 3: right",
+    "waits": true,
+    "title": "Settings",
+    "rows": [
+      {
+        "label": "Master volume",
+        "detail": "80%",
+        "focused": false
+      },
+      {
+        "label": "Music volume",
+        "detail": "70%",
+        "focused": false
+      },
+      {
+        "label": "Effects volume",
+        "detail": "100%",
+        "focused": true
+      },
+      {
+        "label": "Voice volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Difficulty",
+        "detail": "normal",
+        "focused": false
+      },
+      {
+        "label": "Screen shake and hit freeze",
+        "detail": "on",
+        "focused": false
+      },
+      {
+        "label": "Camera zoom",
+        "detail": "100%",
+        "focused": false
+      },
+      {
+        "label": "Show frame rate",
+        "detail": "off",
+        "focused": false
+      },
+      {
+        "label": "Controls",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 1,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "settings row 3: left, left",
+    "waits": true,
+    "title": "Settings",
+    "rows": [
+      {
+        "label": "Master volume",
+        "detail": "80%",
+        "focused": false
+      },
+      {
+        "label": "Music volume",
+        "detail": "70%",
+        "focused": false
+      },
+      {
+        "label": "Effects volume",
+        "detail": "80%",
+        "focused": true
+      },
+      {
+        "label": "Voice volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Difficulty",
+        "detail": "normal",
+        "focused": false
+      },
+      {
+        "label": "Screen shake and hit freeze",
+        "detail": "on",
+        "focused": false
+      },
+      {
+        "label": "Camera zoom",
+        "detail": "100%",
+        "focused": false
+      },
+      {
+        "label": "Show frame rate",
+        "detail": "off",
+        "focused": false
+      },
+      {
+        "label": "Controls",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.8,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "settings row 4 (Voice volume)",
+    "waits": true,
+    "title": "Settings",
+    "rows": [
+      {
+        "label": "Master volume",
+        "detail": "80%",
+        "focused": false
+      },
+      {
+        "label": "Music volume",
+        "detail": "70%",
+        "focused": false
+      },
+      {
+        "label": "Effects volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Voice volume",
+        "detail": "90%",
+        "focused": true
+      },
+      {
+        "label": "Difficulty",
+        "detail": "normal",
+        "focused": false
+      },
+      {
+        "label": "Screen shake and hit freeze",
+        "detail": "on",
+        "focused": false
+      },
+      {
+        "label": "Camera zoom",
+        "detail": "100%",
+        "focused": false
+      },
+      {
+        "label": "Show frame rate",
+        "detail": "off",
+        "focused": false
+      },
+      {
+        "label": "Controls",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "settings row 4: right",
+    "waits": true,
+    "title": "Settings",
+    "rows": [
+      {
+        "label": "Master volume",
+        "detail": "80%",
+        "focused": false
+      },
+      {
+        "label": "Music volume",
+        "detail": "70%",
+        "focused": false
+      },
+      {
+        "label": "Effects volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Voice volume",
+        "detail": "100%",
+        "focused": true
+      },
+      {
+        "label": "Difficulty",
+        "detail": "normal",
+        "focused": false
+      },
+      {
+        "label": "Screen shake and hit freeze",
+        "detail": "on",
+        "focused": false
+      },
+      {
+        "label": "Camera zoom",
+        "detail": "100%",
+        "focused": false
+      },
+      {
+        "label": "Show frame rate",
+        "detail": "off",
+        "focused": false
+      },
+      {
+        "label": "Controls",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 1,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "settings row 4: left, left",
+    "waits": true,
+    "title": "Settings",
+    "rows": [
+      {
+        "label": "Master volume",
+        "detail": "80%",
+        "focused": false
+      },
+      {
+        "label": "Music volume",
+        "detail": "70%",
+        "focused": false
+      },
+      {
+        "label": "Effects volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Voice volume",
+        "detail": "80%",
+        "focused": true
+      },
+      {
+        "label": "Difficulty",
+        "detail": "normal",
+        "focused": false
+      },
+      {
+        "label": "Screen shake and hit freeze",
+        "detail": "on",
+        "focused": false
+      },
+      {
+        "label": "Camera zoom",
+        "detail": "100%",
+        "focused": false
+      },
+      {
+        "label": "Show frame rate",
+        "detail": "off",
+        "focused": false
+      },
+      {
+        "label": "Controls",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.8,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "settings row 5 (Difficulty)",
+    "waits": true,
+    "title": "Settings",
+    "rows": [
+      {
+        "label": "Master volume",
+        "detail": "80%",
+        "focused": false
+      },
+      {
+        "label": "Music volume",
+        "detail": "70%",
+        "focused": false
+      },
+      {
+        "label": "Effects volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Voice volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Difficulty",
+        "detail": "normal",
+        "focused": true
+      },
+      {
+        "label": "Screen shake and hit freeze",
+        "detail": "on",
+        "focused": false
+      },
+      {
+        "label": "Camera zoom",
+        "detail": "100%",
+        "focused": false
+      },
+      {
+        "label": "Show frame rate",
+        "detail": "off",
+        "focused": false
+      },
+      {
+        "label": "Controls",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "normal",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "settings row 5: right",
+    "waits": true,
+    "title": "Settings",
+    "rows": [
+      {
+        "label": "Master volume",
+        "detail": "80%",
+        "focused": false
+      },
+      {
+        "label": "Music volume",
+        "detail": "70%",
+        "focused": false
+      },
+      {
+        "label": "Effects volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Voice volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Difficulty",
+        "detail": "hard",
+        "focused": true
+      },
+      {
+        "label": "Screen shake and hit freeze",
+        "detail": "on",
+        "focused": false
+      },
+      {
+        "label": "Camera zoom",
+        "detail": "100%",
+        "focused": false
+      },
+      {
+        "label": "Show frame rate",
+        "detail": "off",
+        "focused": false
+      },
+      {
+        "label": "Controls",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "hard",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "settings row 5: left, left",
+    "waits": true,
+    "title": "Settings",
+    "rows": [
+      {
+        "label": "Master volume",
+        "detail": "80%",
+        "focused": false
+      },
+      {
+        "label": "Music volume",
+        "detail": "70%",
+        "focused": false
+      },
+      {
+        "label": "Effects volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Voice volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Difficulty",
+        "detail": "easy",
+        "focused": true
+      },
+      {
+        "label": "Screen shake and hit freeze",
+        "detail": "on",
+        "focused": false
+      },
+      {
+        "label": "Camera zoom",
+        "detail": "100%",
+        "focused": false
+      },
+      {
+        "label": "Show frame rate",
+        "detail": "off",
+        "focused": false
+      },
+      {
+        "label": "Controls",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "easy",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "settings row 5: chosen",
+    "waits": true,
+    "title": "Settings",
+    "rows": [
+      {
+        "label": "Master volume",
+        "detail": "80%",
+        "focused": false
+      },
+      {
+        "label": "Music volume",
+        "detail": "70%",
+        "focused": false
+      },
+      {
+        "label": "Effects volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Voice volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Difficulty",
+        "detail": "hard",
+        "focused": true
+      },
+      {
+        "label": "Screen shake and hit freeze",
+        "detail": "on",
+        "focused": false
+      },
+      {
+        "label": "Camera zoom",
+        "detail": "100%",
+        "focused": false
+      },
+      {
+        "label": "Show frame rate",
+        "detail": "off",
+        "focused": false
+      },
+      {
+        "label": "Controls",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "hard",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "settings row 6 (Screen shake and hit freeze)",
+    "waits": true,
+    "title": "Settings",
+    "rows": [
+      {
+        "label": "Master volume",
+        "detail": "80%",
+        "focused": false
+      },
+      {
+        "label": "Music volume",
+        "detail": "70%",
+        "focused": false
+      },
+      {
+        "label": "Effects volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Voice volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Difficulty",
+        "detail": "hard",
+        "focused": false
+      },
+      {
+        "label": "Screen shake and hit freeze",
+        "detail": "on",
+        "focused": true
+      },
+      {
+        "label": "Camera zoom",
+        "detail": "100%",
+        "focused": false
+      },
+      {
+        "label": "Show frame rate",
+        "detail": "off",
+        "focused": false
+      },
+      {
+        "label": "Controls",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "hard",
+      "screenShake": true,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "settings row 6: right",
+    "waits": true,
+    "title": "Settings",
+    "rows": [
+      {
+        "label": "Master volume",
+        "detail": "80%",
+        "focused": false
+      },
+      {
+        "label": "Music volume",
+        "detail": "70%",
+        "focused": false
+      },
+      {
+        "label": "Effects volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Voice volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Difficulty",
+        "detail": "hard",
+        "focused": false
+      },
+      {
+        "label": "Screen shake and hit freeze",
+        "detail": "off",
+        "focused": true
+      },
+      {
+        "label": "Camera zoom",
+        "detail": "100%",
+        "focused": false
+      },
+      {
+        "label": "Show frame rate",
+        "detail": "off",
+        "focused": false
+      },
+      {
+        "label": "Controls",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "hard",
+      "screenShake": false,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "settings row 6: left, left",
+    "waits": true,
+    "title": "Settings",
+    "rows": [
+      {
+        "label": "Master volume",
+        "detail": "80%",
+        "focused": false
+      },
+      {
+        "label": "Music volume",
+        "detail": "70%",
+        "focused": false
+      },
+      {
+        "label": "Effects volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Voice volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Difficulty",
+        "detail": "hard",
+        "focused": false
+      },
+      {
+        "label": "Screen shake and hit freeze",
+        "detail": "off",
+        "focused": true
+      },
+      {
+        "label": "Camera zoom",
+        "detail": "100%",
+        "focused": false
+      },
+      {
+        "label": "Show frame rate",
+        "detail": "off",
+        "focused": false
+      },
+      {
+        "label": "Controls",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "hard",
+      "screenShake": false,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "settings row 6: chosen",
+    "waits": true,
+    "title": "Settings",
+    "rows": [
+      {
+        "label": "Master volume",
+        "detail": "80%",
+        "focused": false
+      },
+      {
+        "label": "Music volume",
+        "detail": "70%",
+        "focused": false
+      },
+      {
+        "label": "Effects volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Voice volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Difficulty",
+        "detail": "hard",
+        "focused": false
+      },
+      {
+        "label": "Screen shake and hit freeze",
+        "detail": "off",
+        "focused": true
+      },
+      {
+        "label": "Camera zoom",
+        "detail": "100%",
+        "focused": false
+      },
+      {
+        "label": "Show frame rate",
+        "detail": "off",
+        "focused": false
+      },
+      {
+        "label": "Controls",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "hard",
+      "screenShake": false,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "settings row 7 (Camera zoom)",
+    "waits": true,
+    "title": "Settings",
+    "rows": [
+      {
+        "label": "Master volume",
+        "detail": "80%",
+        "focused": false
+      },
+      {
+        "label": "Music volume",
+        "detail": "70%",
+        "focused": false
+      },
+      {
+        "label": "Effects volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Voice volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Difficulty",
+        "detail": "hard",
+        "focused": false
+      },
+      {
+        "label": "Screen shake and hit freeze",
+        "detail": "off",
+        "focused": false
+      },
+      {
+        "label": "Camera zoom",
+        "detail": "100%",
+        "focused": true
+      },
+      {
+        "label": "Show frame rate",
+        "detail": "off",
+        "focused": false
+      },
+      {
+        "label": "Controls",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "hard",
+      "screenShake": false,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "settings row 8 (Show frame rate)",
+    "waits": true,
+    "title": "Settings",
+    "rows": [
+      {
+        "label": "Master volume",
+        "detail": "80%",
+        "focused": false
+      },
+      {
+        "label": "Music volume",
+        "detail": "70%",
+        "focused": false
+      },
+      {
+        "label": "Effects volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Voice volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Difficulty",
+        "detail": "hard",
+        "focused": false
+      },
+      {
+        "label": "Screen shake and hit freeze",
+        "detail": "off",
+        "focused": false
+      },
+      {
+        "label": "Camera zoom",
+        "detail": "100%",
+        "focused": false
+      },
+      {
+        "label": "Show frame rate",
+        "detail": "off",
+        "focused": true
+      },
+      {
+        "label": "Controls",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "hard",
+      "screenShake": false,
+      "cameraZoom": 1,
+      "showFps": false,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "settings row 8: right",
+    "waits": true,
+    "title": "Settings",
+    "rows": [
+      {
+        "label": "Master volume",
+        "detail": "80%",
+        "focused": false
+      },
+      {
+        "label": "Music volume",
+        "detail": "70%",
+        "focused": false
+      },
+      {
+        "label": "Effects volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Voice volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Difficulty",
+        "detail": "hard",
+        "focused": false
+      },
+      {
+        "label": "Screen shake and hit freeze",
+        "detail": "off",
+        "focused": false
+      },
+      {
+        "label": "Camera zoom",
+        "detail": "100%",
+        "focused": false
+      },
+      {
+        "label": "Show frame rate",
+        "detail": "on",
+        "focused": true
+      },
+      {
+        "label": "Controls",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "hard",
+      "screenShake": false,
+      "cameraZoom": 1,
+      "showFps": true,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "settings row 8: left, left",
+    "waits": true,
+    "title": "Settings",
+    "rows": [
+      {
+        "label": "Master volume",
+        "detail": "80%",
+        "focused": false
+      },
+      {
+        "label": "Music volume",
+        "detail": "70%",
+        "focused": false
+      },
+      {
+        "label": "Effects volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Voice volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Difficulty",
+        "detail": "hard",
+        "focused": false
+      },
+      {
+        "label": "Screen shake and hit freeze",
+        "detail": "off",
+        "focused": false
+      },
+      {
+        "label": "Camera zoom",
+        "detail": "100%",
+        "focused": false
+      },
+      {
+        "label": "Show frame rate",
+        "detail": "on",
+        "focused": true
+      },
+      {
+        "label": "Controls",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "hard",
+      "screenShake": false,
+      "cameraZoom": 1,
+      "showFps": true,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "settings row 8: chosen",
+    "waits": true,
+    "title": "Settings",
+    "rows": [
+      {
+        "label": "Master volume",
+        "detail": "80%",
+        "focused": false
+      },
+      {
+        "label": "Music volume",
+        "detail": "70%",
+        "focused": false
+      },
+      {
+        "label": "Effects volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Voice volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Difficulty",
+        "detail": "hard",
+        "focused": false
+      },
+      {
+        "label": "Screen shake and hit freeze",
+        "detail": "off",
+        "focused": false
+      },
+      {
+        "label": "Camera zoom",
+        "detail": "100%",
+        "focused": false
+      },
+      {
+        "label": "Show frame rate",
+        "detail": "on",
+        "focused": true
+      },
+      {
+        "label": "Controls",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "hard",
+      "screenShake": false,
+      "cameraZoom": 1,
+      "showFps": true,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "settings row 9 (Controls)",
+    "waits": true,
+    "title": "Settings",
+    "rows": [
+      {
+        "label": "Master volume",
+        "detail": "80%",
+        "focused": false
+      },
+      {
+        "label": "Music volume",
+        "detail": "70%",
+        "focused": false
+      },
+      {
+        "label": "Effects volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Voice volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Difficulty",
+        "detail": "hard",
+        "focused": false
+      },
+      {
+        "label": "Screen shake and hit freeze",
+        "detail": "off",
+        "focused": false
+      },
+      {
+        "label": "Camera zoom",
+        "detail": "100%",
+        "focused": false
+      },
+      {
+        "label": "Show frame rate",
+        "detail": "on",
+        "focused": false
+      },
+      {
+        "label": "Controls",
+        "detail": "",
+        "focused": true
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "hard",
+      "screenShake": false,
+      "cameraZoom": 1,
+      "showFps": true,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "settings row 9: right",
+    "waits": true,
+    "title": "Settings",
+    "rows": [
+      {
+        "label": "Master volume",
+        "detail": "80%",
+        "focused": false
+      },
+      {
+        "label": "Music volume",
+        "detail": "70%",
+        "focused": false
+      },
+      {
+        "label": "Effects volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Voice volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Difficulty",
+        "detail": "hard",
+        "focused": false
+      },
+      {
+        "label": "Screen shake and hit freeze",
+        "detail": "off",
+        "focused": false
+      },
+      {
+        "label": "Camera zoom",
+        "detail": "100%",
+        "focused": false
+      },
+      {
+        "label": "Show frame rate",
+        "detail": "on",
+        "focused": false
+      },
+      {
+        "label": "Controls",
+        "detail": "",
+        "focused": true
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "hard",
+      "screenShake": false,
+      "cameraZoom": 1,
+      "showFps": true,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "settings row 9: left, left",
+    "waits": true,
+    "title": "Settings",
+    "rows": [
+      {
+        "label": "Master volume",
+        "detail": "80%",
+        "focused": false
+      },
+      {
+        "label": "Music volume",
+        "detail": "70%",
+        "focused": false
+      },
+      {
+        "label": "Effects volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Voice volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Difficulty",
+        "detail": "hard",
+        "focused": false
+      },
+      {
+        "label": "Screen shake and hit freeze",
+        "detail": "off",
+        "focused": false
+      },
+      {
+        "label": "Camera zoom",
+        "detail": "100%",
+        "focused": false
+      },
+      {
+        "label": "Show frame rate",
+        "detail": "on",
+        "focused": false
+      },
+      {
+        "label": "Controls",
+        "detail": "",
+        "focused": true
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "hard",
+      "screenShake": false,
+      "cameraZoom": 1,
+      "showFps": true,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "controls: opened",
+    "waits": true,
+    "title": "Controls",
+    "rows": [
+      {
+        "label": "Move left",
+        "detail": "A, Arrow Left, Gamepad stick left, Gamepad D-pad left",
+        "focused": true
+      },
+      {
+        "label": "Move right",
+        "detail": "D, Arrow Right, Gamepad stick right, Gamepad D-pad right",
+        "focused": false
+      },
+      {
+        "label": "Move up",
+        "detail": "W, Arrow Up, Gamepad stick up, Gamepad D-pad up",
+        "focused": false
+      },
+      {
+        "label": "Move down",
+        "detail": "S, Arrow Down, Gamepad stick down, Gamepad D-pad down",
+        "focused": false
+      },
+      {
+        "label": "Run",
+        "detail": "Left Shift, Right Shift, Gamepad RB",
+        "focused": false
+      },
+      {
+        "label": "Interact / talk / confirm",
+        "detail": "E, Enter, Gamepad A",
+        "focused": false
+      },
+      {
+        "label": "Jump",
+        "detail": "Space, Gamepad B",
+        "focused": false
+      },
+      {
+        "label": "Pause menu",
+        "detail": "Escape, P, Gamepad Start",
+        "focused": false
+      },
+      {
+        "label": "Attack (quill)",
+        "detail": "J, Mouse left, Gamepad X",
+        "focused": false
+      },
+      {
+        "label": "Dodge",
+        "detail": "Q, Gamepad Y",
+        "focused": false
+      },
+      {
+        "label": "Inventory",
+        "detail": "I, Gamepad Back",
+        "focused": false
+      },
+      {
+        "label": "Quick slot 1",
+        "detail": "1",
+        "focused": false
+      },
+      {
+        "label": "Quick slot 2",
+        "detail": "2",
+        "focused": false
+      },
+      {
+        "label": "Quick slot 3",
+        "detail": "3",
+        "focused": false
+      },
+      {
+        "label": "Quick slot 4",
+        "detail": "4",
+        "focused": false
+      },
+      {
+        "label": "Travel map",
+        "detail": "M",
+        "focused": false
+      },
+      {
+        "label": "Record an echo",
+        "detail": "R, Gamepad LB",
+        "focused": false
+      },
+      {
+        "label": "Reset all controls",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "E: change the selected control, then press the new key or button"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "hard",
+      "screenShake": false,
+      "cameraZoom": 1,
+      "showFps": true,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "controls: down",
+    "waits": true,
+    "title": "Controls",
+    "rows": [
+      {
+        "label": "Move left",
+        "detail": "A, Arrow Left, Gamepad stick left, Gamepad D-pad left",
+        "focused": false
+      },
+      {
+        "label": "Move right",
+        "detail": "D, Arrow Right, Gamepad stick right, Gamepad D-pad right",
+        "focused": true
+      },
+      {
+        "label": "Move up",
+        "detail": "W, Arrow Up, Gamepad stick up, Gamepad D-pad up",
+        "focused": false
+      },
+      {
+        "label": "Move down",
+        "detail": "S, Arrow Down, Gamepad stick down, Gamepad D-pad down",
+        "focused": false
+      },
+      {
+        "label": "Run",
+        "detail": "Left Shift, Right Shift, Gamepad RB",
+        "focused": false
+      },
+      {
+        "label": "Interact / talk / confirm",
+        "detail": "E, Enter, Gamepad A",
+        "focused": false
+      },
+      {
+        "label": "Jump",
+        "detail": "Space, Gamepad B",
+        "focused": false
+      },
+      {
+        "label": "Pause menu",
+        "detail": "Escape, P, Gamepad Start",
+        "focused": false
+      },
+      {
+        "label": "Attack (quill)",
+        "detail": "J, Mouse left, Gamepad X",
+        "focused": false
+      },
+      {
+        "label": "Dodge",
+        "detail": "Q, Gamepad Y",
+        "focused": false
+      },
+      {
+        "label": "Inventory",
+        "detail": "I, Gamepad Back",
+        "focused": false
+      },
+      {
+        "label": "Quick slot 1",
+        "detail": "1",
+        "focused": false
+      },
+      {
+        "label": "Quick slot 2",
+        "detail": "2",
+        "focused": false
+      },
+      {
+        "label": "Quick slot 3",
+        "detail": "3",
+        "focused": false
+      },
+      {
+        "label": "Quick slot 4",
+        "detail": "4",
+        "focused": false
+      },
+      {
+        "label": "Travel map",
+        "detail": "M",
+        "focused": false
+      },
+      {
+        "label": "Record an echo",
+        "detail": "R, Gamepad LB",
+        "focused": false
+      },
+      {
+        "label": "Reset all controls",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "E: change the selected control, then press the new key or button"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "hard",
+      "screenShake": false,
+      "cameraZoom": 1,
+      "showFps": true,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "controls: Esc goes to settings",
+    "waits": true,
+    "title": "Settings",
+    "rows": [
+      {
+        "label": "Master volume",
+        "detail": "80%",
+        "focused": true
+      },
+      {
+        "label": "Music volume",
+        "detail": "70%",
+        "focused": false
+      },
+      {
+        "label": "Effects volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Voice volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Difficulty",
+        "detail": "hard",
+        "focused": false
+      },
+      {
+        "label": "Screen shake and hit freeze",
+        "detail": "off",
+        "focused": false
+      },
+      {
+        "label": "Camera zoom",
+        "detail": "100%",
+        "focused": false
+      },
+      {
+        "label": "Show frame rate",
+        "detail": "on",
+        "focused": false
+      },
+      {
+        "label": "Controls",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "hard",
+      "screenShake": false,
+      "cameraZoom": 1,
+      "showFps": true,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "leaving \"Settings\" 1",
+    "waits": true,
+    "title": "Settings",
+    "rows": [
+      {
+        "label": "Master volume",
+        "detail": "80%",
+        "focused": true
+      },
+      {
+        "label": "Music volume",
+        "detail": "70%",
+        "focused": false
+      },
+      {
+        "label": "Effects volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Voice volume",
+        "detail": "90%",
+        "focused": false
+      },
+      {
+        "label": "Difficulty",
+        "detail": "hard",
+        "focused": false
+      },
+      {
+        "label": "Screen shake and hit freeze",
+        "detail": "off",
+        "focused": false
+      },
+      {
+        "label": "Camera zoom",
+        "detail": "100%",
+        "focused": false
+      },
+      {
+        "label": "Show frame rate",
+        "detail": "on",
+        "focused": false
+      },
+      {
+        "label": "Controls",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "hard",
+      "screenShake": false,
+      "cameraZoom": 1,
+      "showFps": true,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "leaving \"Settings\" 2",
+    "waits": true,
+    "title": "Paused",
+    "rows": [
+      {
+        "label": "Resume",
+        "detail": "",
+        "focused": true
+      },
+      {
+        "label": "Inventory",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Map",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Travel to a lit lantern",
+        "detail": "2 lit",
+        "focused": false
+      },
+      {
+        "label": "Save game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Load game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Settings",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Restart this area",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Quit",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "hard",
+      "screenShake": false,
+      "cameraZoom": 1,
+      "showFps": true,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "leaving \"Settings\" 3",
+    "waits": false,
+    "title": "",
+    "rows": [],
+    "hints": [],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "hard",
+      "screenShake": false,
+      "cameraZoom": 1,
+      "showFps": true,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "left \"Settings\"",
+    "waits": false,
+    "title": "",
+    "rows": [],
+    "hints": [],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "hard",
+      "screenShake": false,
+      "cameraZoom": 1,
+      "showFps": true,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "the inventory key",
+    "waits": true,
+    "title": "Inventory",
+    "rows": [
+      {
+        "label": "Brass key x1",
+        "detail": "Opens something.",
+        "focused": true
+      },
+      {
+        "label": "Potion x3",
+        "detail": "A small potion. - press E to use",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "E: use A / D: choose its quick slot Esc: back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "hard",
+      "screenShake": false,
+      "cameraZoom": 1,
+      "showFps": true,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "Esc from the inventory (it was opened by its key)",
+    "waits": true,
+    "title": "Paused",
+    "rows": [
+      {
+        "label": "Resume",
+        "detail": "",
+        "focused": true
+      },
+      {
+        "label": "Inventory",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Map",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Travel to a lit lantern",
+        "detail": "2 lit",
+        "focused": false
+      },
+      {
+        "label": "Save game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Load game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Settings",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Restart this area",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Quit",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "hard",
+      "screenShake": false,
+      "cameraZoom": 1,
+      "showFps": true,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "the map key",
+    "waits": true,
+    "title": "The Road",
+    "rows": [
+      {
+        "label": "Hub",
+        "detail": "you are here",
+        "focused": true
+      },
+      {
+        "label": "Cave",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "Arrows or W A S D: choose a place E or click: travel Esc: back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "hard",
+      "screenShake": false,
+      "cameraZoom": 1,
+      "showFps": true,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "Esc from the map",
+    "waits": true,
+    "title": "Paused",
+    "rows": [
+      {
+        "label": "Resume",
+        "detail": "",
+        "focused": true
+      },
+      {
+        "label": "Inventory",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Map",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Travel to a lit lantern",
+        "detail": "2 lit",
+        "focused": false
+      },
+      {
+        "label": "Save game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Load game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Settings",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Restart this area",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Quit",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "hard",
+      "screenShake": false,
+      "cameraZoom": 1,
+      "showFps": true,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "Resume chosen",
+    "waits": false,
+    "title": "",
+    "rows": [],
+    "hints": [],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "hard",
+      "screenShake": false,
+      "cameraZoom": 1,
+      "showFps": true,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "on \"Restart this area\"",
+    "waits": true,
+    "title": "Paused",
+    "rows": [
+      {
+        "label": "Resume",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Inventory",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Map",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Travel to a lit lantern",
+        "detail": "2 lit",
+        "focused": false
+      },
+      {
+        "label": "Save game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Load game",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Settings",
+        "detail": "",
+        "focused": false
+      },
+      {
+        "label": "Restart this area",
+        "detail": "",
+        "focused": true
+      },
+      {
+        "label": "Quit",
+        "detail": "",
+        "focused": false
+      }
+    ],
+    "hints": [
+      "W / S to choose, E to select, Esc or P to go back"
+    ],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "hard",
+      "screenShake": false,
+      "cameraZoom": 1,
+      "showFps": true,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  },
+  {
+    "step": "Restart chosen",
+    "waits": false,
+    "title": "",
+    "rows": [],
+    "hints": [],
+    "settings": {
+      "master": 0.8,
+      "music": 0.7,
+      "sfx": 0.9,
+      "voice": 0.9,
+      "difficulty": "hard",
+      "screenShake": false,
+      "cameraZoom": 1,
+      "showFps": true,
+      "skin": "",
+      "language": "",
+      "bindings": {}
+    },
+    "scene": "scenes/main.scene.json",
+    "vars": {
+      "visited:scenes/main.scene.json": true,
+      "item:potion": 3,
+      "item:key": 1,
+      "lit:scenes/main.scene.json:l1": "Hub lantern|3|3|0",
+      "lit:scenes/cave.scene.json:l2": "Cave lantern|4|4|0",
+      "slot:1": ""
+    }
+  }
+]

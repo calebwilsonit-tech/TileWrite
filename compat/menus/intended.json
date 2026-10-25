@@ -1,0 +1,32 @@
+[
+  {
+    "step": ".*",
+    "note": "^rows gone: (Hub|Autosave|Slot \\d)(, (Hub|Autosave|Slot \\d))*$",
+    "why": "A place you are standing in (the map) and a save slot with nothing in it (Load) are shown, greyed, but are not stops for the keyboard or the pad: the old menu let the focus land on them and then did nothing. The first row the keys reach is the first one that can be used."
+  },
+  {
+    "step": ".*",
+    "note": "^focus: (Hub -> Cave|Autosave -> Slot 1|Autosave -> \\(none\\))$",
+    "why": "The same: the focus starts on the first row that can be used, not on a row that cannot."
+  },
+  {
+    "step": "Load game: down|leaving \"Load game\"",
+    "note": "^focus: Slot 1 -> \\(none\\)$",
+    "why": "The same."
+  },
+  {
+    "step": "^\\[no save\\] title: Esc from \"Load game\" goes back to the title$",
+    "note": "^focus: New game -> Load game$",
+    "why": "Coming back to the title from Load game leaves the focus on Load game, where it was (the old menu always started again at the first row)."
+  },
+  {
+    "step": "controls: (opened|down)",
+    "note": "^(rows gone: Attack \\(quill\\)|rows new: Attack)$",
+    "why": "The old Controls screen named the button after the reference game's weapon (\"quill\"); the engine's own screens name it Attack."
+  },
+  {
+    "step": "^(Esc from the inventory \\(it was opened by its key\\)|Esc from the map)$",
+    "note": "^(the game waits: true -> false|title: \"Paused\" -> \"\"|rows gone: Resume, Inventory, Map, Travel to a lit lantern, Save game, Load game, Settings, Restart this area, Quit|focus: Resume -> \\(none\\))$",
+    "why": "Back from an inventory or a map that was opened by its own key closes it. The old menu went on to the Pause menu (it always went back to the menu it had not come from), so one more Esc was needed to get back to the game."
+  }
+]
