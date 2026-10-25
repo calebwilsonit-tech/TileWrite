@@ -2,6 +2,7 @@ import { api, joinPath } from '../project/api';
 import { store } from '../app/store';
 import { studio } from '../studio/store';
 import { listProjectFiles } from './file-tools';
+import { deltaFrom, filesAt, type Checkpoint } from './checkpoints';
 
 /**
  * A copy of every file of the project, taken before Claude changes things without asking about each one (the "Plan first" and
@@ -28,7 +29,7 @@ export async function takeSnapshot(): Promise<SnapshotResult> {
   const p = store.state.project;
   if (!p) return { ok: false, reason: 'No project is open.' };
   // what is on screen but not yet on disk goes to disk first
-  await store.autosaveNow();
+  await store.flushScene();
   await store.flushStory();
   if (studio.isDirty()) await studio.save();
   const list = await listProjectFiles();
@@ -39,13 +40,33 @@ export async function takeSnapshot(): Promise<SnapshotResult> {
   return { ok: true, snapshot: { id: `s${++counter}`, dir: p.dir, takenAt: Date.now(), files, bytes: total } };
 }
 
+let checkpoints = 0;
+
+/** The project as it is now, as a checkpoint of the run whose first copy is `base` (only what differs from that copy is kept). */
+export async function takeCheckpoint(base: Snapshot): Promise<Checkpoint> {
+  const p = store.state.project;
+  if (!p || p.dir !== base.dir) throw new Error('That copy belongs to a different project.');
+  await store.flushScene();
+  await store.flushStory();
+  if (studio.isDirty()) await studio.save();
+  const now = new Map<string, Uint8Array>();
+  for (const f of await listProjectFiles()) now.set(f.path, await api().fs.readBinary(joinPath(p.dir, ...f.path.split('/'))));
+  return { id: `k${++checkpoints}`, takenAt: Date.now(), changed: deltaFrom(base.files, now) };
+}
+
+/** Put the project back to a checkpoint of a run. */
+export function rollBackToCheckpoint(base: Snapshot, cp: Checkpoint): Promise<{ restored: number; removed: number }> {
+  return rollBack({ ...base, id: `${base.id}@${cp.id}`, files: filesAt(base.files, cp) });
+}
+
 const same = (a: Uint8Array, b: Uint8Array): boolean => a.length === b.length && a.every((v, i) => v === b[i]);
 
 /** Put the project back as it was when the copy was taken: files changed are restored, files made since are removed, then the project is opened again. */
 export async function rollBack(snapshot: Snapshot): Promise<{ restored: number; removed: number }> {
   const p = store.state.project;
   if (!p || p.dir !== snapshot.dir) throw new Error('That copy belongs to a different project.');
-  // leaving the project stops the autosave, so nothing in memory writes over what is put back
+  // leaving the project stops the autosave, so nothing in memory writes over what is put back (and its recovery copy is not offered)
+  await store.dropAutosave();
   await store.closeProject();
   let restored = 0;
   let removed = 0;

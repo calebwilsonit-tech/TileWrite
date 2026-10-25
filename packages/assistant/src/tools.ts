@@ -195,6 +195,30 @@ export const TOOLS: ToolSpec[] = [
     schema: z.object({ mode: z.enum(['walk_to_goal', 'solve_to_goal']) }),
   },
   {
+    name: 'read_console',
+    kind: 'read',
+    description: 'The Console of the editor: what the editor and the game said (information, warnings, errors), with the last crash of the game if there was one, the problems the scripts have, and what the bot reported lately. Use it when the user says something went wrong or the game does something odd.',
+    schema: z.object({ level: z.enum(['all', 'warn', 'error']).optional().describe('Only this level and worse (default all).'), limit: z.number().int().min(1).max(200).optional().describe('The most lines to show, the newest (default 60).') }),
+  },
+  {
+    name: 'profile_game',
+    kind: 'read',
+    description: 'Run the open scene with no window for a few seconds with the profiler on, and say where the time goes: the average and slowest game step, the objects, and the slowest behaviours and parts of the game. Nobody presses anything, so it measures the world running by itself. Use it when the user says the game is slow, or before and after you change something heavy.',
+    schema: z.object({ seconds: z.number().min(1).max(60).optional().describe('How many game seconds to run (default 8).') }),
+  },
+  {
+    name: 'run_project_checks',
+    kind: 'read',
+    description: 'Check the whole project the way Export does: every scene, conversation, cutscene, the lists the plugins keep, tiles, sounds, translations and controls. Errors are what Export refuses; warnings are worth fixing. get_problems is only the open scene; use this before saying a project is finished.',
+    schema: z.object({}),
+  },
+  {
+    name: 'run_playthroughs',
+    kind: 'read',
+    description: 'Run the project tests: every saved playthrough (recorded buttons with what must be true at the end) is played again with no window and checked. Say which still end as recorded and which no longer do and why. Pass a name to run just one.',
+    schema: z.object({ name: z.string().optional().describe('The name of one saved playthrough.') }),
+  },
+  {
     name: 'screenshot',
     kind: 'read',
     description: 'A picture of the viewport as the user sees it right now.',
@@ -628,6 +652,15 @@ export const TOOLS: ToolSpec[] = [
       title: z.string().min(1).max(120),
       steps: z.array(z.string().min(1).max(300)).min(1).max(25),
       risks: z.array(z.string().max(300)).max(8).optional().describe('Anything the user should know before saying yes (it replaces something, it is hard to undo).'),
+    }),
+  },
+  {
+    name: 'plan_step',
+    kind: 'read',
+    description: 'Tell the user which step of the approved plan you are on. Call it with status "start" before the first change of each step (a checkpoint of the project is taken, so the user can roll back to the start of the step) and with status "done" when the step is finished. The user sees the steps ticked off, can ask you to stop between steps, and can put the project back to the start of any step. If the answer says the user stopped the plan, change nothing more: say what is done and what is left.',
+    schema: z.object({
+      step: z.number().int().min(1).max(25).describe('The number of the step in the plan, counting from 1.'),
+      status: z.enum(['start', 'done']),
     }),
   },
   {

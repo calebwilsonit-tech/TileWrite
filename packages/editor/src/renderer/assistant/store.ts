@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react';
-import { DEFAULT_SETTINGS, MAX_ATTACHMENTS, MAX_PDF_ATTACHMENT_BYTES, buildContext, cleanSettings, pdfFacts, approvalClass, mayRunUnasked, whyAsked, type AssistantSettings, type Attachment, type Mode, type ToolOutput, type Usage, NO_USAGE } from '@tilewright/assistant';
+import { DEFAULT_SETTINGS, MAX_ATTACHMENTS, MAX_PDF_ATTACHMENT_BYTES, buildContext, cleanSettings, pdfFacts, approvalClass, mayRunUnasked, whyAsked, countChange, doingStep, requestStop, resume, rollbackNote, rolledBackTo, setCheckpoint, startPlan, stepDone, stepStart, nextStep, type PlanRun, type AssistantSettings, type Attachment, type Mode, type ToolOutput, type Usage, NO_USAGE } from '@tilewright/assistant';
 import { host } from '@tilewright/behaviors';
 import { pluginToolName, toolsOffered } from './plugin-tools';
 import { PictureProblem, bytesToBase64, pictureForClaude } from './pictures';
@@ -10,7 +10,8 @@ import { store } from '../app/store';
 import { api, type AssistantEvent, type AssistantStatus, type AssistantToolCall } from '../project/api';
 import { ToolProblem, prepareAction, readNotes, runReadTool, sceneProblems, type Proposal } from './editor-tools';
 import { projectIndexText } from './file-tools';
-import { rollBack, takeSnapshot, type Snapshot } from './snapshot';
+import { rollBack, rollBackToCheckpoint, takeCheckpoint, takeSnapshot, type Snapshot } from './snapshot';
+import type { Checkpoint } from './checkpoints';
 
 export type ProposalStatus = 'pending' | 'applied' | 'rejected' | 'failed' | 'undone';
 
@@ -45,9 +46,11 @@ export interface AssistantState {
   planApproved: boolean;
   /** A copy of the project taken before this run started changing things, so the run can be rolled back. */
   rollbackAvailable: boolean;
+  /** The approved plan being carried out: its steps, which are done, whether it is held between steps. Null when there is none. */
+  plan: PlanRun | null;
 }
 
-const INITIAL: AssistantState = { ready: false, status: null, settings: DEFAULT_SETTINGS, items: [], busy: false, usage: NO_USAGE, cost: 0, error: null, draft: '', mode: 'chat', notes: '', tick: 0, attachments: [], run: { cost: 0, tokens: 0 }, planApproved: false, rollbackAvailable: false };
+const INITIAL: AssistantState = { ready: false, status: null, settings: DEFAULT_SETTINGS, items: [], busy: false, usage: NO_USAGE, cost: 0, error: null, draft: '', mode: 'chat', notes: '', tick: 0, attachments: [], run: { cost: 0, tokens: 0 }, planApproved: false, rollbackAvailable: false, plan: null };
 
 let counter = 0;
 const nextId = (p: string): string => `${p}${++counter}`;
@@ -75,6 +78,12 @@ export const TOOL_LABELS: Record<string, string> = {
   read_project_file: 'Read a file',
   search_project: 'Searched the project',
   project_references: 'Looked at what uses what',
+  plan_step: 'Reported on the plan',
+  read_console: 'Read the Console',
+  profile_game: 'Measured where the time goes',
+  run_project_checks: 'Checked the whole project',
+  run_playthroughs: 'Replayed the saved playthroughs',
+  tile_template: 'Looked at the tile canvas',
   list_image_providers: 'Checked which picture makers exist',
 };
 
@@ -193,24 +202,32 @@ class AssistantStore {
   async newChat(): Promise<void> {
     await api().assistant.reset();
     this.rejectAll();
-    this.set({ items: [], usage: NO_USAGE, cost: 0, error: null, busy: false, status: await api().assistant.status() });
+    this.snapshot = null;
+    this.checkpoints.clear();
+    this.rollbackText = '';
+    this.set({ items: [], usage: NO_USAGE, cost: 0, error: null, busy: false, plan: null, planApproved: false, rollbackAvailable: false, status: await api().assistant.status() });
   }
 
   // ---- talking ----
 
-  async send(text: string, mode: Mode = this.state.mode): Promise<void> {
-    const trimmed = text.trim();
-    if (!trimmed || this.state.busy) return;
+  async send(text: string, mode: Mode = this.state.mode, opts: { keepPlan?: boolean } = {}): Promise<void> {
+    if (!text.trim() || this.state.busy) return;
     if (!this.state.status?.hasKey) {
-      this.set({ draft: trimmed, mode, error: { message: 'Add your Anthropic API key above, then press Send.', retryable: false, kind: 'key' } });
+      this.set({ draft: text.trim(), mode, error: { message: 'Add your Anthropic API key above, then press Send.', retryable: false, kind: 'key' } });
       return;
     }
+    // after a roll back to a step, Claude is told so with the person's next words
+    const trimmed = (this.rollbackText ? `${this.rollbackText}\n\n${text}` : text).trim();
+    this.rollbackText = '';
     const attachments = this.state.attachments;
-    this.push({ kind: 'user', id: nextId('u'), text: trimmed, mode, ...(attachments.length > 0 ? { images: attachments.map((a) => ({ name: a.name, url: a.url })) } : {}) });
-    this.set({ busy: true, error: null, draft: '', mode: 'chat', attachments: [], run: { cost: 0, tokens: 0 }, planApproved: false });
-    this.snapshot = null;
-    this.changesThisRun = 0;
-    this.set({ rollbackAvailable: false });
+    this.push({ kind: 'user', id: nextId('u'), text: text.trim(), mode, ...(attachments.length > 0 ? { images: attachments.map((a) => ({ name: a.name, url: a.url })) } : {}) });
+    this.set({ busy: true, error: null, draft: '', mode: 'chat', attachments: [], run: { cost: 0, tokens: 0 }, planApproved: opts.keepPlan === true && this.state.plan !== null, ...(opts.keepPlan ? {} : { plan: null }) });
+    if (!opts.keepPlan) {
+      this.snapshot = null;
+      this.changesThisRun = 0;
+      this.checkpoints.clear();
+      this.set({ rollbackAvailable: false });
+    }
     const doc = store.doc;
     const context = buildContext({
       projectName: store.state.project?.project.name ?? '',
@@ -300,6 +317,13 @@ class AssistantStore {
   private async onToolCall(call: AssistantToolCall): Promise<void> {
     const reply = (out: { content: unknown; isError?: boolean }): void => void api().assistant.toolResult(call.callId, out);
     try {
+      if (call.name === 'plan_step') {
+        const epoch = this.epoch;
+        const run = this.actChain.then(() => (epoch === this.epoch ? this.handlePlanStep(call, reply) : undefined));
+        this.actChain = run.catch(() => undefined);
+        await run;
+        return;
+      }
       if (call.kind === 'read') {
         this.push({ kind: 'tool', id: call.callId, name: call.name, status: 'running', detail: '' });
         const out = (await runPluginRead(call.name, call.input)) ?? (await runReadTool(call.name, call.input));
@@ -319,11 +343,96 @@ class AssistantStore {
   /** The copy of the project taken when this run first changed something without asking (null: not taken). */
   private snapshot: Snapshot | null = null;
   private changesThisRun = 0;
+  /** The project at the start of each step of the plan (only what differs from `snapshot`). */
+  private checkpoints = new Map<string, Checkpoint>();
+  /** Said to Claude with the person's next message: the project was rolled back to a step. */
+  private rollbackText = '';
+
+  /** The copy of the project the run can be rolled back to; taken now if the run has none. */
+  private async ensureSnapshot(): Promise<{ ok: true; snapshot: Snapshot } | { ok: false; reason: string }> {
+    if (this.snapshot) return { ok: true, snapshot: this.snapshot };
+    const taken = await takeSnapshot();
+    if (!taken.ok) return taken;
+    this.snapshot = taken.snapshot;
+    this.set({ rollbackAvailable: true });
+    return taken;
+  }
+
+  /** Claude says a step of the plan begins or is done. A checkpoint is taken before a step begins, so the project can be put back to there. */
+  private async handlePlanStep(call: AssistantToolCall, reply: (out: { content: unknown; isError?: boolean }) => void): Promise<void> {
+    const plan = this.state.plan;
+    const finish = (out: { content: unknown; isError?: boolean }, detail = ''): void => {
+      this.push({ kind: 'tool', id: call.callId, name: call.name, status: out.isError ? 'error' : 'done', detail });
+      reply(out);
+    };
+    if (!plan) return finish({ isError: true, content: 'There is no approved plan. Call submit_plan first, and wait for the answer.' }, 'No approved plan');
+    const n = Number(call.input.step);
+    if (call.input.status === 'done') {
+      const r = stepDone(plan, n);
+      this.set({ plan: r.run });
+      return finish({ isError: !r.ok, content: r.message });
+    }
+    const r = stepStart(plan, n);
+    this.set({ plan: r.run });
+    if (!r.ok) return finish({ isError: true, content: r.message }, r.run.paused ? 'Stopped between steps' : '');
+    let note = '';
+    if (this.state.settings.permission === 'plan' || this.state.settings.permission === 'auto') {
+      const snap = await this.ensureSnapshot();
+      if (snap.ok) {
+        try {
+          const cp = await takeCheckpoint(snap.snapshot);
+          this.checkpoints.set(cp.id, cp);
+          this.set({ plan: setCheckpoint(this.state.plan!, n, cp.id) });
+          note = ' A checkpoint of the project was taken.';
+        } catch (e) {
+          note = ` (No checkpoint could be taken: ${e instanceof Error ? e.message : String(e)})`;
+        }
+      } else note = ` (${snap.reason})`;
+    }
+    finish({ content: r.message + note });
+  }
+
+  /** The person asks Claude to stop when the step it is on is done. */
+  stopAfterStep(): void {
+    if (this.state.plan) this.set({ plan: requestStop(this.state.plan) });
+  }
+
+  /** The person says to go on with a plan that was held between steps. */
+  async continuePlan(): Promise<void> {
+    const plan = this.state.plan;
+    if (!plan || this.state.busy) return;
+    const next = nextStep(plan);
+    this.set({ plan: resume(plan) });
+    await this.send(next === null ? 'The plan is finished: check the result and tell me what was done.' : `Go on with the plan from step ${next}.`, 'chat', { keepPlan: true });
+  }
+
+  /** Put the project back to the start of a step of the plan. The steps from there on are undone and the plan is held. */
+  async rollBackToStep(n: number): Promise<void> {
+    const plan = this.state.plan;
+    const base = this.snapshot;
+    const id = plan?.steps[n - 1]?.checkpoint;
+    const cp = id ? this.checkpoints.get(id) : undefined;
+    if (!plan || !base || !cp || this.state.busy) return;
+    try {
+      const r = await rollBackToCheckpoint(base, cp);
+      this.rollbackText = rollbackNote(plan, n);
+      this.set({ plan: rolledBackTo(plan, n) });
+      this.push({ kind: 'notice', id: nextId('n'), level: 'info', text: `Back to the start of step ${n}: ${r.restored} file${r.restored === 1 ? '' : 's'} put back, ${r.removed} removed. Steps ${n} to ${plan.steps.length} are undone.` });
+      // the cards of the changes made from the start of that step on have been undone with it
+      for (const item of this.state.items) if (item.kind === 'proposal' && item.status === 'applied' && item.auto && (this.stepOfCard.get(item.id) ?? 0) >= n) this.patchItem(item.id, { status: 'undone', undoable: false } as Partial<ChatItem>);
+    } catch (e) {
+      this.push({ kind: 'notice', id: nextId('n'), level: 'warn', text: `The project could not be put back: ${e instanceof Error ? e.message : String(e)}` });
+    }
+  }
+
+  /** Which step of the plan each change card was made in. */
+  private stepOfCard = new Map<string, number>();
 
   /** Could Claude make this change right now, under the person's permission setting? A reason when it may not. */
   private refusal(name: string): string | null {
     const level = this.state.settings.permission;
     if (level === 'look') return 'The person has set Claude to "Look only", so nothing can be changed. Say what you would change and ask them to allow changes (the permission setting in the assistant) if they want it done.';
+    if (this.state.plan?.paused && name !== 'submit_plan') return 'The user stopped the plan between steps, so nothing can be changed now. Say what is finished and what is left, and wait for them to tell you to go on.';
     if (level === 'plan' && name !== 'submit_plan' && !this.state.planApproved) return 'The person has set Claude to "Plan first, then do it": nothing can be changed until they approve a plan. Call submit_plan with the steps you will take, and wait for the answer.';
     return null;
   }
@@ -359,19 +468,21 @@ class AssistantStore {
     if (goesAhead) {
       // the first change of a run without asking takes a copy of the project, so the run can be rolled back
       if (!this.snapshot) {
-        const taken = await takeSnapshot();
+        const taken = await this.ensureSnapshot();
         if (!taken.ok) {
           this.push({ kind: 'tool', id: call.callId, name: call.name, status: 'error', detail: taken.reason });
           reply({ isError: true, content: `${taken.reason} Claude may not change things without asking at this size: tell the user they can pick "Ask me for every change" in the assistant.` });
           return;
         }
-        this.snapshot = taken.snapshot;
-        this.set({ rollbackAvailable: true });
       }
       this.push({ kind: 'proposal', id: call.callId, tool: call.name, title: proposal.title, lines: proposal.lines, diff: proposal.diff, status: 'pending', message: '', undoable: false, auto: true, ...(proposal.images ? { images: looks(proposal) } : {}) });
       try {
         const message = await proposal.apply();
         this.changesThisRun++;
+        if (this.state.plan) {
+          this.stepOfCard.set(call.callId, doingStep(this.state.plan) + 1);
+          this.set({ plan: countChange(this.state.plan) });
+        }
         if (proposal.undo) this.undoers.set(call.callId, proposal.undo);
         this.patchItem(call.callId, { status: 'applied', message, undoable: proposal.undo !== undefined, ...(proposal.images ? { images: looks(proposal) } : {}) } as Partial<ChatItem>);
         reply(await resultOf(proposal, `Applied. ${message}`));
@@ -396,7 +507,7 @@ class AssistantStore {
     }
     try {
       const message = await proposal.apply();
-      if (proposal.plan) this.set({ planApproved: true });
+      if (proposal.plan) this.set({ planApproved: true, plan: startPlan(String(call.input.title), proposal.plan.steps) });
       else if (proposal.tool !== 'submit_plan') this.changesThisRun++;
       if (proposal.undo) this.undoers.set(call.callId, proposal.undo);
       this.patchItem(call.callId, { status: 'applied', message, undoable: proposal.undo !== undefined, ...(proposal.images ? { images: looks(proposal) } : {}) } as Partial<ChatItem>);
@@ -451,7 +562,9 @@ class AssistantStore {
       const r = await rollBack(snap);
       this.snapshot = null;
       this.changesThisRun = 0;
-      this.set({ rollbackAvailable: false });
+      this.checkpoints.clear();
+      this.stepOfCard.clear();
+      this.set({ rollbackAvailable: false, plan: null, planApproved: false });
       this.patchItem(id, { rolledBack: true, message: `Back as it was: ${r.restored} file${r.restored === 1 ? '' : 's'} put back, ${r.removed} removed.` } as Partial<ChatItem>);
       // everything the cards said they could undo has been undone with it
       for (const item of this.state.items) if (item.kind === 'proposal' && item.status === 'applied') this.patchItem(item.id, { status: 'undone', undoable: false } as Partial<ChatItem>);

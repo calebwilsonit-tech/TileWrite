@@ -109,6 +109,52 @@ function ProposalCard({ item }: { item: Extract<ChatItem, { kind: 'proposal' }> 
   );
 }
 
+const STEP_MARK: Record<string, string> = { pending: '\u25cb', doing: '\u25b6', done: '\u2713', undone: '\u21a9' };
+const STEP_WORD: Record<string, string> = { pending: 'not started', doing: 'working on it', done: 'done', undone: 'undone (rolled back)' };
+
+/** The steps of the approved plan: ticked off as Claude reports them, with a way to stop between steps and to go back to the start of a step. */
+function PlanProgress() {
+  const plan = useAssistant((s) => s.plan);
+  const busy = useAssistant((s) => s.busy);
+  if (!plan) return null;
+  const doing = plan.steps.findIndex((s) => s.status === 'doing');
+  const finished = plan.steps.every((s) => s.status === 'done');
+  return (
+    <section className="plan-progress" data-testid="plan-progress" aria-label={`Plan: ${plan.title}`}>
+      <h4>
+        {plan.title} ({plan.steps.filter((s) => s.status === 'done').length} of {plan.steps.length} done)
+      </h4>
+      <ol className="plain">
+        {plan.steps.map((s, i) => (
+          <li key={i} data-testid={`plan-step-${i + 1}`} data-status={s.status} className={s.status}>
+            <span aria-label={STEP_WORD[s.status]} title={STEP_WORD[s.status]}>{STEP_MARK[s.status]}</span> {s.text}
+            {s.changes > 0 && <span className="hint"> ({s.changes} change{s.changes === 1 ? '' : 's'})</span>}
+            {s.checkpoint && !busy && s.status !== 'pending' && (
+              <button data-testid={`plan-rollback-${i + 1}`} title="Put the project back as it was before this step began. This step and the ones after it are undone." onClick={() => void assistant.rollBackToStep(i + 1)}>
+                Back to before this step
+              </button>
+            )}
+          </li>
+        ))}
+      </ol>
+      {busy && doing >= 0 && !plan.stopAfter && (
+        <button data-testid="plan-stop" onClick={() => assistant.stopAfterStep()} title="Claude finishes the step it is on, then stops before the next">
+          Stop after this step
+        </button>
+      )}
+      {busy && plan.stopAfter && <p className="hint" data-testid="plan-stopping">Claude will stop when this step is done.</p>}
+      {!busy && plan.paused && (
+        <>
+          <p className="hint" data-testid="plan-paused">The plan is held between steps. Nothing changes until you go on.</p>
+          <button className="primary" data-testid="plan-continue" onClick={() => void assistant.continuePlan()}>
+            {finished ? 'Check the result' : 'Go on with the plan'}
+          </button>
+        </>
+      )}
+    </section>
+  );
+}
+
 function RunCard({ item }: { item: Extract<ChatItem, { kind: 'run' }> }) {
   const busy = useAssistant((s) => s.busy);
   const available = useAssistant((s) => s.rollbackAvailable);
@@ -402,6 +448,7 @@ export function AssistantPanel() {
           </button>
         ))}
       </div>
+      <PlanProgress />
       {attachments.length > 0 && (
         <div className="attachments" data-testid="attachments">
           {attachments.map((a, i) => (

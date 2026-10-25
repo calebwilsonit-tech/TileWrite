@@ -631,6 +631,23 @@ class AppStore {
     }, 20_000);
   }
 
+  /** Write the open scene to its file now, quietly (no toast, no check), clearing the recovery copy: for taking a copy of the project that is what is on disk. */
+  async flushScene(): Promise<void> {
+    const p = this.state.project;
+    const doc = this.doc;
+    if (!p || !doc || !doc.dirty || !this.state.scenePath) return;
+    await saveScene(realFs, p.dir, this.state.scenePath, doc.toScene());
+    doc.markSaved();
+    await clearAutosave(realFs, p.dir, this.state.scenePath).catch(() => undefined);
+    this.bumpDoc();
+  }
+
+  /** Throw away the recovery copy of the open scene (before the project is put back to an earlier state, so it is not offered as "unsaved work"). */
+  async dropAutosave(): Promise<void> {
+    const p = this.state.project;
+    if (p && this.state.scenePath) await clearAutosave(realFs, p.dir, this.state.scenePath).catch(() => undefined);
+  }
+
   async autosaveNow(): Promise<void> {
     const p = this.state.project;
     const doc = this.doc;
