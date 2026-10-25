@@ -1,3 +1,4 @@
+import { exposeForTests } from '../project/api';
 import { useEffect, useRef } from 'react';
 import { host } from '@tilewright/behaviors';
 import { bindingLabel } from '@tilewright/runtime';
@@ -27,13 +28,13 @@ export function ViewportPanel() {
     void vp.mount(host.current!).then(() => {
       if (cancelled) return;
       viewportRef.current = vp;
-      window.__viewport = vp;
+      exposeForTests('__viewport', vp);
       if (store.doc) vp.setDoc(store.doc);
     });
     return () => {
       cancelled = true;
       viewportRef.current = null;
-      window.__viewport = undefined;
+      exposeForTests('__viewport', undefined);
       vp.dispose();
     };
   }, []);

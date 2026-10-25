@@ -52,7 +52,7 @@ export interface TilewrightApi {
     remove(id: string, version?: string): Promise<void>;
     watch(dir: string): Promise<void>;
     unwatch(dir: string): Promise<void>;
-    runProgram(pluginName: string, command: string, args: string[]): Promise<{ code: number; stdout: string; stderr: string }>;
+    runProgram(pluginId: string, command: string, args: string[]): Promise<{ code: number; stdout: string; stderr: string }>;
     onChanged(fn: (dir: string) => void): () => void;
   };
   settings: {
@@ -95,14 +95,30 @@ export interface TilewrightApi {
 
 declare global {
   interface Window {
-    tilewright: TilewrightApi;
+    /** What the page is given: the door itself in tests, otherwise only `unlock` (see main/preload.ts). */
+    tilewright: TilewrightApi & { testHooks?: boolean; unlock?: () => TilewrightApi | null };
   }
 }
 
-export const api = (): TilewrightApi => window.tilewright;
+/**
+ * The door to the computer, taken once when this file first runs (at startup, before any plugin). The page's own `window.tilewright`
+ * holds nothing once the door has been handed over, so plugins that run in this window cannot reach it.
+ */
+const given = typeof window === 'undefined' ? undefined : window.tilewright; // (no window when tests and tools import this file)
+const door = (typeof given?.unlock === 'function' ? given.unlock() : given) as TilewrightApi;
+
+/** Handles for end-to-end tests (window.__store and the like) exist only when the tests ask for them. */
+export const testHooks: boolean = given?.testHooks === true;
+
+export const api = (): TilewrightApi => door;
 
 /** Join path parts with the separator the file already uses (Windows or POSIX). */
 export function joinPath(base: string, ...parts: string[]): string {
   const sep = base.includes('\\') ? '\\' : '/';
   return [base.replace(/[\\/]+$/, ''), ...parts.map((p) => p.replace(/^[\\/]+|[\\/]+$/g, '').replace(/[\\/]/g, sep))].join(sep);
+}
+
+/** Put a handle on `window` for the end-to-end tests. In the real editor there is no such handle: plugins run in the same window and would get it. */
+export function exposeForTests(name: `__${string}`, value: unknown): void {
+  if (testHooks) (window as unknown as Record<string, unknown>)[name] = value;
 }

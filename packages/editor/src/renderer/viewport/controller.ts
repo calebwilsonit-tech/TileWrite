@@ -1,3 +1,4 @@
+import { exposeForTests } from '../project/api';
 import { isPlayerRequired } from '../model/validate';
 import { Graphics } from 'pixi.js';
 import {
@@ -42,7 +43,7 @@ interface SpriteLike {
   visible: boolean;
 }
 
-interface PlayState {
+export interface PlayState {
   sim: Simulation;
   runner: GameRunner;
   source: DomInputSource;
@@ -796,7 +797,7 @@ export class ViewportController {
     }
     const { sim, runner, source } = session;
     this.play = { sim, runner, source, session, saved, stepToken: store.stepToken };
-    window.__play = this.play;
+    setCurrentPlay(this.play);
   }
 
   private stopPlay(): void {
@@ -810,7 +811,7 @@ export class ViewportController {
     p.session.dispose();
     if (recording && recording.length > 30) void store.saveRecording(recording, store.state.scenePath ?? '', endNear);
     this.play = null;
-    window.__play = undefined;
+    setCurrentPlay(null);
     const cam = this.camera;
     cam.bounds = null;
     cam.x = p.saved.x;
@@ -844,4 +845,12 @@ declare global {
 export function isTyping(e: KeyboardEvent): boolean {
   const t = e.target as HTMLElement | null;
   return !!t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable);
+}
+
+/** The game running in the editor's Play (null when none): read by the panels that show what it is doing, and handed to the tests. */
+let currentPlay: PlayState | null = null;
+export const getPlay = (): PlayState | null => currentPlay;
+function setCurrentPlay(p: PlayState | null): void {
+  currentPlay = p;
+  exposeForTests('__play', p ?? undefined);
 }

@@ -5,8 +5,13 @@ import { contextBridge, ipcRenderer } from 'electron';
 const prefix = process.argv.find((a) => a.startsWith('--tw-prefix='))?.slice('--tw-prefix='.length) ?? '';
 const invoke = <T>(channel: string, ...args: unknown[]): Promise<T> => ipcRenderer.invoke(prefix + channel, ...args) as Promise<T>;
 
-/** The only door between a game and the computer: its own data (read), its saves (read and write), a crash log, quit. */
-contextBridge.exposeInMainWorld('tilewright', {
+/**
+ * The only door between a game and the computer: its own data (read), its saves (read and write), a crash log, quit. Plugins from
+ * outside run in the game's page, so the door is handed over once to the first code that asks (the player, at startup) and the
+ * global holds nothing after that. Tests of exported games keep it where they can see it.
+ */
+const testHooks = process.env.TILEWRIGHT_GAME_TEST === '1' || process.env.TILEWRIGHT_TEST_DIR !== undefined;
+const door = {
   platform: process.platform,
   fs: {
     read: (file: string) => invoke<string>('fs:read', file),
@@ -24,4 +29,19 @@ contextBridge.exposeInMainWorld('tilewright', {
     toggleFullscreen: () => invoke<void>('game:fullscreen'),
     setFullscreen: (on: boolean) => invoke<void>('game:fullscreen', on),
   },
-});
+};
+let handedOver = false;
+contextBridge.exposeInMainWorld(
+  'tilewright',
+  testHooks
+    ? { ...door, testHooks: true }
+    : {
+        testHooks: false,
+        platform: process.platform,
+        unlock: () => {
+          if (handedOver) return null;
+          handedOver = true;
+          return door;
+        },
+      },
+);

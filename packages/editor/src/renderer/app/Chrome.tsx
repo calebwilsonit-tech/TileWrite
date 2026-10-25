@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { api } from '../project/api';
 import { useApp, store } from './store';
 import { COMMANDS, commandForKey, describeKeys, keysFor, viewportRef, type Command } from './commands';
 import { eventKeySpec, findConflicts, formatKeySpec, isModifierOnly } from './keys';
@@ -8,7 +9,7 @@ import { isTyping } from '../viewport/controller';
 export function useShortcuts(): [Record<string, string>, (id: string, keys: string | null) => void] {
   const [overrides, setOverrides] = useState<Record<string, string>>({});
   useEffect(() => {
-    void window.tilewright.settings.get().then((s) => {
+    void api().settings.get().then((s) => {
       if (s.shortcuts && typeof s.shortcuts === 'object') setOverrides(s.shortcuts as Record<string, string>);
     });
   }, []);

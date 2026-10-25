@@ -145,10 +145,14 @@ export async function evaluatePlugin(pkg: PluginPackage, sdk: unknown, importer:
 export type LoadOutcome = { state: 'loaded'; definition: PluginDefinition } | { state: 'needs-approval'; pkg: PluginPackage } | { state: 'refused'; problems: string[] };
 
 /** Turn a package into a plugin the host can register: only when its exact code has been approved. */
-export async function loadPackage(pkg: PluginPackage, trust: PluginTrust, sdk: unknown, opts: { builtin?: boolean; importer?: Importer } = {}): Promise<LoadOutcome> {
+export async function loadPackage(pkg: PluginPackage, trust: PluginTrust, sdk: unknown, opts: { builtin?: boolean; importer?: Importer; /** Tries the code out somewhere it cannot hang the editor; a plain message says why it should not be started. */ preflight?: (pkg: PluginPackage) => Promise<string | null> } = {}): Promise<LoadOutcome> {
   const builtin = opts.builtin === true;
   if (!builtin && pkg.manifest.builtin) return { state: 'refused', problems: [`The plugin "${pkg.manifest.id}" says it ships with Tilewright, but it does not. Only the editor's own plugins can say that.`] };
   if (!builtin && pkg.runtimeCode !== null && !trust.isApproved(pkg.manifest.id, pkg.hash)) return { state: 'needs-approval', pkg };
+  if (!builtin && pkg.runtimeCode !== null && opts.preflight) {
+    const problem = await opts.preflight(pkg);
+    if (problem) return { state: 'refused', problems: [problem] };
+  }
   try {
     return { state: 'loaded', definition: await evaluatePlugin(pkg, sdk, opts.importer) };
   } catch (e) {

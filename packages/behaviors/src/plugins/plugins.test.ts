@@ -258,6 +258,42 @@ describe('the host', () => {
     expect(host.failures().find((f) => f.plugin === 't-bad')?.where).toContain('the action "Bad"');
   });
 
+  it('turns off a plugin from outside that keeps the game waiting (a watchdog), and leaves the built-in plugins alone', async () => {
+    const busy = (ms: number): void => {
+      const end = performance.now() + ms;
+      while (performance.now() < end) {
+        /* a plugin that does not give the game back */
+      }
+    };
+    const slowSystem = (id: string, builtin: boolean): PluginDefinition => ({
+      ...plugin({ id }, (api) => api.system('spin', () => busy(12))),
+      manifest: { ...plugin({ id }, () => undefined).manifest, builtin },
+    });
+    const told: string[] = [];
+    host.editorHost = { notify: (_k: string, text: string) => void told.push(text) } as never;
+    host.slowCallMs = 5;
+    try {
+      host.register(slowSystem('t-slow', false));
+      host.register(slowSystem('t-slow-own', true));
+      host.install('t-slow');
+      host.install('t-slow-own');
+      const run = (id: string): void => host.installed.get(id)!.systems[0]!.fn({} as never);
+      for (let i = 0; i < 2; i++) run('t-slow');
+      expect(host.isInstalled('t-slow')).toBe(true); // a slow moment or two is forgiven
+      run('t-slow');
+      await new Promise((r) => setTimeout(r, 5));
+      expect(host.isInstalled('t-slow')).toBe(false);
+      expect(host.failures().find((f) => f.plugin === 't-slow')?.message).toMatch(/too long|too slow|kept the game waiting/);
+      expect(told.join(' ')).toContain('turned off');
+      for (let i = 0; i < 5; i++) run('t-slow-own');
+      await new Promise((r) => setTimeout(r, 5));
+      expect(host.isInstalled('t-slow-own')).toBe(true);
+    } finally {
+      host.slowCallMs = 250;
+      host.editorHost = null;
+    }
+  });
+
   it('puts a replaced plugin back as it was on (dev mode: the new code replaces the old)', () => {
     let n = 0;
     host.register(plugin({ id: 't-dev', version: '1.0.0' }, (api) => api.provide('v', ++n)));

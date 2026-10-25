@@ -1,3 +1,4 @@
+import { exposeForTests } from '../project/api';
 import * as monaco from 'monaco-editor';
 import EditorWorker from 'monaco-editor/editor/editor.worker?worker';
 import TsWorker from 'monaco-editor/language/typescript/ts.worker?worker';
@@ -31,7 +32,7 @@ export function setupMonaco(): typeof monaco {
   });
   ts.setDiagnosticsOptions({ noSemanticValidation: false, noSyntaxValidation: false });
   ts.addExtraLib(engineTypes(), 'file:///tilewright/api.d.ts');
-  (window as unknown as { __monaco: unknown }).__monaco = monaco; // for the end-to-end tests
+  exposeForTests('__monaco', monaco);
   monaco.editor.defineTheme('tilewright-dark', { base: 'vs-dark', inherit: true, rules: [], colors: {} });
   return monaco;
 }

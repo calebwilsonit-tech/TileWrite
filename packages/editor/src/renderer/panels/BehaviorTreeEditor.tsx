@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { NODE_H, NODE_W, addNode, canHaveChild, duplicateNode, kindColor, layoutTree, moveNode, nodeOf, parentOf, removeNode, setAction, setCondition, startTree, updateNode, wrapNode } from '../model/tree-edit';
+import { getPlay } from '../viewport/controller';
 import { NumberField, SelectField, TextField } from './fields';
 import { SoundField } from './SoundField';
 import { ACTION_KIND_LABELS, CONDITION_KIND_LABELS, NODE_KIND_LABELS, archerTree, checkTree, describeNode, guardTree, newTreeAction, newTreeCondition, wandererTree, type BehaviorTree, type TreeAction, type TreeCondition, type TreeNode, type TreeNodeKind } from '@tilewright/behaviors';
@@ -92,7 +93,7 @@ function useLiveTrace(sceneId: string | undefined): Record<string, string> {
   const [trace, setTrace] = useState<Record<string, string>>({});
   useEffect(() => {
     const id = window.setInterval(() => {
-      const play = window.__play;
+      const play = getPlay();
       const runtimeId = sceneId && play ? play.sim.runtime.ids.get(sceneId) : undefined;
       const t = runtimeId !== undefined ? play!.sim.world.get(runtimeId)?.get<{ trace: Record<string, string> }>('state:tree')?.trace : undefined;
       setTrace((old) => {

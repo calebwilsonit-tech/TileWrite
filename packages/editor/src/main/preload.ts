@@ -5,8 +5,13 @@ const invoke = <T>(channel: string, ...args: unknown[]): Promise<T> => ipcRender
 /**
  * The only door between the editor UI and the computer. File access is limited to folders the user chose
  * (enforced in the main process), and there is no way to run commands from here.
+ *
+ * The page does not get the door as a global. It gets `unlock`, which hands the door over once, to the first code that asks (the
+ * editor's own, at startup, before any plugin runs); after that the global holds nothing. Plugins from outside run in this same
+ * window, so a global door would be theirs too. (End-to-end tests ask for `testHooks`, which keeps the door where tests can see it.)
  */
-contextBridge.exposeInMainWorld('tilewright', {
+const testHooks = process.env.TILEWRIGHT_TEST_DIR !== undefined && process.env.TILEWRIGHT_TEST_HOOKS !== '0';
+const door = {
   platform: process.platform,
   versions: { electron: process.versions.electron, chrome: process.versions.chrome },
   info: () => invoke('app:info'),
@@ -32,7 +37,7 @@ contextBridge.exposeInMainWorld('tilewright', {
     remove: (id: string, version?: string) => invoke<void>('plugins:remove', id, version),
     watch: (dir: string) => invoke<void>('plugins:watch', dir),
     unwatch: (dir: string) => invoke<void>('plugins:unwatch', dir),
-    runProgram: (pluginName: string, command: string, args: string[]) => invoke('plugins:run-program', pluginName, command, args),
+    runProgram: (pluginId: string, command: string, args: string[]) => invoke('plugins:run-program', pluginId, command, args),
     onChanged: (fn: (dir: string) => void) => {
       const l = (_e: unknown, dir: string): void => fn(dir);
       ipcRenderer.on('plugins:changed', l);
@@ -95,4 +100,19 @@ contextBridge.exposeInMainWorld('tilewright', {
     remove: (dir: string) => invoke<void>('recent:remove', dir),
     allow: (dir: string) => invoke<string>('recent:open-allowed', dir),
   },
-});
+};
+let handedOver = false;
+contextBridge.exposeInMainWorld(
+  'tilewright',
+  testHooks
+    ? { ...door, testHooks: true }
+    : {
+        testHooks: false,
+        platform: process.platform,
+        unlock: () => {
+          if (handedOver) return null;
+          handedOver = true;
+          return door;
+        },
+      },
+);

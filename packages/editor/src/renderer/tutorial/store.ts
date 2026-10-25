@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react';
+import { getPlay } from '../viewport/controller';
 import { store as app } from '../app/store';
 import { TUTORIAL_STEPS, type TutorialContext } from './steps';
 
@@ -67,8 +68,8 @@ class TutorialStore {
   private check(): void {
     if (!this.state.active) return;
     let saw = this.state.sawGateOpen;
-    if (!saw && app.state.mode === 'play' && window.__play) {
-      saw = window.__play.sim.world.all().some((e) => e.has('gate') && (e.get<{ outputs: Record<string, boolean> }>('signals')?.outputs.isOpen ?? false));
+    if (!saw && app.state.mode === 'play' && getPlay()) {
+      saw = getPlay()!.sim.world.all().some((e) => e.has('gate') && (e.get<{ outputs: Record<string, boolean> }>('signals')?.outputs.isOpen ?? false));
       if (saw) this.set({ sawGateOpen: true });
     }
     const step = TUTORIAL_STEPS[this.state.index];

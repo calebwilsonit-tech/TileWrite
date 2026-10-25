@@ -3,6 +3,7 @@ import { PluginTrust, compareVersionText, host, loadPackage, readPluginPackage, 
 import { api } from '../project/api';
 import { joinPath } from '../project/api';
 import { installIsolatedEditorPart } from './isolated';
+import { browserWorker, preflightGamePart } from './preflight';
 
 /**
  * Plugins other people wrote, kept on this computer: found in the plugin store (a folder per id and version), read, approved by the
@@ -137,7 +138,7 @@ class PluginManager {
       if (!p?.pkg || p.state !== 'ready') continue;
       const known = host.known.get(id);
       if (known && known.manifest.version === p.pkg.manifest.version && !p.dev) continue;
-      const out = await loadPackage(p.pkg, this.trust, sdk);
+      const out = await loadPackage(p.pkg, this.trust, sdk, { preflight: (pkg) => preflightGamePart(pkg.manifest.name, pkg.runtimeCode ?? '', browserWorker) });
       if (out.state !== 'loaded') {
         p.state = out.state === 'needs-approval' ? 'needs-approval' : 'refused';
         p.problems = out.state === 'refused' ? out.problems : [];

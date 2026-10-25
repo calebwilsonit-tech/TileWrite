@@ -1,6 +1,7 @@
 import { Suspense, lazy, useEffect, useRef } from 'react';
 import { DockviewReact, type DockviewApi, type DockviewReadyEvent, type IDockviewPanelProps } from 'dockview-react';
 import 'dockview-react/dist/styles/dockview.css';
+import { api } from '../project/api';
 import { useApp, store } from './store';
 import { COMMANDS, viewportRef } from './commands';
 import { CommandPalette, NewSceneDialog, RecoveryDialog, ShortcutsDialog, StatusBar, Toasts, useKeyDispatcher, useShortcuts } from './Chrome';
@@ -253,7 +254,7 @@ export function EditorShell() {
 
   const onReady = (e: DockviewReadyEvent): void => {
     apiRef.current = e.api;
-    void window.tilewright.settings.get().then((s) => {
+    void api().settings.get().then((s) => {
       const saved = s.layout as { version?: number; data?: unknown } | null | undefined;
       let restored = false;
       if (saved && saved.version === LAYOUT_VERSION && saved.data) {

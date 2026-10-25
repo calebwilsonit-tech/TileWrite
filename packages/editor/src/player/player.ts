@@ -26,7 +26,10 @@ interface GameApi {
   toggleFullscreen(): Promise<void>;
   setFullscreen(on: boolean): Promise<void>;
 }
-const game = (): GameApi => (window.tilewright as unknown as { game: GameApi }).game;
+// the door to the computer is handed over once, to this file, before any plugin runs (see game/game-preload.ts)
+const raw = window.tilewright as unknown as { unlock?: () => { game: GameApi } | null; game: GameApi };
+const door = typeof raw.unlock === 'function' ? raw.unlock() : raw;
+const game = (): GameApi => door!.game;
 
 const stage = document.getElementById('stage')!;
 let session: PlaySession | null = null;

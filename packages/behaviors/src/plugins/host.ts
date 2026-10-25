@@ -36,7 +36,7 @@ export interface EditorHost {
   /** The clipboard's text, and putting text on it. Needs the `clipboard` permission. */
   clipboard: { read(): Promise<string>; write(text: string): Promise<void> };
   /** Run another program on this computer (the person is asked each time). Needs the `programs` permission, which is off by default. */
-  runProgram(command: string, args: string[], plugin?: string): Promise<{ code: number; stdout: string; stderr: string }>;
+  runProgram(command: string, args: string[], pluginId?: string): Promise<{ code: number; stdout: string; stderr: string }>;
 }
 
 /** A panel a plugin adds to the editor. Plain DOM, so a plugin needs no UI framework. */
@@ -339,7 +339,7 @@ export class PluginHost {
       },
       runProgram: async (command, args) => {
         this.need(id, 'programs', 'run another program');
-        return raw().runProgram(command, args, name());
+        return raw().runProgram(command, args, id); // the id, not a name: the main process looks the plugin up itself
       },
     };
   }
@@ -487,16 +487,40 @@ export class PluginHost {
     };
   }
 
-  /** The same for a function the game runs (a behaviour, a system, an event block): the error is recorded against the plugin and passed on. */
+  /**
+   * The same for a function the game runs (a behaviour, a system, an event block): the error is recorded against the plugin and passed on.
+   * A plugin from outside is also timed. The game cannot be taken back from code that never returns, but code that keeps it waiting
+   * again and again (more than `slowCallMs` in one call, three times) is turned off, with a message, so the game goes on without it.
+   */
   private watched<A extends unknown[], R>(id: string, where: string, fn: (...args: A) => R): (...args: A) => R {
+    const timed = (): boolean => this.known.get(id)?.manifest.builtin !== true;
     return (...args: A): R => {
+      const start = timed() ? performance.now() : 0;
       try {
         return fn(...args);
       } catch (e) {
         this.fail(id, where, e);
         throw e;
+      } finally {
+        if (start > 0) this.noteDuration(id, where, performance.now() - start);
       }
     };
+  }
+
+  /** A call longer than this many milliseconds is a strike against a plugin from outside; the third turns it off. */
+  slowCallMs = 250;
+  private readonly strikes = new Map<string, number>();
+
+  private noteDuration(id: string, where: string, ms: number): void {
+    if (ms <= this.slowCallMs || !this.installed.has(id)) return;
+    const n = (this.strikes.get(id) ?? 0) + 1;
+    this.strikes.set(id, n);
+    if (n < 3) return;
+    this.strikes.delete(id);
+    const f = this.fail(id, where, new Error(`it kept the game waiting for ${Math.round(ms)} milliseconds in one call (the third time)`));
+    this.editorHost?.notify('error', `${f.message}. The plugin has been turned off; turn it back on in the Plugins window once it is fixed.`);
+    // not in the middle of the call that was too slow: the game is still using what the plugin added
+    setTimeout(() => this.uninstall(id), 0);
   }
 
   // --- the api a plugin is given ---

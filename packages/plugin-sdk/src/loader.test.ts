@@ -64,6 +64,21 @@ describe('running a plugin other people wrote', () => {
     expect(PluginTrust.from(trust.toJSON()).isApproved('wind', r.pkg.hash)).toBe(true);
   });
 
+  it('is not started when the try-out beforehand says it does not finish, and built-in plugins skip the try-out', async () => {
+    const r = await readPluginPackage(memoryFs(files));
+    if (!r.ok) throw new Error('read');
+    const trust = new PluginTrust();
+    trust.approve('wind', r.pkg.hash);
+    const asked: string[] = [];
+    const refuse = async (pkg: { manifest: { id: string } }): Promise<string | null> => (asked.push(pkg.manifest.id), 'It never ends.');
+    const out = await loadPackage(r.pkg, trust, sdk, { preflight: refuse });
+    expect(out).toEqual({ state: 'refused', problems: ['It never ends.'] });
+    expect((await loadPackage(r.pkg, trust, sdk, { preflight: async () => null })).state).toBe('loaded');
+    asked.length = 0;
+    await loadPackage(r.pkg, trust, sdk, { builtin: true, preflight: refuse });
+    expect(asked).toEqual([]);
+  });
+
   it('adds what it brings when turned on and takes it away again', async () => {
     const r = await readPluginPackage(memoryFs(files));
     if (!r.ok) throw new Error('read');

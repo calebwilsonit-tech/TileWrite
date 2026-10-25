@@ -1,3 +1,4 @@
+import { getPlay } from '../viewport/controller';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ACTIONS,
@@ -56,7 +57,7 @@ function useLive(graphId: string | null): Set<string> {
     }
     let raf = 0;
     const loop = (): void => {
-      const play = (window as unknown as { __play?: { sim: { tick: number; runtime: { scratch: Map<string, unknown> } } } }).__play;
+      const play = getPlay();
       const fired = play?.sim.runtime.scratch.get('fired') as Map<string, number> | undefined;
       const next = new Set<string>();
       if (play && fired) for (const [key, tick] of fired) if (key.startsWith(`g:${graphId}:`) && play.sim.tick - tick < 30) next.add(key.slice(`g:${graphId}:`.length).replace('#ran', ''));

@@ -127,15 +127,32 @@ export class RemotePart {
     doc: DomDocLike,
     onDeclared: (d: Declared, part: RemotePart) => void,
     private readonly onCrash: (message: string) => void,
+    private readonly limits: { declareMs: number; requestMs: number } = { declareMs: 5000, requestMs: 15_000 },
   ) {
     this.dom = new RemoteDom(doc, (node, type, value, checked) => this.worker?.postMessage({ t: 'event', node, type, value, checked }));
     this.worker = makeWorker();
     this.worker.onmessage = (ev) => this.handle(ev.data, onDeclared);
     this.worker.onerror = (ev) => this.onCrash(ev.message ?? 'it stopped');
     this.worker.postMessage({ t: 'declare' });
+    // a worker that never says what it offers (a loop at the top of its file) is stopped; so is one that stops answering a call
+    this.declareTimer = setTimeout(() => this.hung('say what it offers'), this.limits.declareMs);
+  }
+
+  private declareTimer: ReturnType<typeof setTimeout> | null = null;
+
+  /** The worker did not answer in time: stop it, fail what waits on it, and tell the editor. */
+  private hung(what: string): void {
+    if (!this.worker) return;
+    const waiting = [...this.requests.values()];
+    this.requests.clear();
+    this.stop();
+    for (const r of waiting) r.reject(new Error(`The plugin did not answer in time (it was asked to ${what}), so it was stopped.`));
+    this.onCrash(`it did not answer in time (it was asked to ${what}), so it was stopped`);
   }
 
   stop(): void {
+    if (this.declareTimer) clearTimeout(this.declareTimer);
+    this.declareTimer = null;
     this.worker?.terminate();
     this.worker = null;
     for (const r of this.requests.values()) r.reject(new Error('The plugin was turned off.'));
@@ -157,6 +174,8 @@ export class RemotePart {
         this.dom.apply(m.op as DomOp);
         return;
       case 'declared':
+        if (this.declareTimer) clearTimeout(this.declareTimer);
+        this.declareTimer = null;
         onDeclared(m as Declared, this);
         return;
       case 'error':
@@ -197,7 +216,8 @@ export class RemotePart {
   private request(message: Record<string, unknown>): Promise<unknown> {
     return new Promise((resolve, reject) => {
       const id = this.nextRequest++;
-      this.requests.set(id, { resolve, reject });
+      const timer = setTimeout(() => this.hung(`answer a ${String(message.t)} call`), this.limits.requestMs);
+      this.requests.set(id, { resolve: (v) => (clearTimeout(timer), resolve(v)), reject: (e) => (clearTimeout(timer), reject(e)) });
       this.worker?.postMessage({ ...message, id });
     });
   }

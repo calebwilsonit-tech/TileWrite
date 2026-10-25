@@ -1,3 +1,4 @@
+import { api, exposeForTests } from '../project/api';
 import { PALETTE, setColourBlindSafe } from '../viewport/palette';
 
 /** Settings that make the editor easier to see and use; remembered with the other app settings. */
@@ -20,10 +21,10 @@ export function cleanAccessibility(raw: unknown): Accessibility {
 }
 
 export function applyAccessibility(a: Accessibility): void {
-  (window.tilewright as unknown as { ui?: { setZoom(factor: number): void } }).ui?.setZoom(a.zoom);
+  (api() as unknown as { ui?: { setZoom(factor: number): void } }).ui?.setZoom(a.zoom);
   document.documentElement.classList.toggle('reduce-motion', a.reduceMotion);
   setColourBlindSafe(a.colourBlind);
-  (window as unknown as { __palette?: typeof PALETTE }).__palette = PALETTE; // for the end-to-end tests
+  exposeForTests('__palette', PALETTE);
   document.dispatchEvent(new CustomEvent('tw:palette'));
   void import('./commands').then((m) => m.viewportRef.current?.requestRedraw());
 }

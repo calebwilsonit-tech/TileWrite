@@ -5,6 +5,8 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 
 interface Deps {
+  /** The person's saved settings (the plugin manager keeps what the person allowed there). */
+  settings(): Promise<Record<string, unknown>>;
   /** Lets the editor read and write inside a folder (the plugin store). */
   allow(dir: string): string;
   /** Where installed plugins live: <store>/<id>/<version>/. */
@@ -162,9 +164,14 @@ export function registerPlugins(deps: Deps): void {
    * The one way a plugin can run another program: it must have asked for the "programs" permission and been granted it, and the
    * person is asked here, every time, with the command in front of them. No shell is involved.
    */
-  ipcMain.handle('plugins:run-program', async (e, pluginName: string, command: string, args: string[]) => {
+  ipcMain.handle('plugins:run-program', async (e, pluginId: string, command: string, args: string[]) => {
     if (typeof command !== 'string' || command === '' || !Array.isArray(args) || args.some((a) => typeof a !== 'string')) throw new Error('That is not a program to run.');
-    const allowed = deps.testMode ? process.env.TILEWRIGHT_TEST_PROGRAMS === 'allow' : await ask(e.sender, pluginName, command, args);
+    // who is asking is worked out here, from what is on this computer: the dialog names the plugin by its own manifest, and a plugin
+    // that was not allowed to run programs cannot get as far as the question
+    const who = await describePlugin(pluginId);
+    if (!who) throw new Error('A program can only be run by a plugin that is installed.');
+    if (!who.granted.includes('programs')) throw new Error(`The plugin "${who.name}" was not allowed to run programs.`);
+    const allowed = deps.testMode ? process.env.TILEWRIGHT_TEST_PROGRAMS === 'allow' : await ask(e.sender, who.name, command, args);
     if (!allowed) throw new Error('You said no, so the program was not run.');
     return new Promise<{ code: number; stdout: string; stderr: string }>((resolve) => {
       execFile(command, args, { timeout: 30_000, maxBuffer: 1024 * 1024, windowsHide: true }, (err, stdout, stderr) => {
@@ -173,6 +180,29 @@ export function registerPlugins(deps: Deps): void {
       });
     });
   });
+
+  /** What this computer says about a plugin: its name from its manifest, and what the person allowed it to do (read from the saved settings). */
+  async function describePlugin(id: unknown): Promise<{ name: string; granted: string[] } | null> {
+    if (typeof id !== 'string' || !ID.test(id)) return null;
+    const settings = ((await deps.settings()).plugins ?? {}) as { grants?: Record<string, unknown>; dev?: unknown };
+    const folders = [...(Array.isArray(settings.dev) ? (settings.dev as unknown[]).filter((d): d is string => typeof d === 'string') : [])];
+    try {
+      for (const v of await fs.readdir(path.join(deps.storeDir, id), { withFileTypes: true })) if (v.isDirectory()) folders.push(path.join(deps.storeDir, id, v.name));
+    } catch {
+      /* not in the store */
+    }
+    for (const dir of folders) {
+      try {
+        const m = JSON.parse(await fs.readFile(path.join(dir, 'plugin.json'), 'utf8')) as { id?: unknown; name?: unknown };
+        if (m.id !== id) continue;
+        const granted = settings.grants?.[id];
+        return { name: typeof m.name === 'string' && m.name !== '' ? m.name : id, granted: Array.isArray(granted) ? granted.filter((g): g is string => typeof g === 'string') : [] };
+      } catch {
+        /* not a readable plugin folder */
+      }
+    }
+    return null;
+  }
 
   async function ask(sender: WebContents, pluginName: string, command: string, args: string[]): Promise<boolean> {
     const win = BrowserWindow.fromWebContents(sender);

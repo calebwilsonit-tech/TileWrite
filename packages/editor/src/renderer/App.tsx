@@ -1,3 +1,4 @@
+import { exposeForTests } from './project/api';
 import { useEffect, useRef, useState } from 'react';
 import { startWalkingSquare, type SampleHandle } from '../../../../samples/m1-walking-square/game';
 import { startMultilevelRoom, type M2Handle } from '../../../../samples/m2-multilevel-room/game';
@@ -46,7 +47,7 @@ function SampleView({ start, title, help }: { start: Starter; title: string; hel
         return;
       }
       handle = h;
-      window.__sample = h;
+      exposeForTests('__sample', h);
       timer = window.setInterval(() => {
         const player = h.sim.world.withTag('player')[0];
         const t = player?.get<{ h: number }>('transform');
@@ -58,7 +59,7 @@ function SampleView({ start, title, help }: { start: Starter; title: string; hel
       cancelled = true;
       if (timer) window.clearInterval(timer);
       handle?.stop();
-      window.__sample = undefined;
+      exposeForTests('__sample', undefined);
     };
   }, [start]);
   return (
@@ -82,9 +83,9 @@ export function App() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    window.__store = store;
-    window.__plugins = { host, manager: pluginManager };
-    window.__studio = studio;
+    exposeForTests('__store', store);
+    exposeForTests('__plugins', { host, manager: pluginManager });
+    exposeForTests('__studio', studio);
     void store.init().then(() => setReady(true));
   }, []);
 

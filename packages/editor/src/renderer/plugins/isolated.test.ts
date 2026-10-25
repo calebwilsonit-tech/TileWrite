@@ -200,3 +200,28 @@ describe('the sandbox of a plugin editor part', () => {
     expect((container as unknown as FakeNode).text()).toMatch(/not allowed to .*project\.read/);
   });
 });
+
+describe('a plugin editor part that stops answering', () => {
+  const silent = (): { postMessage(m: unknown): void; terminate(): void; onmessage: null; onerror: null; stopped: boolean } => {
+    const w = { postMessage: () => undefined, terminate: () => void (w.stopped = true), onmessage: null, onerror: null, stopped: false };
+    return w;
+  };
+
+  it('is stopped and reported when it never says what it offers', async () => {
+    const log: string[] = [];
+    const w = silent();
+    new RemotePart('p', () => editorHost(log), () => w as never, fakeDoc, () => undefined, (m) => log.push(`crash: ${m}`), { declareMs: 20, requestMs: 20 });
+    await new Promise((r) => setTimeout(r, 60));
+    expect(w.stopped).toBe(true);
+    expect(log.join(' ')).toMatch(/crash: .*did not answer/);
+  });
+
+  it('is stopped when a tool call takes too long, and the person is told in words', async () => {
+    const log: string[] = [];
+    const w = silent();
+    const part = new RemotePart('p', () => editorHost(log), () => w as never, fakeDoc, () => undefined, (m) => log.push(`crash: ${m}`), { declareMs: 10_000, requestMs: 20 });
+    await expect(part.tool('probe', { x: 1, y: 1 }, {})).rejects.toThrow(/did not answer/);
+    expect(w.stopped).toBe(true);
+    expect(log.join(' ')).toMatch(/crash: .*did not answer/);
+  });
+});

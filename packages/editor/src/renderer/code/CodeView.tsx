@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type * as MonacoTypes from 'monaco-editor';
 import { contextOf, gameViewOf, type ScriptEntity, type ScriptGame } from '@tilewright/behaviors';
+import { getPlay } from '../viewport/controller';
 import { store, useApp } from '../app/store';
 import { SCRIPT_TEMPLATES } from '../project/scripts';
 import { evaluateWatch } from './script-manager';
@@ -10,7 +11,7 @@ import { setupMonaco } from './monaco-setup';
 function watchContext(): { me?: ScriptEntity; game?: ScriptGame } {
   const hit = store.hitContext;
   if (hit) return { me: hit.me, game: hit.game };
-  const play = window.__play;
+  const play = getPlay();
   if (!play) return {};
   const sim = play.sim;
   const sel = store.state.selection[0];

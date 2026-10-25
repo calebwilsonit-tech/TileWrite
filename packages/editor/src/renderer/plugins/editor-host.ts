@@ -27,7 +27,7 @@ export function createEditorHost(): EditorHost {
     readFile: (rel) => assetFs.read(inside(dir(), rel)),
     writeFile: (rel, text) => assetFs.write(inside(dir(), rel), text),
     clipboard: { read: () => navigator.clipboard.readText(), write: (text) => navigator.clipboard.writeText(text) },
-    runProgram: (command, args, plugin) => api().plugins.runProgram(plugin ?? 'A plugin', command, args),
+    runProgram: (command, args, plugin) => api().plugins.runProgram(plugin ?? '', command, args),
   };
 }
 

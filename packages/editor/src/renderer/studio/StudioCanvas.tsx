@@ -1,3 +1,4 @@
+import { exposeForTests } from '../project/api';
 import { useEffect, useRef, useState } from 'react';
 import { floodPoints, getPixel, moveShape, newEllipseShape, newPathShape, newRectShape, pickShape, resizeShape, shapeBounds, type Box, type Pt, type VectorShape } from '@tilewright/runtime';
 import { isoBoxPixels, shadeHex, shapePixels } from './paint';
@@ -47,12 +48,12 @@ export function StudioCanvas() {
 
   // lets end-to-end tests find pixels on screen (page coordinates of a sprite pixel's centre)
   useEffect(() => {
-    window.__studioPx = (x: number, y: number) => {
+    exposeForTests('__studioPx', (x: number, y: number) => {
       const r = canvas.current!.getBoundingClientRect();
       return { x: r.left + view.current.x + (x + 0.5) * studio.state.zoom, y: r.top + view.current.y + (y + 0.5) * studio.state.zoom };
-    };
+    });
     return () => {
-      window.__studioPx = undefined;
+      exposeForTests('__studioPx', undefined);
     };
   }, []);
 
