@@ -387,7 +387,7 @@ export class IsoRenderer {
     const hw = this.iso.tileW / 2;
     const hh = this.iso.tileH / 2;
     let best: { x: number; y: number; z: number; face: BlockFace; key: number } | null = null;
-    const test = (x: number, y: number, z: number): void => {
+    const test = (x: number, y: number, z: number, topOnly = false): void => {
       if (this.sliceTop !== null && z >= this.sliceTop) return;
       const c = gridToScreen(x + 0.5, y + 0.5, z + 1, this.iso);
       if (w.x < c.x - hw || w.x > c.x + hw || w.y < c.y - hh || w.y > c.y + hh + this.iso.heightPx) return;
@@ -405,6 +405,7 @@ export class IsoRenderer {
       const sides = this.visibleSides();
       let face: BlockFace | null = null;
       if (map.blockAt(x, y, z + 1) === undefined && inside(top, w.x, w.y)) face = 'top';
+      else if (topOnly) return;
       else if (map.blockAt(x + l.x, y + l.y, z) === undefined && inside(sideOf(sides.left), w.x, w.y)) face = leftFace;
       else if (map.blockAt(x + r.x, y + r.y, z) === undefined && inside(sideOf(sides.right), w.x, w.y)) face = rightFace;
       if (!face) return;
@@ -414,7 +415,11 @@ export class IsoRenderer {
     };
     for (let y = 0; y < map.height; y++) {
       for (let x = 0; x < map.width; x++) {
-        if (map.getTile(x, y) === 0 && !map.getStack(x, y)) continue;
+        if (map.getTile(x, y) === 0 && !map.getStack(x, y)) {
+          // a cell with nothing in it (its floor was taken out): where its floor was can still be pointed at, so a block can go back there
+          test(x, y, -1, true);
+          continue;
+        }
         const st = map.getStack(x, y);
         if (st) for (const b of st.blocks) test(x, y, b.z);
         else if (!map.getSlope(x, y) && map.getDeck(x, y) === 0) {

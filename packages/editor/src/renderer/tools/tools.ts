@@ -984,7 +984,11 @@ function blocksTool(): ToolImpl {
       const hit = env.pickBlock(p.screen);
       if (!hit) return env.setPreview([]);
       const removing = p.ctrl || env.opts.blockMode === 'delete';
-      if (removing) return env.setPreview([{ kind: 'cube', x: hit.x, y: hit.y, z: hit.z, color: 0xe0566b }]);
+      if (removing) {
+        // an empty cell has nothing to take away
+        const empty = hit.z < 0 && env.doc.map.getTile(hit.x, hit.y) === 0 && !env.doc.map.getStack(hit.x, hit.y);
+        return env.setPreview(empty ? [] : [{ kind: 'cube', x: hit.x, y: hit.y, z: hit.z, color: 0xe0566b }]);
+      }
       const beside = cellBeside(hit);
       env.setPreview([
         { kind: 'face', x: hit.x, y: hit.y, z: hit.z, face: hit.face, color: 0xffd34a },

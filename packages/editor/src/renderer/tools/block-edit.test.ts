@@ -95,6 +95,21 @@ describe('the Blocks tool, used', () => {
     expect(r.preview().map((p) => p.kind)).toEqual(['cube']);
   });
 
+  it('a cell whose floor was taken out can be built on again, and has nothing to take away', () => {
+    const r = rig({ x: 5, y: 5, z: -1, face: 'top' });
+    r.doc.map.set(5, 5, 0);
+    TOOLS.blocks.hover(r.at(5, 5, { ctrl: true }), r.env);
+    expect(r.preview()).toEqual([]);
+    TOOLS.blocks.down(r.at(5, 5, { button: 2 }), r.env);
+    TOOLS.blocks.up(r.at(5, 5, { button: 2 }), r.env);
+    expect(r.doc.map.getTile(5, 5)).toBe(0);
+    TOOLS.blocks.hover(r.at(5, 5), r.env);
+    expect(r.preview().map((p) => p.kind)).toEqual(['face', 'solid']);
+    TOOLS.blocks.down(r.at(5, 5), r.env);
+    TOOLS.blocks.up(r.at(5, 5), r.env);
+    expect(r.doc.map.blockAt(5, 5, 0)?.tile).toBe(2);
+  });
+
   it('a click puts a block on the face; right-click takes the block away; both are one undo step', () => {
     const r = rig({ x: 4, y: 4, z: -1, face: 'top' });
     TOOLS.blocks.down(r.at(4, 4), r.env);

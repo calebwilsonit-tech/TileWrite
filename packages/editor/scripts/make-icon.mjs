@@ -1,9 +1,11 @@
 // Draws the Tilewright logo and writes it where electron-builder looks: build/icon.svg, build/icon.png (512) and build/icon.ico
 // (16 to 256). The picture is made by the code below, so it can be changed here and drawn again with `node scripts/make-icon.mjs`.
 // The SVG is turned into pictures by Electron itself (already installed), so no extra tool is needed.
+import { Buffer } from 'node:buffer';
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
+import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
