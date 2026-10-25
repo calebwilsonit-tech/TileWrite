@@ -428,10 +428,11 @@ describe('the Parchment UI kit (a plugin that re-skins the game\u2019s screens)'
       const { sim } = game();
       sim.assets.ui = doc;
       open(sim, 'pause');
-      activateWidget(sim, byId(sim, 'resume'));
+      activateWidget(sim, byId(sim, 'pause.resume'));
       expect(stack(sim)).toEqual([]);
-      // the heads-up display and the travel list are not re-drawn
-      expect(doc.screens.find((s) => s.role === 'hud')!.from?.plugin).toBe('prebuilt-screens');
+      // the travel list is not re-drawn; the heads-up display is the kit's own (parchment.test.ts says what each page does)
+      expect(doc.screens.find((s) => s.role === 'hud')!.from?.plugin).toBe('parchment');
+      expect(doc.screens.find((s) => s.role === 'travel')!.from?.plugin).not.toBe('parchment');
       // a project's own screen still wins over a plugin's
       const own = UiDocSchema.parse({ screens: [{ ...defs('pause'), id: 'mine', name: 'Pause', role: undefined }] });
       expect(withPluginScreens(own).screens.filter((s) => s.role === 'pause' || s.name === 'Pause')).toHaveLength(1);

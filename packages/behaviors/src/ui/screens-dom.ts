@@ -816,6 +816,8 @@ export class UiScreens {
       cur = this.nearest(cur, dir, all, menuKeys) ?? (menu && (dir === 'up' || dir === 'down') ? (dir === 'down' ? all[0]! : all[all.length - 1]!) : cur);
       break;
     }
+    // choosing a widget with the keys or the pad does what pointing at it does (a description under a menu follows both)
+    if (cur && cur.key !== this.focusKey && cur.visible && cur.node.on.hover.length > 0) hover(this.sim, cur);
     if (cur) this.focusKey = cur.key;
     if (cur && ui.pressed('interact')) {
       this.autoFocus = false;

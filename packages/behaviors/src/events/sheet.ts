@@ -699,6 +699,26 @@ export const ACTIONS: ActionDef[] = [
     run: (ctx, p) => void ctx.events.emit('travel-place-request', { place: filled(ctx, p, 'place') }),
   },
   {
+    id: 'setSetting',
+    label: 'Change a player setting (music volume, difficulty, language...)',
+    category: 'Interface',
+    params: [
+      { key: 'name', label: 'Setting (master, music, sfx, voice, difficulty, language, skin, screenShake, cameraZoom, showFps, fullscreen)', type: 'text', default: 'difficulty' },
+      { key: 'value', label: 'Value (a number, true or false, or words)', type: 'text', default: 'normal' },
+    ],
+    describe: (p) => `set the player setting "${str(p, 'name')}" to ${str(p, 'value')}`,
+    run(ctx, p) {
+      // the host (the editor's Play, an exported game) keeps the settings; a screen's sliders and choices reach it the same way
+      const bridge = ctx.runtime.scratch.get('ui.bridge') as { setSetting(key: string, value: VariableValue): void } | undefined;
+      const name = str(p, 'name').replace(/^settings\./, '');
+      if (!name) return;
+      if (!bridge) return void ctx.events.emit('problem', { text: `The setting "${name}" cannot be changed here: the game has no settings to change.` });
+      const raw = filled(ctx, p, 'value');
+      const n = Number(raw);
+      bridge.setSetting(name, raw === 'true' ? true : raw === 'false' ? false : raw.trim() !== '' && Number.isFinite(n) ? n : raw);
+    },
+  },
+  {
     id: 'resetControls',
     label: 'Put all controls back to how they were',
     category: 'Interface',

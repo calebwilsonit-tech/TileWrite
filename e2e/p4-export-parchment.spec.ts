@@ -36,6 +36,12 @@ test('Round 2: a game that uses the Parchment UI kit exports with its paper menu
   await expect(gamePage.getByTestId('tw-screen-Pause')).toBeVisible();
   await expect(gamePage.getByTestId('tw-ui-Pause box')).toHaveCSS('background-color', 'rgb(232, 217, 181)');
   await gamePage.screenshot({ path: shot('p4-export-parchment.png') });
+  // the kit's own pages are in the exported game too: the pause menu's Travel row, and the binder with its paper doll
+  await expect(gamePage.getByTestId('tw-ui-Travel')).toBeVisible();
+  await gamePage.getByTestId('tw-ui-Inventory').first().click();
+  await expect(gamePage.getByTestId('tw-screen-Inventory')).toBeVisible();
+  await expect(gamePage.getByTestId('tw-ui-Paper doll')).toBeVisible();
+  await gamePage.screenshot({ path: shot('p4-export-parchment-binder.png') });
   expect(gameErrors).toEqual([]);
   await game.close();
 });

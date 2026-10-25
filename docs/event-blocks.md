@@ -4,7 +4,7 @@
 
 An event sheet is a list of rows, each reading like a line of instructions: **when** its conditions hold, **do** its actions. Rows can have sub-events that run only while the row holds. Objects are chosen as "the player", "anything tagged ...", or a particular object. See [logic.md](logic.md).
 
-There are 31 conditions and 58 actions.
+There are 31 conditions and 59 actions.
 
 ## Conditions
 
@@ -602,6 +602,15 @@ Id: `travelToPost`.
 | height | `h` | text | "0" |  |
 
 ### Interface
+
+#### Change a player setting (music volume, difficulty, language...)
+
+Id: `setSetting`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Setting (master, music, sfx, voice, difficulty, language, skin, screenShake, cameraZoom, showFps, fullscreen) | `name` | text | "difficulty" |  |
+| Value (a number, true or false, or words) | `value` | text | "normal" |  |
 
 #### Put all controls back to how they were
 
