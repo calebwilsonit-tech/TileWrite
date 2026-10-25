@@ -5,7 +5,6 @@ import {
   facingOfGridDir,
   findPath,
   isGravityDir,
-  isLit,
   itemCount,
   teleportBody,
   type Body,
@@ -290,7 +289,7 @@ class GameView implements ScriptGame {
     if (!this.ctx.runtime.travel) this.ctx.runtime.travel = { scene: scene || this.ctx.runtime.scene, spawn };
   }
   isLit(x: number, y: number): boolean {
-    return isLit(this.ctx.runtime.lighting, x, y);
+    return this.viaPlugin('isLit', [x, y], true);
   }
   findPath(from: { x: number; y: number }, to: { x: number; y: number }): { x: number; y: number }[] | null {
     const map = this.ctx.map;

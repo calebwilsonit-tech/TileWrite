@@ -1,6 +1,6 @@
 import { Container, Graphics, RenderTexture, Sprite as PixiSprite, type Renderer } from 'pixi.js';
-import { gridToScreen, type IsoConfig } from '../iso/math';
-import { visibilityPolygon, type LightingModel } from '../lighting/lighting';
+import { gridToScreen, type IsoConfig, type ScreenLayer, type ScreenLayerFrame } from '@tilewright/runtime';
+import { visibilityPolygon, type LightingModel } from './model';
 
 const RINGS = 14;
 const RAYS = 72;
@@ -10,7 +10,7 @@ const RAYS = 72;
  * lights are "erased" from it (so overlapping lights add up); a faint additive glow gives lights their colour.
  * The result is two display objects the renderer puts above the world.
  */
-export class LightingLayer {
+export class LightingLayer implements ScreenLayer {
   /** Additive coloured glow (under the darkness). */
   readonly glow = new Graphics();
   /** The darkness (above the glow). */
@@ -28,7 +28,24 @@ export class LightingLayer {
     this.darkness.visible = false;
   }
 
+  get objects(): Container[] {
+    return [this.glow, this.darkness];
+  }
+
+  private lights = 0;
+
+  /** For the profiler line. */
+  stat(): string {
+    return `${this.lights} lights`;
+  }
+
+  /** The layer the renderer draws from what the lighting system left each tick. */
+  update(frame: ScreenLayerFrame): void {
+    this.draw(frame.renderer, frame.data as LightingModel, frame.iso, frame.view, frame.width, frame.height);
+  }
+
   hide(): void {
+    this.lights = 0;
     this.glow.visible = false;
     this.darkness.visible = false;
   }
@@ -36,7 +53,8 @@ export class LightingLayer {
   /**
    * @param view Where the world sits on screen: position of the world container and its zoom.
    */
-  update(renderer: Renderer, model: LightingModel, iso: IsoConfig, view: { x: number; y: number; zoom: number }, width: number, height: number): void {
+  private draw(renderer: Renderer, model: LightingModel, iso: IsoConfig, view: { x: number; y: number; zoom: number }, width: number, height: number): void {
+    this.lights = model.lights.length;
     const anyDark = model.sceneDarkness > 0 || model.regions.some((r) => r.darkness > 0);
     if (!anyDark) {
       this.hide();

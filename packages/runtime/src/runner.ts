@@ -158,7 +158,7 @@ export class GameRunner {
   }
 
   private draw(): void {
-    this.o.renderer.lighting = this.o.sim.runtime.lighting ?? null;
+    this.o.renderer.layerData = this.o.sim.runtime.plugin;
     this.o.renderer.marks = this.o.sim.runtime.view.cells;
     this.o.renderer.render(this.o.sim.world);
   }

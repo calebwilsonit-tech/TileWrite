@@ -110,6 +110,8 @@ export interface PluginApi {
   whoFilter(def: X.WhoFilterDef): void;
   /** Say when an object counts as defeated (what the playbot and the screens ask: `isDefeated`). */
   defeatCheck(def: X.DefeatCheckDef): void;
+  /** A layer drawn over the world (darkness, weather...). The game keeps its data in `runtime.plugin[id]`; with none, the layer hides. */
+  screenLayer(def: X.ScreenLayerDef): void;
   /** Add a way a place on the world map can unlock ("a checkpoint is lit there"). */
   unlockRule(def: X.UnlockRuleDef): void;
   /** Give scripts a method (me.damage, game.startDialogue...) that this plugin implements. */
@@ -212,6 +214,7 @@ const emptyExtensions = (): Extensions => ({
   collisionLayers: new Map(),
   whoFilters: new Map(),
   defeatChecks: new Map(),
+  screenLayers: new Map(),
   unlockRules: new Map(),
   scriptMethods: new Map(),
   blockTypes: new Map(),
@@ -590,6 +593,9 @@ export class PluginHost {
       },
       defeatCheck(def) {
         host.add(rec, id, 'defeatChecks', def.id, def);
+      },
+      screenLayer(def) {
+        host.add(rec, id, 'screenLayers', def.id, def);
       },
       whoFilter(def) {
         host.add(rec, id, 'whoFilters', def.id, def);

@@ -107,6 +107,15 @@ export const defeatExample: PluginDefinition = definePlugin(manifestOf('defeat',
   install: (api) => api.defeatCheck({ id: 'example-fragile', defeated: (e) => e.tags.has('fragile') && e.tags.has('broken') }),
 });
 
+// ---------- a layer over the world ----------
+export const screenLayerExample: PluginDefinition = definePlugin(manifestOf('screen-layer', 'Example: screen layer', 'A layer drawn over the world that tints the picture while a counter named "chill" is above zero.'), {
+  install: (api) => {
+    api.system('chill', (ctx) => void (ctx.runtime.plugin['screen-layer'] = Number(ctx.runtime.vars.chill) > 0 ? { amount: Math.min(1, Number(ctx.runtime.vars.chill) / 10) } : undefined), 'gameplay', 'after-behaviors');
+    // the layer is made when this plugin comes on, gets its data each frame, and hides when there is none
+    api.screenLayer({ id: 'screen-layer', create: () => ({ objects: [], update: () => undefined, hide: () => undefined }) });
+  },
+});
+
 // ---------- a method for scripts ----------
 export const scriptExample: PluginDefinition = definePlugin(manifestOf('script', 'Example: a script method', 'Scripts can call game.exampleShout(text).'), {
   install: (api) => api.scriptMethod({ id: 'exampleShout', run: (ctx, _self, [text]) => void ctx.events.emit('message', { text: String(text).toUpperCase() }), fallback: undefined }),

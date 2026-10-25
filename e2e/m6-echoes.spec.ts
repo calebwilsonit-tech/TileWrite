@@ -61,7 +61,7 @@ const worldState = (page: Page) =>
       plate1: active('Pressure plate'),
       plate2: active('Pressure plate 2'),
       gateOpen: find('Gate').get<{ enabled: boolean }>('collider')!.enabled === false,
-      lights: s.runtime.lighting?.lights.length ?? 0,
+      lights: (s.runtime.plugin.lighting as { lights: unknown[] } | undefined)?.lights.length ?? 0,
     };
   });
 

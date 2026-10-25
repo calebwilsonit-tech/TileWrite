@@ -18,7 +18,7 @@ import {
   type TileSet,
   type TransformIso,
 } from '@tilewright/runtime';
-import { parsePoints } from '@tilewright/behaviors';
+import { host, parsePoints } from '@tilewright/behaviors';
 import { objectLayerOf, type ObjectLayer } from '../model/layers';
 import { compatOf, crashReport } from '@tilewright/runtime';
 import type { EditorDoc, DocEvent } from '../model/doc';
@@ -60,7 +60,7 @@ const MAX_ZOOM = 3;
  * React only mounts it and forwards keys; everything visual lives here so it stays testable and fast.
  */
 export class ViewportController {
-  readonly renderer = new IsoRenderer({ antialias: true });
+  readonly renderer = new IsoRenderer({ antialias: true, layerSource: () => host.ext.screenLayers.values() });
   doc: EditorDoc | null = null;
   hoverCell: P | null = null;
 
@@ -821,7 +821,7 @@ export class ViewportController {
     cam.deadzoneH = p.saved.dzh;
     cam.smoothing = p.saved.smoothing;
     this.renderer.focus = undefined;
-    this.renderer.lighting = null;
+    this.renderer.layerData = {};
     this.renderer.overlay.visible = true;
     if (this.doc) {
       this.renderer.setTileMap(this.doc.map, this.tilesetFor());

@@ -14,8 +14,11 @@ import { describe, expect, it } from 'vitest';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 const CORE = ['runtime', 'behaviors', 'editor', 'exporter', 'playbot', 'assistant', 'hub-server', 'plugin-sdk'];
 
-/** Where a core package may name the bundled plugins: the files that make them known to the host (each must exist, or the entry goes). */
-const COMPOSITION_ROOTS = ['packages/editor/src/bundled.ts', 'packages/editor/src/bundled-editor.ts'];
+/**
+ * Where a core package may name the bundled plugins: the files that make them known to the host, and the SDK's list of names that moved
+ * out of the engine into the plugin that owns them (each must exist, or the entry goes).
+ */
+const COMPOSITION_ROOTS = ['packages/editor/src/bundled.ts', 'packages/editor/src/bundled-editor.ts', 'packages/plugin-sdk/src/legacy.ts'];
 
 /** Words that belong to one game and so to its plugin (a word at the start of a word, or inside a camelCase name). */
 const FORBIDDEN = ['storytender', 'echo', 'lantern', 'sentence', 'dough', 'quill', 'mnemosynth', 'critic', 'spoiler', 'rested', 'parchment'];

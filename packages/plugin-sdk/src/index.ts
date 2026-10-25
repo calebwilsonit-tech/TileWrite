@@ -8,3 +8,4 @@ export { newRow } from '@tilewright/behaviors';
 export { Bot, Game, PointerBot, formatTime } from '@tilewright/playbot';
 export type { GameSetup, PlayReport, ReportKind, WalkOptions } from '@tilewright/playbot';
 export * from './playbot';
+export * from './legacy';

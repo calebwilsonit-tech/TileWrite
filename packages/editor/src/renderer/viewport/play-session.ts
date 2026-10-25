@@ -604,7 +604,13 @@ export class PlaySession {
         }
       }
     }
-    if (flags.lights) for (const l of sim.runtime.lighting?.lights ?? []) drawLightRadius(g, { x: l.x, y: l.y, h: l.h, radius: l.radius }, iso);
+    if (flags.lights) {
+      // (the same reach the editor shows while editing, from what each object says about itself)
+      for (const e of sim.world.all()) {
+        const l = shapesOf(Object.fromEntries(e.components) as Record<string, unknown>).light;
+        if (l) drawLightRadius(g, l, iso);
+      }
+    }
     if (flags.wires !== false && sim.runtime.wires.length + this.nodeCount > 0) {
       // wires and the lines from action nodes to what they change, lit while a signal runs through them
       const ends = sim.world.all().map((e) => ({ id: e.get<{ sceneId?: string }>('meta')?.sceneId ?? String(e.id), components: Object.fromEntries(e.components) as Record<string, unknown> }));
@@ -688,7 +694,7 @@ export class PlaySession {
       `${this.fps.toFixed(0)} frames per second`,
       `game step ${snap.avgTickMs.toFixed(2)} ms (worst ${snap.maxTickMs.toFixed(2)})`,
       `drawing ${st.renderMs.toFixed(2)} ms, sorting ${st.sortMs.toFixed(2)} ms`,
-      `${this.sim.world.count} objects, ${st.tiles} tiles, ${st.lights} lights`,
+      `${this.sim.world.count} objects, ${st.tiles} tiles${st.layers.length ? ', ' + st.layers.join(', ') : ''}`,
       slow.length ? 'slowest:' : '',
       ...slow.map((s) => `  ${s}`),
     ]

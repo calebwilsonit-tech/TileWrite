@@ -31,6 +31,7 @@ describe('the example plugins', () => {
       ['blockType', (h) => h.ext.blockTypes.size],
       ['whoFilter', (h) => h.ext.whoFilters.size],
       ['defeatCheck', (h) => h.ext.defeatChecks.size],
+      ['screenLayer', (h) => h.ext.screenLayers.size],
       ['scriptMethod', (h) => h.ext.scriptMethods.size],
       ['unlockRule', (h) => h.ext.unlockRules.size],
       ['bridgeSource', (h) => h.ext.bridgeSources.size],

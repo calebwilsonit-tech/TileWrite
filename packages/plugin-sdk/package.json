@@ -9,7 +9,8 @@
   "dependencies": {
     "@tilewright/runtime": "*",
     "@tilewright/behaviors": "*",
-    "@tilewright/playbot": "*"
+    "@tilewright/playbot": "*",
+    "@tilewright/plugin-lighting": "*"
   },
   "exports": {
     ".": "./src/index.ts",

@@ -1,11 +1,7 @@
 import {
   C,
-  ambientDarkness,
-  isLit,
-  lightLevel,
   type Collider,
   type Entity,
-  type LightingModel,
   type Sprite,
   type TransformIso,
   behaviorDef,
@@ -15,6 +11,7 @@ import {
 } from '@tilewright/plugin-sdk';
 import { damage } from '@tilewright/plugin-combat';
 import type { Light } from '@tilewright/plugin-lighting';
+import { ambientDarkness, isLit, lightLevel, lightingOf, type LightingModel } from '@tilewright/plugin-lighting/model';
 
 
 const collider = (e: Entity): Collider | undefined => e.get<Collider>(C.Collider);
@@ -83,7 +80,7 @@ export const lightResource = behaviorDef<LightResource>({
     // resting at a lantern post, or being defeated, fills it up
     if (s.refillOnRest && (ctx.events.of('rested').length > 0 || ctx.events.of('died').some((d) => ctx.world.get(Number(d.entity))?.tags.has('player')))) amount = s.max;
     amount -= s.burn * ctx.dt;
-    const model = ctx.runtime.lighting;
+    const model = lightingOf(ctx.runtime);
     if (model && s.refillNearLight > 0 && model.lights.length > 0) {
       // the glow of every light but this one's own
       const others: LightingModel = { ...model, lights: model.lights.filter((l) => Math.hypot(l.x - t.x, l.y - t.y) > 0.05) };
@@ -141,7 +138,7 @@ export const lightSensor = behaviorDef<LightSensor>({
   summary: (s) => `Turns on while its spot is ${s.mode}.`,
   update(ctx, e, s) {
     const t = transform(e);
-    const lit = isLit(ctx.runtime.lighting, t.x, t.y, t.h, s.threshold);
+    const lit = isLit(lightingOf(ctx.runtime), t.x, t.y, t.h, s.threshold);
     setOutput(e, 'active', s.mode === 'lit' ? lit : !lit);
   },
 });
@@ -177,7 +174,8 @@ export const growing = behaviorDef<Growing>({
   update(ctx, e, s) {
     const st = stateOf(e, 'growing', () => ({ progress: s.startFull ? 1 : 0 }));
     const t = transform(e);
-    const lit = ctx.runtime.lighting ? lightLevel(ctx.runtime.lighting, t.x, t.y, t.h) : 1;
+    const lighting = lightingOf(ctx.runtime);
+    const lit = lighting ? lightLevel(lighting, t.x, t.y, t.h) : 1;
     const rate = (1 + (s.lightBoost - 1) * lit) / Math.max(1, s.growSeconds);
     st.progress = Math.min(1, Math.max(0, st.progress + (input(e, 'shrink') ? -rate : rate) * ctx.dt));
     const height = Math.max(0.2, st.progress * s.maxHeight);

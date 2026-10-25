@@ -1,4 +1,4 @@
-import type { Simulation, UiLayout, EventRow, MapNode, RegionData, TileMap, VariableValue, WireData, EntityData, ProjectData, SceneData, SimContext, UiScreen, UiNode, System, SystemMode, Entity } from '@tilewright/runtime';
+import type { ScreenLayerFactory, Simulation, UiLayout, EventRow, MapNode, RegionData, TileMap, VariableValue, WireData, EntityData, ProjectData, SceneData, SimContext, UiScreen, UiNode, System, SystemMode, Entity } from '@tilewright/runtime';
 import type { BehaviorDef } from '../framework';
 import type { ActionDef, ConditionDef } from '../events/sheet';
 
@@ -76,6 +76,9 @@ export interface DefeatCheckDef {
   id: string;
   defeated(entity: Entity): boolean;
 }
+
+/** A layer drawn over the finished world picture: darkness and light, weather, a colour grade. It reads `runtime.plugin[id]` each frame. */
+export type ScreenLayerDef = ScreenLayerFactory;
 
 /** A method scripts can call on an object or on the game (me.damage, game.startDialogue...), implemented by a plugin. */
 export interface ScriptMethodDef {
@@ -408,6 +411,7 @@ export interface Extensions {
   collisionLayers: Map<string, CollisionLayerDef & OwnedBy>;
   whoFilters: Map<string, WhoFilterDef & OwnedBy>;
   defeatChecks: Map<string, DefeatCheckDef & OwnedBy>;
+  screenLayers: Map<string, ScreenLayerDef & OwnedBy>;
   unlockRules: Map<string, UnlockRuleDef & OwnedBy>;
   scriptMethods: Map<string, ScriptMethodDef & OwnedBy>;
   blockTypes: Map<string, BlockTypeDef & OwnedBy>;

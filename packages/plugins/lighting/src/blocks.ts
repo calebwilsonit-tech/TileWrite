@@ -1,4 +1,5 @@
-import { C, describeRef, entityParam, lightLevel, num, resolveRef, str, type ActionDef, type ConditionDef, type TransformIso } from '@tilewright/plugin-sdk';
+import { C, describeRef, entityParam, num, resolveRef, str, type ActionDef, type ConditionDef, type TransformIso } from '@tilewright/plugin-sdk';
+import { lightLevel, lightingOf } from './model';
 
 export const conditions: ConditionDef[] = [
   {
@@ -12,7 +13,7 @@ export const conditions: ConditionDef[] = [
     ],
     describe: (p, n) => `the place of ${describeRef(str(p, 'where'), n)} is ${str(p, 'state') === 'dark' ? 'dark' : 'lit'}`,
     test: (ctx, p, row) => {
-      const model = ctx.runtime.lighting;
+      const model = lightingOf(ctx.runtime);
       const e = resolveRef(ctx, str(p, 'where'), row.picked)[0];
       const t = e?.get<TransformIso>(C.Transform);
       if (!model || !t) return false;

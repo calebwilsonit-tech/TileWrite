@@ -1,7 +1,6 @@
 import { legacyFlags, type CompatFlags } from '../project/compat';
 import type { GravityDir } from '../physics/gravity';
 import { Tweens } from '../anim/tween';
-import type { LightingModel } from '../lighting/lighting';
 import type { EventRow, GraphData, PrefabData, RegionData, VariableValue, WireData } from '../project/schema';
 import { InputState, type ActionSnapshot } from '../input/input';
 import { World } from '../scene/world';
@@ -96,8 +95,8 @@ export interface SceneRuntime {
   ids: Map<string, number>;
   /** The scene's regions (darkness, ...). */
   regions: RegionData[];
-  /** Rebuilt every tick by the lighting system: what is lit and what casts shadows. The renderer draws from it. */
-  lighting?: LightingModel;
+  /** What each plugin keeps while a scene runs, by plugin part id (rebuilt when the scene loads). Layers drawn over the world read their data here. */
+  plugin: Record<string, unknown>;
   /** Path of the scene being played ("" when unknown); checkpoints and saves remember it. */
   scene: string;
   /** The conversation on screen, if any. The game is frozen while it is open. */
@@ -231,6 +230,7 @@ export function newSceneRuntime(): SceneRuntime {
     rowState: {},
     ids: new Map(),
     regions: [],
+    plugin: {},
     scene: '',
     dialogue: null,
     minigame: null,

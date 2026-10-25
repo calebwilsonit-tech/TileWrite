@@ -8,7 +8,8 @@
   "types": "./src/index.ts",
   "dependencies": {
     "@tilewright/plugin-sdk": "*",
-    "@tilewright/plugin-combat": "*"
+    "@tilewright/plugin-combat": "*",
+    "@tilewright/plugin-lighting": "*"
   },
   "exports": {
     ".": "./src/index.ts",

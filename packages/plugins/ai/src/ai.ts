@@ -1,5 +1,6 @@
-import { C, blockersBetween, facingOfGridDir, lineClear, lightLevel, makeOccluder, type Body, type Cell2, type Entity, type LightingModel, type TransformIso, stateOf, setOutput, spawnPrefabAt, newNav, parsePoints, steerTo, type NavState, behaviorDef } from '@tilewright/plugin-sdk';
+import { C, facingOfGridDir, type Body, type Cell2, type Entity, type TransformIso, stateOf, setOutput, spawnPrefabAt, newNav, parsePoints, steerTo, type NavState, behaviorDef } from '@tilewright/plugin-sdk';
 import { aiFlags, healthOf } from '@tilewright/plugin-combat';
+import { blockersBetween, lightLevel, lineClear, lightingOf, makeOccluder, type LightingModel } from '@tilewright/plugin-lighting/model';
 import { facingVector } from '@tilewright/plugin-sdk';
 
 
@@ -65,7 +66,7 @@ export const vision = behaviorDef<Vision>({
       return;
     }
     const t = transform(e);
-    const model: LightingModel = ctx.runtime.lighting ?? { regions: [], sceneDarkness: 0, lights: [], blocked: makeOccluder(ctx.map, []) };
+    const model: LightingModel = lightingOf(ctx.runtime) ?? { regions: [], sceneDarkness: 0, lights: [], blocked: makeOccluder(ctx.map, []) };
     const f = facingVector(t.facing);
     const half = Math.cos((s.angle / 2) * (Math.PI / 180));
     let best: { e: Entity; d: number } | null = null;

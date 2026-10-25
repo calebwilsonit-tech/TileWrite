@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { FLAG, TileMap } from '../tilemap/tilemap';
-import { ambientDarkness, isLit, lightLevel, lineClear, makeOccluder, visibilityPolygon, type LightingModel, type LightSource } from './lighting';
+import { FLAG, TileMap } from '@tilewright/runtime';
+import { ambientDarkness, isLit, lightLevel, lineClear, makeOccluder, visibilityPolygon, type LightingModel, type LightSource } from './model';
 
 function room(): TileMap {
   const m = new TileMap(12, 12);

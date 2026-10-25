@@ -1,5 +1,4 @@
-import { FLAG, type TileMap } from '../tilemap/tilemap';
-import type { RegionData } from '../project/schema';
+import { FLAG, type RegionData, type TileMap } from '@tilewright/runtime';
 
 /**
  * Lighting is plain data plus a few pure functions, so behaviours ("is this plant in the light?"), the
@@ -46,6 +45,11 @@ export function makeOccluder(map: TileMap | null, tall: readonly { x: number; y:
     }
     return false;
   };
+}
+
+/** The lighting of this tick, as the lighting system left it (undefined when the lighting plugin is off, and then everything is lit). */
+export function lightingOf(runtime: { plugin: Record<string, unknown> }): LightingModel | undefined {
+  return runtime.plugin.lighting as LightingModel | undefined;
 }
 
 /** Darkness (0..1) of the scene at a point before any light is added. */

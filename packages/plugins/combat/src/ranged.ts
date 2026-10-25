@@ -1,5 +1,6 @@
 import { aiFlags } from './combat';
-import { C, emitFx, facingOfGridDir, lineClear, makeOccluder, type Body, type Entity, type LightingModel, type SimContext, type TransformIso, attachBehavior, stateOf, spawnPrefabAt, behaviorDef } from '@tilewright/plugin-sdk';
+import { lightingOf, lineClear, makeOccluder, type LightingModel } from '@tilewright/plugin-lighting/model';
+import { C, emitFx, facingOfGridDir, type Body, type Entity, type SimContext, type TransformIso, attachBehavior, stateOf, spawnPrefabAt, behaviorDef } from '@tilewright/plugin-sdk';
 
 const transform = (e: Entity): TransformIso => e.require<TransformIso>(C.Transform);
 
@@ -159,7 +160,7 @@ export const rangedAttack = behaviorDef<RangedAttack>({
     let fired = false;
     const canSee = (x: number, y: number): boolean => {
       if (!s.needSight) return true;
-      const model: LightingModel = ctx.runtime.lighting ?? { regions: [], sceneDarkness: 0, lights: [], blocked: makeOccluder(ctx.map, []) };
+      const model: LightingModel = lightingOf(ctx.runtime) ?? { regions: [], sceneDarkness: 0, lights: [], blocked: makeOccluder(ctx.map, []) };
       return lineClear(model, t.x, t.y, x, y, t.h + 0.5);
     };
     const inRange = target !== null && target.d <= s.range && target.d >= s.minRange && Math.abs(target.h - t.h) <= 3 && canSee(target.x, target.y);

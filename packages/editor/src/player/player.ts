@@ -178,7 +178,7 @@ async function boot(): Promise<void> {
     activate(r.loaded, { log: (kind, text) => console[kind === 'log' ? 'log' : kind](text) });
   }
 
-  const renderer = new IsoRenderer({ antialias: true });
+  const renderer = new IsoRenderer({ antialias: true, layerSource: () => host.ext.screenLayers.values() });
   await renderer.init(stage);
   const ro = new ResizeObserver(() => {
     if (stage.clientWidth > 0 && stage.clientHeight > 0) renderer.resize(stage.clientWidth, stage.clientHeight);

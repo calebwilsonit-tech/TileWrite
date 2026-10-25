@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { C, FLAG, tileMapToRows, type Collider, type Label, type RegionData, type Sprite, type TransformIso } from '@tilewright/runtime';
 import { GRID_MINUS_X, GRID_PLUS_X, flatScene, player, rig, thing, wire } from '@tilewright/plugin-sdk/testing';
 import { attachBehavior, getBehavior, output, setInput } from '@tilewright/behaviors';
+import type { LightingModel } from '@tilewright/plugin-lighting/model';
 import '@tilewright/bundled-plugins';
 
 const darkRegion = (darkness = 0.9): RegionData => ({ id: 'r1', name: 'Dark', x: 0, y: 0, w: 24, h: 24, cameraBounds: false, music: '', darkness, bossActive: false });
@@ -222,7 +223,7 @@ describe('light', () => {
     expect(output(r.get('near'), 'active')).toBe(true);
     expect(output(r.get('far'), 'active')).toBe(false);
     expect(output(r.get('dark'), 'active')).toBe(true);
-    expect(r.sim.runtime.lighting!.lights).toHaveLength(1);
+    expect((r.sim.runtime.plugin.lighting as LightingModel).lights).toHaveLength(1);
   });
 
   it('a light can be switched with a wire, and walls make shadows', () => {

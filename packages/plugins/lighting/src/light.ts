@@ -1,4 +1,5 @@
-import { C, makeOccluder, type Collider, type Entity, type LightSource, type LightingModel, type SimContext, type Sprite, type TransformIso, stateOf, input, behaviorDef } from '@tilewright/plugin-sdk';
+import { C, type Collider, type Entity, type SimContext, type Sprite, type TransformIso, stateOf, input, behaviorDef } from '@tilewright/plugin-sdk';
+import { makeOccluder, type LightSource, type LightingModel } from './model';
 
 
 const collider = (e: Entity): Collider | undefined => e.get<Collider>(C.Collider);
@@ -82,7 +83,7 @@ function activeLights(ctx: SimContext): LightSource[] {
   return out;
 }
 
-/** Builds `runtime.lighting` for this tick: regions and the "darkness" variable, the shining lights, and what blocks them. */
+/** Builds the lighting (`runtime.plugin.lighting`) for this tick: regions and the "darkness" variable, the shining lights, and what blocks them. */
 export function lightingSystem(ctx: SimContext): void {
   const tall: { x: number; y: number; w: number; d: number; top: number }[] = [];
   for (const e of ctx.world.query(C.Transform, C.Collider)) {
@@ -98,5 +99,5 @@ export function lightingSystem(ctx: SimContext): void {
     lights: activeLights(ctx),
     blocked: makeOccluder(ctx.map, tall, ctx.assets.tileset ? (t) => ctx.assets.tileset![t]?.props?.blocksLight === true : undefined),
   };
-  ctx.runtime.lighting = model;
+  ctx.runtime.plugin.lighting = model;
 }

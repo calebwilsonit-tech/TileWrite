@@ -3,11 +3,10 @@ import { ANIMATOR, type Animator } from '../anim/animator';
 import type { CellMark } from '../story/cutscene';
 import type { BlockFace, CellStack } from '../tilemap/tilemap';
 import { DEFAULT_ISO, gridToScreen, relToScreen, rotateGrid, screenToCell, screenToGrid, unrotateVec, type Cell, type IsoConfig, type ViewRotation } from '../iso/math';
-import type { LightingModel } from '../lighting/lighting';
 import { ATTACH, C, LABEL, type Attach, type Label, type Sprite, type TransformIso } from '../scene/components';
 import { gravityFrame, spriteBox } from '../physics/gravity';
 import type { Body } from '../physics/physics';
-import { LightingLayer } from './lighting-layer';
+import type { ScreenLayer, ScreenLayerFactory } from './screen-layers';
 import { ParticleLayer } from './particles';
 import type { SpriteData } from '../sprites/format';
 import { compositeFrame } from '../sprites/raster';
@@ -47,6 +46,8 @@ export interface RendererOptions {
   width?: number;
   height?: number;
   antialias?: boolean;
+  /** Where the layers drawn over the world come from (the game host passes the plugins' layers). */
+  layerSource?: () => Iterable<ScreenLayerFactory>;
 }
 
 /** A drawn sprite uploaded to the GPU: one texture per frame cut from a packed sheet. */
@@ -156,9 +157,11 @@ export class IsoRenderer {
   /** Milliseconds the last frame took to draw. */
   lastRenderMs = 0;
   private readonly depthLabels = new Map<number, Text>();
-  /** Darkness and lights to draw this frame (null = none). Set by the game runner from the simulation. */
-  lighting: LightingModel | null = null;
-  private readonly lightLayer = new LightingLayer();
+  /** Where the layers drawn over the world come from (plugins add them); asked every frame, so a plugin turned on or off shows at once. */
+  layerSource: (() => Iterable<ScreenLayerFactory>) | null;
+  /** What the game keeps for each layer this frame (`runtime.plugin`), set by the game runner from the simulation. */
+  layerData: Record<string, unknown> = {};
+  private readonly screenLayers = new Map<string, { factory: ScreenLayerFactory; layer: ScreenLayer }>();
   private readonly labelLayer = new Container();
   /** Show only the blocks below this level (null = all): lets inner blocks be reached. */
   private sliceTop: number | null = null;
@@ -194,6 +197,7 @@ export class IsoRenderer {
 
   constructor(private readonly opts: RendererOptions = {}) {
     this.iso = { ...(opts.iso ?? DEFAULT_ISO) };
+    this.layerSource = opts.layerSource ?? null;
     this.particles = new ParticleLayer(this.iso);
   }
 
@@ -212,7 +216,7 @@ export class IsoRenderer {
     this.labelLayer.zIndex = 1e8;
     this.world.addChild(this.labelLayer);
     this.world.addChild(this.particles.container);
-    this.app.stage.addChild(this.world, this.lightLayer.glow, this.lightLayer.darkness);
+    this.app.stage.addChild(this.world);
     if (parent && !this.opts.canvas) parent.appendChild(this.app.canvas);
     this.camera.setViewport(this.app.screen.width, this.app.screen.height);
     this.ready = true;
@@ -943,10 +947,11 @@ export class IsoRenderer {
     const jy = this.shake > 0 ? (Math.random() - 0.5) * 2 * this.shake : 0;
     this.world.position.set(Math.round(off.x + jx), Math.round(off.y + jy));
     this.world.scale.set(this.camera.zoom);
-    if (this.lighting) {
-      this.lightLayer.update(this.app.renderer, this.lighting, this.iso, { x: Math.round(off.x), y: Math.round(off.y), zoom: this.camera.zoom }, this.app.screen.width, this.app.screen.height);
-    } else {
-      this.lightLayer.hide();
+    this.syncScreenLayers();
+    for (const [id, { layer }] of this.screenLayers) {
+      const data = this.layerData[id];
+      if (data === undefined) layer.hide();
+      else layer.update({ renderer: this.app.renderer, iso: this.iso, view: { x: Math.round(off.x), y: Math.round(off.y), zoom: this.camera.zoom }, width: this.app.screen.width, height: this.app.screen.height, data });
     }
     const r0 = performance.now();
     this.app.renderer.render(this.app.stage);
@@ -977,8 +982,26 @@ export class IsoRenderer {
   }
 
   /** How much there is to draw, for the profiler. */
-  stats(): { objects: number; tiles: number; lights: number; sortMs: number; renderMs: number } {
-    return { objects: this.entityViews.size, tiles: this.tiles.length, lights: this.lighting?.lights.length ?? 0, sortMs: this.lastSortMs, renderMs: this.lastRenderMs };
+  /** Make the layers on the stage the ones the source offers now (a layer is made when its plugin comes on and thrown away when it goes off). */
+  private syncScreenLayers(): void {
+    const wanted = new Map<string, ScreenLayerFactory>();
+    for (const f of this.layerSource?.() ?? []) wanted.set(f.id, f);
+    for (const [id, have] of this.screenLayers) {
+      if (wanted.get(id) === have.factory) continue;
+      for (const o of have.layer.objects) this.app.stage.removeChild(o);
+      have.layer.destroy?.();
+      this.screenLayers.delete(id);
+    }
+    for (const [id, factory] of wanted) {
+      if (this.screenLayers.has(id)) continue;
+      const layer = factory.create();
+      this.app.stage.addChild(...layer.objects);
+      this.screenLayers.set(id, { factory, layer });
+    }
+  }
+
+  stats(): { objects: number; tiles: number; layers: string[]; sortMs: number; renderMs: number } {
+    return { objects: this.entityViews.size, tiles: this.tiles.length, layers: [...this.screenLayers.values()].map((l) => l.layer.stat?.() ?? '').filter(Boolean), sortMs: this.lastSortMs, renderMs: this.lastRenderMs };
   }
 
   /** Numbers showing the draw order of every object, when switched on. */
