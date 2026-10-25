@@ -1,12 +1,7 @@
 {
   "loadProblems": [],
   "check": [
-    "error: scenes/main.scene.json: This scene has no player start, so the game has nowhere to begin. Use the Place tool to add one.",
-    "warning: Controls: \"Escape\" is used by both \"Pause menu\" and \"Put the building away\".",
-    "warning: Controls: \"KeyA\" is used by both \"Move left\" and \"Attack-move (hold, then right-click)\".",
-    "warning: Controls: \"KeyE\" is used by both \"Interact / talk / confirm\" and \"Turn the world right\".",
-    "warning: Controls: \"KeyQ\" is used by both \"Turn the world left\" and \"Dodge\".",
-    "warning: Controls: \"KeyS\" is used by both \"Move down\" and \"Stop the selected units\"."
+    "error: scenes/main.scene.json: This scene has no player start, so the game has nowhere to begin. Use the Place tool to add one."
   ],
   "project": {
     "schemaVersion": 2,

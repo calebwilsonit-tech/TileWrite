@@ -1,14 +1,6 @@
 {
   "loadProblems": [],
-  "check": [
-    "warning: Controls: \"Escape\" is used by both \"Pause menu\" and \"Put the building away\".",
-    "warning: Controls: \"KeyA\" is used by both \"Move left\" and \"Attack-move (hold, then right-click)\".",
-    "warning: Controls: \"KeyE\" is used by both \"Interact / talk / confirm\" and \"Turn the world right\".",
-    "warning: Controls: \"KeyQ\" is used by both \"Dodge\" and \"Turn the world left\".",
-    "warning: Controls: \"KeyS\" is used by both \"Move down\" and \"Stop the selected units\".",
-    "warning: Controls: \"Space\" is used by both \"Jump\" and \"End the turn\".",
-    "warning: Controls: \"pad:button3\" is used by both \"Dodge\" and \"End the turn\"."
-  ],
+  "check": [],
   "project": {
     "schemaVersion": 2,
     "plugins": "combat,inventory,turns,controls",

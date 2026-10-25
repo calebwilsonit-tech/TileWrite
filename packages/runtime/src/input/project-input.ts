@@ -61,13 +61,18 @@ export function checkProjectInput(p: ProjectInput, base: { map: InputMapDef; lab
   for (const a of Object.keys(p.overrides)) if (!(a in base.map)) out.push(`The setting for "${a}" does nothing: there is no built-in action with that name.`);
   const map = projectDefaults(p, base.map);
   for (const a of REQUIRED_ACTIONS) if ((map[a] ?? []).length === 0) out.push(`"${base.labels[a] ?? a}" has no key or button, so the game could not be played.`);
-  const owner = new Map<string, string>();
+  // A key two actions share is only a mistake of the project when the project picked it: its own actions, or a key it changed. The
+  // default keys of the built-in actions and of the buttons plugins add are shared on purpose (a builder's cancel is the pause key, and
+  // each works in its own part of a game), so a project that never touched them is not told about them.
+  const picked = new Set([...Object.keys(p.overrides), ...p.actions.map((c) => c.id)]);
+  const owners = new Map<string, string[]>();
   const labels = projectActionLabels(p, base.labels);
   for (const [a, list] of Object.entries(map)) {
     for (const b of list) {
-      const other = owner.get(b);
-      if (other && other !== a) out.push(`"${b.replace(/^key:/, '')}" is used by both "${labels[other] ?? other}" and "${labels[a] ?? a}".`);
-      owner.set(b, a);
+      for (const other of owners.get(b) ?? []) {
+        if (other !== a && (picked.has(a) || picked.has(other))) out.push(`"${b.replace(/^key:/, '')}" is used by both "${labels[other] ?? other}" and "${labels[a] ?? a}".`);
+      }
+      owners.set(b, [...(owners.get(b) ?? []), a]);
     }
   }
   return out;

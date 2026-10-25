@@ -33,6 +33,17 @@ describe('the game\'s own controls', () => {
     expect(problems).toContain('"KeyX" is used by both');
   });
 
+  it('does not warn about keys the engine and its plugins chose to share (the builder cancel and the pause key, the end-turn and jump): only about keys the project picked', () => {
+    // the buttons plugins add are given with the plugin's own default keys, some of which are the same as the game's: they work in different parts of a game
+    const shared = { map: { ...DEFAULT_INPUT_MAP, cancel_build: ['key:Escape'], end_turn: ['key:Space'] }, labels: { ...Object.fromEntries(Object.keys(DEFAULT_INPUT_MAP).map((k) => [k, k])), cancel_build: 'Put the building away', end_turn: 'End the turn' } };
+    expect(checkProjectInput(emptyProjectInput(), shared)).toEqual([]);
+    // the moment the project picks a key that is already used, it is told
+    const picked = ProjectInputSchema.parse({ overrides: { interact: ['key:Escape'] } });
+    expect(checkProjectInput(picked, shared).join('\n')).toContain('"Escape" is used by both');
+    const own = ProjectInputSchema.parse({ actions: [{ id: 'wave', label: 'Wave', bindings: ['key:Space'] }] });
+    expect(checkProjectInput(own, shared).join('\n')).toContain('"Space" is used by both');
+  });
+
   it('rejects action names that scripts could not use', () => {
     expect(ProjectInputSchema.safeParse({ actions: [{ id: 'Bad Name', label: 'x' }] }).success).toBe(false);
   });
