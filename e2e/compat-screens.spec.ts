@@ -27,9 +27,15 @@ function projects(): { kind: string; id: string; dir: string }[] {
 
 const only = process.env.COMPAT_ONLY;
 
+/** Golden pictures are kept per operating system (`-win32.png`, `-linux.png`). */
+const SNAPSHOTS = path.join(root, 'e2e', 'compat-screens.spec.ts-snapshots');
+const hasGoldens = fs.existsSync(SNAPSHOTS) && fs.readdirSync(SNAPSHOTS).some((f) => f.endsWith(`-${process.platform}.png`) && !f.startsWith('owner-'));
+
 for (const p of projects()) {
   if (only && p.id !== only) continue;
   test(`compat pictures: ${p.kind} ${p.id}`, async () => {
+    // In CI a system with no golden pictures says so, instead of passing by writing them (the "Update golden pictures" workflow makes them).
+    test.skip(Boolean(process.env.CI) && !hasGoldens, `no golden pictures are committed for ${process.platform} yet: run the "Update golden pictures" workflow and commit what it makes`);
     test.setTimeout(180_000);
     const { page, app, workDir } = await launchEditor();
     try {

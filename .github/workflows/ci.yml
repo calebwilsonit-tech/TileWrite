@@ -3,6 +3,7 @@ name: CI
 on:
   push:
   pull_request:
+  workflow_dispatch:
 
 jobs:
   test:
@@ -29,6 +30,27 @@ jobs:
       - name: E2E
         if: runner.os != 'Linux'
         run: npm run test:e2e
+
+  # Golden pictures of the compatibility corpus are kept per operating system. Run this by hand (Actions, "CI", Run workflow) on a
+  # system that has none committed, download the artifact, and commit the pictures it holds into e2e/compat-screens.spec.ts-snapshots.
+  update-golden-pictures:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+      - run: npm ci
+      - run: npm run build -w @tilewright/editor
+      - run: xvfb-run --auto-servernum npx playwright test e2e/compat-screens.spec.ts --update-snapshots
+        env:
+          CI: ''
+      - uses: actions/upload-artifact@v4
+        with:
+          name: golden-pictures-linux
+          path: e2e/compat-screens.spec.ts-snapshots/*-linux.png
 
   windows-build:
     # builds the editor installer exactly as docs/BUILDING.md describes, and keeps it as a download

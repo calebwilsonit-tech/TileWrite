@@ -26,7 +26,10 @@ Phase 3, Rule A: **nothing the owner has made may break.** This folder is how th
 - **Export:** which files an export would ship (a hash of each, line endings ignored), and the manifest.
 - **The script API** only grows (`baselines/script-api.json` keeps every name it ever had).
 - **Pictures:** `e2e/compat-screens.spec.ts` opens each scene in the editor and compares it with a golden picture
-  (one set per operating system, written the first time).
+  (one set per operating system, written the first time on a computer). Only Windows pictures (`*-win32.png`) are committed. In CI a missing
+  picture is an error (`updateSnapshots: 'none'`), and a system that has none committed skips the test and says why, so a green Ubuntu run
+  does not claim it compared anything it did not. To get the Linux pictures: Actions, CI, **Run workflow** (the job *update-golden-pictures*),
+  download the artifact, and commit the `*-linux.png` files into `e2e/compat-screens.spec.ts-snapshots/`.
 
 ## Commands
 
