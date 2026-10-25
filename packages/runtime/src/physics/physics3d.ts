@@ -133,6 +133,72 @@ function supportBelow(w: Work, box: Aabb, reach: number): Hit {
   return sweep(w, box, w.gi, w.frame.sign, reach, true);
 }
 
+/** How long a turn of gravity takes for this body: its own say, else the scene's, else a moment (0 for a project made before turns took time). */
+function turnSecondsOf(ctx: SimContext, b: Body): number {
+  if (b.noclip) return 0;
+  return b.turnSeconds ?? ctx.runtime.gravityTurn ?? (ctx.compat.timedGravity ? TURN_SECONDS : 0);
+}
+
+/** How long a turn takes when nobody says. */
+export const TURN_SECONDS = 0.25;
+/** A turn that has no room waits this long (seconds) for room, then goes on as well as it can. */
+const TURN_WAIT = 0.75;
+
+/** Half the length of a body's box along one world axis when it stands in this frame. */
+const halfAlong = (frame: GravityFrame, axis: number, b: Body): number => (axis === axisIndex(frame.axis) ? b.height / 2 : b.radius);
+
+function boxAround(c: readonly number[], he: readonly number[]): Aabb {
+  return { x0: c[0]! - he[0]!, x1: c[0]! + he[0]!, y0: c[1]! - he[1]!, y1: c[1]! + he[1]!, z0: c[2]! - he[2]!, z1: c[2]! + he[2]! };
+}
+
+/** Where the feet are when a turn is cut short: the body stands in the new way around the middle it has now. */
+function finishTurn(b: Body): { x: number; y: number; h: number } {
+  const tr = b.turn!;
+  const to = gravityFrame(tr.to);
+  const box = boxAround([tr.cx, tr.cy, tr.cz], [0, 1, 2].map((a) => halfAlong(to, a, b)));
+  b.turn = undefined;
+  b.peakZ = upCoord(to, box);
+  return feetOf(to, box, b.radius);
+}
+
+/**
+ * One tick of a turn of gravity. The body's box swings round its middle from standing one way to standing the other (each side grows
+ * or shrinks toward its new length), and every tick it is checked against the blocks and objects: if it overlaps one it is pushed out
+ * the shortest way, and if it cannot be freed the turn waits for room (up to TURN_WAIT seconds) instead of going into the block.
+ */
+function stepTurn(w: Work, t: TransformIso, b: Body): void {
+  const tr = b.turn!;
+  const dt = w.ctx.dt;
+  const from = gravityFrame(tr.from);
+  const to = w.frame;
+  const boxAt = (elapsed: number): Aabb => {
+    const u = Math.min(1, elapsed / tr.seconds);
+    const k = u * u * (3 - 2 * u);
+    return boxAround([tr.cx, tr.cy, tr.cz], [0, 1, 2].map((a) => halfAlong(from, a, b) + (halfAlong(to, a, b) - halfAlong(from, a, b)) * k));
+  };
+  const next = unstick(w, boxAt(tr.elapsed + dt));
+  b.vx = b.vy = b.vz = 0;
+  if (hitsSomething(w, next) && tr.held < TURN_WAIT) {
+    // no room to turn here: stay as the last tick left it, and try again
+    tr.held += dt;
+    tr.box = boxAt(tr.elapsed);
+    write(t, to, tr.box, b);
+    return;
+  }
+  tr.elapsed += dt;
+  tr.cx = (next.x0 + next.x1) / 2;
+  tr.cy = (next.y0 + next.y1) / 2;
+  tr.cz = (next.z0 + next.z1) / 2;
+  tr.box = next;
+  write(t, to, next, b);
+  if (tr.elapsed >= tr.seconds) {
+    b.turn = undefined;
+    b.state = 'air';
+    b.standingOn = null;
+    b.peakZ = upCoord(to, next);
+  }
+}
+
 /** Advance every body one tick. Systems call this after behaviours set velocities. */
 export function stepBodies3d(ctx: SimContext, solids: SolidRef[]): void {
   const map = ctx.map;
@@ -155,19 +221,36 @@ function stepBody3d(ctx: SimContext, field: SolidField, solids: SolidRef[], e: E
   const w: Work = { ctx, field, solids, self: e, b, frame, who: { wade: b.wade }, gi, plane: [axisIndex(frame.plane[0]), axisIndex(frame.plane[1])] };
 
   let feet = { x: t.x, y: t.y, h: t.h };
-  if (b.g !== undefined && b.g !== dir) {
+  if (b.turn && b.turn.to !== dir) {
+    // gravity turned again before the last turn was over: that one is finished where it is, and the new one starts from there
+    feet = finishTurn(b);
+  }
+  if (!b.turn && b.g !== undefined && b.g !== dir) {
     // gravity turned: the body keeps the middle it had, forgets how it was moving, and falls toward the new surface
     const from = gravityFrame(b.g);
-    feet = turnFeet(from, frame, feet, b.height);
+    const seconds = turnSecondsOf(ctx, b);
     b.vx = b.vy = b.vz = 0;
     b.state = 'air';
     b.standingOn = null;
     b.turnedAt = ctx.tick;
     ctx.events.emit('gravity-changed', { entity: e.id, from: b.g, to: dir });
-    const up = frame.up;
-    b.peakZ = feet.x * up[0] + feet.y * up[1] + feet.h * up[2];
+    if (seconds > 0) {
+      // over a moment: the body turns around its middle, tick by tick, and is kept out of every block on the way (see stepTurn)
+      const centre = [feet.x, feet.y, feet.h];
+      const a = axisIndex(from.axis);
+      centre[a] = centre[a]! + from.up[a]! * (b.height / 2);
+      b.turn = { from: b.g, to: dir, elapsed: 0, seconds, cx: centre[0]!, cy: centre[1]!, cz: centre[2]!, held: 0 };
+    } else {
+      feet = turnFeet(from, frame, feet, b.height);
+      const up = frame.up;
+      b.peakZ = feet.x * up[0] + feet.y * up[1] + feet.h * up[2];
+    }
   }
   b.g = dir;
+  if (b.turn) {
+    stepTurn(w, t, b);
+    return;
+  }
 
   let box = bodyBox(frame, feet, b.radius, b.height);
   if (b.noclip) {

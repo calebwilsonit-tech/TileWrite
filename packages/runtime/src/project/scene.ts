@@ -196,6 +196,8 @@ export function loadScene(sim: Simulation, scene: SceneData, opts: LoadOptions =
   sim.runtime.regions = structuredClone(scene.regions);
   sim.runtime.plugin = {};
   sim.runtime.gravity = scene.gravity ?? '-z';
+  sim.runtime.gravityTurn = scene.gravityTurn;
+  sim.runtime.scratch.set('sceneGravity', sim.runtime.gravity); // (a save keeps gravity only when it has been turned from this)
   sim.runtime.blockRules = { enabled: scene.blocks?.runtime ?? false, limit: scene.blocks?.limit ?? 200 };
   sim.runtime.blockEdits = 0;
   sim.runtime.editedCells = new Set();

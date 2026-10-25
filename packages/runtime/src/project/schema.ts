@@ -216,6 +216,8 @@ export const SceneSchema = z.object({
   generator: z.record(z.string(), z.unknown()).optional(),
   /** Which way gravity pulls in this scene (default: down). */
   gravity: z.enum(['-z', '+z', '-x', '+x', '-y', '+y']).optional(),
+  /** Seconds a turn of gravity takes (0 = at once). Missing: 0.25 for a project with the timedGravity flag, else at once. */
+  gravityTurn: z.number().min(0).max(5).optional(),
   /** Opt in: the game itself may place and break blocks while it runs (up to `limit` edits a run). */
   blocks: z.object({ runtime: z.boolean().default(false), limit: z.number().int().min(1).max(100000).default(200) }).optional(),
 });

@@ -68,7 +68,7 @@ function bodyIn(ctx: SimContext, box: Aabb): boolean {
   for (const e of ctx.world.query(C.Transform, C.Body)) {
     const t = e.require<TransformIso>(C.Transform);
     const b = e.require<Body>(C.Body);
-    const mine = bodyBox(gravityFrame(b.g ?? b.gdir ?? ctx.runtime.gravity), { x: t.x, y: t.y, h: t.h }, b.radius, b.height);
+    const mine = b.turn?.box ?? bodyBox(gravityFrame(b.g ?? b.gdir ?? ctx.runtime.gravity), { x: t.x, y: t.y, h: t.h }, b.radius, b.height);
     if (mine.x0 < box.x1 - 1e-6 && mine.x1 > box.x0 + 1e-6 && mine.y0 < box.y1 - 1e-6 && mine.y1 > box.y0 + 1e-6 && mine.z0 < box.z1 - 1e-6 && mine.z1 > box.z0 + 1e-6) return true;
   }
   return false;

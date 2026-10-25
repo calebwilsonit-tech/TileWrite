@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Simulation } from '../core/simulation';
-import { currentFlags } from '../project/compat';
+import { currentFlags, type CompatFlags } from '../project/compat';
 import { C, makeTransform, type TransformIso } from '../scene/components';
 import { FLAG, SLOPE, TileMap } from '../tilemap/tilemap';
 import { bodyBox, gravityFrame, type GravityDir } from './gravity';
@@ -18,10 +18,11 @@ function flat(w = 12, h = 12): TileMap {
   return m;
 }
 
-function rig(map: TileMap, x: number, y: number, z: number, gravity: GravityDir = '-z', opts: Partial<Body> = {}) {
+function rig(map: TileMap, x: number, y: number, z: number, gravity: GravityDir = '-z', opts: Partial<Body> = {}, flags: Partial<CompatFlags> = {}) {
   const sim = new Simulation(1);
   sim.map = map;
-  sim.compat = currentFlags();
+  // (gravity turns at once unless a test asks for the timed turn)
+  sim.compat = { ...currentFlags(), timedGravity: false, ...flags };
   sim.runtime.gravity = gravity;
   sim.addSystem('physics', physicsSystem);
   const e = sim.world.spawn({ name: 'hero', components: { [C.Transform]: makeTransform(x, y, z), [C.Body]: makeBody({ height: 1.2, ...opts }) } });
@@ -252,6 +253,119 @@ describe('gravity in every direction', () => {
     }
     expect(inside).toBe(false);
     expect(t.h).toBeCloseTo(0, 4);
+  });
+
+  describe('a turn of gravity that takes time (the timedGravity flag)', () => {
+    /** The box the body fills now: while it turns, its pose is between the two, so this reads what the physics itself kept clear. */
+    const timed = (m: TileMap, x = 5.5, y = 5.5, z = 0, opts: Partial<Body> = {}) => rig(m, x, y, z, '-z', opts, { timedGravity: true });
+
+    it('moves the body over the time given, in steps, and ends standing on the new surface', () => {
+      const { sim, t, b } = timed(flat(10, 10));
+      run(sim, 20);
+      const rest = { x: t.x, y: t.y, h: t.h };
+      sim.runtime.gravity = '-x';
+      sim.step();
+      expect(b.turn).toBeDefined();
+      const seen: number[] = [];
+      run(sim, 40, () => seen.push(t.x));
+      expect(b.turn).toBeUndefined();
+      expect(b.g).toBe('-x');
+      // it did not jump: x went down by small steps across the quarter second (15 ticks) and then on to the wall
+      const early = seen.slice(0, 14);
+      for (let i = 1; i < early.length; i++) expect(Math.abs(early[i]! - early[i - 1]!)).toBeLessThan(1.2);
+      expect(Math.abs(seen[0]! - rest.x)).toBeLessThan(1.2);
+      run(sim, 120);
+      expect(b.state).toBe('ground');
+      expect(t.x).toBeCloseTo(0, 4);
+    });
+
+    it('takes the time the scene says, the body says, or nothing at all when it says 0', () => {
+      const ticksToTurn = (set: (sim: Simulation, b: Body) => void): number => {
+        const { sim, b } = timed(flat(10, 10));
+        run(sim, 20);
+        set(sim, b);
+        sim.runtime.gravity = '-x';
+        let n = 0;
+        sim.step();
+        while (b.turn && n < 400) {
+          sim.step();
+          n++;
+        }
+        return n;
+      };
+      expect(ticksToTurn(() => undefined)).toBeGreaterThan(10); // a quarter of a second, by default
+      expect(ticksToTurn(() => undefined)).toBeLessThan(20);
+      const slow = ticksToTurn((sim) => (sim.runtime.gravityTurn = 1));
+      expect(slow).toBeGreaterThan(55);
+      expect(ticksToTurn((_s, b) => (b.turnSeconds = 0))).toBe(0);
+      expect(ticksToTurn((sim, b) => { sim.runtime.gravityTurn = 1; b.turnSeconds = 0.5; })).toBeLessThan(slow);
+    });
+
+    it('is checked against the blocks every tick: never inside one, and it waits for room beside a pillar', () => {
+      const m = flat(12, 12);
+      // a pillar right where the body will swing out to: it stands one cell from the wall side
+      for (let z = 0; z < 4; z++) m.setBlock(4, 5, z, 2);
+      const { sim, t, b } = timed(m, 5.5, 5.5, 0);
+      run(sim, 20);
+      sim.runtime.gravity = '-x';
+      let inside = false;
+      const field = new SolidField(m);
+      run(sim, 200, () => {
+        const frame = gravityFrame(b.turn ? b.turn.to : b.g);
+        // the box the body occupies this tick (the physics keeps it free of solids at the end of every tick)
+        inside = inside || (b.turn === undefined ? field.overlaps(bodyBox(frame, { x: t.x, y: t.y, h: t.h }, b.radius, b.height), { wade: b.wade }) : b.turn.box !== undefined && field.overlaps(b.turn.box, { wade: b.wade }));
+      });
+      expect(inside).toBe(false);
+      expect(b.turn).toBeUndefined();
+      expect(b.state).toBe('ground');
+    });
+
+    it('waits for room in a corridor too narrow to turn in, and does not go into the walls while it waits', () => {
+      const m = flat(12, 12);
+      for (let y = 0; y < 12; y++) for (let z = 0; z < 4; z++) {
+        m.setBlock(4, y, z, 2);
+        m.setBlock(6, y, z, 2);
+      }
+      const { sim, b } = timed(m, 5.5, 5.5, 0);
+      run(sim, 20);
+      sim.runtime.gravity = '-x'; // lying toward a wall needs more than the one cell of width there is
+      let waited = 0;
+      let inside = false;
+      const field = new SolidField(m);
+      run(sim, 30, () => {
+        if (b.turn && b.turn.held > 0) waited = b.turn.held;
+        // while it waits its pose is the last free one: the box it fills is not inside a block
+        if (b.turn?.box) inside = inside || field.overlaps(b.turn.box, { wade: b.wade });
+      });
+      expect(waited).toBeGreaterThan(0);
+      expect(inside).toBe(false);
+      run(sim, 200); // after the wait it goes on as well as it can, and the game does not hang
+      expect(b.turn).toBeUndefined();
+    });
+
+    it('with the flag off, turns at once as it always did', () => {
+      const { sim, b } = rig(flat(10, 10), 5.5, 5.5, 0, '-z', {}, { timedGravity: false });
+      run(sim, 20);
+      sim.runtime.gravity = '-x';
+      sim.step();
+      expect(b.turn).toBeUndefined();
+      expect(b.g).toBe('-x');
+    });
+
+    it('is finished where it is when gravity turns again, and the new turn starts from there', () => {
+      const { sim, b, t } = timed(flat(10, 10));
+      run(sim, 20);
+      sim.runtime.gravity = '-x';
+      run(sim, 5);
+      expect(b.turn?.to).toBe('-x');
+      sim.runtime.gravity = '+y';
+      run(sim, 5);
+      expect(b.turn?.to).toBe('+y');
+      run(sim, 200);
+      expect(b.turn).toBeUndefined();
+      expect(b.state).toBe('ground');
+      expect(t.y).toBeCloseTo(10, 3);
+    });
   });
 
   it('an object can have its own gravity, whatever the scene says', () => {

@@ -632,6 +632,7 @@
     "physicsSystem",
     "pickShape",
     "pickVariant",
+    "pictureForGravity",
     "pictureOf",
     "pinBehaviour",
     "placeAtSpawn",

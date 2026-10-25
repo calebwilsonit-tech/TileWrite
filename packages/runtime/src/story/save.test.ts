@@ -5,6 +5,7 @@ import { loadScene } from '../project/scene';
 import { tileMapToRows } from '../project/scene';
 import { TileMap } from '../tilemap/tilemap';
 import { C, type TransformIso } from '../scene/components';
+import { makeBody } from '../physics/physics';
 import { CURRENT_SAVE_VERSION, SaveError, SaveManager, SaveSchema, applySave, migrateSave, parseSave, serializeGame, type SaveStorage } from './save';
 
 function scene() {
@@ -84,6 +85,32 @@ describe('serializeGame and applySave', () => {
     expect(b.world.get(b.runtime.ids.get('coin')!)).toBeUndefined();
     expect(b.world.get(b.runtime.ids.get('door')!)!.get<{ enabled: boolean }>(C.Collider)!.enabled).toBe(false);
     expect(b.world.get(b.runtime.ids.get('tree')!)).toBeDefined(); // not persistent: comes back from the scene
+  });
+
+  it('keeps which way gravity pulls, and each body that has its own, so a game saved on a wall loads on the wall', () => {
+    const a = game();
+    expect(serializeGame(a).gravity).toBeUndefined(); // nothing changed: the save is what it always was
+    expect(serializeGame(a).player).not.toHaveProperty('gdir');
+    a.runtime.gravity = '+x';
+    const body = makeBody();
+    a.world.withTag('player')[0]!.set(C.Body, body);
+    body.gdir = '-y';
+    const save = serializeGame(a);
+    expect(save.gravity).toBe('+x');
+    expect(save.player!.gdir).toBe('-y');
+    expect(JSON.parse(JSON.stringify(save))).toEqual(save);
+
+    const b = game(); // the scene itself pulls down
+    b.world.withTag('player')[0]!.set(C.Body, makeBody());
+    applySave(b, save);
+    expect(b.runtime.gravity).toBe('+x');
+    expect(b.world.withTag('player')[0]!.get<ReturnType<typeof makeBody>>(C.Body)!.gdir).toBe('-y');
+    // turned back to what the scene says: the save says so, because the scene's own way is not the current one
+    const c = game();
+    c.runtime.gravity = '+x';
+    c.runtime.scratch.set('sceneGravity', '+x');
+    c.runtime.gravity = '-z';
+    expect(serializeGame(c).gravity).toBe('-z');
   });
 
   it('does not count a non-persistent object that was destroyed as gone', () => {

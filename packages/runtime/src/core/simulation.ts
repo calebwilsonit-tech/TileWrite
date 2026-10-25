@@ -77,6 +77,8 @@ export interface SceneRuntime {
   };
   /** Which way gravity pulls in this scene (objects can have their own). */
   gravity: GravityDir;
+  /** Seconds a turn of gravity takes in this scene, when the scene says (see Body.turnSeconds). */
+  gravityTurn?: number;
   /** May the game place and break blocks while it runs, and how many edits a run may make (see behaviors/builtins/blocks.ts). */
   blockRules: { enabled: boolean; limit: number };
   /** How many block edits the game has made, and which cells (by index) they were in, so a save can keep them. */

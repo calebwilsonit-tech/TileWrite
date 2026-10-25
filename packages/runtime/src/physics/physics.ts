@@ -72,6 +72,10 @@ export interface Body {
   g?: GravityDir;
   /** The tick gravity last turned for it (the picture turns over the next half second). */
   turnedAt?: number;
+  /** How many seconds a turn of gravity takes for this body; missing: the scene's, else 0.25 with the timedGravity flag and 0 without. */
+  turnSeconds?: number;
+  /** A turn in progress: the body is going from one way of standing to another around a fixed middle, and is kept out of every block on the way. */
+  turn?: { from: GravityDir; to: GravityDir; elapsed: number; seconds: number; cx: number; cy: number; cz: number; held: number; /** The box it fills this tick (kept clear of every block). */ box?: { x0: number; x1: number; y0: number; y1: number; z0: number; z1: number } };
 }
 
 export interface Collider {

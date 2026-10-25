@@ -4,6 +4,7 @@ import { VariableValueSchema } from '../project/schema';
 import type { Simulation } from '../core/simulation';
 import { C, type TransformIso } from '../scene/components';
 import { applyTableEdits } from '../data/tables';
+import { GRAVITY_DIRS } from '../physics/gravity';
 
 /**
  * Save games: what to keep (flags and inventory, where the player is, the last checkpoint, and the state of
@@ -13,6 +14,7 @@ import { applyTableEdits } from '../data/tables';
 
 export const CURRENT_SAVE_VERSION = 1;
 
+const GravitySchema = z.enum(GRAVITY_DIRS as unknown as [string, ...string[]]);
 const CheckpointSchema = z.object({ scene: z.string(), x: z.number(), y: z.number(), h: z.number(), name: z.string() });
 
 export const SaveSchema = z.object({
@@ -26,7 +28,9 @@ export const SaveSchema = z.object({
   checkpoint: CheckpointSchema.nullable().default(null),
   difficulty: z.enum(['easy', 'normal', 'hard']).default('normal'),
   playSeconds: z.number().min(0).default(0),
-  player: z.object({ x: z.number(), y: z.number(), h: z.number(), facing: z.number().default(2), hp: z.number().nullable().default(null) }).nullable().default(null),
+  /** Which way gravity pulls now, when that is not the way the scene says (a game saved on a wall). */
+  gravity: GravitySchema.optional(),
+  player: z.object({ x: z.number(), y: z.number(), h: z.number(), facing: z.number().default(2), hp: z.number().nullable().default(null), /** The player's own gravity, when it has one. */ gdir: GravitySchema.optional() }).nullable().default(null),
   /** Objects tagged "persistent": their saved parts, by scene id. */
   objects: z.array(z.object({ id: z.string(), components: z.record(z.string(), z.unknown()) })).default([]),
   /** Persistent objects that no longer exist (a picked-up coin, a broken pot). */
@@ -55,6 +59,8 @@ export function serializeGame(sim: Simulation, meta: { stamp: string; label?: st
   const playerEntity = sim.world.withTag('player')[0];
   const t = playerEntity?.get<TransformIso>(C.Transform);
   const hp = playerEntity?.get<{ hp: number }>('state:health')?.hp ?? null;
+  const gdir = playerEntity?.get<{ gdir?: string }>(C.Body)?.gdir;
+  const authored = (r.scratch.get('sceneGravity') as string | undefined) ?? '-z';
   const objects: SaveData['objects'] = [];
   const present = new Set<string>();
   for (const e of sim.world.withTag(PERSISTENT_TAG)) {
@@ -87,7 +93,8 @@ export function serializeGame(sim: Simulation, meta: { stamp: string; label?: st
     checkpoint: r.checkpoint,
     difficulty: r.difficulty,
     playSeconds: meta.playSeconds ?? 0,
-    player: t ? { x: t.x, y: t.y, h: t.h, facing: t.facing, hp } : null,
+    ...(r.gravity !== authored ? { gravity: r.gravity } : {}),
+    player: t ? { x: t.x, y: t.y, h: t.h, facing: t.facing, hp, ...(gdir ? { gdir } : {}) } : null,
     objects,
     gone: gone.filter((id) => persistentOnLoad.has(id)),
     tables: JSON.parse(JSON.stringify(r.tableEdits)),
@@ -105,6 +112,7 @@ export function applySave(sim: Simulation, save: SaveData): void {
   r.vars = { ...r.vars, ...save.vars };
   r.checkpoint = save.checkpoint;
   r.difficulty = save.difficulty;
+  if (save.gravity) r.gravity = save.gravity as typeof r.gravity;
   r.tableEdits = structuredClone(save.tables) as typeof r.tableEdits;
   applyTableEdits(sim.assets.tables, r.tableEdits);
   if (sim.map && save.blocks.length > 0) {
@@ -139,6 +147,7 @@ export function applySave(sim: Simulation, save: SaveData): void {
       b.vx = b.vy = b.vz = 0;
       b.state = 'ground';
       b.peakZ = save.player.h;
+      if (save.player.gdir) (b as { gdir?: string }).gdir = save.player.gdir;
     }
     const hs = p.get<{ hp: number; dead: boolean; iframes: number }>('state:health');
     if (hs && save.player.hp !== null) {

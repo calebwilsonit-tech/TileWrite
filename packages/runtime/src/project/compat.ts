@@ -30,6 +30,11 @@ export const COMPAT_FLAGS = {
     help: 'Off: the older rule for screens made in the designer: the first press of a direction only chooses the first widget, the focus stops at the last one, up and down go to the nearest widget (which can skip a narrow one), and left and right do not change choices or tick boxes. On: a menu opens with its first row chosen, going past the last row comes round to the first, up and down go to the next row whatever its width, left and right change a choice or flip a tick box, and the button that presses the chosen widget is not also given to the game. The game\'s own screens (Pause, Settings...) always work this way.',
     since: 3,
   },
+  timedGravity: {
+    label: 'When gravity turns, the body turns with it over a moment, and is checked against the blocks every tick on the way',
+    help: 'Off: the older rule, where the body jumps to its new place at once when gravity turns and only the picture eases. On: the body turns over the time the scene (or the body) says, 0.25 seconds when it does not say, and is kept out of every block while it turns; if something is in the way it waits for room.',
+    since: 3,
+  },
   pauseAction: {
     label: 'The pause button is a Quick Action you can see and change',
     help: 'Off: the pause button opens the screen used as Pause by itself, which nothing in the project shows (the older rule). On: it does nothing by itself; the Quick Action "When the pause button is pressed, open the Pause screen", which every new scene starts with, does it, so you can change or remove it. Back (closing a screen) works either way.',
