@@ -10,6 +10,7 @@
     "prebuilt-screens": "^1.0.0"
   },
   "permissions": [],
+  "replaces": ["example-parchment-ui"],
   "entry": {
     "runtime": "src/index.ts"
   },

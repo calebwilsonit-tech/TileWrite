@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { CURRENT_SCHEMA_VERSION, type Assets, type Rng, type VariableValue } from '@tilewright/runtime'; // (loading the runtime sets up Zod before the schemas below are built)
-import type { DataKindDef, DataKnown } from '@tilewright/behaviors';
+import { CURRENT_SCHEMA_VERSION, type Assets, type Rng, type VariableValue } from '@tilewright/plugin-sdk'; // (loading the runtime sets up Zod before the schemas below are built)
+import type { DataKindDef, DataKnown } from '@tilewright/plugin-sdk';
 
 /**
  * Minigames: small games inside the game (stop the marker in the zone, repeat the pattern, match the pairs).

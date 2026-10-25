@@ -1,6 +1,6 @@
 {
   "name": "@tilewright/runtime",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "private": true,
   "description": "Game engine core: scene, ECS, renderer, physics, audio, input, save",
   "type": "module",

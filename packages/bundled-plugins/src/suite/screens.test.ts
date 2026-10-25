@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { ItemSchema, putRecord } from '@tilewright/plugin-sdk';
+import { putRecord } from '@tilewright/plugin-sdk';
+import { ItemSchema } from '@tilewright/plugin-inventory';
 import { MapNodeSchema, Simulation, UiDocSchema, UiScreenSchema, UiThemeSchema, UiWidgetSchema, WorldMapSchema, completeLayout, openRole, roleOfScreen, screenForRole, type SlotInfo, type VariableValue } from '@tilewright/runtime';
 import {
   activateWidget,

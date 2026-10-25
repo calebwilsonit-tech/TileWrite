@@ -10,6 +10,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import * as sdk from '@tilewright/plugin-sdk';
+import * as legacy from '@tilewright/plugin-sdk/legacy';
 import { ENGINE_VERSION, PluginHost, definePlugin } from '@tilewright/plugin-sdk';
 import { COMPAT } from './harness/corpus';
 
@@ -30,7 +31,8 @@ function surface(): { exports: string[]; api: string[]; tables: string[] } {
     ),
   );
   host.install('probe');
-  return { exports: Object.keys(sdk).sort(), api: api.sort(), tables: Object.keys(host.ext).sort() };
+  // (the SDK is a list now; every name it ever had is still reachable, from the list or from the deprecated legacy entry)
+  return { exports: [...new Set([...Object.keys(sdk), ...Object.keys(legacy)])].sort(), api: api.sort(), tables: Object.keys(host.ext).sort() };
 }
 
 describe(`the plugin SDK only grows (platform version ${ENGINE_VERSION})`, () => {

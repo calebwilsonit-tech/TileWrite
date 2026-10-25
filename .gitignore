@@ -16,3 +16,4 @@ compat/projects/*
 compat/baselines/owner/
 e2e/compat-screens.spec.ts-snapshots/owner-*
 compat/proposals/
+packages/plugin-sdk/dist-test

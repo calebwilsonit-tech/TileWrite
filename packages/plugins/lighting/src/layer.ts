@@ -1,5 +1,5 @@
 import { Container, Graphics, RenderTexture, Sprite as PixiSprite, type Renderer } from 'pixi.js';
-import { gridToScreen, type IsoConfig, type ScreenLayer, type ScreenLayerFrame } from '@tilewright/runtime';
+import { gridToScreen, type IsoConfig, type ScreenLayer, type ScreenLayerFrame } from '@tilewright/plugin-sdk';
 import { visibilityPolygon, type LightingModel } from './model';
 
 const RINGS = 14;

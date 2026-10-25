@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { FLAG, TileMap } from '@tilewright/runtime';
+import { FLAG, TileMap } from '@tilewright/plugin-sdk';
 import { ambientDarkness, isLit, lightLevel, lineClear, makeOccluder, visibilityPolygon, type LightingModel, type LightSource } from './model';
 
 function room(): TileMap {

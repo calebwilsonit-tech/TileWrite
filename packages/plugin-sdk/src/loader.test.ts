@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import * as sdk from './index';
-import { PluginHost, PluginTrust, hashText, loadPackage, readPluginPackage, type PluginFs } from './index';
+import { PluginHost } from './index';
+import { PluginTrust, hashText, loadPackage, readPluginPackage, type PluginFs } from '@tilewright/behaviors';
 
 const memoryFs = (files: Record<string, string>): PluginFs => ({
   readText: async (p) => {

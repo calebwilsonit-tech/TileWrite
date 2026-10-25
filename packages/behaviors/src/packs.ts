@@ -95,10 +95,13 @@ export function setLegacyPacks(ids: readonly string[]): void {
 export const legacyPacks = (): readonly string[] => legacy;
 
 /** The packs a project file asks for (a file with no list is a project from before plugins existed). */
-export const packsOfProject = (project: { plugins?: readonly string[] | undefined }): readonly string[] => (project.plugins ? [...new Set(project.plugins.map((id) => RENAMED_PLUGINS[id] ?? id))] : legacy);
+export const packsOfProject = (project: { plugins?: readonly string[] | undefined }): readonly string[] => (project.plugins ? [...new Set(project.plugins.map(currentId))] : legacy);
 
-/** Plugins that changed their id: a project that lists the old one gets the new one. (The Parchment UI kit was an example, `example-parchment-ui`, before it shipped with the editor.) */
-export const RENAMED_PLUGINS: Readonly<Record<string, string>> = { 'example-parchment-ui': 'parchment' };
+/** The id a plugin has now, when a plugin says (`replaces` in its plugin.json) that it took over the id a project lists. */
+function currentId(id: string): string {
+  for (const p of host.known.values()) if (p.manifest.replaces.includes(id)) return p.manifest.id;
+  return id;
+}
 
 /** Use a project's plugins and the collision layers it names (what opening a project and playing it start with). */
 export function useProject(project: { plugins?: readonly string[] | undefined; collisionLayers?: readonly ProjectLayerData[] | undefined }): void {

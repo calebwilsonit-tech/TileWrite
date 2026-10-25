@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { C, CutsceneSchema, DialogueSchema, type EntityData, type TransformIso } from '@tilewright/runtime';
-import { ItemSchema, itemCount, putRecord, quickSlots } from '@tilewright/plugin-sdk';
+import { putRecord } from '@tilewright/plugin-sdk';
+import { ItemSchema, itemCount, quickSlots } from '@tilewright/plugin-inventory';
 import { GRID_PLUS_X, ctxOf, flatScene, player, rig, thing, type Rig } from '@tilewright/plugin-sdk/testing';
 import { attachBehavior, newAction, newCondition, newRow, output } from '@tilewright/behaviors';
 import { beginDialogue, playCutscene } from '@tilewright/plugin-story';

@@ -1,4 +1,5 @@
-import { minigameWon, str, type ActionDef, type ConditionDef } from '@tilewright/plugin-sdk';
+import { str, type ActionDef, type ConditionDef } from '@tilewright/plugin-sdk';
+import { minigameWon } from './minigames';
 import { beginDialogue, beginMinigame, playCutscene } from './director';
 
 export const conditions: ConditionDef[] = [

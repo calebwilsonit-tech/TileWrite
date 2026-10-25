@@ -1,4 +1,4 @@
-import { FLAG, type RegionData, type TileMap } from '@tilewright/runtime';
+import { FLAG, type RegionData, type TileMap } from '@tilewright/plugin-sdk';
 
 /**
  * Lighting is plain data plus a few pure functions, so behaviours ("is this plant in the light?"), the

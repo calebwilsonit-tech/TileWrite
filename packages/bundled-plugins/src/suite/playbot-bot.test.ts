@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { DialogueSchema, FLAG, tileMapToRows, type SceneData } from '@tilewright/runtime';
-import { ItemSchema, newMinigame, openMinigame, type MinigameData } from '@tilewright/plugin-sdk';
+import { ItemSchema } from '@tilewright/plugin-inventory';
+import { newMinigame, openMinigame, type MinigameData } from '@tilewright/plugin-story';
 import { playMinigame } from '@tilewright/plugin-story';
 import { attachBehavior, output } from '@tilewright/behaviors';
 import { flatScene, player, thing } from '@tilewright/plugin-sdk/testing';

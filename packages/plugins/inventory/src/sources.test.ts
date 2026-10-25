@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Simulation, UiDocSchema, newWidget, type UiNode } from '@tilewright/runtime';
+import { Simulation, UiDocSchema, newWidget, type UiNode } from '@tilewright/plugin-sdk';
 import { host, rowsOf, putRecord, setActivePacks } from '@tilewright/plugin-sdk';
 import '@tilewright/bundled-plugins';
 import { ItemSchema } from './items';

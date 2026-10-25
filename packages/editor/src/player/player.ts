@@ -1,7 +1,7 @@
 import '../bundled';
 import 'pixi.js/unsafe-eval'; // Pixi's shader helpers without `new Function`, which the Content-Security-Policy forbids
 import { IsoRenderer, compatOf, crashReport, formatCrashReport, tilesetFromList, type SpriteData } from '@tilewright/runtime';
-import * as sdk from '@tilewright/plugin-sdk';
+import * as sdk from '@tilewright/plugin-sdk/legacy'; // (a plugin shipped with a game is handed the whole old SDK too)
 import { PluginsBundleSchema } from '@tilewright/exporter';
 import { activate, defaultImporter, evaluatePlugin, host, parseManifest, installScriptGlobals, loadScript, syncCustomBlocks, useProject, type Transpiler } from '@tilewright/behaviors';
 import { GameManifestSchema, ScriptsBundleSchema, type GameManifest } from '@tilewright/exporter';

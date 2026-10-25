@@ -1,6 +1,6 @@
 {
   "name": "@tilewright/playbot",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "private": true,
   "description": "Automated player and puzzle solver",
   "type": "module",

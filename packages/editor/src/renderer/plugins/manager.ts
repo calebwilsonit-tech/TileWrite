@@ -1,5 +1,6 @@
-import * as sdk from '@tilewright/plugin-sdk';
-import { PluginTrust, compareVersionText, host, loadPackage, readPluginPackage, type PluginFs, type PluginPackage } from '@tilewright/plugin-sdk';
+// (a plugin from outside is handed the whole old SDK, so one written before the list was made still finds every name it used)
+import * as sdk from '@tilewright/plugin-sdk/legacy';
+import { PluginTrust, compareVersionText, host, loadPackage, readPluginPackage, type PluginFs, type PluginPackage } from '@tilewright/behaviors';
 import { api } from '../project/api';
 import { joinPath } from '../project/api';
 import { installIsolatedEditorPart } from './isolated';

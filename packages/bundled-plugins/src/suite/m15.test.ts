@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { C, type TransformIso } from '@tilewright/runtime';
-import { ItemSchema, itemCount, newMinigame, openMinigame, putRecord, symbolDirs, type MinigameData } from '@tilewright/plugin-sdk';
+import { putRecord } from '@tilewright/plugin-sdk';
+import { ItemSchema, itemCount } from '@tilewright/plugin-inventory';
+import { newMinigame, openMinigame, symbolDirs, type MinigameData } from '@tilewright/plugin-story';
 import { GRID_PLUS_X, ctxOf, flatScene, player, rig, thing, type Rig } from '@tilewright/plugin-sdk/testing';
 import { beginMinigame } from '@tilewright/plugin-story';
 import { newAction, newCondition, newRow, output } from '@tilewright/behaviors';

@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { CURRENT_SCHEMA_VERSION, type Assets, type VariableValue } from '@tilewright/runtime'; // (loading the runtime sets up Zod before the schemas below are built)
-import type { DataKindDef } from '@tilewright/behaviors';
+import { CURRENT_SCHEMA_VERSION, type Assets, type VariableValue } from '@tilewright/plugin-sdk'; // (loading the runtime sets up Zod before the schemas below are built)
+import type { DataKindDef } from '@tilewright/plugin-sdk';
 
 /**
  * Items are plain data (`assets/items.json`). How many of each the player carries is stored in the scene's

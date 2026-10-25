@@ -62,6 +62,8 @@ export const PluginManifestSchema = z.object({
   data: z.array(z.string().max(200)).default([]),
   /** Folder of art, sounds, screens, templates and pages the plugin brings (copied into a game that uses them). */
   assets: z.string().max(200).default(''),
+  /** Ids this plugin took over from earlier plugins: a project that lists one of them gets this plugin. */
+  replaces: z.array(Id).default([]),
   /** True for the plugins that ship with the editor. */
   builtin: z.boolean().default(false),
   /** False for a plugin that ships with the editor but is on only where a project chooses it (a look, not a part of every game). */

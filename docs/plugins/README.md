@@ -113,7 +113,13 @@ t.off();
 
 ## Stability
 
-The plugin SDK is versioned (`ENGINE_VERSION`). Within a major version names are only ever added: `compat/baselines/sdk-api.json` lists every name the SDK has had (exports, api methods, extension tables) and a test fails if one disappears. A thing that is replaced stays under its old name. The scripting API has its own version (`SCRIPT_API_VERSION`) with the same rule.
+The plugin SDK is versioned (`ENGINE_VERSION`). Within a major version names are only ever added: `compat/baselines/sdk-api.json` lists every name the SDK has had (exports, api methods, extension tables) and a test fails if one disappears. A thing that is replaced stays under its old name.
+
+**What is in the SDK.** `@tilewright/plugin-sdk` is a deliberate list of about 240 names: the plugin api, the shape of everything a plugin can add, and the helpers for the engine's own data. Every plugin that ships with Tilewright is written against exactly this list (the compiler and `packages/plugin-sdk/src/surface.test.ts` see to it), so what they can do, yours can. The rest of what the engine exports (about 600 more names) is internal and can change. It is all still there, unchanged, in `@tilewright/plugin-sdk/legacy`, which is deprecated: a plugin written against the old, whole-engine SDK keeps building and loading (a plugin loaded from outside is handed the legacy entry as its `require('@tilewright/plugin-sdk')`). If you need something that is only there, ask for it to be added to the list. The baseline counts the names of both.
+
+**Publishing the SDK.** `npm run build -w @tilewright/plugin-sdk` makes `packages/plugin-sdk/dist`, which is the package (bundled code, the types, a manifest whose only dependencies are `pixi.js` and `zod`, with real version ranges); publish that folder. The test `build.test.ts` builds it and compiles a small plugin against its types.
+
+The scripting API has its own version (`SCRIPT_API_VERSION`) with the same rule.
 
 ## Plugins that came with Tilewright
 

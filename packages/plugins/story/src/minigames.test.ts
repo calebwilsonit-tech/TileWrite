@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Rng } from '@tilewright/runtime';
+import { Rng } from '@tilewright/plugin-sdk';
 import {
   MinigamesFileSchema,
   checkMinigame,

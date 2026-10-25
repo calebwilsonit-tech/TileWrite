@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { DialogueSchema, startDialogue, type VariableValue } from '@tilewright/runtime';
+import { DialogueSchema, startDialogue, type VariableValue } from '@tilewright/plugin-sdk';
 import { ItemSchema, addItem, assignSlot, autoSlot, carried, itemCount, itemsKind, quickSlots, type ItemData } from './items';
-import { parseDataFile } from '@tilewright/behaviors';
+import { parseDataFile } from '@tilewright/plugin-sdk';
 
 const items = new Map<string, ItemData>([
   ['key', ItemSchema.parse({ id: 'key', name: 'Brass key', max: 3 })],
