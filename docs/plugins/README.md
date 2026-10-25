@@ -28,6 +28,8 @@ npm run build        # plugin.cjs (the game part) and editor.cjs (the editor par
 npm test
 ```
 
+To start from the example for one kind of thing a plugin can add (a widget, a screen layer, a kind of data, a check, a panel...) instead, add the starter's name: `npm create tilewright-plugin my-plugin -- --starter widget`; `--starters` lists all of them. Each is the tested example of the matching row of [extension-points.md](extension-points.md), with its own manifest, test and build.
+
 In Tilewright open **Project settings → Plugins → Open a folder for development…** and choose the folder. The editor asks whether to allow it (see *Trust*), then uses the plugin where it is: `npm run dev` rebuilds when you save and the editor reloads the plugin at once. Switch it on in the project with its tick box.
 
 A plugin is a folder:

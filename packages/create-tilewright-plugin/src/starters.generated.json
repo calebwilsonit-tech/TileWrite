@@ -1,0 +1,306 @@
+[
+  {
+    "id": "behavior",
+    "point": "behavior",
+    "title": "a behaviour",
+    "description": "Adds the Spinner behaviour to the Inspector.",
+    "deps": {
+      "zod": "^4.6.7"
+    },
+    "source": "import { z } from 'zod';\nimport { definePlugin, behaviorDef, type PluginDefinition, type SimContext, type Entity } from '@tilewright/plugin-sdk';\nimport manifest from '../plugin.json' with { type: 'json' };\n\nimport { z } from 'zod';\nimport { definePlugin, behaviorDef, type PluginDefinition, type SimContext, type Entity } from '@tilewright/plugin-sdk';\n\n/** The manifest every example shares the shape of. A real plugin keeps this in its own plugin.json. */\nexport const manifestOf = (id: string, name: string, description: string) => ({ id: `example-${id}`, name, version: '1.0.0', description, author: 'Tilewright examples', license: 'MIT' });\n\nexport interface Spinner {\n  /** Quarter turns a second. */\n  speed: number;\n}\n\n/** A behaviour: something an object does on its own, with settings in the Inspector. This one turns its object round and round. */\nexport const spinnerBehavior = behaviorDef<Spinner>({\n  id: 'exampleSpinner',\n  name: 'Spinner',\n  category: 'Examples',\n  description: 'Turns the object round and round.',\n  phase: 'actuator',\n  defaults: { speed: 2 },\n  fields: [{ key: 'speed', label: 'Quarter turns a second', type: 'number', min: 0, max: 8, step: 0.5 }],\n  inputs: [],\n  outputs: [],\n  requires: {},\n  summary: (s) => `Turns ${s.speed} quarter turns a second.`,\n  update(ctx: SimContext, e: Entity, s: Spinner) {\n    const t = e.get<{ facing: number }>('transform');\n    if (t) t.facing = (Math.floor(ctx.tick * s.speed * (1 / 15)) + 8) % 8;\n  },\n});\n\nexport const behaviorExample: PluginDefinition = definePlugin(manifest, {\n  install: (api) => api.behavior(spinnerBehavior),\n});\n\nexport default behaviorExample;\n"
+  },
+  {
+    "id": "condition",
+    "point": "condition / action / event",
+    "title": "event blocks",
+    "description": "A condition, an action and an event for the event sheet.",
+    "deps": {
+      "zod": "^4.6.7"
+    },
+    "source": "import { z } from 'zod';\nimport { definePlugin, behaviorDef, type PluginDefinition, type SimContext, type Entity } from '@tilewright/plugin-sdk';\nimport manifest from '../plugin.json' with { type: 'json' };\n\nimport { z } from 'zod';\nimport { definePlugin, behaviorDef, type PluginDefinition, type SimContext, type Entity } from '@tilewright/plugin-sdk';\n\n/** The manifest every example shares the shape of. A real plugin keeps this in its own plugin.json. */\nexport const manifestOf = (id: string, name: string, description: string) => ({ id: `example-${id}`, name, version: '1.0.0', description, author: 'Tilewright examples', license: 'MIT' });\n\nexport const eventsExample: PluginDefinition = definePlugin(manifest, {\n  install(api) {\n    api.condition({\n      id: 'exampleCounterAtLeast',\n      label: 'The example counter is at least',\n      category: 'Examples',\n      params: [{ key: 'n', label: 'Number', type: 'number', default: 3, step: 1 }],\n      describe: (p) => `the example counter is at least ${Number(p.n ?? 3)}`,\n      test: (ctx, p) => Number(ctx.runtime.vars.exampleCounter ?? 0) >= Number(p.n ?? 3),\n    });\n    api.action({\n      id: 'exampleCountUp',\n      label: 'Add one to the example counter',\n      category: 'Examples',\n      params: [],\n      describe: () => 'add one to the example counter',\n      run(ctx) {\n        ctx.runtime.vars.exampleCounter = Number(ctx.runtime.vars.exampleCounter ?? 0) + 1;\n        ctx.events.emit('example-counted', { total: ctx.runtime.vars.exampleCounter });\n      },\n    });\n    api.event({ id: 'example-counted', label: 'the example counter goes up', text: 'the example counter goes up' });\n  },\n});\n\nexport default eventsExample;\n"
+  },
+  {
+    "id": "system",
+    "point": "system",
+    "title": "a system",
+    "description": "Counts ticks in a variable.",
+    "deps": {
+      "zod": "^4.6.7"
+    },
+    "source": "import { z } from 'zod';\nimport { definePlugin, behaviorDef, type PluginDefinition, type SimContext, type Entity } from '@tilewright/plugin-sdk';\nimport manifest from '../plugin.json' with { type: 'json' };\n\nimport { z } from 'zod';\nimport { definePlugin, behaviorDef, type PluginDefinition, type SimContext, type Entity } from '@tilewright/plugin-sdk';\n\n/** The manifest every example shares the shape of. A real plugin keeps this in its own plugin.json. */\nexport const manifestOf = (id: string, name: string, description: string) => ({ id: `example-${id}`, name, version: '1.0.0', description, author: 'Tilewright examples', license: 'MIT' });\n\nexport const systemExample: PluginDefinition = definePlugin(manifest, {\n  install: (api) =>\n    api.system('count-ticks', (ctx) => {\n      ctx.runtime.vars.exampleTicks = ctx.tick;\n    }),\n});\n\nexport default systemExample;\n"
+  },
+  {
+    "id": "input-action",
+    "point": "inputAction",
+    "title": "a button",
+    "description": "A \"Wave\" button on F and the pad.",
+    "deps": {
+      "zod": "^4.6.7"
+    },
+    "source": "import { z } from 'zod';\nimport { definePlugin, behaviorDef, type PluginDefinition, type SimContext, type Entity } from '@tilewright/plugin-sdk';\nimport manifest from '../plugin.json' with { type: 'json' };\n\nimport { z } from 'zod';\nimport { definePlugin, behaviorDef, type PluginDefinition, type SimContext, type Entity } from '@tilewright/plugin-sdk';\n\n/** The manifest every example shares the shape of. A real plugin keeps this in its own plugin.json. */\nexport const manifestOf = (id: string, name: string, description: string) => ({ id: `example-${id}`, name, version: '1.0.0', description, author: 'Tilewright examples', license: 'MIT' });\n\nexport const inputExample: PluginDefinition = definePlugin(manifest, {\n  install: (api) => api.inputAction('example_wave', { label: 'Wave', bindings: ['key:KeyF', 'pad:button2'] }),\n});\n\nexport default inputExample;\n"
+  },
+  {
+    "id": "component",
+    "point": "component",
+    "title": "a component",
+    "description": "State an object can carry, with defaults.",
+    "deps": {
+      "zod": "^4.6.7"
+    },
+    "source": "import { z } from 'zod';\nimport { definePlugin, behaviorDef, type PluginDefinition, type SimContext, type Entity } from '@tilewright/plugin-sdk';\nimport manifest from '../plugin.json' with { type: 'json' };\n\nimport { z } from 'zod';\nimport { definePlugin, behaviorDef, type PluginDefinition, type SimContext, type Entity } from '@tilewright/plugin-sdk';\n\n/** The manifest every example shares the shape of. A real plugin keeps this in its own plugin.json. */\nexport const manifestOf = (id: string, name: string, description: string) => ({ id: `example-${id}`, name, version: '1.0.0', description, author: 'Tilewright examples', license: 'MIT' });\n\nexport const componentExample: PluginDefinition = definePlugin(manifest, {\n  install: (api) => api.component({ id: 'exampleScore', name: 'Score', description: 'Points an object has earned.', defaults: { points: 0, best: 0 } }),\n});\n\nexport default componentExample;\n"
+  },
+  {
+    "id": "collision-layer",
+    "point": "collisionLayer",
+    "title": "a collision layer",
+    "description": "A layer for mist, bit 12 for ever.",
+    "deps": {
+      "zod": "^4.6.7"
+    },
+    "source": "import { z } from 'zod';\nimport { definePlugin, behaviorDef, type PluginDefinition, type SimContext, type Entity } from '@tilewright/plugin-sdk';\nimport manifest from '../plugin.json' with { type: 'json' };\n\nimport { z } from 'zod';\nimport { definePlugin, behaviorDef, type PluginDefinition, type SimContext, type Entity } from '@tilewright/plugin-sdk';\n\n/** The manifest every example shares the shape of. A real plugin keeps this in its own plugin.json. */\nexport const manifestOf = (id: string, name: string, description: string) => ({ id: `example-${id}`, name, version: '1.0.0', description, author: 'Tilewright examples', license: 'MIT' });\n\nexport const layerExample: PluginDefinition = definePlugin(manifest, {\n  install: (api) => api.collisionLayer({ name: 'example-mist', bit: 12, label: 'Mist' }),\n});\n\nexport default layerExample;\n"
+  },
+  {
+    "id": "physics-modifier",
+    "point": "physicsModifier",
+    "title": "wind",
+    "description": "A steady wind pushing every body east.",
+    "deps": {
+      "zod": "^4.6.7"
+    },
+    "source": "import { z } from 'zod';\nimport { definePlugin, behaviorDef, type PluginDefinition, type SimContext, type Entity } from '@tilewright/plugin-sdk';\nimport manifest from '../plugin.json' with { type: 'json' };\n\nimport { z } from 'zod';\nimport { definePlugin, behaviorDef, type PluginDefinition, type SimContext, type Entity } from '@tilewright/plugin-sdk';\n\n/** The manifest every example shares the shape of. A real plugin keeps this in its own plugin.json. */\nexport const manifestOf = (id: string, name: string, description: string) => ({ id: `example-${id}`, name, version: '1.0.0', description, author: 'Tilewright examples', license: 'MIT' });\n\nexport const physicsExample: PluginDefinition = definePlugin(manifest, {\n  install: (api) =>\n    api.physicsModifier({\n      id: 'wind',\n      apply(_ctx, _entity, body) {\n        body.vx = (typeof body.vx === 'number' ? body.vx : 0) + 0.5;\n      },\n    }),\n});\n\nexport default physicsExample;\n"
+  },
+  {
+    "id": "block-type",
+    "point": "blockType",
+    "title": "ice",
+    "description": "A slippery block.",
+    "deps": {
+      "zod": "^4.6.7"
+    },
+    "source": "import { z } from 'zod';\nimport { definePlugin, behaviorDef, type PluginDefinition, type SimContext, type Entity } from '@tilewright/plugin-sdk';\nimport manifest from '../plugin.json' with { type: 'json' };\n\nimport { z } from 'zod';\nimport { definePlugin, behaviorDef, type PluginDefinition, type SimContext, type Entity } from '@tilewright/plugin-sdk';\n\n/** The manifest every example shares the shape of. A real plugin keeps this in its own plugin.json. */\nexport const manifestOf = (id: string, name: string, description: string) => ({ id: `example-${id}`, name, version: '1.0.0', description, author: 'Tilewright examples', license: 'MIT' });\n\nexport const blockExample: PluginDefinition = definePlugin(manifest, {\n  install: (api) => api.blockType({ id: 'example-ice', name: 'Ice', top: 0xbfe8ff, left: 0x8fc4e8, right: 0x6aa3cc, custom: { friction: 0.05 }, tags: ['slippery'] }),\n});\n\nexport default blockExample;\n"
+  },
+  {
+    "id": "who-filter",
+    "point": "whoFilter",
+    "title": "a group",
+    "description": "Plates and zones can react to \"Heroes\".",
+    "deps": {
+      "zod": "^4.6.7"
+    },
+    "source": "import { z } from 'zod';\nimport { definePlugin, behaviorDef, type PluginDefinition, type SimContext, type Entity } from '@tilewright/plugin-sdk';\nimport manifest from '../plugin.json' with { type: 'json' };\n\nimport { z } from 'zod';\nimport { definePlugin, behaviorDef, type PluginDefinition, type SimContext, type Entity } from '@tilewright/plugin-sdk';\n\n/** The manifest every example shares the shape of. A real plugin keeps this in its own plugin.json. */\nexport const manifestOf = (id: string, name: string, description: string) => ({ id: `example-${id}`, name, version: '1.0.0', description, author: 'Tilewright examples', license: 'MIT' });\n\nexport const whoExample: PluginDefinition = definePlugin(manifest, {\n  install: (api) => api.whoFilter({ id: 'example-heroes', label: 'Heroes', match: (e) => e.tags.has('hero') }),\n});\n\nexport default whoExample;\n"
+  },
+  {
+    "id": "defeat-check",
+    "point": "defeatCheck",
+    "title": "defeat",
+    "description": "An object with the tag \"fragile\" counts as defeated once it has the tag \"broken\".",
+    "deps": {
+      "zod": "^4.6.7"
+    },
+    "source": "import { z } from 'zod';\nimport { definePlugin, behaviorDef, type PluginDefinition, type SimContext, type Entity } from '@tilewright/plugin-sdk';\nimport manifest from '../plugin.json' with { type: 'json' };\n\nimport { z } from 'zod';\nimport { definePlugin, behaviorDef, type PluginDefinition, type SimContext, type Entity } from '@tilewright/plugin-sdk';\n\n/** The manifest every example shares the shape of. A real plugin keeps this in its own plugin.json. */\nexport const manifestOf = (id: string, name: string, description: string) => ({ id: `example-${id}`, name, version: '1.0.0', description, author: 'Tilewright examples', license: 'MIT' });\n\nexport const defeatExample: PluginDefinition = definePlugin(manifest, {\n  install: (api) => api.defeatCheck({ id: 'example-fragile', defeated: (e) => e.tags.has('fragile') && e.tags.has('broken') }),\n});\n\nexport default defeatExample;\n"
+  },
+  {
+    "id": "screen-layer",
+    "point": "screenLayer",
+    "title": "screen layer",
+    "description": "A layer drawn over the world that tints the picture while a counter named \"chill\" is above zero.",
+    "deps": {
+      "zod": "^4.6.7"
+    },
+    "source": "import { z } from 'zod';\nimport { definePlugin, behaviorDef, type PluginDefinition, type SimContext, type Entity } from '@tilewright/plugin-sdk';\nimport manifest from '../plugin.json' with { type: 'json' };\n\nimport { z } from 'zod';\nimport { definePlugin, behaviorDef, type PluginDefinition, type SimContext, type Entity } from '@tilewright/plugin-sdk';\n\n/** The manifest every example shares the shape of. A real plugin keeps this in its own plugin.json. */\nexport const manifestOf = (id: string, name: string, description: string) => ({ id: `example-${id}`, name, version: '1.0.0', description, author: 'Tilewright examples', license: 'MIT' });\n\nexport const screenLayerExample: PluginDefinition = definePlugin(manifest, {\n  install: (api) => {\n    api.system('chill', (ctx) => void (ctx.runtime.plugin['screen-layer'] = Number(ctx.runtime.vars.chill) > 0 ? { amount: Math.min(1, Number(ctx.runtime.vars.chill) / 10) } : undefined), 'gameplay', 'after-behaviors');\n    // the layer is made when this plugin comes on, gets its data each frame, and hides when there is none\n    api.screenLayer({ id: 'screen-layer', create: () => ({ objects: [], update: () => undefined, hide: () => undefined }) });\n  },\n});\n\nexport default screenLayerExample;\n"
+  },
+  {
+    "id": "data-kind",
+    "point": "dataKind / dataEditor",
+    "title": "a kind of data",
+    "description": "A list of recipes kept in assets/example-recipes.json: loaded, saved, checked, translated and edited by the engine.",
+    "deps": {
+      "zod": "^4.6.7"
+    },
+    "source": "import { z } from 'zod';\nimport { definePlugin, behaviorDef, type PluginDefinition, type SimContext, type Entity } from '@tilewright/plugin-sdk';\nimport manifest from '../plugin.json' with { type: 'json' };\n\nimport { z } from 'zod';\nimport { definePlugin, behaviorDef, type PluginDefinition, type SimContext, type Entity } from '@tilewright/plugin-sdk';\n\n/** The manifest every example shares the shape of. A real plugin keeps this in its own plugin.json. */\nexport const manifestOf = (id: string, name: string, description: string) => ({ id: `example-${id}`, name, version: '1.0.0', description, author: 'Tilewright examples', license: 'MIT' });\n\nconst RecipeSchema = z.object({ name: z.string().min(1), makes: z.string().default('') });\n\n/** A kind of data: a list of recipes kept in a file of the project. The engine loads it while this plugin is on, saves and checks it, collects its words for translation, and shows its editor as a tab of the Story panel. */\nexport const dataKindExample: PluginDefinition = definePlugin(manifest, {\n  install: (api) =>\n    api.dataKind({\n      id: 'example-recipes',\n      label: 'Recipes',\n      file: 'assets/example-recipes.json',\n      listKey: 'recipes',\n      noun: 'recipe',\n      keyName: 'name',\n      schema: RecipeSchema,\n      keyOf: (r: z.infer<typeof RecipeSchema>) => r.name,\n      create: (existing: readonly unknown[]) => ({ name: `Recipe ${existing.length + 1}`, makes: '' }),\n      check: (records: readonly z.infer<typeof RecipeSchema>[]) => records.filter((r) => r.makes === '').map((r) => `The recipe \"${r.name}\" makes nothing yet.`),\n      texts: (r: z.infer<typeof RecipeSchema>) => [{ text: r.name, where: `Recipe ${r.name}` }],\n    }),\n  // the tab that edits it (editor part only: it never goes into an exported game); a real one draws its fields with React, using props.ui\n  installEditor: (api) => api.dataEditor({ kind: 'example-recipes', component: () => null }),\n});\n\nexport default dataKindExample;\n"
+  },
+  {
+    "id": "carrier",
+    "point": "carrier",
+    "title": "pockets",
+    "description": "Keeps what the player carries in the variables pocket:<name>, for conversations and cutscenes to give into.",
+    "deps": {
+      "zod": "^4.6.7"
+    },
+    "source": "import { z } from 'zod';\nimport { definePlugin, behaviorDef, type PluginDefinition, type SimContext, type Entity } from '@tilewright/plugin-sdk';\nimport manifest from '../plugin.json' with { type: 'json' };\n\nimport { z } from 'zod';\nimport { definePlugin, behaviorDef, type PluginDefinition, type SimContext, type Entity } from '@tilewright/plugin-sdk';\n\n/** The manifest every example shares the shape of. A real plugin keeps this in its own plugin.json. */\nexport const manifestOf = (id: string, name: string, description: string) => ({ id: `example-${id}`, name, version: '1.0.0', description, author: 'Tilewright examples', license: 'MIT' });\n\n/** The keeper of what the player carries (an inventory): conversations, cutscenes, skins and scripts ask it how many, and to give or take some. */\nexport const carrierExample: PluginDefinition = definePlugin(manifest, {\n  install: (api) =>\n    api.carrier({\n      id: 'example-pockets',\n      count: (vars, id) => (typeof vars[`pocket:${id}`] === 'number' ? (vars[`pocket:${id}`] as number) : 0),\n      give(ctx, id, amount) {\n        const had = typeof ctx.runtime.vars[`pocket:${id}`] === 'number' ? (ctx.runtime.vars[`pocket:${id}`] as number) : 0;\n        const got = Math.max(-had, amount);\n        ctx.runtime.vars[`pocket:${id}`] = had + got;\n        return got;\n      },\n      variable: (id) => `pocket:${id}`,\n    }),\n});\n\nexport default carrierExample;\n"
+  },
+  {
+    "id": "script-method",
+    "point": "scriptMethod",
+    "title": "a script method",
+    "description": "Scripts can call game.exampleShout(text).",
+    "deps": {
+      "zod": "^4.6.7"
+    },
+    "source": "import { z } from 'zod';\nimport { definePlugin, behaviorDef, type PluginDefinition, type SimContext, type Entity } from '@tilewright/plugin-sdk';\nimport manifest from '../plugin.json' with { type: 'json' };\n\nimport { z } from 'zod';\nimport { definePlugin, behaviorDef, type PluginDefinition, type SimContext, type Entity } from '@tilewright/plugin-sdk';\n\n/** The manifest every example shares the shape of. A real plugin keeps this in its own plugin.json. */\nexport const manifestOf = (id: string, name: string, description: string) => ({ id: `example-${id}`, name, version: '1.0.0', description, author: 'Tilewright examples', license: 'MIT' });\n\nexport const scriptExample: PluginDefinition = definePlugin(manifest, {\n  install: (api) => api.scriptMethod({ id: 'exampleShout', run: (ctx, _self, [text]) => void ctx.events.emit('message', { text: String(text).toUpperCase() }), fallback: undefined }),\n});\n\nexport default scriptExample;\n"
+  },
+  {
+    "id": "unlock-rule",
+    "point": "unlockRule",
+    "title": "a map rule",
+    "description": "A place unlocks when the variable \"gotKey\" is set.",
+    "deps": {
+      "zod": "^4.6.7"
+    },
+    "source": "import { z } from 'zod';\nimport { definePlugin, behaviorDef, type PluginDefinition, type SimContext, type Entity } from '@tilewright/plugin-sdk';\nimport manifest from '../plugin.json' with { type: 'json' };\n\nimport { z } from 'zod';\nimport { definePlugin, behaviorDef, type PluginDefinition, type SimContext, type Entity } from '@tilewright/plugin-sdk';\n\n/** The manifest every example shares the shape of. A real plugin keeps this in its own plugin.json. */\nexport const manifestOf = (id: string, name: string, description: string) => ({ id: `example-${id}`, name, version: '1.0.0', description, author: 'Tilewright examples', license: 'MIT' });\n\nexport const unlockExample: PluginDefinition = definePlugin(manifest, {\n  install: (api) => api.unlockRule({ id: 'example-key', label: 'once the player has the key', met: (vars) => vars.gotKey === true || Number(vars.gotKey) > 0 }),\n});\n\nexport default unlockExample;\n"
+  },
+  {
+    "id": "bridge-source",
+    "point": "bridgeSource",
+    "title": "planks",
+    "description": "Objects tagged \"plank\" count as bridges over pits.",
+    "deps": {
+      "zod": "^4.6.7"
+    },
+    "source": "import { z } from 'zod';\nimport { definePlugin, behaviorDef, type PluginDefinition, type SimContext, type Entity } from '@tilewright/plugin-sdk';\nimport manifest from '../plugin.json' with { type: 'json' };\n\nimport { z } from 'zod';\nimport { definePlugin, behaviorDef, type PluginDefinition, type SimContext, type Entity } from '@tilewright/plugin-sdk';\n\n/** The manifest every example shares the shape of. A real plugin keeps this in its own plugin.json. */\nexport const manifestOf = (id: string, name: string, description: string) => ({ id: `example-${id}`, name, version: '1.0.0', description, author: 'Tilewright examples', license: 'MIT' });\n\nexport const bridgeExample: PluginDefinition = definePlugin(manifest, {\n  install: (api) =>\n    api.bridgeSource({\n      id: 'planks',\n      possible: (entities) => {\n        const out = new Set<string>();\n        for (const e of entities) {\n          const t = e.components.transform as { x: number; y: number } | undefined;\n          if (t && e.components.plank !== undefined) out.add(`${Math.floor(t.x)},${Math.floor(t.y)}`);\n        }\n        return out;\n      },\n      movable: (e) => e.components.plank !== undefined,\n    }),\n});\n\nexport default bridgeExample;\n"
+  },
+  {
+    "id": "widget",
+    "point": "widget",
+    "title": "a widget",
+    "description": "A \"Clock\" widget that shows how long the game has run.",
+    "deps": {},
+    "source": "import { definePlugin, newWidget, type PluginDefinition, type UiScreen } from '@tilewright/plugin-sdk';\nimport manifest from '../plugin.json' with { type: 'json' };\n\nexport const widgetExample: PluginDefinition = definePlugin(manifest, {\n  install: (api) =>\n    api.widget({\n      id: 'example-clock',\n      label: 'Clock (seconds the game has run)',\n      defaults: { w: 120, h: 32, text: 'time' },\n      render(el, node, values) {\n        const seconds = Number(values['time.seconds'] ?? 0);\n        el.textContent = `${node.text || 'time'} ${seconds.toFixed(0)}s`;\n      },\n    }),\n});\n\nexport default widgetExample;\n"
+  },
+  {
+    "id": "screen",
+    "point": "screen / screenRole",
+    "title": "a screen",
+    "description": "A Credits screen a project can copy and make its own, and a \"Credits\" role to use it as.",
+    "deps": {},
+    "source": "import { definePlugin, newWidget, type PluginDefinition, type UiScreen } from '@tilewright/plugin-sdk';\nimport manifest from '../plugin.json' with { type: 'json' };\n\nconst creditsScreen = (): UiScreen => {\n  const root = newWidget('panel', 'credits-root', 'Credits');\n  root.layout = 'column';\n  return { id: 'example-credits', name: 'Credits', root, modal: true, back: 'close', backTo: '', priority: 0, dim: 0.6, transition: 'fade', mapX: 0, mapY: 0, opensOnStart: false };\n};\n\nexport const screenExample: PluginDefinition = definePlugin(manifest, {\n  install(api) {\n    api.screenRole({ id: 'credits', label: 'Credits', help: 'Opened from the title screen and the pause menu.' });\n    api.screen({ id: 'credits', screen: creditsScreen(), role: 'credits', revision: 1 });\n  },\n});\n\nexport default screenExample;\n"
+  },
+  {
+    "id": "list-source",
+    "point": "listSource",
+    "title": "a list source",
+    "description": "A list called \"badges\" that a screen can show: one row for every badge the player has earned.",
+    "deps": {},
+    "source": "import { definePlugin, newWidget, type PluginDefinition, type UiScreen } from '@tilewright/plugin-sdk';\nimport manifest from '../plugin.json' with { type: 'json' };\n\nexport const listSourceExample: PluginDefinition = definePlugin(manifest, {\n  install: (api) =>\n    api.listSource({\n      id: 'example-badges',\n      label: 'Badges the player has earned',\n      fields: { 'badge.name': 'The name of the badge' },\n      rows: (sim) =>\n        Object.keys(sim.runtime.vars)\n          .filter((k) => k.startsWith('badge:') && sim.runtime.vars[k])\n          .map((k) => ({ id: k.slice(6), scope: { 'badge.name': k.slice(6) } })),\n    }),\n});\n\nexport default listSourceExample;\n"
+  },
+  {
+    "id": "menu-entry",
+    "point": "menuEntry",
+    "title": "a menu entry",
+    "description": "Adds \"Journal\" to the Pause menu. It opens the screen that plays the \"journal\" role.",
+    "deps": {},
+    "source": "import { definePlugin, newWidget, type PluginDefinition, type UiScreen } from '@tilewright/plugin-sdk';\nimport manifest from '../plugin.json' with { type: 'json' };\n\nexport const menuEntryExample: PluginDefinition = definePlugin(manifest, {\n  install(api) {\n    api.screenRole({ id: 'journal', label: 'Journal', help: 'Opened from the Pause menu.' });\n    api.menuEntry({ id: 'example-journal', menu: 'pause', label: 'Journal', opens: 'journal', order: 30, detail: (sim) => `${Object.keys(sim.runtime.vars).filter((k) => k.startsWith('note:')).length} notes` });\n  },\n});\n\nexport default menuEntryExample;\n"
+  },
+  {
+    "id": "strings",
+    "point": "strings",
+    "title": "strings",
+    "description": "Tells the translation tables about the words the plugin shows.",
+    "deps": {},
+    "source": "import { definePlugin, newWidget, type PluginDefinition, type UiScreen } from '@tilewright/plugin-sdk';\nimport manifest from '../plugin.json' with { type: 'json' };\n\nexport const stringsExample: PluginDefinition = definePlugin(manifest, {\n  install: (api) => api.strings(() => ['Thank you for playing', 'Press F to wave']),\n});\n\nexport default stringsExample;\n"
+  },
+  {
+    "id": "game-ui",
+    "point": "gameUi",
+    "title": "the game screens",
+    "description": "Draws a one-line heads-up display instead of the engine screens.",
+    "deps": {},
+    "source": "import { definePlugin, newWidget, type PluginDefinition, type UiScreen } from '@tilewright/plugin-sdk';\nimport manifest from '../plugin.json' with { type: 'json' };\n\nexport const gameUiExample: PluginDefinition = definePlugin(manifest, {\n  install: (api) =>\n    api.provide('gameUi', (parent: HTMLElement) => {\n      const line = parent.ownerDocument.createElement('div');\n      line.textContent = 'Playing';\n      parent.appendChild(line);\n      return { menuOpen: false, setLayout: () => undefined, openStart: () => undefined, openTitle: () => undefined, tick: () => undefined, update: () => (line.textContent = 'Playing'), dispose: () => line.remove() };\n    }),\n});\n\nexport default gameUiExample;\n"
+  },
+  {
+    "id": "panel",
+    "point": "panel",
+    "title": "a panel",
+    "description": "A panel that counts the objects in the open scene.",
+    "deps": {},
+    "source": "import { TileMap, baseProject, definePlugin, playerEntity, sceneFrom, thing, type PluginDefinition, type ProblemDef } from '@tilewright/plugin-sdk';\nimport manifest from '../plugin.json' with { type: 'json' };\n\nconst editorPart = (_id: string, _name: string, _description: string, installEditor: NonNullable<PluginDefinition['installEditor']>): PluginDefinition => definePlugin(manifest, { install: () => undefined, installEditor });\n\nexport const panelExample = editorPart('panel', 'Example: a panel', 'A panel that counts the objects in the open scene.', (api) =>\n  api.panel({\n    id: 'example-object-count',\n    title: 'Object count',\n    mount(el, host) {\n      const show = (): void => {\n        el.textContent = `${host.entities().length} objects in the scene`;\n      };\n      show();\n      const timer = setInterval(show, 1000);\n      return () => clearInterval(timer);\n    },\n  }),\n);\n\nexport default panelExample;\n"
+  },
+  {
+    "id": "tool",
+    "point": "tool",
+    "title": "a tool",
+    "description": "A Tool that reports the cell you click.",
+    "deps": {},
+    "source": "import { TileMap, baseProject, definePlugin, playerEntity, sceneFrom, thing, type PluginDefinition, type ProblemDef } from '@tilewright/plugin-sdk';\nimport manifest from '../plugin.json' with { type: 'json' };\n\nconst editorPart = (_id: string, _name: string, _description: string, installEditor: NonNullable<PluginDefinition['installEditor']>): PluginDefinition => definePlugin(manifest, { install: () => undefined, installEditor });\n\nexport const toolExample = editorPart('tool', 'Example: a tool', 'A Tool that reports the cell you click.', (api) =>\n  api.tool({ id: 'example-probe', label: 'Probe', help: 'Click a cell to see its position.', onCell: (cell, host, ev) => ev.kind === 'down' && host.notify('info', `Cell ${cell.x}, ${cell.y}`) }),\n);\n\nexport default toolExample;\n"
+  },
+  {
+    "id": "importer",
+    "point": "importer",
+    "title": "an importer",
+    "description": "Brings a .coords file (lines of \"x,y\") in as markers.",
+    "deps": {},
+    "source": "import { TileMap, baseProject, definePlugin, playerEntity, sceneFrom, thing, type PluginDefinition, type ProblemDef } from '@tilewright/plugin-sdk';\nimport manifest from '../plugin.json' with { type: 'json' };\n\nconst editorPart = (_id: string, _name: string, _description: string, installEditor: NonNullable<PluginDefinition['installEditor']>): PluginDefinition => definePlugin(manifest, { install: () => undefined, installEditor });\n\nexport const importerExample = editorPart('importer', 'Example: an importer', 'Brings a .coords file (lines of \"x,y\") in as markers.', (api) =>\n  api.importer({ id: 'example-coords', label: 'Coordinates', extensions: ['.coords'], import: (name, bytes) => `${name}: ${new TextDecoder().decode(bytes).split('\\n').filter(Boolean).length} points read` }),\n);\n\nexport default importerExample;\n"
+  },
+  {
+    "id": "exporter",
+    "point": "exporter",
+    "title": "an exporter",
+    "description": "Turns a data table into a CSV file.",
+    "deps": {},
+    "source": "import { TileMap, baseProject, definePlugin, playerEntity, sceneFrom, thing, type PluginDefinition, type ProblemDef } from '@tilewright/plugin-sdk';\nimport manifest from '../plugin.json' with { type: 'json' };\n\nconst editorPart = (_id: string, _name: string, _description: string, installEditor: NonNullable<PluginDefinition['installEditor']>): PluginDefinition => definePlugin(manifest, { install: () => undefined, installEditor });\n\nexport const exporterExample = editorPart('exporter', 'Example: an exporter', 'Turns a data table into a CSV file.', (api) =>\n  api.exporter({\n    id: 'example-csv',\n    label: 'Table as CSV',\n    extension: '.csv',\n    from: '.table.json',\n    export(_name, text) {\n      const t = JSON.parse(text) as { columns: { id: string }[]; rows: Record<string, unknown>[] };\n      const cols = t.columns.map((c) => c.id);\n      return [cols.join(','), ...t.rows.map((r) => cols.map((c) => String(r[c] ?? '')).join(','))].join('\\n');\n    },\n  }),\n);\n\nexport default exporterExample;\n"
+  },
+  {
+    "id": "export-target",
+    "point": "exportTarget",
+    "title": "an export target",
+    "description": "A target that asks for a start scene.",
+    "deps": {},
+    "source": "import { TileMap, baseProject, definePlugin, playerEntity, sceneFrom, thing, type PluginDefinition, type ProblemDef } from '@tilewright/plugin-sdk';\nimport manifest from '../plugin.json' with { type: 'json' };\n\nconst editorPart = (_id: string, _name: string, _description: string, installEditor: NonNullable<PluginDefinition['installEditor']>): PluginDefinition => definePlugin(manifest, { install: () => undefined, installEditor });\n\nexport const exportTargetExample = editorPart('export-target', 'Example: an export target', 'A target that asks for a start scene.', (api) =>\n  api.exportTarget({\n    id: 'example-folder',\n    label: 'A plain folder',\n    platforms: ['win32', 'linux', 'darwin'],\n    check: (project) => (project.startScene ? [] : ['The project has no start scene.']),\n    describe: () => 'Copies the game into a folder you can zip.',\n  }),\n);\n\nexport default exportTargetExample;\n"
+  },
+  {
+    "id": "inspector",
+    "point": "inspector",
+    "title": "an inspector",
+    "description": "Draws the Score component as a number box.",
+    "deps": {},
+    "source": "import { TileMap, baseProject, definePlugin, playerEntity, sceneFrom, thing, type PluginDefinition, type ProblemDef } from '@tilewright/plugin-sdk';\nimport manifest from '../plugin.json' with { type: 'json' };\n\nconst editorPart = (_id: string, _name: string, _description: string, installEditor: NonNullable<PluginDefinition['installEditor']>): PluginDefinition => definePlugin(manifest, { install: () => undefined, installEditor });\n\nexport const inspectorExample = editorPart('inspector', 'Example: an inspector', 'Draws the Score component as a number box.', (api) =>\n  api.inspector({\n    component: 'exampleScore',\n    render(el, value, change) {\n      const input = el.ownerDocument.createElement('input');\n      input.type = 'number';\n      input.value = String(value.points ?? 0);\n      input.onchange = () => change({ ...value, points: Number(input.value) });\n      el.appendChild(input);\n    },\n  }),\n);\n\nexport default inspectorExample;\n"
+  },
+  {
+    "id": "prefab",
+    "point": "prefab",
+    "title": "a prefab",
+    "description": "A beacon you can place.",
+    "deps": {},
+    "source": "import { TileMap, baseProject, definePlugin, playerEntity, sceneFrom, thing, type PluginDefinition, type ProblemDef } from '@tilewright/plugin-sdk';\nimport manifest from '../plugin.json' with { type: 'json' };\n\nconst editorPart = (_id: string, _name: string, _description: string, installEditor: NonNullable<PluginDefinition['installEditor']>): PluginDefinition => definePlugin(manifest, { install: () => undefined, installEditor });\n\nexport const prefabExample = editorPart('prefab', 'Example: a prefab', 'A beacon you can place.', (api) =>\n  api.prefab({ id: 'example-beacon', label: 'Beacon', hint: 'A tall pillar of light.', group: 'Examples', make: (x, y, h) => thing('Beacon', ['beacon'], { color: 0xffe08a, w: 0.4, d: 0.4, height: 2 }, x, y, h) }),\n);\n\nexport default prefabExample;\n"
+  },
+  {
+    "id": "template",
+    "point": "template",
+    "title": "a template",
+    "description": "A \"Small arena\" starter.",
+    "deps": {},
+    "source": "import { TileMap, baseProject, definePlugin, playerEntity, sceneFrom, thing, type PluginDefinition, type ProblemDef } from '@tilewright/plugin-sdk';\nimport manifest from '../plugin.json' with { type: 'json' };\n\nexport const templateExample: PluginDefinition = definePlugin(manifest, {\n  templates: [\n    {\n      id: 'example-arena',\n      name: 'Small arena (example)',\n      description: 'A flat arena with a player.',\n      build(name) {\n        const map = new TileMap(16, 16);\n        map.fill(1, 0);\n        return { project: baseProject(name, []), scene: sceneFrom(map, [playerEntity('e1', 8.5, 8.5)]) };\n      },\n    },\n  ],\n  install: () => undefined,\n});\n\nexport default templateExample;\n"
+  },
+  {
+    "id": "validator",
+    "point": "validator",
+    "title": "a check",
+    "description": "Warns about objects called \"TODO\".",
+    "deps": {},
+    "source": "import { TileMap, baseProject, definePlugin, playerEntity, sceneFrom, thing, type PluginDefinition, type ProblemDef } from '@tilewright/plugin-sdk';\nimport manifest from '../plugin.json' with { type: 'json' };\n\nconst editorPart = (_id: string, _name: string, _description: string, installEditor: NonNullable<PluginDefinition['installEditor']>): PluginDefinition => definePlugin(manifest, { install: () => undefined, installEditor });\n\nexport const validatorExample = editorPart('validator', 'Example: a check', 'Warns about objects called \"TODO\".', (api) =>\n  api.validator({\n    id: 'example-todo',\n    check: (scene): ProblemDef[] => scene.entities.filter((e) => e.name.startsWith('TODO')).map((e) => ({ id: `todo-${e.id}`, severity: 'warning' as const, message: `\"${e.name}\" is still a to-do.`, entity: e.id })),\n  }),\n);\n\nexport default validatorExample;\n"
+  },
+  {
+    "id": "playbot-strategy",
+    "point": "playbotStrategy",
+    "title": "a playbot strategy",
+    "description": "A button that makes the bot wait ten seconds.",
+    "deps": {},
+    "source": "import { definePlaybotMove, definePlaybotStrategy, definePlugin, encodePng, type ImageProviderDef, type PluginDefinition } from '@tilewright/plugin-sdk';\nimport manifest from '../plugin.json' with { type: 'json' };\n\nconst editorPart = (_id: string, _name: string, _description: string, installEditor: NonNullable<PluginDefinition['installEditor']>): PluginDefinition => definePlugin(manifest, { install: () => undefined, installEditor });\n\nexport const strategyExample = editorPart('strategy', 'Example: a playbot strategy', 'A button that makes the bot wait ten seconds.', (api) =>\n  api.playbotStrategy(\n    definePlaybotStrategy({\n      id: 'example-wait',\n      label: 'Wait ten seconds',\n      help: 'The bot stands still, to see whether anything in the scene changes by itself.',\n      play(bot) {\n        bot.wait(10);\n        return { ok: true, kind: 'reached', seconds: 10, message: 'Waited ten seconds.' };\n      },\n    }),\n  ),\n);\n\nexport default strategyExample;\n"
+  },
+  {
+    "id": "playbot-move",
+    "point": "playbotMove",
+    "title": "a playbot move",
+    "description": "Lets the solver try waiting a moment before a plate.",
+    "deps": {},
+    "source": "import { definePlaybotMove, definePlaybotStrategy, definePlugin, encodePng, type ImageProviderDef, type PluginDefinition } from '@tilewright/plugin-sdk';\nimport manifest from '../plugin.json' with { type: 'json' };\n\nconst editorPart = (_id: string, _name: string, _description: string, installEditor: NonNullable<PluginDefinition['installEditor']>): PluginDefinition => definePlugin(manifest, { install: () => undefined, installEditor });\n\nexport const moveExample = editorPart('move', 'Example: a playbot move', 'Lets the solver try waiting a moment before a plate.', (api) =>\n  api.playbotMove(\n    definePlaybotMove({\n      id: 'example-pause',\n      offer: (entity) => (entity.components.pressurePlate !== undefined ? [{ ref: `id:${entity.id}`, label: `wait, then stand on \"${entity.name}\"` }] : []),\n      perform: (bot, _game, ref) => {\n        bot.wait(1);\n        return bot.standOn(ref, 0.8).ok;\n      },\n    }),\n  ),\n);\n\nexport default moveExample;\n"
+  },
+  {
+    "id": "assistant-note",
+    "point": "assistantNote / assistantTool / fileReader / imageProvider",
+    "title": "for the assistant",
+    "description": "A note, a tool that counts objects, a reader for .txt files and a picture maker (the mock one: no service needed).",
+    "deps": {},
+    "source": "import { definePlaybotMove, definePlaybotStrategy, definePlugin, encodePng, type ImageProviderDef, type PluginDefinition } from '@tilewright/plugin-sdk';\nimport manifest from '../plugin.json' with { type: 'json' };\n\n/** The same words always give the same picture: a coloured background, a shape and a few stripes, all worked out from the prompt. */\nexport const mockArtProvider: ImageProviderDef = {\n  id: 'example-mock-art',\n  label: 'Mock pictures (made from the words, no service needed)',\n  needsKey: false,\n  async generate({ prompt, width, height, reference }) {\n    let h = 2166136261;\n    for (const c of prompt) h = Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0;\n    const next = (): number => {\n      h = (Math.imul(h, 1664525) + 1013904223) >>> 0;\n      return h / 4294967296;\n    };\n    const base = [Math.floor(next() * 200 + 40), Math.floor(next() * 200 + 40), Math.floor(next() * 200 + 40)];\n    const accent = [255 - base[0]!, 255 - base[1]!, 255 - base[2]!];\n    const rgba = new Uint8ClampedArray(width * height * 4);\n    const cx = width * (0.3 + next() * 0.4);\n    const cy = height * (0.3 + next() * 0.4);\n    const r = Math.min(width, height) * (0.2 + next() * 0.2);\n    for (let y = 0; y < height; y++) {\n      for (let x = 0; x < width; x++) {\n        const i = (y * width + x) * 4;\n        const stripe = Math.floor((x + y) / Math.max(2, Math.floor(width / 8))) % 2 === 0 ? 1 : 0.85;\n        const inside = (x - cx) ** 2 + (y - cy) ** 2 < r * r;\n        const colour = inside ? accent : base;\n        rgba[i] = colour[0]! * stripe;\n        rgba[i + 1] = colour[1]! * stripe;\n        rgba[i + 2] = colour[2]! * stripe;\n        rgba[i + 3] = 255;\n      }\n    }\n    // a reference picture, when there is one, shows through in the top left corner\n    if (reference) rgba[3] = 254;\n    return encodePng(width, height, rgba);\n  },\n};\n\nexport const assistantExample: PluginDefinition = definePlugin(manifest, {\n  install(api) {\n    api.assistantNote('The Example plugin adds a Spinner behaviour; use it on things that should turn.');\n    api.assistantTool({\n      id: 'example_count',\n      description: 'Count the objects in the open scene.',\n      input: { type: 'object', properties: {} },\n      kind: 'read',\n      run: () => 'The example plugin cannot see the scene from here.',\n    });\n    api.fileReader({ id: 'example-text', label: 'Plain text', extensions: ['.txt'], read: (_name, bytes) => ({ text: new TextDecoder().decode(bytes) }) });\n    api.imageProvider(mockArtProvider);\n  },\n});\n\nexport default assistantExample;\n"
+  }
+]
