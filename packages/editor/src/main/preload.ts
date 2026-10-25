@@ -54,7 +54,8 @@ const door = {
     clearKey: () => invoke('assistant:clear-key'),
     providerKey: {
       has: (id: string) => invoke<boolean>('assistant:provider-key-has', id),
-      get: (id: string) => invoke<string | null>('assistant:provider-key-get', id),
+      /** Make a request for a picture provider with its key put in by the main process (the key itself is never handed over). */
+      fetch: (req: { provider: string; plugin: string; url: string; method?: string; headers?: Record<string, string>; body?: string | Uint8Array }) => invoke<{ status: number; body: Uint8Array }>('assistant:provider-fetch', req),
       set: (id: string, key: string) => invoke<void>('assistant:provider-key-set', id, key),
       clear: (id: string) => invoke<void>('assistant:provider-key-clear', id),
     },

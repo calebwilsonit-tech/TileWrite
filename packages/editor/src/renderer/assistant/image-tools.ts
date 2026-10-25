@@ -237,10 +237,8 @@ function generateImage(input: Record<string, unknown>): Proposal {
     async apply() {
       const p = store.state.project;
       if (!p) return fail("No project is open.");
-      const key = provider.needsKey
-        ? await api().assistant.providerKey.get(provider.id)
-        : null;
-      if (provider.needsKey && !key)
+      const hasKey = provider.needsKey ? await api().assistant.providerKey.has(provider.id) : true;
+      if (!hasKey)
         return fail(
           `${provider.label} needs a key and none is saved. Ask the user to add it in the assistant's settings (Picture providers), then try again.`,
         );
@@ -257,7 +255,10 @@ function generateImage(input: Record<string, unknown>): Proposal {
           width,
           height,
           ...(referenceBytes ? { reference: referenceBytes } : {}),
-          ...(key ? { key } : {}),
+          // the key stays in the main process: the provider writes {{key}} where it goes and the request is made there
+          ...(provider.needsKey
+            ? { fetch: (url: string, init: { method?: string; headers?: Record<string, string>; body?: string | Uint8Array } = {}) => api().assistant.providerKey.fetch({ provider: provider.id, plugin: provider.plugin, url, ...init }) }
+            : {}),
         });
       } catch (e) {
         return fail(

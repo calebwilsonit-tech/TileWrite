@@ -337,13 +337,30 @@ export interface AssistantNoteDef {
   text: string;
 }
 
+export interface ImageRequest {
+  prompt: string;
+  width: number;
+  height: number;
+  reference?: Uint8Array;
+  /** @deprecated Never given any more: use `fetch` with `{{key}}`. */
+  key?: string;
+  /** A request made for the provider with its key put in by the editor. Only there when the provider needs a key. */
+  fetch?: (url: string, init?: { method?: string; headers?: Record<string, string>; body?: string | Uint8Array }) => Promise<{ status: number; body: Uint8Array }>;
+}
+
 export interface ImageProviderDef {
   id: string;
   label: string;
   /** Needs the person's own key for this service (stored by the editor, never in the project). */
   needsKey: boolean;
-  /** Make a picture from words (and optionally a picture to start from); PNG bytes back. */
-  generate(request: { prompt: string; width: number; height: number; reference?: Uint8Array; key?: string }): Promise<Uint8Array>;
+  /**
+   * Make a picture from words (and optionally a picture to start from); PNG bytes back.
+   * A provider that needs a key makes its requests with `request.fetch`: write `{{key}}` where the key goes (a header, the path, the
+   * query or the body) and the editor's main process puts the person's key in and makes the request, to a host the plugin has the
+   * `network` permission for. The key itself is never handed to the plugin. (`key` is no longer given; it stays in the type so that
+   * plugins written before still compile.)
+   */
+  generate(request: ImageRequest): Promise<Uint8Array>;
 }
 
 // ---------- what the host keeps ----------

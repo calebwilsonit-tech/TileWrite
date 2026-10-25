@@ -64,7 +64,7 @@ export interface TilewrightApi {
     setKey(key: string): Promise<AssistantStatus>;
     clearKey(): Promise<AssistantStatus>;
     /** Keys for the picture services plugins use, one per provider (kept by the system keychain). */
-    providerKey: { has(id: string): Promise<boolean>; get(id: string): Promise<string | null>; set(id: string, key: string): Promise<void>; clear(id: string): Promise<void> };
+    providerKey: { has(id: string): Promise<boolean>; fetch(req: { provider: string; plugin: string; url: string; method?: string; headers?: Record<string, string>; body?: string | Uint8Array }): Promise<{ status: number; body: Uint8Array }>; set(id: string, key: string): Promise<void>; clear(id: string): Promise<void> };
     send(args: { text: string; mode: string; context: string; settings: unknown; notes?: readonly string[]; attachments?: readonly { name: string; mediaType: string; data: string }[]; pluginTools?: readonly unknown[] }): Promise<{ started: boolean; reason?: string }>;
     retry(settings: unknown): Promise<{ started: boolean; reason?: string }>;
     cancel(): Promise<void>;

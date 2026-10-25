@@ -50,6 +50,6 @@ A plugin's `install(api)` is the **game part** (runs in the editor and in the ex
 | `api.playbotMove(def)` | A step the puzzle solver may combine with the others. | `tools.ts` pause |
 | `api.fileReader(def)` | How the assistant reads a kind of file you attach. | `tools.ts` assistant |
 | `api.assistantTool(def)` | A tool the assistant can use. | `tools.ts` assistant |
-| `api.imageProvider(def)` | A way for the assistant to make a picture. | `tools.ts` assistant |
+| `api.imageProvider(def)` | A way for the assistant to make a picture. A provider that needs a key makes its requests with `request.fetch` and writes `{{key}}` where the key goes: the main process puts the key in, to a host the plugin has the `network` permission for. | `tools.ts` assistant |
 
 Panels, tools, importers and exporters of a plugin somebody else wrote run in the sandbox; the plugin API they see is the small one described in the README (`Tilewright.editor.panel({ id, title, mount(el, host) })`, `tool`, `importer`, `exporter`).

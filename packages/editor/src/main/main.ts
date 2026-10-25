@@ -55,11 +55,11 @@ async function readJsonFile<T>(file: string, fallback: T): Promise<T> {
 }
 
 function registerIpc(): void {
-  registerAssistant();
   registerExport({ resolveInside, distDir: path.join(here, '..') });
   registerSamples({ resolveInside, distDir: path.join(here, '..') });
-  registerPlugins({ allow, settings: async () => readJsonFile<Record<string, unknown>>(userFile('settings.json'), {}), storeDir: process.env.TILEWRIGHT_PLUGINS ?? path.join(app.getPath('userData'), 'plugins'), testMode: TEST_DIR !== undefined });
+  const plugins = registerPlugins({ allow, settings: async () => readJsonFile<Record<string, unknown>>(userFile('settings.json'), {}), storeDir: process.env.TILEWRIGHT_PLUGINS ?? path.join(app.getPath('userData'), 'plugins'), testMode: TEST_DIR !== undefined });
   registerPreview({ resolveInside, distDir: path.join(here, '..'), testMode: TEST_DIR !== undefined });
+  registerAssistant({ pluginPermissions: plugins.permissionsOf });
   // the library folder may always be used by the editor
   allow(libraryDir());
   ipcMain.handle('app:info', () => ({

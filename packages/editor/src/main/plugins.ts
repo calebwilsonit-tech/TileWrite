@@ -34,7 +34,7 @@ export interface InstalledPlugin {
 }
 
 /** What the plugin manager needs from the computer: a store of installed plugins, a way to watch a folder while a plugin is being written, and the one door to other programs. */
-export function registerPlugins(deps: Deps): void {
+export function registerPlugins(deps: Deps): { /** What the person allowed a plugin: the permissions it was granted, or null when it is not installed. */ permissionsOf(id: string): Promise<string[] | null> } {
   deps.allow(deps.storeDir);
   const watchers = new Map<string, FSWatcher>();
 
@@ -210,4 +210,6 @@ export function registerPlugins(deps: Deps): void {
     const r = win ? await dialog.showMessageBox(win, options) : await dialog.showMessageBox(options);
     return r.response === 1;
   }
+
+  return { permissionsOf: async (id) => (await describePlugin(id))?.granted ?? null };
 }

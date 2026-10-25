@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { Conversation, MAX_ATTACHMENTS, MAX_ATTACHMENT_BYTES, cleanSettings, type AssistantSettings, type Attachment, type ExtraTool, type Mode, type ModelClient, type RunTool, type ToolOutput, type TurnResult, type Usage, userTurnText } from '@tilewright/assistant';
 import { createModelClient, friendlyError } from '@tilewright/assistant/src/sdk-client';
+import { providerFetch, type ProviderFetchRequest } from './provider-fetch';
 
 /**
  * The Claude assistant's side of the editor that must not live in the window: the API key and every call to
@@ -103,7 +104,7 @@ function cleanExtraTools(raw: unknown): ExtraTool[] {
   return out;
 }
 
-export function registerAssistant(): void {
+export function registerAssistant(deps: { /** What the person allowed a plugin (read from this computer). Null when it is not installed. */ pluginPermissions(id: string): Promise<string[] | null> }): void {
   let busy = false;
   let controller: AbortController | null = null;
   let settings: AssistantSettings = cleanSettings(undefined);
@@ -185,7 +186,10 @@ export function registerAssistant(): void {
   });
 
   ipcMain.handle('assistant:provider-key-has', async (_e, id: string) => typeof id === 'string' && typeof (await readProviderKeys())[id] === 'string');
-  ipcMain.handle('assistant:provider-key-get', async (_e, id: string) => (typeof id === 'string' ? ((await readProviderKeys())[id] ?? null) : null));
+  // the key itself never leaves this process: a picture provider asks for a request, and the key is put in here
+  ipcMain.handle('assistant:provider-fetch', async (_e, req: ProviderFetchRequest) =>
+    providerFetch({ key: async (id) => (await readProviderKeys())[id] ?? null, permissions: deps.pluginPermissions, fetch }, req),
+  );
   ipcMain.handle('assistant:provider-key-set', async (_e, id: string, key: string) => {
     const k = typeof key === 'string' ? key.trim() : '';
     if (typeof id !== 'string' || !/^[A-Za-z0-9_.-]{1,80}$/.test(id)) throw new Error('That is not a picture provider.');

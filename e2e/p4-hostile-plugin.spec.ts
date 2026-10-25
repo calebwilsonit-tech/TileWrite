@@ -101,3 +101,17 @@ test('Round 2: the main process works out which plugin asks to run a program, an
   expect(await ask('runner-plugin')).toBe('ran');
   await app.close();
 });
+
+test('Round 2: no code in the page can read a picture provider\'s key; a provider asks the main process to make its request', async () => {
+  test.setTimeout(120_000);
+  const { page, app } = await launchEditor();
+  await page.getByTestId('btn-new-project').waitFor();
+  expect(await page.evaluate(() => Object.keys(window.tilewright.assistant.providerKey).sort())).toEqual(['clear', 'fetch', 'has', 'set']);
+  await page.evaluate(() => window.tilewright.assistant.providerKey.set('pics', 'sk-secret-123'));
+  // the key is saved, can be asked about, and is used only for a plugin that is installed and was allowed the network
+  expect(await page.evaluate(() => window.tilewright.assistant.providerKey.has('pics'))).toBe(true);
+  const refused = await page.evaluate(() => window.tilewright.assistant.providerKey.fetch({ provider: 'pics', plugin: 'nobody-here', url: 'https://api.pictures.example/x', headers: { Authorization: 'Bearer {{key}}' } }).then(() => 'went', (e: Error) => e.message));
+  expect(refused).toMatch(/installed/);
+  expect(refused).not.toContain('sk-secret-123');
+  await app.close();
+});
