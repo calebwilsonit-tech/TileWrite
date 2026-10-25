@@ -75,7 +75,7 @@ test('M8: build a small story (items, a conversation, a cutscene, a lantern, a p
   await field(page, 'item-name-1', 'Bread');
   await page.getByTestId('item-usable-1').click();
   await field(page, 'item-heal-1', '2');
-  expect((await page.evaluate(() => window.__store!.story.items.map((i) => i.id)))).toEqual(['key', 'bread']);
+  expect((await page.evaluate(() => (window.__store!.dataList('items') as { id: string; name: string }[]).map((i) => i.id)))).toEqual(['key', 'bread']);
 
   // ---- a conversation: a line, a choice, a gift, a goodbye ----
   await page.getByTestId('story-tab-dialogues').click();

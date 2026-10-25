@@ -1,7 +1,9 @@
-import { describe, expect, it } from 'vitest';
-import { ItemSchema, newCutscene, newDialogue, newSkin } from '@tilewright/runtime';
+import { beforeAll, describe, expect, it } from 'vitest';
+import '../../bundled';
+import { dataKinds, setActivePacks } from '@tilewright/behaviors';
+import { newCutscene, newDialogue, newSkin } from '@tilewright/runtime';
 import type { AssetFs } from '../studio/assets';
-import { deleteCutscene, deleteDialogue, loadCutscenes, loadDialogues, loadItems, loadSkins, saveCutscene, saveDialogue, saveItems, saveSkins, skinProblems, storyNameProblem } from './story';
+import { deleteCutscene, deleteDialogue, loadCutscenes, loadData, loadDialogues, loadSkins, saveAllData, saveCutscene, saveData, saveDialogue, saveSkins, skinProblems, storyNameProblem } from './story';
 
 function memoryFs(): AssetFs & { files: Map<string, string> } {
   const files = new Map<string, string>();
@@ -32,26 +34,52 @@ function memoryFs(): AssetFs & { files: Map<string, string> } {
 }
 
 describe('story files', () => {
-  it('items round-trip, and an empty or missing file is simply no items', async () => {
-    const fs = memoryFs();
-    expect(await loadItems(fs, '/p')).toEqual({ items: [], problems: [] });
-    const key = ItemSchema.parse({ id: 'key', name: 'Key', color: 0xffcc00 });
-    await saveItems(fs, '/p', [key]);
-    const r = await loadItems(fs, '/p');
-    expect(r.problems).toEqual([]);
-    expect(r.items).toEqual([key]);
-  });
+  describe('the data the plugins keep', () => {
+    beforeAll(() => setActivePacks(['inventory', 'story']));
+    const items = (): ReturnType<typeof dataKinds>[number] => dataKinds().find((d) => d.id === 'items')!;
+    const key = { id: 'key', name: 'Key', description: '', color: 0xffcc00, max: 0 };
 
-  it('refuses two items with the same id and reports a damaged file instead of crashing', async () => {
-    const fs = memoryFs();
-    const a = ItemSchema.parse({ id: 'a', name: 'A' });
-    await expect(saveItems(fs, '/p', [a, a])).rejects.toThrow(/share the id "a"/);
-    fs.files.set('/p/assets/items.json', '{ nope');
-    const r = await loadItems(fs, '/p');
-    expect(r.items).toEqual([]);
-    expect(r.problems[0]).toMatch(/could not be read/);
-    fs.files.set('/p/assets/items.json', JSON.stringify({ items: [{ id: 'bad id', name: 'x' }] }));
-    expect((await loadItems(fs, '/p')).problems[0]).toMatch(/not valid/);
+    it('records round-trip, and an empty or missing file is simply none', async () => {
+      const fs = memoryFs();
+      expect(await loadData(fs, '/p')).toEqual({ data: { items: [], minigames: [] }, problems: [] });
+      await saveData(fs, '/p', items(), [key]);
+      const r = await loadData(fs, '/p');
+      expect(r.problems).toEqual([]);
+      expect(r.data.items).toEqual([key]);
+    });
+
+    it('refuses two records with the same name and reports a damaged file instead of crashing', async () => {
+      const fs = memoryFs();
+      await expect(saveData(fs, '/p', items(), [key, key])).rejects.toThrow(/share the id "key"/);
+      fs.files.set('/p/assets/items.json', '{ nope');
+      const r = await loadData(fs, '/p');
+      expect(r.data.items).toEqual([]);
+      expect(r.problems[0]).toMatch(/could not be read/);
+      fs.files.set('/p/assets/items.json', JSON.stringify({ items: [{ id: 'bad id', name: 'x' }] }));
+      expect((await loadData(fs, '/p')).problems[0]).toMatch(/not valid/);
+    });
+
+    it('writes the file of a kind that always has one, and of the ones that have something in them', async () => {
+      const fs = memoryFs();
+      await saveAllData(fs, '/p', {});
+      expect([...fs.files.keys()]).toEqual(['/p/assets/items.json']); // the minigames file waits until there is a minigame
+      await saveAllData(fs, '/p', { minigames: [{ name: 'Duel', kind: 'timing' }] });
+      expect(fs.files.has('/p/assets/minigames.json')).toBe(true);
+    });
+
+    it('leaves the file of a plugin that is off alone', async () => {
+      const fs = memoryFs();
+      fs.files.set('/p/assets/items.json', JSON.stringify({ items: [key] }));
+      setActivePacks(['story']);
+      try {
+        const r = await loadData(fs, '/p');
+        expect(Object.keys(r.data)).toEqual(['minigames']);
+        await saveAllData(fs, '/p', r.data);
+        expect(JSON.parse(fs.files.get('/p/assets/items.json')!).items).toHaveLength(1); // untouched, not lost
+      } finally {
+        setActivePacks(['inventory', 'story']);
+      }
+    });
   });
 
   it('saves, lists, loads and deletes dialogues and cutscenes', async () => {

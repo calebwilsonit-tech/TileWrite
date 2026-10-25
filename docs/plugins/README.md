@@ -6,6 +6,18 @@ A **plugin** adds something to Tilewright: a kind of behaviour, new event blocks
 - The examples: `packages/plugin-examples/src` (one file group per area; each example is a complete plugin and is tested). Switch them on in **Project settings → Plugins → Examples** to see them in the editor.
 - [Recipes](../recipes.md): building things with plugins in the editor.
 
+## The plugins that ship with Tilewright
+
+Each is written the way yours will be. Its guide lives in its own folder.
+
+| Plugin | What it adds | Guides |
+| --- | --- | --- |
+| Combat and AI | Health, damage, melee and ranged attacks, guards that see and hear, bosses | [ai-and-combat.md](../../packages/plugins/combat/docs/ai-and-combat.md) |
+| Story and Inventory | Conversations, cutscenes, minigames, the world map, items, quick slots | [story-systems.md](../../packages/plugins/story/docs/story-systems.md) |
+| Turns | Turn-based play | [time-and-turns.md](../../packages/plugins/turns/docs/time-and-turns.md) |
+| Simulation | Resources, production chains, day and night, waves, routes, villagers with needs, fire and growth | [simulation-helpers.md](../../packages/plugins/sim/docs/simulation-helpers.md) |
+| The reference game (echoes, lanterns, words) | The mechanics of the sample game "The Last Storytender", and how that whole game was built and tested | [echoes-light-words.md](../../packages/plugins/storytender/docs/echoes-light-words.md), [reference_game.md](../../packages/plugins/storytender/docs/reference_game.md), [acceptance.md](../../packages/plugins/storytender/docs/acceptance.md) |
+
 ## Your first plugin
 
 ```

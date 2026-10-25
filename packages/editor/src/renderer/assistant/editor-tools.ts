@@ -17,6 +17,7 @@ import {
   type Names,
 } from '@tilewright/behaviors';
 import apiSource from '@tilewright/behaviors/src/scripting/api.ts?raw';
+import { dataKinds } from '@tilewright/behaviors';
 import { Bot, extractPushPuzzle, solvePush, type PlayReport } from '@tilewright/playbot';
 import { DEFAULT_TILESET, FLAG, SLOPE, resolveInstance, type EntityData, type EventRow, type WireData } from '@tilewright/runtime';
 import { lineDiff, type ToolOutput } from '@tilewright/assistant';
@@ -166,7 +167,7 @@ export async function runReadTool(name: string, input: Record<string, unknown>):
             scriptProblems: store.state.scriptProblems.length,
             conversations: [...store.story.dialogues.keys()],
             cutscenes: [...store.story.cutscenes.keys()],
-            items: store.story.items.map((i) => i.id),
+            data: Object.fromEntries(dataKinds().map((d) => [d.id, store.dataList(d.id).map((r) => d.keyOf(r))])),
             prefabs: [...store.prefabs.keys()],
             problemsInOpenScene: doc ? sceneProblems(doc).length : null,
             notesFile: NOTES_FILE,

@@ -31,7 +31,7 @@ const game = (screens: UiScreen[] = []): Simulation => {
 const list = (source: string): UiNode => w('list', { source, children: [w('text', { text: '{index}' })] });
 
 describe('the sources a list can read from the game', () => {
-  it('the save slots, the controls, the quick slots and the places on the map', () => {
+  it('the save slots, the controls and the places on the map', () => {
     const sim = game();
     setUiBridge(sim, {
       getSetting: () => undefined,
@@ -51,13 +51,6 @@ describe('the sources a list can read from the game', () => {
     expect(saves[1]!.scope).toMatchObject({ 'save.name': 'Slot 1', 'save.detail': 'empty', 'save.exists': 0, 'save.manual': 1 });
     expect(saves[2]!.scope['save.detail']).toBe('damaged');
     expect(rowsOf(sim, list('controls'))[0]!.scope).toMatchObject({ 'control.action': 'jump', 'control.label': 'Jump', 'control.binding': 'Space' });
-
-    sim.runtime.vars['slot:2'] = 'key';
-    sim.runtime.vars['item:key'] = 3;
-    const quick = rowsOf(sim, list('quickslots'));
-    expect(quick).toHaveLength(4);
-    expect(quick[1]!.scope).toMatchObject({ 'slot.number': 2, 'slot.item': 'key', 'slot.count': 3 });
-    expect(quick[0]!.scope['slot.item']).toBe('');
 
     sim.assets.worldMap = WorldMapSchema.parse({
       nodes: [

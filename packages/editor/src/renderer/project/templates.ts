@@ -21,7 +21,7 @@ const empty: Template = {
 const emptyIso: Template = {
   id: 'empty-iso',
   name: 'Action starter (a field and a player)',
-  description: 'A flat grass field and a player who walks, runs and jumps, with every module switched on.',
+  description: 'A flat grass field and a player who walks, runs and jumps, with no plugins switched on (add the ones the game needs in Project settings).',
   build(name) {
     const map = new TileMap(32, 32);
     map.fill(1, 0);

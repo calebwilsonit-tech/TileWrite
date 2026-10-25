@@ -100,7 +100,7 @@ export function backFromScreens(sim: Simulation, fresh: ReadonlySet<string> = ne
 export function routeInput(h: RouterHost): void {
   const sim = h.sim;
   const r = sim.runtime;
-  const busy = Boolean(r.dialogue || r.cutscene || r.minigame);
+  const busy = Boolean(r.dialogue || r.cutscene || Object.keys(r.modals).length > 0);
   const fresh = new Set(r.ui.stack.filter((n) => !r.ui.seen.includes(n)));
   try {
     route(h, busy, fresh);

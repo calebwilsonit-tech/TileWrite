@@ -26,7 +26,7 @@ test('record what the game\'s own menus show and do', async () => {
   // some things to show: two items (one can be used), a world map of two places, two lit lanterns
   await page.evaluate(() => {
     const s = window.__store!;
-    s.setItems([
+    s.setData('items', [
       { id: 'potion', name: 'Potion', description: 'A small potion.', color: 0xcc3333, max: 9, use: { heal: 2, setVariable: '', setValue: 1, consume: true, message: 'You feel better.' } },
       { id: 'key', name: 'Brass key', description: 'Opens something.', color: 0xddaa33, max: 0 },
     ] as never);

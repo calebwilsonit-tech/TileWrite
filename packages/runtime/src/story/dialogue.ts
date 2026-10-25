@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import '../project/schema'; // sets up Zod before the schemas below are built
 import { CURRENT_SCHEMA_VERSION, VariableValueSchema, type VariableValue } from '../project/schema';
-import { addItem, autoSlot, itemCount, type ItemData } from './items';
 import { richTextProblems } from './richtext';
 
 /**
@@ -51,10 +50,20 @@ export function newDialogue(name: string): DialogueData {
 
 // ---------- running ----------
 
+/**
+ * What a plugin that keeps things the player carries offers to conversations and cutscenes: how many of a thing the player has, and
+ * giving or taking some. The engine itself keeps no inventory; with none offered, nothing is carried and nothing can be given.
+ */
+export interface Carrying {
+  count(id: string): number;
+  /** Give (or, negative, take) some; returns how many actually were. */
+  give(id: string, amount: number): number;
+}
+
 /** What a running conversation can change and look at. */
 export interface DialogueHost {
   vars: Record<string, VariableValue>;
-  items: ReadonlyMap<string, ItemData>;
+  carrying?: Carrying;
   /** Called when something noteworthy happens (an item is given, a variable set). */
   emit?(type: string, data: Record<string, unknown>): void;
   /** Turns written text into the player's language (before {placeholders} are filled in). */
@@ -75,8 +84,8 @@ export interface DialogueState {
   selected: number;
 }
 
-export function evalCondition(c: DialogueCondition, vars: Record<string, VariableValue>): boolean {
-  if (c.kind === 'item') return itemCount(vars, c.item) >= c.atLeast;
+export function evalCondition(c: DialogueCondition, vars: Record<string, VariableValue>, carrying?: Carrying): boolean {
+  if (c.kind === 'item') return (carrying?.count(c.item) ?? 0) >= c.atLeast;
   const a = vars[c.name];
   const b = c.value;
   switch (c.op) {
@@ -122,7 +131,7 @@ function settle(d: DialogueData, nodeId: string | undefined, host: DialogueHost)
       case 'line':
         return { dialogue: d.name, node: n.id, selected: 0, view: { kind: 'line', speaker: tr(n.speaker), text: fillText(tr(n.text), host.vars) } };
       case 'choice': {
-        const options = n.options.map((o, index) => ({ o, index })).filter(({ o }) => !o.if || evalCondition(o.if, host.vars)).map(({ o, index }) => ({ text: fillText(tr(o.text), host.vars), index }));
+        const options = n.options.map((o, index) => ({ o, index })).filter(({ o }) => !o.if || evalCondition(o.if, host.vars, host.carrying)).map(({ o, index }) => ({ text: fillText(tr(o.text), host.vars), index }));
         if (options.length === 0) return null;
         return { dialogue: d.name, node: n.id, selected: 0, view: { kind: 'choice', speaker: tr(n.speaker), prompt: fillText(tr(n.prompt), host.vars), options } };
       }
@@ -136,14 +145,13 @@ function settle(d: DialogueData, nodeId: string | undefined, host: DialogueHost)
         break;
       }
       case 'give': {
-        const got = addItem(host.vars, n.item, n.amount, host.items.get(n.item));
-        if (got > 0) autoSlot(host.vars, n.item);
+        const got = host.carrying?.give(n.item, n.amount) ?? 0;
         host.emit?.(n.amount >= 0 ? 'item-given' : 'item-taken', { item: n.item, amount: got });
         id = n.next;
         break;
       }
       case 'branch':
-        id = evalCondition(n.if, host.vars) ? n.then : n.else;
+        id = evalCondition(n.if, host.vars, host.carrying) ? n.then : n.else;
         break;
     }
   }
@@ -180,7 +188,7 @@ export interface DialogueProblem {
 }
 
 /** Plain-English problems in a dialogue: nodes that lead nowhere, missing items or variables, lines nobody can reach. */
-export function checkDialogue(d: DialogueData, known: { items: ReadonlySet<string>; variables: ReadonlySet<string> }): DialogueProblem[] {
+export function checkDialogue(d: DialogueData, known: { carried: ReadonlySet<string>; variables: ReadonlySet<string> }): DialogueProblem[] {
   const out: DialogueProblem[] = [];
   const ids = new Set<string>();
   for (const n of d.nodes) {
@@ -193,7 +201,7 @@ export function checkDialogue(d: DialogueData, known: { items: ReadonlySet<strin
     if (to !== undefined && to !== '' && !ids.has(to)) out.push({ node: from, text: `${what} of "${from}" goes to "${to}", which does not exist.` });
   };
   const checkCond = (from: string, c: DialogueCondition): void => {
-    if (c.kind === 'item' && c.item && !known.items.has(c.item)) out.push({ node: from, text: `"${from}" checks for the item "${c.item}", which is not in your items list.` });
+    if (c.kind === 'item' && c.item && !known.carried.has(c.item)) out.push({ node: from, text: `"${from}" checks for the item "${c.item}", which is not in your items list.` });
     if (c.kind === 'variable' && c.name === '') out.push({ node: from, text: `A condition in "${from}" has no variable chosen.` });
   };
   for (const n of d.nodes) {
@@ -219,7 +227,7 @@ export function checkDialogue(d: DialogueData, known: { items: ReadonlySet<strin
       case 'give':
         target(n.id, n.next, 'The next step');
         if (n.item === '') out.push({ node: n.id, text: `The "give an item" step "${n.id}" has no item chosen.` });
-        else if (!known.items.has(n.item)) out.push({ node: n.id, text: `"${n.id}" gives the item "${n.item}", which is not in your items list.` });
+        else if (!known.carried.has(n.item)) out.push({ node: n.id, text: `"${n.id}" gives the item "${n.item}", which is not in your items list.` });
         break;
       case 'branch':
         target(n.id, n.then, 'The "yes" way');

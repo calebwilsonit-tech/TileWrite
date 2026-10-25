@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { DialogueSchema, FLAG, ItemSchema, newMinigame, tileMapToRows, type MinigameData, type SceneData } from '@tilewright/runtime';
+import { DialogueSchema, FLAG, tileMapToRows, type SceneData } from '@tilewright/runtime';
+import { ItemSchema, newMinigame, openMinigame, type MinigameData } from '@tilewright/plugin-sdk';
+import { playMinigame } from '@tilewright/plugin-story';
 import { attachBehavior, output } from '@tilewright/behaviors';
 import { flatScene, player, thing } from '@tilewright/plugin-sdk/testing';
 import { Bot, formatTime } from '@tilewright/playbot';
@@ -83,7 +85,7 @@ describe('interacting', () => {
     const npc = thing('npc', 'Keeper', 9.5, 5.5, { npcTalk: { dialogue: 'Keeper' } });
     const game = new Game({
       scene: sceneOf(fs, player('p', 2.5, 5.5), npc),
-      items: [ItemSchema.parse({ id: 'key', name: 'Key' })],
+      data: { items: [ItemSchema.parse({ id: 'key', name: 'Key' })] },
       dialogues: new Map([
         ['Keeper', DialogueSchema.parse({ name: 'Keeper', start: 'a', nodes: [{ id: 'a', type: 'line', text: 'Key?', next: 'b' }, { id: 'b', type: 'choice', options: [{ text: 'No', next: 'z' }, { text: 'Yes', next: 'g' }] }, { id: 'g', type: 'give', item: 'key', amount: 1, next: 'z' }, { id: 'z', type: 'end' }] })],
       ]),
@@ -106,17 +108,16 @@ describe('minigames', () => {
       const arcade = thing('arcade', 'Arcade', 9.5, 5.5, { minigameStation: { minigame: 'Game' } });
       const game = new Game({
         scene: sceneOf(fs, player('p', 2.5, 5.5), arcade),
-        items: [ItemSchema.parse({ id: 'medal', name: 'Medal' })],
-        minigames: [{ ...newMinigame(kind, 'Game'), rewardItem: 'medal', winVariable: 'won_game' } as MinigameData],
+        data: { items: [ItemSchema.parse({ id: 'medal', name: 'Medal' })], minigames: [{ ...newMinigame(kind, 'Game'), rewardItem: 'medal', winVariable: 'won_game' } as MinigameData] },
         seed: 5,
       });
       const bot = new Bot(game);
       expect(bot.interact('name:Arcade').ok).toBe(true);
-      expect(game.sim.runtime.minigame).not.toBeNull();
-      const r = bot.playMinigame();
+      expect(openMinigame(game.sim.runtime)).not.toBeNull();
+      const r = playMinigame(bot);
       expect(r.ok, r.message).toBe(true);
       expect(r.message).toMatch(/^Won the minigame "Game"/);
-      expect(game.sim.runtime.minigame).toBeNull();
+      expect(openMinigame(game.sim.runtime)).toBeNull();
       expect(game.sim.runtime.vars['won_game']).toBe(true);
       expect(game.sim.runtime.vars['item:medal']).toBe(1);
     });
@@ -124,7 +125,7 @@ describe('minigames', () => {
 
   it('says so when no minigame is open', () => {
     const game = new Game({ scene: sceneOf(flatScene(6, 6), player('p', 2.5, 2.5)) });
-    expect(new Bot(game).playMinigame().message).toBe('There is no minigame open.');
+    expect(playMinigame(new Bot(game)).message).toBe('There is no minigame open.');
   });
 });
 

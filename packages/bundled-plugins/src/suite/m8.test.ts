@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { C, CutsceneSchema, DialogueSchema, ItemSchema, itemCount, quickSlots, type EntityData, type TransformIso } from '@tilewright/runtime';
+import { C, CutsceneSchema, DialogueSchema, type EntityData, type TransformIso } from '@tilewright/runtime';
+import { ItemSchema, itemCount, putRecord, quickSlots } from '@tilewright/plugin-sdk';
 import { GRID_PLUS_X, ctxOf, flatScene, player, rig, thing, type Rig } from '@tilewright/plugin-sdk/testing';
 import { attachBehavior, newAction, newCondition, newRow, output } from '@tilewright/behaviors';
 import { beginDialogue, playCutscene } from '@tilewright/plugin-story';
@@ -28,8 +29,8 @@ const keeper = DialogueSchema.parse({
 
 function withStory(r: Rig): Rig {
   r.sim.assets.dialogues.set('Keeper', keeper);
-  r.sim.assets.items.set('key', ItemSchema.parse({ id: 'key', name: 'Brass key', max: 2 }));
-  r.sim.assets.items.set('bread', ItemSchema.parse({ id: 'bread', name: 'Bread', use: { heal: 2, message: 'Tasty.' } }));
+  putRecord(r.sim.assets, 'items', 'key', ItemSchema.parse({ id: 'key', name: 'Brass key', max: 2 }));
+  putRecord(r.sim.assets, 'items', 'bread', ItemSchema.parse({ id: 'bread', name: 'Bread', use: { heal: 2, message: 'Tasty.' } }));
   return r;
 }
 

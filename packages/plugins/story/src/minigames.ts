@@ -1,7 +1,6 @@
 import { z } from 'zod';
-import '../project/schema'; // sets up Zod before the schemas below are built
-import { CURRENT_SCHEMA_VERSION, type VariableValue } from '../project/schema';
-import type { Rng } from '../core/rng';
+import { CURRENT_SCHEMA_VERSION, type Assets, type Rng, type VariableValue } from '@tilewright/runtime'; // (loading the runtime sets up Zod before the schemas below are built)
+import type { DataKindDef, DataKnown } from '@tilewright/behaviors';
 
 /**
  * Minigames: small games inside the game (stop the marker in the zone, repeat the pattern, match the pairs).
@@ -89,15 +88,52 @@ export function defaultInstructions(kind: MinigameKind): string {
   }
 }
 
-/** Problems with a minigame, in plain English. `items` are the item ids that exist. */
-export function checkMinigame(m: MinigameData, known: { items: ReadonlySet<string> }): string[] {
+/** Every minigame the project defines, by name (what the running game reads). */
+export function minigamesOf(assets: Pick<Assets, 'data'>): ReadonlyMap<string, MinigameData> {
+  return (assets.data.get('minigames') ?? new Map()) as ReadonlyMap<string, MinigameData>;
+}
+
+/** The minigame that is open over the game, if any (the game is frozen while it is). */
+export function openMinigame(runtime: { modals: Record<string, unknown> }): MinigameState | null {
+  return (runtime.modals.minigame as MinigameState | undefined) ?? null;
+}
+
+/** Open a minigame over the game, or (with null) close it. */
+export function setMinigame(runtime: { modals: Record<string, unknown> }, state: MinigameState | null): void {
+  if (state) runtime.modals.minigame = state;
+  else delete runtime.modals.minigame;
+}
+
+/** Problems with a minigame, in plain English. `carried` are the names of everything the player can be given. */
+export function checkMinigame(m: MinigameData, known: { carried: ReadonlySet<string> }): string[] {
   const out: string[] = [];
-  if (m.rewardItem !== '' && !known.items.has(m.rewardItem)) out.push(`The minigame "${m.name}" rewards the item "${m.rewardItem}", which is not in the item list.`);
+  if (m.rewardItem !== '' && !known.carried.has(m.rewardItem)) out.push(`The minigame "${m.name}" rewards the item "${m.rewardItem}", which is not in the item list.`);
   if (m.kind === 'timing' && m.zone * (m.shrink ? 1 - 0.12 * (m.rounds - 1) : 1) < 0.07) out.push(`The minigame "${m.name}" shrinks its zone so much by the last round that it is almost impossible to hit. Use a wider zone or fewer rounds.`);
   if (m.kind === 'timing' && m.speed >= 3 && m.zone < 0.1) out.push(`The minigame "${m.name}" has a very fast marker and a very narrow zone; most players will never win it.`);
   if (m.kind === 'sequence' && m.length > 9 && m.allowedMistakes === 0) out.push(`The minigame "${m.name}" has ${m.length} symbols and no allowed mistakes; this is very hard to win.`);
   return out;
 }
+
+/** The project's minigames as a kind of data: their file, their checks, the words in them. The editor adds the tab that edits them. */
+export const minigamesKind: DataKindDef = {
+  id: 'minigames',
+  label: 'Minigames',
+  blurb: 'Small games inside your game. Give an object the Minigame behaviour (or use the "Play a minigame" action) to let the player play one. Winning sets a flag, can give an item once, and the "A minigame has been won" condition lets event rows react.',
+  file: 'assets/minigames.json',
+  listKey: 'minigames',
+  noun: 'minigame',
+  keyName: 'name',
+  schema: MinigameSchema,
+  keyOf: (m: MinigameData) => m.name,
+  create: (existing: readonly MinigameData[]) => {
+    let n = existing.length + 1;
+    while (existing.some((m) => m.name === `Game ${n}`)) n++;
+    return newMinigame('timing', `Game ${n}`);
+  },
+  check: (records: readonly MinigameData[], known: DataKnown) => records.flatMap((m) => checkMinigame(m, known)),
+  texts: (m: MinigameData) => [m.title || m.name, m.instructions || defaultInstructions(m.kind)].map((text) => ({ text, where: `Minigame ${m.name}` })),
+  assistant: { description: `Replace the project's whole list of minigames (start from story_overview and send everything back, changed). A minigame has a name, a kind and settings: "timing" {rounds, zone, speed, shrink, allowedMisses}, "sequence" {length, buttons (2-4), showSeconds, allowedMistakes} or "pairs" {pairs, allowedMisses}; all kinds can have title, instructions, winVariable, scoreVariable, rewardItem (an item id, given for the first win) and canQuit. Players reach one through an object with the minigameStation behaviour (settings {"minigame": "<name>"}) or the playMinigame action.` },
+};
 
 // ---------- state ----------
 

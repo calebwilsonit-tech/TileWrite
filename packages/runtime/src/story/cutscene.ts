@@ -124,7 +124,7 @@ export interface CutsceneProblem {
 }
 
 /** Plain-English problems in a cutscene. */
-export function checkCutscene(c: CutsceneData, known: { dialogues: ReadonlySet<string>; items: ReadonlySet<string>; sounds?: ReadonlySet<string> }): CutsceneProblem[] {
+export function checkCutscene(c: CutsceneData, known: { dialogues: ReadonlySet<string>; carried: ReadonlySet<string>; sounds?: ReadonlySet<string> }): CutsceneProblem[] {
   const out: CutsceneProblem[] = [];
   if (c.steps.length === 0) out.push({ text: `The cutscene "${c.name}" has no steps yet.` });
   const seen = new Set<string>();
@@ -138,7 +138,7 @@ export function checkCutscene(c: CutsceneData, known: { dialogues: ReadonlySet<s
     }
     if ((s.type === 'sound' || s.type === 'music') && s.name !== '' && known.sounds && !known.sounds.has(s.name)) out.push({ step: s.id, text: `${label} uses the sound "${s.name}", which is not in Assets -> Sounds.` });
     if (s.type === 'sound' && s.name === '') out.push({ step: s.id, text: `${label} has no sound chosen.` });
-    if (s.type === 'give' && !known.items.has(s.item)) out.push({ step: s.id, text: `${label} gives "${s.item}", which is not in your items list.` });
+    if (s.type === 'give' && !known.carried.has(s.item)) out.push({ step: s.id, text: `${label} gives "${s.item}", which is not in your items list.` });
     if (s.type === 'move' && s.to === '') out.push({ step: s.id, text: `${label} does not say where to walk.` });
     if (s.type === 'face' && s.toward === '') out.push({ step: s.id, text: `${label} does not say what to turn towards.` });
     if (s.type === 'say' && s.text.trim() === '') out.push({ step: s.id, text: `${label} has no text.` });

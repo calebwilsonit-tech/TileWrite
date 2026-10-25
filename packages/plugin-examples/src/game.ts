@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import { definePlugin, behaviorDef, type PluginDefinition, type SimContext, type Entity } from '@tilewright/plugin-sdk';
 
 /** The manifest every example shares the shape of. A real plugin keeps this in its own plugin.json. */
@@ -105,6 +106,47 @@ export const whoExample: PluginDefinition = definePlugin(manifestOf('who', 'Exam
 // ---------- when an object counts as defeated ----------
 export const defeatExample: PluginDefinition = definePlugin(manifestOf('defeat', 'Example: defeat', 'An object with the tag "fragile" counts as defeated once it has the tag "broken".'), {
   install: (api) => api.defeatCheck({ id: 'example-fragile', defeated: (e) => e.tags.has('fragile') && e.tags.has('broken') }),
+});
+
+// ---------- a kind of data the project keeps ----------
+const RecipeSchema = z.object({ name: z.string().min(1), makes: z.string().default('') });
+
+/** A kind of data: a list of recipes kept in a file of the project. The engine loads it while this plugin is on, saves and checks it, collects its words for translation, and shows its editor as a tab of the Story panel. */
+export const dataKindExample: PluginDefinition = definePlugin(manifestOf('data', 'Example: a kind of data', 'A list of recipes kept in assets/example-recipes.json: loaded, saved, checked, translated and edited by the engine.'), {
+  install: (api) =>
+    api.dataKind({
+      id: 'example-recipes',
+      label: 'Recipes',
+      file: 'assets/example-recipes.json',
+      listKey: 'recipes',
+      noun: 'recipe',
+      keyName: 'name',
+      schema: RecipeSchema,
+      keyOf: (r: z.infer<typeof RecipeSchema>) => r.name,
+      create: (existing: readonly unknown[]) => ({ name: `Recipe ${existing.length + 1}`, makes: '' }),
+      check: (records: readonly z.infer<typeof RecipeSchema>[]) => records.filter((r) => r.makes === '').map((r) => `The recipe "${r.name}" makes nothing yet.`),
+      texts: (r: z.infer<typeof RecipeSchema>) => [{ text: r.name, where: `Recipe ${r.name}` }],
+    }),
+  // the tab that edits it (editor part only: it never goes into an exported game); a real one draws its fields with React, using props.ui
+  installEditor: (api) => api.dataEditor({ kind: 'example-recipes', component: () => null }),
+});
+
+// ---------- keeping what the player carries ----------
+
+/** The keeper of what the player carries (an inventory): conversations, cutscenes, skins and scripts ask it how many, and to give or take some. */
+export const carrierExample: PluginDefinition = definePlugin(manifestOf('carrier', 'Example: pockets', 'Keeps what the player carries in the variables pocket:<name>, for conversations and cutscenes to give into.'), {
+  install: (api) =>
+    api.carrier({
+      id: 'example-pockets',
+      count: (vars, id) => (typeof vars[`pocket:${id}`] === 'number' ? (vars[`pocket:${id}`] as number) : 0),
+      give(ctx, id, amount) {
+        const had = typeof ctx.runtime.vars[`pocket:${id}`] === 'number' ? (ctx.runtime.vars[`pocket:${id}`] as number) : 0;
+        const got = Math.max(-had, amount);
+        ctx.runtime.vars[`pocket:${id}`] = had + got;
+        return got;
+      },
+      variable: (id) => `pocket:${id}`,
+    }),
 });
 
 // ---------- a layer over the world ----------

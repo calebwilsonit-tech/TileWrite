@@ -270,6 +270,17 @@ export const IsoConfigSchema = z.object({
   heightPx: z.number().int().min(1).default(16),
 });
 
+/** A collision layer the project names itself (what colliders belong to and which they meet), besides the engine's and the plugins'. */
+export const ProjectLayerSchema = z.object({
+  name: z.string().regex(/^[a-z][a-z0-9_-]{0,23}$/, 'A layer name uses lower-case letters, numbers, - and _ (it starts with a letter)'),
+  /** Which bit of the layer number it is (0 to 15). Saved colliders keep the number, so a layer keeps its bit forever. */
+  bit: z.number().int().min(0).max(15),
+  label: z.string().max(40).optional(),
+  /** True for layers of ghosts (recorded copies, spirits): a gate set to let ghosts pass lets these through. */
+  ghost: z.boolean().optional(),
+});
+export type ProjectLayerData = z.infer<typeof ProjectLayerSchema>;
+
 export const ProjectSchema = z.object({
   schemaVersion: z.number().int().min(1),
   name: z.string().min(1),
@@ -286,6 +297,8 @@ export const ProjectSchema = z.object({
   plugins: z.array(z.string()).optional(),
   /** Patterns for files the assistant may not read or list, added to its built-in list of files that may hold secrets (.env, *.pem, ...). */
   assistantDeny: z.array(z.string().min(1).max(200)).max(100).optional(),
+  /** The collision layers the project names itself (Project settings). Missing means none. */
+  collisionLayers: z.array(ProjectLayerSchema).max(16).optional(),
   /** Compatibility flags (see compat.ts): behaviour that changed after projects were made. Missing flags are off, as the project always played. */
   compat: z.record(z.string(), z.boolean()).optional(),
 });

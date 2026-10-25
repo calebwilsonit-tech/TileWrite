@@ -1,4 +1,5 @@
-import { C, addItem, autoSlot, type Collider, type Entity, matchesWho, WHO_OPTIONS, type Who, behaviorDef } from '@tilewright/plugin-sdk';
+import { C, type Collider, type Entity, matchesWho, WHO_OPTIONS, type Who, behaviorDef } from '@tilewright/plugin-sdk';
+import { addItem, autoSlot, itemsOf } from './items';
 
 
 const collider = (e: Entity): Collider | undefined => e.get<Collider>(C.Collider);
@@ -43,7 +44,7 @@ export const pickup = behaviorDef<Pickup>({
       ctx.runtime.vars[s.variable] = (typeof cur === 'number' ? cur : 0) + s.amount;
     }
     if (s.item) {
-      const got = addItem(ctx.runtime.vars, s.item, Math.max(1, s.amount), ctx.assets.items.get(s.item));
+      const got = addItem(ctx.runtime.vars, s.item, Math.max(1, s.amount), itemsOf(ctx.assets).get(s.item));
       if (got > 0) autoSlot(ctx.runtime.vars, s.item);
       ctx.events.emit('item-given', { item: s.item, amount: got });
     }

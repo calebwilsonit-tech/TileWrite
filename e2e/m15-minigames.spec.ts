@@ -25,6 +25,9 @@ async function create(page: Page, name: string, kind: 'timing' | 'sequence' | 'p
   await expect(page.getByTestId(`minigame-${name}`)).toBeVisible();
 }
 
+/** The state of the open minigame, as these tests read it. */
+type MG = { phase: string; cards: number[]; round: number; zoneAt: number; zoneSize: number; pos: number };
+
 test('M15: minigames are made in the Story panel, tested in the game and played with the mouse and the buttons', async () => {
   test.setTimeout(150_000);
   const { page, app, errors } = await launchEditor();
@@ -41,22 +44,22 @@ test('M15: minigames are made in the Story panel, tested in the game and played 
   await page.getByTestId('minigame-rounds-Duel').press('Enter');
   await page.getByTestId('minigame-pairs-Cards').fill('3');
   await page.getByTestId('minigame-pairs-Cards').press('Enter');
-  await expect.poll(() => page.evaluate(() => window.__store!.minigames.map((m) => `${m.name}:${m.kind}`))).toEqual(['Duel:timing', 'Cards:pairs', 'Echo:sequence']);
+  await expect.poll(() => page.evaluate(() => (window.__store!.dataList('minigames') as { name: string; kind: string }[]).map((m) => `${m.name}:${m.kind}`))).toEqual(['Duel:timing', 'Cards:pairs', 'Echo:sequence']);
   await page.screenshot({ path: shot('m15-minigames-panel.png') });
 
   // ---- the timing bar: test it, start it by clicking, hit the zone twice ----
   await page.getByTestId('minigame-test-Duel').click();
-  await page.waitForFunction(() => window.__play !== undefined && window.__play.sim.runtime.minigame !== null);
+  await page.waitForFunction(() => window.__play !== undefined && window.__play.sim.runtime.modals.minigame !== undefined);
   await expect(page.getByTestId('tw-minigame')).toBeVisible();
   await page.screenshot({ path: shot('m15-minigame-intro.png') });
   await page.getByTestId('tw-minigame').click(); // click = confirm
-  await expect.poll(() => page.evaluate(() => window.__play!.sim.runtime.minigame!.phase)).toBe('play');
+  await expect.poll(() => page.evaluate(() => (window.__play!.sim.runtime.modals.minigame as MG).phase)).toBe('play');
   await expect(page.getByTestId('tw-minigame-bar')).toBeVisible();
   await page.evaluate(() => {
     window.__store!.set({ paused: true });
     const r = window.__play!.runner;
     r.paused = true;
-    const st = window.__play!.sim.runtime.minigame!;
+    const st = (window.__play!.sim.runtime.modals.minigame as MG);
     for (let round = 0; round < 2; round++) {
       const target = round + 1;
       for (let i = 0; i < 5000 && st.round < target && st.phase === 'play'; i++) {
@@ -72,20 +75,20 @@ test('M15: minigames are made in the Story panel, tested in the game and played 
   await expect(page.getByTestId('tw-minigame-result')).toHaveText('You won!');
   await page.screenshot({ path: shot('m15-minigame-won.png') });
   await page.getByTestId('tw-minigame').click();
-  await expect.poll(() => page.evaluate(() => window.__play!.sim.runtime.minigame)).toBeNull();
+  await expect.poll(() => page.evaluate(() => (window.__play!.sim.runtime.modals.minigame ?? null))).toBeNull();
   expect(await page.evaluate(() => window.__play!.sim.runtime.vars['minigame:Duel:won'])).toBe(true);
   expect(await page.evaluate(() => window.__play!.sim.runtime.vars['minigame:Duel:best'])).toBe(200);
 
   // ---- the cards: opened by the event action, flipped with real mouse clicks ----
   await page.evaluate(() => {
     const play = window.__play!;
-    play.sim.runtime.minigame = null;
+    delete play.sim.runtime.modals.minigame;
   });
-  expect(await page.evaluate(() => window.__play!.session.openMinigame('Cards'))).toBe(true);
+  expect(await page.evaluate(() => window.__play!.session.runAction('playMinigame', { minigame: 'Cards' }))).toBe(true);
   await expect(page.getByTestId('tw-minigame')).toBeVisible();
   await page.getByTestId('tw-minigame').click({ position: { x: 5, y: 5 } }); // start
-  await expect.poll(() => page.evaluate(() => window.__play!.sim.runtime.minigame!.phase)).toBe('play');
-  const cards: number[] = await page.evaluate(() => [...window.__play!.sim.runtime.minigame!.cards]);
+  await expect.poll(() => page.evaluate(() => (window.__play!.sim.runtime.modals.minigame as MG).phase)).toBe('play');
+  const cards: number[] = await page.evaluate(() => [...(window.__play!.sim.runtime.modals.minigame as MG).cards]);
   expect(cards).toHaveLength(6);
   const byPicture = new Map<number, number[]>();
   cards.forEach((c, i) => byPicture.set(c, [...(byPicture.get(c) ?? []), i]));
@@ -96,7 +99,7 @@ test('M15: minigames are made in the Story panel, tested in the game and played 
   await expect(page.getByTestId('tw-minigame-result')).toHaveText('You won!');
   await page.screenshot({ path: shot('m15-minigame-cards.png') });
   await page.getByTestId('tw-minigame').click();
-  await expect.poll(() => page.evaluate(() => window.__play!.sim.runtime.minigame)).toBeNull();
+  await expect.poll(() => page.evaluate(() => (window.__play!.sim.runtime.modals.minigame ?? null))).toBeNull();
   expect(await page.evaluate(() => window.__play!.sim.runtime.vars['minigame:Cards:won'])).toBe(true);
   await steps(page, {}, 2);
   expect(errors).toEqual([]);

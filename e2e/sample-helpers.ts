@@ -3,11 +3,11 @@ import { expect, type Page } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
 import { C, compatOf, tilesetFromList, type SceneData, type TransformIso } from '@tilewright/runtime';
-import { packsOfProject, setActivePacks, syncCustomBlocks } from '@tilewright/behaviors';
+import { syncCustomBlocks, useProject } from '@tilewright/behaviors';
 import { Game, PointerBot } from '@tilewright/playbot';
 import { loadScene, openProject } from '../packages/editor/src/renderer/project/io';
 import { loadAllPrefabs } from '../packages/editor/src/renderer/project/prefabs';
-import { loadCutscenes, loadDialogues, loadItems, loadUiDoc } from '../packages/editor/src/renderer/project/story';
+import { loadCutscenes, loadData, loadDialogues, loadUiDoc } from '../packages/editor/src/renderer/project/story';
 import { loadComponents, loadCustomBehaviors, loadTables } from '../packages/editor/src/renderer/project/blocks';
 import { nodeFs } from './slice-bot';
 import { clickCell, pickTool, root } from './helpers';
@@ -84,19 +84,19 @@ export async function saveSample(page: Page, name: string): Promise<string> {
 /** A saved project, loaded from disk the way an exported game loads it, for a bot that plays without the editor. */
 export async function loadSampleGame(projectDir: string, opts: { seed?: number } = {}): Promise<{ game: Game; bot: PointerBot; scenes: Map<string, SceneData> }> {
   const { project } = await openProject(nodeFs, projectDir);
-  setActivePacks(packsOfProject(project));
+  useProject(project);
   const [tables, components, behaviours] = await Promise.all([loadTables(nodeFs, projectDir), loadComponents(nodeFs, projectDir), loadCustomBehaviors(nodeFs, projectDir)]);
   syncCustomBlocks(components.items, behaviours.items);
   const scenes = new Map<string, SceneData>();
   for (const p of project.scenes) scenes.set(p, await loadScene(nodeFs, projectDir, p));
   const { prefabs } = await loadAllPrefabs(nodeFs, projectDir);
-  const [items, dialogues, cutscenes, ui] = await Promise.all([loadItems(nodeFs, projectDir), loadDialogues(nodeFs, projectDir), loadCutscenes(nodeFs, projectDir), loadUiDoc(nodeFs, projectDir)]);
+  const [data, dialogues, cutscenes, ui] = await Promise.all([loadData(nodeFs, projectDir), loadDialogues(nodeFs, projectDir), loadCutscenes(nodeFs, projectDir), loadUiDoc(nodeFs, projectDir)]);
   const game = new Game({
     scene: scenes.get(project.startScene)!,
     scenePath: project.startScene,
     scenes,
     prefabs,
-    items: items.items,
+    data: data.data,
     dialogues: dialogues.items,
     cutscenes: cutscenes.items,
     tables: tables.items,

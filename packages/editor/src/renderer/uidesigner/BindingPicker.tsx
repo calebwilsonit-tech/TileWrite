@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import type { UiDoc } from '@tilewright/runtime';
+import { host } from '@tilewright/behaviors';
 import { store } from '../app/store';
 import { bindingChoices, numericFields, type BindingFacts } from './bindings';
 
@@ -21,7 +22,10 @@ export function useBindingFacts(): BindingFacts {
   return {
     variables: [...vars],
     tables: store.tables,
-    items: store.story.items.map((i) => ({ id: i.id, name: i.name })),
+    carried: store.carriedChoices().flatMap((c) => {
+      const variable = host.ext.carriers.values().next().value?.variable(c.value);
+      return variable ? [{ name: c.label, variable }] : [];
+    }),
     objects: (doc?.entities ?? []).filter((e) => !e.tags.includes('logic-node')).slice(0, 40).map((e) => ({ name: e.name, fields: numericFields(e.components) })),
   };
 }

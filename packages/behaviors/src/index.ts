@@ -33,6 +33,8 @@ export * from './nav';
 export * from './template-kit';
 export * from './bridges';
 export * from './defeat';
+export * from './data-kinds';
+export * from './carrying';
 export * from './facing';
 export * from './point';
 export * from './travel';

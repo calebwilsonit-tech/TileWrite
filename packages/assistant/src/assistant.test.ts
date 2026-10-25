@@ -90,7 +90,7 @@ describe('tool definitions', () => {
 
   it('keep reading and changing apart: every tool that changes the project is an act tool', () => {
     const act = TOOLS.filter((t) => t.kind === 'act').map((t) => t.name);
-    expect(act).toEqual(['place_objects', 'update_objects', 'delete_objects', 'paint_tiles', 'connect_wires', 'remove_wires', 'set_event_sheet', 'write_dialogue', 'write_cutscene', 'write_items', 'write_minigames', 'write_skins', 'write_world_map', 'write_mixer', 'write_ui_layout', 'write_controls', 'set_project_settings', 'edit_event_rows', 'create_prefab', 'set_regions', 'write_translation', 'set_plugins', 'write_table', 'set_variables', 'generate_map', 'write_ui_screen', 'write_script', 'write_project_notes', 'submit_plan', 'draw_sprite', 'generate_image', 'place_blocks', 'set_gravity']);
+    expect(act).toEqual(['place_objects', 'update_objects', 'delete_objects', 'paint_tiles', 'connect_wires', 'remove_wires', 'set_event_sheet', 'write_dialogue', 'write_cutscene', 'write_skins', 'write_world_map', 'write_mixer', 'write_ui_layout', 'write_controls', 'set_project_settings', 'edit_event_rows', 'create_prefab', 'set_regions', 'write_translation', 'set_plugins', 'write_table', 'set_variables', 'generate_map', 'write_ui_screen', 'write_script', 'write_project_notes', 'submit_plan', 'draw_sprite', 'generate_image', 'place_blocks', 'set_gravity']);
   });
 
   it('checks the genre tools\' inputs with messages Claude can act on', () => {
@@ -114,10 +114,6 @@ describe('tool definitions', () => {
     expect(checkToolInput('write_translation', { language: 'French', strings: {} }).ok).toBe(false);
     expect(checkToolInput('set_regions', { regions: [{ name: 'Yard', x: 1, y: 1, w: 4, h: 4, darkness: 2 }] }).ok).toBe(false);
     expect(checkToolInput('set_regions', { regions: [{ name: 'Yard', x: 1, y: 1, w: 4, h: 4, darkness: 0.5, music: 'theme' }] }).ok).toBe(true);
-    expect(checkToolInput('write_items', { items: [{ id: 'key', name: 'Key', use: { heal: 1 } }] }).ok).toBe(true);
-    expect(checkToolInput('write_minigames', { minigames: [{ name: 'Duel', kind: 'timing', rounds: 3 }, { name: 'Cards', kind: 'pairs', pairs: 4 }] }).ok).toBe(true);
-    expect(checkToolInput('write_minigames', { minigames: [{ name: 'Bad', kind: 'darts' }] }).ok).toBe(false);
-    expect(checkToolInput('write_minigames', { minigames: [{ name: 'bad/name', kind: 'timing' }] }).ok).toBe(false);
     expect(checkToolInput('write_skins', { skins: [{ id: 'red', name: 'Red', color: 0xff0000, unlock: { kind: 'variable', name: 'won' } }] }).ok).toBe(true);
     expect(checkToolInput('write_skins', { skins: [{ id: 'red', name: 'Red', unlock: { kind: 'nonsense' } }] }).ok).toBe(false);
     expect(checkToolInput('write_world_map', { nodes: [{ id: 'hub', label: 'Hub', scene: 'scenes/main.scene.json', x: 400, y: 300, icon: 'town', unlock: { kind: 'always' } }], links: [] }).ok).toBe(true);

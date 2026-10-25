@@ -12,7 +12,8 @@ export interface BindingChoice {
 export interface BindingFacts {
   variables: readonly string[];
   tables: readonly TableData[];
-  items: readonly { id: string; name: string }[];
+  /** What can be carried, and the variable that holds how many are carried (from the plugin that keeps the inventory). */
+  carried: readonly { name: string; variable: string }[];
   /** Objects of the open scene and the numeric fields of their parts: `Player.health.hp`. */
   objects: readonly { name: string; fields: readonly string[] }[];
 }
@@ -64,7 +65,7 @@ export function bindingChoices(doc: UiDoc, widgetId: string | null, facts: Bindi
   for (const v of BUILTIN_VARS) out.push({ path: v, label: v, group: 'Game state' });
   for (const [path, label] of HOST_VALUES) out.push({ path, label, group: 'The game and its screens' });
   for (const s of SETTINGS) out.push({ path: `settings.${s}`, label: `settings.${s}`, group: 'Player settings' });
-  for (const i of facts.items) out.push({ path: `item:${i.id}`, label: `How many "${i.name}" are carried`, group: 'Items' });
+  for (const c of facts.carried) out.push({ path: c.variable, label: `How many "${c.name}" are carried`, group: 'Things carried' });
   for (const t of facts.tables) {
     for (const r of t.rows.slice(0, 60)) {
       for (const c of t.columns) out.push({ path: `${t.name}.${r.id}.${c.id}`, label: `${t.name} → ${r.id} → ${c.id}`, group: `Table ${t.name}` });

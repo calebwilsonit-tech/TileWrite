@@ -1,7 +1,7 @@
 import { addPhysicsModifier, baseInput, removePhysicsModifiersOf, setExtraInputActions, type Entity, type SimContext, type System, type SystemMode } from '@tilewright/runtime';
 import { behaviorList, defineBehavior, getBehavior, reshelveBehavior, undefineBehavior, type BehaviorDef } from '../framework';
 import { registerAction, registerCondition, shelvedAction, shelvedCondition, unregisterAction, unregisterCondition, type ActionDef, type ConditionDef } from '../events/sheet';
-import type { ComponentDef, EventDef, Extensions, ExtensionKind, InputActionDef, OwnedBy } from './extensions';
+import type { ComponentDef, DataEditorProps, EventDef, Extensions, ExtensionKind, InputActionDef, OwnedBy } from './extensions';
 import type * as X from './extensions';
 import { ENGINE_VERSION, grants, parseManifest, worksWithEngine, type PluginManifest } from './manifest';
 import { satisfies } from './semver';
@@ -67,7 +67,14 @@ export interface ImporterDef {
   import(name: string, bytes: Uint8Array, host: EditorHost): Promise<string> | string;
 }
 
+/** The tab in the Story panel that edits a kind of data (see `api.dataKind`). First-party plugins write it with React; it is given the fields to use in `props.ui`. */
+export interface DataEditorDef {
+  kind: string;
+  component(props: DataEditorProps): unknown;
+}
+
 export interface EditorExtensions {
+  dataEditors: Map<string, DataEditorDef & OwnedBy>;
   panels: Map<string, EditorPanelDef & OwnedBy>;
   tools: Map<string, EditorToolDef & OwnedBy>;
   importers: Map<string, ImporterDef & OwnedBy>;
@@ -112,6 +119,12 @@ export interface PluginApi {
   defeatCheck(def: X.DefeatCheckDef): void;
   /** A layer drawn over the world (darkness, weather...). The game keeps its data in `runtime.plugin[id]`; with none, the layer hides. */
   screenLayer(def: X.ScreenLayerDef): void;
+  /** A kind of data the project keeps in a file of its own (items, minigames...): loaded, saved, checked, translated and edited by the engine. */
+  dataKind(def: X.DataKindDef): void;
+  /** Keep what the player carries (conversations, cutscenes, skins and scripts ask how many, and give or take some). */
+  carrier(def: X.CarrierDef): void;
+  /** The editor of a kind of data, as a tab of the Story panel (the editor part of the plugin adds it). */
+  dataEditor(def: DataEditorDef): void;
   /** Add a way a place on the world map can unlock ("a checkpoint is lit there"). */
   unlockRule(def: X.UnlockRuleDef): void;
   /** Give scripts a method (me.damage, game.startDialogue...) that this plugin implements. */
@@ -215,6 +228,8 @@ const emptyExtensions = (): Extensions => ({
   whoFilters: new Map(),
   defeatChecks: new Map(),
   screenLayers: new Map(),
+  dataKinds: new Map(),
+  carriers: new Map(),
   unlockRules: new Map(),
   scriptMethods: new Map(),
   blockTypes: new Map(),
@@ -246,7 +261,7 @@ export class PluginHost {
   readonly installed = new Map<string, Installed>();
   readonly ext: Extensions = emptyExtensions();
   /** What the editor's parts (panels, tools, importers) have added. */
-  readonly editor: EditorExtensions = { panels: new Map(), tools: new Map(), importers: new Map() };
+  readonly editor: EditorExtensions = { dataEditors: new Map(), panels: new Map(), tools: new Map(), importers: new Map() };
   private readonly failedPlugins = new Map<string, PluginFailure>();
   private readonly granted = new Map<string, string[]>();
   private readonly listeners = new Set<(c: HostChange) => void>();
@@ -409,7 +424,7 @@ export class PluginHost {
       if (kind === 'whoFilters') removeWhoFilter(key);
       if (kind === 'events') removeEventEntry(key);
     }
-    for (const t of ['panels', 'tools', 'importers'] as const) for (const [key, v] of this.editor[t]) if (v.plugin === id) this.editor[t].delete(key);
+    for (const t of ['dataEditors', 'panels', 'tools', 'importers'] as const) for (const [key, v] of this.editor[t]) if (v.plugin === id) this.editor[t].delete(key);
     this.installed.delete(id);
     setExtraInputActions(this.inputActions());
     this.emit({ kind: 'removed', plugin: id });
@@ -597,6 +612,15 @@ export class PluginHost {
       screenLayer(def) {
         host.add(rec, id, 'screenLayers', def.id, def);
       },
+      dataKind(def) {
+        host.add(rec, id, 'dataKinds', def.id, def);
+      },
+      carrier(def) {
+        host.add(rec, id, 'carriers', def.id, def);
+      },
+      dataEditor(def) {
+        host.editor.dataEditors.set(def.kind, { ...def, component: host.guarded(id, `the editor of ${def.kind}`, def.component.bind(def), null), plugin: id });
+      },
       whoFilter(def) {
         host.add(rec, id, 'whoFilters', def.id, def);
         addWhoFilter(def.id, def.label, host.watched(id, `the group "${def.label}"`, def.match.bind(def)));
@@ -726,10 +750,10 @@ export class PluginHost {
 
   // --- what plugins added (for the editor's pickers and the plugin manager) ---
 
-  contentsOf(id: string): { behaviors: string[]; conditions: string[]; actions: string[]; inputs: string[]; systems: string[]; extensions: { kind: ExtensionKind | 'panels' | 'tools' | 'importers'; id: string }[] } | null {
+  contentsOf(id: string): { behaviors: string[]; conditions: string[]; actions: string[]; inputs: string[]; systems: string[]; extensions: { kind: ExtensionKind | 'dataEditors' | 'panels' | 'tools' | 'importers'; id: string }[] } | null {
     const r = this.installed.get(id);
     if (!r) return null;
-    const editorParts = (['panels', 'tools', 'importers'] as const).flatMap((t) => [...this.editor[t]].filter(([, v]) => v.plugin === id).map(([key]) => ({ kind: t, id: key })));
+    const editorParts = (['dataEditors', 'panels', 'tools', 'importers'] as const).flatMap((t) => [...this.editor[t]].filter(([, v]) => v.plugin === id).map(([key]) => ({ kind: t, id: key })));
     return { behaviors: [...r.behaviors], conditions: [...r.conditions], actions: [...r.actions], inputs: Object.keys(r.inputs), systems: r.systems.map((s) => s.name), extensions: [...r.added.map((a) => ({ kind: a.kind, id: a.id })), ...editorParts] };
   }
 

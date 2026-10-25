@@ -1,5 +1,4 @@
 import {
-  carried,
   evalUiCondition,
   evalValue,
   fillValues,
@@ -12,7 +11,7 @@ import {
   type ValueSource,
   type VariableValue,
 } from '@tilewright/runtime';
-import { placeState, quickSlots, type SlotInfo } from '@tilewright/runtime';
+import { placeState, type SlotInfo } from '@tilewright/runtime';
 import { runActionList } from '../events/sheet';
 import { host } from '../plugins/host';
 import { contextOf } from '../story/context';
@@ -150,13 +149,6 @@ interface Row {
   table?: string;
 }
 
-function itemDetail(sim: Simulation, id: string): string {
-  const def = sim.assets.items.get(id);
-  const slot = quickSlots(sim.runtime.vars).indexOf(id);
-  const t = sim.assets.strings;
-  return [t.t(def?.description ?? ''), def?.use ? t.t('press E to use') : '', slot >= 0 ? t.fmt(t.t('slot {n}'), { n: slot + 1 }) : ''].filter(Boolean).join(' - ');
-}
-
 /** What the screens may ask about the host, as values in view (`{host.quit}`, `{game.title}`) while a screen is worked out. */
 export function hostScope(sim: Simulation): Record<string, VariableValue> {
   const b = uiBridge(sim);
@@ -192,9 +184,6 @@ export function rowsOf(sim: Simulation, node: UiNode): Row[] {
   if (src.startsWith('slots:')) {
     const n = Math.max(0, Math.min(200, Math.floor(Number(src.slice(6)) || 0)));
     return Array.from({ length: n }, (_, i) => ({ id: String(i + 1), scope: { slot: i + 1, index: i + 1 } }));
-  }
-  if (src === 'items') {
-    return carried(sim.runtime.vars).map(([id, count], i) => ({ id, scope: { 'item.detail': itemDetail(sim, id), 'item.id': id, 'item.name': sim.assets.strings.t(sim.assets.items.get(id)?.name ?? id), 'item.count': count, 'item.description': sim.assets.strings.t(sim.assets.items.get(id)?.description ?? ''), 'item.usable': sim.assets.items.get(id)?.use ? 1 : 0, 'item.slot': quickSlots(sim.runtime.vars).indexOf(id) + 1, 'item.color': sim.assets.items.get(id)?.color ?? 0, index: i + 1 } }));
   }
   if (src === 'turns') {
     const t = sim.runtime.turns;
@@ -233,9 +222,6 @@ export function rowsOf(sim: Simulation, node: UiNode): Row[] {
       .map((node) => ({ node, state: placeState(node, sim.runtime.vars, sim.runtime.scene, custom) }))
       .filter((p) => p.state === 'open' || p.state === 'here')
       .map((p, i) => ({ id: p.node.id, scope: { 'place.id': p.node.id, 'place.name': p.node.label, 'place.scene': p.node.scene, 'place.here': p.state === 'here' ? 1 : 0, 'place.hint': p.state === 'here' ? sim.assets.strings.t('you are here') : '', 'place.x': p.node.x, 'place.y': p.node.y, index: i + 1 } }));
-  }
-  if (src === 'quickslots') {
-    return quickSlots(sim.runtime.vars).map((id, i) => ({ id: String(i + 1), scope: { 'slot.number': i + 1, 'slot.item': id, 'slot.name': id ? sim.assets.strings.t(sim.assets.items.get(id)?.name ?? id) : '', 'slot.count': id ? Number(sim.runtime.vars[`item:${id}`] ?? 0) : 0, 'slot.color': id ? (sim.assets.items.get(id)?.color ?? 0) : 0, index: i + 1 } }));
   }
   if (src.startsWith('menu:')) {
     const menu = src.slice(5);

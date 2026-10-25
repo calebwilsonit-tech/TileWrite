@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { UiScreens } from '@tilewright/behaviors';
+import { UiScreens, fillAssetData } from '@tilewright/behaviors';
 import { Simulation, findWidget, parentOf, walkWidgets, type UiDoc, type UiNode, type VariableValue } from '@tilewright/runtime';
 import { store } from '../app/store';
 import { anchorForDrop, designScreen, linkFocus, moveWidget, rootOf, updateWidget, addWidget, type Dir } from './ui-edit';
@@ -125,8 +125,7 @@ export function DesignCanvas({ doc }: { doc: UiDoc }) {
       sim.assets.ui = sc && !d.screens.some((x) => x.id === sc.id) ? { ...d, screens: [...d.screens, sc] } : sc ? { ...d, screens: d.screens.map((x) => (x.id === sc.id ? sc : x)) } : d;
       sim.assets.tables.clear();
       for (const t of store.tables) sim.assets.tables.set(t.name, t);
-      sim.assets.items.clear();
-      for (const it of store.story.items) sim.assets.items.set(it.id, it);
+      fillAssetData(sim.assets, store.data);
       const vars = sim.runtime.vars;
       for (const k of Object.keys(vars)) delete vars[k];
       for (const v of store.doc?.variables ?? []) vars[v.name] = v.value;

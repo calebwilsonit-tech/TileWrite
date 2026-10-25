@@ -2,7 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { CutsceneSchema, DialogueSchema, ItemSchema, newLanguage } from '@tilewright/runtime';
+import { CutsceneSchema, DialogueSchema, newLanguage } from '@tilewright/runtime';
+import { ItemSchema, putRecord } from '@tilewright/plugin-sdk';
 import { ctxOf, flatScene, player, rig, thing } from '@tilewright/plugin-sdk/testing';
 import { attachBehavior, host, newAction, newCondition, newRow } from '@tilewright/behaviors';
 import { beginDialogue, confirmDialogue, playCutscene } from '@tilewright/plugin-story';
@@ -27,7 +28,7 @@ function world(language = '') {
   scene.entities.push(p, thing('npc', 'Keeper', 6.5, 5.5, {}));
   const r = rig(scene);
   r.sim.assets.dialogues.set('Keeper', keeper);
-  r.sim.assets.items.set('bread', ItemSchema.parse({ id: 'bread', name: 'Bread', use: { heal: 1, message: 'Tasty.' } }));
+  putRecord(r.sim.assets, 'items', 'bread', ItemSchema.parse({ id: 'bread', name: 'Bread', use: { heal: 1, message: 'Tasty.' } }));
   const fr = newLanguage('fr', 'Français');
   fr.strings = { Keeper: 'Gardien', 'Welcome, {who}.': 'Bienvenue, {who}.', 'Will you help?': 'Voulez-vous aider ?', Yes: 'Oui', Tasty: 'Délicieux', 'Tasty.': 'Délicieux.' };
   r.sim.assets.strings.set(fr);

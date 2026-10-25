@@ -10,10 +10,13 @@
     "@tilewright/runtime": "*",
     "@tilewright/behaviors": "*",
     "@tilewright/playbot": "*",
-    "@tilewright/plugin-lighting": "*"
+    "@tilewright/plugin-lighting": "*",
+    "@tilewright/plugin-inventory": "*",
+    "@tilewright/plugin-story": "*"
   },
   "exports": {
     ".": "./src/index.ts",
-    "./testing": "./src/testing.ts"
+    "./testing": "./src/testing.ts",
+    "./editor-ui": "./src/editor-ui.ts"
   }
 }

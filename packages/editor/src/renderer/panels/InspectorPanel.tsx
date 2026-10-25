@@ -1,5 +1,6 @@
 import { FACING_NAMES, GRAVITY_DIRS, GRAVITY_NAMES, type Animator, type EntityData, type GravityDir, type RegionData } from '@tilewright/runtime';
 import { behaviorList } from '@tilewright/behaviors';
+import { CollisionLayerFields } from './CollisionLayers';
 import { applySprite, setLocomotionClips, setPlainClip } from '../studio/apply';
 import { BehaviorsSection } from './BehaviorsSection';
 import { PluginComponentsSection } from './PluginComponents';
@@ -102,7 +103,7 @@ function EntityInspector({ ids }: { ids: string[] }) {
   const e = ents[0]!;
   const t = comp<{ x: number; y: number; h: number; facing: number }>(e, 'transform');
   const s = comp<{ shape: string; color: number; w: number; d: number; height: number; visible: boolean }>(e, 'sprite');
-  const c = comp<{ w: number; d: number; height: number; solid: boolean; trigger: boolean }>(e, 'collider');
+  const c = comp<{ w: number; d: number; height: number; solid: boolean; trigger: boolean; layer?: number; mask?: number }>(e, 'collider');
   const pc = comp<{ speed: number; runMultiplier: number; jumpSpeed: number }>(e, 'playerController');
   const edit = (label: string, fn: (x: EntityData) => void): void => doc.updateEntities([e.id], label, fn);
   const setC = (name: string, key: string, value: unknown, label: string): void =>
@@ -148,6 +149,7 @@ function EntityInspector({ ids }: { ids: string[] }) {
           <NumberField label="Width" step={0.1} min={0.1} value={c.w} onCommit={(v) => setC('collider', 'w', v, 'Resize collider')} />
           <NumberField label="Depth" step={0.1} min={0.1} value={c.d} onCommit={(v) => setC('collider', 'd', v, 'Resize collider')} />
           <NumberField label="Height" step={0.1} min={0.1} value={c.height} onCommit={(v) => setC('collider', 'height', v, 'Resize collider')} />
+          <CollisionLayerFields layer={c.layer ?? 1} mask={c.mask ?? 65535} onLayer={(v) => setC('collider', 'layer', v, 'Change collision layer')} onMask={(v) => setC('collider', 'mask', v, 'Change what it meets')} />
         </fieldset>
       )}
       {pc && (

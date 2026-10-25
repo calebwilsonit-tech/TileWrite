@@ -8,6 +8,7 @@ import {
   type ProjectData,
   type SceneData,
 } from '@tilewright/runtime';
+import { host } from '@tilewright/behaviors';
 import { joinPath } from './api';
 import { MAIN_SCENE_PATH, templateById } from './templates';
 
@@ -27,6 +28,8 @@ export interface OpenProject {
   project: ProjectData;
   /** The format the file on disk was in, when it was older than this Tilewright's (it was upgraded in memory; the file is not changed until the first save). */
   migratedFrom?: number;
+  /** Plugins that were turned on because the project has data of theirs (their file has records in it) but did not list them. */
+  addedPlugins?: string[];
 }
 
 export const PROJECT_FILE = 'project.json';
@@ -79,7 +82,38 @@ export async function openProject(fs: ProjectFs, dir: string): Promise<OpenProje
   if (!migrated.ok) throw new UserError(migrated.error);
   const parsed = parseProject(migrated.value);
   if (!parsed.ok) throw new UserError(parsed.error);
-  return { dir, project: parsed.value, ...(migrated.from < parsed.value.schemaVersion ? { migratedFrom: migrated.from } : {}) };
+  const added = await pluginsNeededByData(fs, dir, parsed.value);
+  const project = added.length > 0 ? { ...parsed.value, plugins: [...(parsed.value.plugins ?? []), ...added] } : parsed.value;
+  return { dir, project, ...(migrated.from < parsed.value.schemaVersion ? { migratedFrom: migrated.from } : {}), ...(added.length > 0 ? { addedPlugins: added } : {}) };
+}
+
+/**
+ * The plugins a project needs for the data it already has: a plugin that keeps a file (`data` in its plugin.json) which has records in it
+ * but is not in the project's list. Before data belonged to plugins a project could hold items without the inventory plugin on; turning
+ * the plugin on keeps those items working exactly as they did, and the person is told.
+ */
+export async function pluginsNeededByData(fs: ProjectFs, dir: string, project: ProjectData): Promise<string[]> {
+  if (project.plugins === undefined) return []; // (a project with no list plays with every built-in one)
+  const have = new Set(project.plugins);
+  const out: string[] = [];
+  for (const p of host.known.values()) {
+    const m = p.manifest;
+    if (have.has(m.id) || !m.builtin) continue;
+    for (const file of m.data) {
+      try {
+        const path = joinPath(dir, file);
+        if (!(await fs.exists(path))) continue;
+        const raw = JSON.parse(await fs.read(path)) as Record<string, unknown>;
+        if (Object.values(raw).some((v) => Array.isArray(v) && v.length > 0)) {
+          out.push(m.id);
+          break;
+        }
+      } catch {
+        /* a file that cannot be read is reported when the data is loaded */
+      }
+    }
+  }
+  return out;
 }
 
 /**

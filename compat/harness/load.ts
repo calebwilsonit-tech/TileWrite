@@ -1,12 +1,12 @@
 import '@tilewright/bundled-plugins';
 import path from 'node:path';
 import ts from 'typescript';
-import { compatOf, tilesetFromList, type ItemData, type ProjectData, type SceneData, type TableData, type UiDoc, type DialogueData, type CutsceneData, type PrefabData } from '@tilewright/runtime';
-import { activate, clearScripts, defaultImporter, installScriptGlobals, loadScript, packsOfProject, setActivePacks, syncCustomBlocks, tsTranspiler } from '@tilewright/behaviors';
+import { compatOf, tilesetFromList, type ProjectData, type SceneData, type TableData, type UiDoc, type DialogueData, type CutsceneData, type PrefabData } from '@tilewright/runtime';
+import { activate, clearScripts, defaultImporter, installScriptGlobals, loadScript, setActivePacks, setProjectLayers, syncCustomBlocks, tsTranspiler, useProject } from '@tilewright/behaviors';
 import { Game } from '@tilewright/playbot';
 import { loadScene, openProject } from '../../packages/editor/src/renderer/project/io';
 import { loadAllPrefabs } from '../../packages/editor/src/renderer/project/prefabs';
-import { loadCutscenes, loadDialogues, loadItems, loadUiDoc, loadMinigames, loadSkins, loadWorldMap, loadProjectInput } from '../../packages/editor/src/renderer/project/story';
+import { loadCutscenes, loadData, loadDialogues, loadUiDoc, loadSkins, loadWorldMap, loadProjectInput } from '../../packages/editor/src/renderer/project/story';
 import { loadComponents, loadCustomBehaviors, loadTables } from '../../packages/editor/src/renderer/project/blocks';
 import { loadScripts } from '../../packages/editor/src/renderer/project/scripts';
 import { nodeFs } from './nodefs';
@@ -16,7 +16,8 @@ export interface LoadedProject {
   project: ProjectData;
   scenes: Map<string, SceneData>;
   prefabs: Map<string, PrefabData>;
-  items: ItemData[];
+  /** The records of the kinds of data the project's plugins keep (items, minigames...). */
+  data: Record<string, unknown[]>;
   dialogues: Map<string, DialogueData>;
   cutscenes: Map<string, CutsceneData>;
   tables: TableData[];
@@ -40,7 +41,7 @@ export async function loadProject(dir: string, from: 'sources' | { compiled: Rec
   const log: string[] = [];
   clearScripts();
   const { project } = await openProject(nodeFs, dir);
-  setActivePacks(packsOfProject(project));
+  useProject(project);
   const [tables, components, behaviours] = await Promise.all([loadTables(nodeFs, dir), loadComponents(nodeFs, dir), loadCustomBehaviors(nodeFs, dir)]);
   problems.push(...syncCustomBlocks(components.items, behaviours.items));
   const scenes = new Map<string, SceneData>();
@@ -52,13 +53,12 @@ export async function loadProject(dir: string, from: 'sources' | { compiled: Rec
     }
   }
   const { prefabs, problems: prefabProblems } = await loadAllPrefabs(nodeFs, dir);
-  const [items, dialogues, cutscenes, ui, skins, minigames, worldMap, controls, scripts] = await Promise.all([
-    loadItems(nodeFs, dir),
+  const [data, dialogues, cutscenes, ui, skins, worldMap, controls, scripts] = await Promise.all([
+    loadData(nodeFs, dir),
     loadDialogues(nodeFs, dir),
     loadCutscenes(nodeFs, dir),
     loadUiDoc(nodeFs, dir),
     loadSkins(nodeFs, dir),
-    loadMinigames(nodeFs, dir),
     loadWorldMap(nodeFs, dir),
     loadProjectInput(nodeFs, dir),
     // an exported game has no script sources, only the compiled ones (see `compiled` below)
@@ -69,12 +69,11 @@ export async function loadProject(dir: string, from: 'sources' | { compiled: Rec
     ...tables.problems,
     ...components.problems,
     ...behaviours.problems,
-    ...items.problems,
+    ...data.problems,
     ...dialogues.problems,
     ...cutscenes.problems,
     ...ui.problems,
     ...skins.problems,
-    ...minigames.problems,
     ...worldMap.problems,
     ...controls.problems,
     ...scripts.problems,
@@ -108,7 +107,7 @@ export async function loadProject(dir: string, from: 'sources' | { compiled: Rec
     project,
     scenes,
     prefabs,
-    items: items.items,
+    data: data.data,
     dialogues: dialogues.items,
     cutscenes: cutscenes.items,
     tables: tables.items,
@@ -122,6 +121,7 @@ export async function loadProject(dir: string, from: 'sources' | { compiled: Rec
 export function unload(): void {
   clearScripts();
   setActivePacks([]);
+  setProjectLayers([]);
 }
 
 /** A game on one scene of the project, as Play starts it. */
@@ -133,7 +133,7 @@ export function gameOn(p: LoadedProject, scenePath: string, seed = 1): Game {
     scenePath,
     scenes: p.scenes,
     prefabs: p.prefabs,
-    items: p.items,
+    data: p.data,
     dialogues: p.dialogues,
     cutscenes: p.cutscenes,
     tables: p.tables,

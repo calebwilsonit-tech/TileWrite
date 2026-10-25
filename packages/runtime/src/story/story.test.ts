@@ -10,18 +10,29 @@ import {
   newDialogue,
   startDialogue,
   type DialogueData,
+  type Carrying,
   type DialogueHost,
 } from './dialogue';
-import { ItemSchema, ItemsFileSchema, addItem, assignSlot, autoSlot, carried, itemCount, quickSlots, type ItemData } from './items';
 
-const items = new Map<string, ItemData>([
-  ['key', ItemSchema.parse({ id: 'key', name: 'Brass key', max: 3 })],
-  ['bread', ItemSchema.parse({ id: 'bread', name: 'Bread', use: { heal: 2 } })],
-]);
+/** What a plugin that keeps an inventory offers conversations: counts kept in the variables "item:<id>" (the real one is tested with that plugin). */
+function carrying(vars: Record<string, VariableValue>): Carrying {
+  const count = (id: string): number => (typeof vars['item:' + id] === 'number' ? (vars['item:' + id] as number) : 0);
+  return {
+    count,
+    give(id, amount) {
+      const had = count(id);
+      const got = Math.max(-had, amount);
+      vars['item:' + id] = had + got;
+      return got;
+    },
+  };
+}
+
+const countOf = (vars: Record<string, VariableValue>, id: string): number => (typeof vars['item:' + id] === 'number' ? (vars['item:' + id] as number) : 0);
 
 function host(vars: Record<string, VariableValue> = {}): DialogueHost & { events: string[] } {
   const events: string[] = [];
-  return { vars, items, events, emit: (t) => void events.push(t) };
+  return { vars, carrying: carrying(vars), events, emit: (t) => void events.push(t) };
 }
 
 const talk: DialogueData = DialogueSchema.parse({
@@ -48,40 +59,6 @@ const talk: DialogueData = DialogueSchema.parse({
   ],
 });
 
-describe('items and inventory', () => {
-  it('counts items in variables, honours limits, and never goes below zero', () => {
-    const vars: Record<string, VariableValue> = {};
-    expect(addItem(vars, 'key', 2, items.get('key'))).toBe(2);
-    expect(addItem(vars, 'key', 5, items.get('key'))).toBe(1); // limit of 3
-    expect(itemCount(vars, 'key')).toBe(3);
-    expect(addItem(vars, 'key', -10)).toBe(-3);
-    expect(itemCount(vars, 'key')).toBe(0);
-    expect(vars['item:key']).toBeUndefined();
-    expect(carried(vars)).toEqual([]);
-  });
-
-  it('lists what is carried and keeps quick slots tidy', () => {
-    const vars: Record<string, VariableValue> = {};
-    addItem(vars, 'bread', 2);
-    addItem(vars, 'key', 1);
-    expect(carried(vars)).toEqual([['bread', 2], ['key', 1]]);
-    autoSlot(vars, 'bread');
-    autoSlot(vars, 'key');
-    autoSlot(vars, 'bread'); // already in a slot
-    expect(quickSlots(vars)).toEqual(['bread', 'key', '', '']);
-    assignSlot(vars, 4, 'bread'); // moving it frees its old slot
-    expect(quickSlots(vars)).toEqual(['', 'key', '', 'bread']);
-    addItem(vars, 'bread', -2); // used up: its slot empties
-    expect(quickSlots(vars)).toEqual(['', 'key', '', '']);
-  });
-
-  it('validates item files and ids', () => {
-    expect(ItemsFileSchema.safeParse({ items: [{ id: 'ok-1', name: 'Fine' }] }).success).toBe(true);
-    expect(ItemSchema.safeParse({ id: 'has space', name: 'Bad' }).success).toBe(false);
-    expect(ItemSchema.safeParse({ id: 'x', name: '' }).success).toBe(false);
-  });
-});
-
 describe('dialogue', () => {
   it('runs lines, choices and silent steps, filling in variables', () => {
     const h = host({ player: 'Ada' });
@@ -92,8 +69,7 @@ describe('dialogue', () => {
     if (s.view.kind === 'choice') expect(s.view.options.map((o) => o.text)).toEqual(['Yes please', 'No thanks']); // the second needs a key
     s = chooseDialogue(talk, s, 0, h)!; // give key, set flag, branch -> "Take care."
     expect(s.view).toMatchObject({ kind: 'line', text: 'Take care.' });
-    expect(itemCount(h.vars, 'key')).toBe(1);
-    expect(h.vars['slot:1']).toBe('key'); // a new item goes in the first free quick slot
+    expect(countOf(h.vars, 'key')).toBe(1);
     expect(h.vars.metKeeper).toBe(true);
     expect(h.events).toEqual(['item-given', 'variable-set']);
     expect(advanceDialogue(talk, s, h)).toBeNull(); // to the end node
@@ -135,7 +111,7 @@ describe('dialogue', () => {
     expect(s.view).toMatchObject({ text: 'big' });
     expect(h.vars.n).toBe(5);
     expect(h.vars.flag).toBe(true);
-    expect(itemCount(h.vars, 'bread')).toBe(1);
+    expect(countOf(h.vars, 'bread')).toBe(1);
   });
 
   it('ends cleanly on loops without text, missing nodes and empty choices', () => {
@@ -163,7 +139,7 @@ describe('dialogue', () => {
 });
 
 describe('checkDialogue', () => {
-  const known = { items: new Set(['key', 'bread']), variables: new Set(['n']) };
+  const known = { carried: new Set(['key', 'bread']), variables: new Set(['n']) };
 
   it('is clean for a good dialogue', () => {
     expect(checkDialogue(talk, known)).toEqual([]);

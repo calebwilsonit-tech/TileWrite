@@ -127,11 +127,9 @@ describe('what is on show', () => {
     expect(resolveScreen(sim, sim.assets.ui.screens[0]!).children[0]!.children[0]!.children[0]!.text).toBe('Changed Sword');
   });
 
-  it('rows can come from slots, carried items, and the turn queue', () => {
+  it('rows can come from slots and the turn queue', () => {
     const sim = game([]);
-    sim.runtime.vars['item:key'] = 2;
     expect(rowsOf(sim, w('grid', { source: 'slots:6' }))).toHaveLength(6);
-    expect(rowsOf(sim, w('list', { source: 'items' })).map((r) => [r.id, r.scope['item.count']])).toEqual([['key', 2]]);
     expect(rowsOf(sim, w('turnOrder'))).toEqual([]);
   });
 

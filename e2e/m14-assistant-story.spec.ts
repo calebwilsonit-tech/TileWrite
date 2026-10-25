@@ -63,14 +63,14 @@ test('M14: Claude writes a conversation, items, regions and a translation as app
 
   // the reading call sees the (still empty) story
   await expect(page.getByTestId('proposal').first()).toContainText('item');
-  expect(toolResults(mock.requests[1]!.body)[0]!.text).toContain('"items": []');
+  expect(toolResults(mock.requests[1]!.body)[0]!.text).toMatch(/"items": \{\s+"records": \[\]/);
 
   // nothing is written until each card is approved
   expect(fs.existsSync(path.join(projectDir, 'assets', 'items.json'))).toBe(false);
   await page.getByTestId('proposal-apply').click();
   await expect(page.getByTestId('proposal').nth(1)).toContainText('Gatekeeper');
   await expect(page.getByTestId('proposal-diff').last()).toContainText('Halt! Have you a pass?');
-  expect(await page.evaluate(() => window.__store!.story.items.map((i) => i.id))).toEqual(['pass']);
+  expect(await page.evaluate(() => (window.__store!.dataList('items') as { id: string; name: string }[]).map((i) => i.id))).toEqual(['pass']);
   await page.getByTestId('proposal-apply').click();
   await expect(page.getByTestId('proposal').nth(2)).toContainText('region');
   expect(await page.evaluate(() => [...window.__store!.story.dialogues.keys()])).toEqual(['Gatekeeper']);

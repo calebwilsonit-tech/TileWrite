@@ -779,8 +779,8 @@ export class ViewportController {
         ...(project?.project.title?.enabled ? { title: { text: project.project.name, subtitle: project.project.title.subtitle } } : {}),
         flags: () => store.state.view,
         record,
+        data: store.data,
         skins: store.skins,
-        minigames: store.minigames,
         worldMap: store.worldMap,
         layout: store.uiLayout,
         uiDoc: store.uiDoc,
@@ -788,7 +788,7 @@ export class ViewportController {
         tables: store.tables,
         compat: project ? compatOf(project.project) : undefined,
         mixer: studio.mixerSource,
-        liveAssets: () => ({ prefabs: store.prefabs, sprites: studio.assets, story: store.story, skins: store.skins, minigames: store.minigames, worldMap: store.worldMap, layout: store.uiLayout, uiDoc: store.uiDoc, input: store.input, tables: store.tables }),
+        liveAssets: () => ({ prefabs: store.prefabs, sprites: studio.assets, story: store.story, data: store.data, skins: store.skins, worldMap: store.worldMap, layout: store.uiLayout, uiDoc: store.uiDoc, input: store.input, tables: store.tables }),
       });
     } catch (e) {
       store.notify('error', `The game could not start: ${e instanceof Error ? e.message : String(e)}`);

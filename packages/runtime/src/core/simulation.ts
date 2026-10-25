@@ -8,12 +8,10 @@ import type { SpriteData } from '../sprites/format';
 import type { CutsceneData, CutsceneState, ViewState } from '../story/cutscene';
 import { newView } from '../story/cutscene';
 import type { DialogueData, DialogueState } from '../story/dialogue';
-import type { ItemData } from '../story/items';
 import { StringTables } from '../story/strings';
 import type { SkinData } from '../story/skins';
 import { emptyUiDoc, type UiDoc } from '../ui/model';
 import type { TileSet } from '../tilemap/tilemap';
-import type { MinigameData, MinigameState } from '../story/minigames';
 import type { WorldMapData } from '../story/worldmap';
 import type { TableData, TableRow } from '../data/tables';
 import type { TileMap } from '../tilemap/tilemap';
@@ -29,14 +27,13 @@ export interface Assets {
   /** Prefabs objects can be spawned from while the game runs. */
   prefabs: Map<string, PrefabData>;
   dialogues: Map<string, DialogueData>;
-  items: Map<string, ItemData>;
   cutscenes: Map<string, CutsceneData>;
   /** Translations and the language in use (see story/strings.ts). */
   strings: StringTables;
   /** Skins the player can pick from (see story/skins.ts). */
   skins: SkinData[];
-  /** Small games inside the game (see story/minigames.ts). */
-  minigames: Map<string, MinigameData>;
+  /** The project's own kinds of data that plugins keep (items, minigames...): by kind, then by each record's name. */
+  data: Map<string, Map<string, unknown>>;
   /** The world map the player can open (null when the game has none). */
   worldMap: WorldMapData | null;
   /** The project's data tables, by name (see data/tables.ts). */
@@ -101,8 +98,8 @@ export interface SceneRuntime {
   scene: string;
   /** The conversation on screen, if any. The game is frozen while it is open. */
   dialogue: DialogueState | null;
-  /** The minigame on screen, if any. The game is frozen while it is open. */
-  minigame: MinigameState | null;
+  /** Whatever a plugin has open over the game that holds the player's whole attention (a minigame, a shop), by name. The game is frozen while any is open. */
+  modals: Record<string, unknown>;
   /** Events to announce at the start of the next tick: the tick that caused them was frozen, so its event sheet never ran. */
   announce: { type: string; data: Record<string, unknown> }[];
   /** The cutscene playing, if any. The player cannot act while it runs. */
@@ -233,7 +230,7 @@ export function newSceneRuntime(): SceneRuntime {
     plugin: {},
     scene: '',
     dialogue: null,
-    minigame: null,
+    modals: {},
     announce: [],
     cutscene: null,
     checkpoint: null,
@@ -261,7 +258,7 @@ export class Simulation {
   readonly uiInput = new InputState();
   readonly events = new EventBus();
   readonly tweens = new Tweens();
-  readonly assets: Assets = { sprites: new Map(), prefabs: new Map(), dialogues: new Map(), items: new Map(), cutscenes: new Map(), strings: new StringTables(), skins: [], minigames: new Map(), worldMap: null, tables: new Map(), ui: emptyUiDoc() };
+  readonly assets: Assets = { sprites: new Map(), prefabs: new Map(), dialogues: new Map(), cutscenes: new Map(), strings: new StringTables(), skins: [], data: new Map(), worldMap: null, tables: new Map(), ui: emptyUiDoc() };
   readonly runtime: SceneRuntime = newSceneRuntime();
   readonly rng: Rng;
   readonly profiler = new Profiler();
@@ -291,7 +288,7 @@ export class Simulation {
   /** Which kind of tick this is, from what is on screen. */
   get modal(): Modal {
     const r = this.runtime;
-    if (r.menuOpen || r.ui.modal || r.dialogue || r.minigame || r.clock.mode === 'paused') return 'freeze';
+    if (r.menuOpen || r.ui.modal || r.dialogue || Object.keys(r.modals).length > 0 || r.clock.mode === 'paused') return 'freeze';
     if (r.cutscene) return 'scripted';
     return 'none';
   }
@@ -370,7 +367,7 @@ export class Simulation {
       r.ui,
       r.tableEdits,
       r.dialogue,
-      r.minigame,
+      Object.keys(r.modals).length > 0 ? r.modals : null,
       r.cutscene,
       r.checkpoint,
       r.clock,

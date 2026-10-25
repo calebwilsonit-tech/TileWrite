@@ -1,4 +1,5 @@
-import { _electron as electron, expect, test } from '@playwright/test';
+import { expect, test } from '@playwright/test';
+import { launchEditor } from './helpers';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -6,8 +7,8 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const shot = (name: string): string => path.join(root, 'screenshots', name);
 
 test('M1: the square walks on the tiled floor and the camera follows', async () => {
-  const app = await electron.launch({ args: [path.join(root, 'packages', 'editor')] });
-  const page = await app.firstWindow();
+  // (the handles these tests read, such as the sample's, exist only when the editor is started for tests)
+  const { app, page } = await launchEditor();
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => {

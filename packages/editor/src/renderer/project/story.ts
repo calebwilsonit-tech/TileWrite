@@ -1,13 +1,10 @@
-import { hudPieceKinds } from '@tilewright/behaviors';
+import { dataKinds, duplicateKey, hudPieceKinds, parseDataFile, type DataKindDef } from '@tilewright/behaviors';
 import {
   CutsceneSchema,
   DialogueSchema,
-  ItemsFileSchema,
   SkinsFileSchema,
-  MinigamesFileSchema,
   WorldMapSchema,
   type WorldMapData,
-  type MinigameData,
   CURRENT_SCHEMA_VERSION,
   ProjectInputSchema,
   UiLayoutSchema,
@@ -23,16 +20,13 @@ import {
   type SkinData,
   type CutsceneData,
   type DialogueData,
-  type ItemData,
 } from '@tilewright/runtime';
 import type { z } from 'zod';
 import type { AssetFs } from '../studio/assets';
 import { joinPath } from './api';
 import { UserError } from './io';
 
-export const ITEMS_FILE = 'assets/items.json';
 export const SKINS_FILE = 'assets/skins.json';
-export const MINIGAMES_FILE = 'assets/minigames.json';
 export const WORLDMAP_FILE = 'assets/worldmap.json';
 export const INPUT_FILE = 'assets/input.json';
 export const UI_FILE = 'assets/ui.json';
@@ -76,27 +70,43 @@ async function loadFolder<T>(fs: AssetFs, dir: string, sub: string, ext: string,
 
 const json = (v: unknown): string => JSON.stringify(v, null, 2) + '\n';
 
-// ---------- items ----------
+// ---------- the kinds of data plugins keep (items, minigames...) ----------
 
-export async function loadItems(fs: AssetFs, dir: string): Promise<{ items: ItemData[]; problems: string[] }> {
-  const file = joinPath(dir, ITEMS_FILE);
-  try {
-    if (!(await fs.exists(file))) return { items: [], problems: [] };
-    const r = ItemsFileSchema.safeParse(JSON.parse(await fs.read(file)));
-    if (!r.success) return { items: [], problems: [`The items file is not valid: ${r.error.issues[0]?.message ?? 'unknown problem'}.`] };
-    return { items: r.data.items, problems: [] };
-  } catch (e) {
-    return { items: [], problems: [`The items file could not be read (${(e as Error).message}).`] };
+/** Read the file of every kind of data that is on (a plugin that is off leaves its file alone). */
+export async function loadData(fs: AssetFs, dir: string): Promise<{ data: Record<string, unknown[]>; problems: string[] }> {
+  const data: Record<string, unknown[]> = {};
+  const problems: string[] = [];
+  for (const def of dataKinds()) {
+    const file = joinPath(dir, def.file);
+    try {
+      if (!(await fs.exists(file))) {
+        data[def.id] = [];
+        continue;
+      }
+      const r = parseDataFile(def, await fs.read(file));
+      data[def.id] = r.records;
+      problems.push(...r.problems);
+    } catch (e) {
+      data[def.id] = [];
+      problems.push(`The ${def.label.toLowerCase()} file could not be read (${(e as Error).message}).`);
+    }
   }
+  return { data, problems };
 }
 
-export async function saveItems(fs: AssetFs, dir: string, items: readonly ItemData[]): Promise<void> {
-  const ids = new Set<string>();
-  for (const i of items) {
-    if (ids.has(i.id)) throw new UserError(`Two items share the id "${i.id}". Item ids must be different.`);
-    ids.add(i.id);
+/** Write one kind's file. Two records may not share a name. */
+export async function saveData(fs: AssetFs, dir: string, def: DataKindDef, records: readonly unknown[]): Promise<void> {
+  const twice = duplicateKey(def, records);
+  if (twice !== null) throw new UserError(`Two ${def.noun}s share the ${def.keyName} "${twice}". ${def.noun[0]!.toUpperCase()}${def.noun.slice(1)} ${def.keyName}s must be different.`);
+  await fs.write(joinPath(dir, def.file), json({ schemaVersion: CURRENT_SCHEMA_VERSION, [def.listKey]: records }));
+}
+
+/** Write the files of the kinds that are on: the ones that always have a file, the ones that have something in them, the ones that already have a file. */
+export async function saveAllData(fs: AssetFs, dir: string, data: Record<string, readonly unknown[]>): Promise<void> {
+  for (const def of dataKinds()) {
+    const records = data[def.id] ?? [];
+    if (def.alwaysWritten || records.length > 0 || (await fs.exists(joinPath(dir, def.file)))) await saveData(fs, dir, def, records);
   }
-  await fs.write(joinPath(dir, ITEMS_FILE), json({ schemaVersion: CURRENT_SCHEMA_VERSION, items }));
 }
 
 // ---------- the world map ----------
@@ -174,29 +184,6 @@ export async function saveUiLayout(fs: AssetFs, dir: string, layout: UiLayout): 
     ids.add(w.id);
   }
   await fs.write(joinPath(dir, UI_FILE), json({ ...layout, schemaVersion: CURRENT_SCHEMA_VERSION }));
-}
-
-// ---------- minigames ----------
-
-export async function loadMinigames(fs: AssetFs, dir: string): Promise<{ minigames: MinigameData[]; problems: string[] }> {
-  const file = joinPath(dir, MINIGAMES_FILE);
-  try {
-    if (!(await fs.exists(file))) return { minigames: [], problems: [] };
-    const r = MinigamesFileSchema.safeParse(JSON.parse(await fs.read(file)));
-    if (!r.success) return { minigames: [], problems: [`The minigames file is not valid: ${r.error.issues[0]?.message ?? 'unknown problem'}.`] };
-    return { minigames: r.data.minigames, problems: [] };
-  } catch (e) {
-    return { minigames: [], problems: [`The minigames file could not be read (${(e as Error).message}).`] };
-  }
-}
-
-export async function saveMinigames(fs: AssetFs, dir: string, minigames: readonly MinigameData[]): Promise<void> {
-  const names = new Set<string>();
-  for (const m of minigames) {
-    if (names.has(m.name)) throw new UserError(`Two minigames share the name "${m.name}". Minigame names must be different.`);
-    names.add(m.name);
-  }
-  await fs.write(joinPath(dir, MINIGAMES_FILE), json({ schemaVersion: CURRENT_SCHEMA_VERSION, minigames }));
 }
 
 // ---------- skins ----------

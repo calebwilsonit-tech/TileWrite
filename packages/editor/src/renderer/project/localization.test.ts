@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { CutsceneSchema, DialogueSchema, ItemSchema, newLanguage, type SceneData } from '@tilewright/runtime';
+import '../../bundled';
+import { setActivePacks } from '@tilewright/behaviors';
+import { CutsceneSchema, DialogueSchema, newLanguage, type SceneData } from '@tilewright/runtime';
 import { newAction, newRow } from '@tilewright/behaviors';
 import type { AssetFs } from '../studio/assets';
 import { collectStrings, coverage, deleteLanguage, languageProblem, loadLanguages, makeLanguage, saveLanguage } from './localization';
@@ -56,11 +58,11 @@ function scene(): SceneData {
 
 describe('finding the text to translate', () => {
   const story = {
-    items: [ItemSchema.parse({ id: 'bread', name: 'Bread', description: 'Warm.', use: { heal: 1, message: 'Tasty.' } })],
     dialogues: new Map([['Elder', dialogue]]),
     cutscenes: new Map([['Intro', CutsceneSchema.parse({ name: 'Intro', steps: [{ id: 's', type: 'say', speaker: 'Elder', text: 'Welcome.' }, { id: 'm', type: 'message', text: 'A bell tolls.' }] })]]),
   };
-  const found = collectStrings(story, [{ path: 'scenes/main.scene.json', scene: scene() }], ['Resume']);
+  setActivePacks(['inventory']);
+  const found = collectStrings(story, [{ path: 'scenes/main.scene.json', scene: scene() }], ['Resume'], { items: [{ id: 'bread', name: 'Bread', description: 'Warm.', color: 0xcccccc, max: 0, use: { heal: 1, setVariable: '', setValue: 1, consume: true, message: 'Tasty.' } }] });
   const texts = found.map((f) => f.text);
 
   it('collects conversations, cutscenes, items, messages and the menus, once each', () => {

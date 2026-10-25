@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { DEFAULT_SETTINGS, MAX_ATTACHMENTS, MAX_ATTACHMENT_BYTES, buildContext, cleanSettings, formatProjectIndex, approvalClass, mayRunUnasked, pluginToolKind, whyAsked, type AssistantSettings, type Attachment, type Mode, type ToolOutput, type Usage, NO_USAGE } from '@tilewright/assistant';
-import { host } from '@tilewright/behaviors';
+import { dataKinds, dataToolOf, host } from '@tilewright/behaviors';
 import { store } from '../app/store';
 import { api, type AssistantEvent, type AssistantStatus, type AssistantToolCall } from '../project/api';
 import { ToolProblem, prepareAction, readNotes, runReadTool, sceneProblems, type Proposal } from './editor-tools';
@@ -464,13 +464,14 @@ export function pluginToolName(plugin: string, id: string): string {
 }
 
 function pluginToolDefs(): { name: string; description: string; input_schema: Record<string, unknown>; kind: 'read' | 'act' }[] {
-  return [...host.ext.assistantTools.values()].slice(0, 20).map((t) => ({
+  const lists = dataKinds().map(dataToolOf);
+  return [...lists, ...[...host.ext.assistantTools.values()].slice(0, 20 - lists.length).map((t) => ({
     name: pluginToolName(t.plugin, t.id),
     description: `${t.description} (A tool added by the plugin "${t.plugin}".)`,
     input_schema: { type: 'object', ...(typeof t.input === 'object' && t.input ? t.input : { properties: {} }) },
     // a plugin cannot make its tool skip the question by calling it "read": that depends on what the plugin was allowed to do
     kind: pluginToolKind(t.kind, host.permissionsOf(t.plugin).granted),
-  }));
+  }))];
 }
 
 /** A plugin's own tool as a change to approve (or null when the name is not a plugin's tool). */

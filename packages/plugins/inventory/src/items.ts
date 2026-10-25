@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import '../project/schema'; // sets up Zod before the schemas below are built
-import { CURRENT_SCHEMA_VERSION, type VariableValue } from '../project/schema';
+import { CURRENT_SCHEMA_VERSION, type Assets, type VariableValue } from '@tilewright/runtime'; // (loading the runtime sets up Zod before the schemas below are built)
+import type { DataKindDef } from '@tilewright/behaviors';
 
 /**
  * Items are plain data (`assets/items.json`). How many of each the player carries is stored in the scene's
@@ -36,6 +36,33 @@ export const ItemsFileSchema = z.object({
   items: z.array(ItemSchema).default([]),
 });
 export type ItemsFile = z.infer<typeof ItemsFileSchema>;
+
+/** Every item the project defines, by id (what the running game reads). */
+export function itemsOf(assets: Pick<Assets, 'data'>): ReadonlyMap<string, ItemData> {
+  return (assets.data.get('items') ?? new Map()) as ReadonlyMap<string, ItemData>;
+}
+
+/** The project's items as a kind of data: their file, their checks, the words in them. The editor adds the tab that edits them. */
+export const itemsKind: DataKindDef = {
+  id: 'items',
+  label: 'Items',
+  blurb: 'Things the player can carry. Pick them up with a Pickup (item setting), receive them from conversations and cutscenes, and use them from the quick slots (1-4) or the inventory.',
+  file: 'assets/items.json',
+  listKey: 'items',
+  noun: 'item',
+  keyName: 'id',
+  alwaysWritten: true,
+  carries: true,
+  schema: ItemSchema,
+  keyOf: (i: ItemData) => i.id,
+  create: (existing: readonly ItemData[]) => {
+    let n = existing.length + 1;
+    while (existing.some((i) => i.id === `item${n}`)) n++;
+    return ItemSchema.parse({ id: `item${n}`, name: 'New item' });
+  },
+  texts: (i: ItemData) => [i.name, i.description, i.use?.message ?? ''].filter((t) => t.trim() !== '').map((text) => ({ text, where: `Item ${i.name}` })),
+  assistant: { description: "Replace the project's whole item list (start from story_overview and send everything back, changed). An item has an id (letters, digits, - and _), a name, a description, a colour as a number, a carry limit and what using it does." },
+};
 
 export const QUICK_SLOTS = 4;
 export const ITEM_PREFIX = 'item:';

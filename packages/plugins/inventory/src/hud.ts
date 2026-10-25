@@ -1,4 +1,5 @@
-import { quickSlots, type WidgetDef } from '@tilewright/plugin-sdk';
+import type { WidgetDef } from '@tilewright/plugin-sdk';
+import { itemsOf, quickSlots } from './items';
 
 const hex = (n: number): string => `#${n.toString(16).padStart(6, '0')}`;
 
@@ -32,7 +33,7 @@ export const quickSlotsWidget: WidgetDef = {
       key.textContent = String(i + 1);
       s.appendChild(key);
       if (id) {
-        const def = sim.assets.items.get(id);
+        const def = itemsOf(sim.assets).get(id);
         const gem = document.createElement('div');
         gem.className = 'gem';
         gem.style.background = hex(def?.color ?? 0xcccccc);

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import '../../bundled';
 import { newScene, stringifyScene } from '@tilewright/runtime';
 import {
   UserError,
@@ -47,6 +48,16 @@ describe('a project made in an older format', () => {
     fs.files.set(`${dir}\\scenes\\main.scene.json`, stringifyScene(newScene('Main', 8, 8)));
     return { fs, dir };
   }
+
+  it('has the plugin turned on for the data it holds, because that data used to load whatever plugins were on (and says so)', async () => {
+    const { fs, dir } = await oldProject();
+    fs.files.set(`${dir}\\assets\\items.json`, JSON.stringify({ items: [{ id: 'key', name: 'Key' }] }));
+    fs.files.set(`${dir}\\assets\\minigames.json`, JSON.stringify({ minigames: [] })); // nothing in it: nothing to keep alive
+    const opened = await openProject(fs, dir);
+    expect(opened.addedPlugins).toEqual(['inventory']);
+    expect(opened.project.plugins).toEqual(['combat', 'controls', 'inventory']);
+    expect(fs.files.get(`${dir}\\project.json`)).toBe(OLD); // the file on disk is not touched until a save
+  });
 
   it('opens as format 2 (the list is called plugins now) without touching the file on disk', async () => {
     const { fs, dir } = await oldProject();

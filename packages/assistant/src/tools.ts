@@ -170,7 +170,7 @@ export const TOOLS: ToolSpec[] = [
   {
     name: 'story_overview',
     kind: 'read',
-    description: 'The story data of the project: every item, every conversation (start, number of steps, problems the checker found), every cutscene (steps, problems) and every language with how many lines it has translated.',
+    description: 'The story data of the project: every conversation (start, number of steps, problems the checker found), every cutscene (steps, problems), every language with how many lines it has translated, and the data the plugins that are on keep (a list each, such as items or minigames; write one back with its write_<name> tool).',
     schema: z.object({}),
   },
   {
@@ -356,42 +356,6 @@ export const TOOLS: ToolSpec[] = [
     kind: 'act',
     description: 'Create a cutscene or replace all of one: a list of steps that run one after another (a step marked async lets the next start at once). Start from get_cutscene to change an existing one.',
     schema: z.object({ name: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9 _-]{0,39}$/, 'Letters, digits, spaces, _ and - only.'), skippable: z.boolean().optional(), steps: z.array(cutsceneStep).min(1).max(120) }),
-  },
-  {
-    name: 'write_items',
-    kind: 'act',
-    description: 'Replace the project\'s whole item list (start from story_overview and send everything back, changed). An item has an id (letters, digits, - and _), a name, a description, a colour as a number, a carry limit and what using it does.',
-    schema: z.object({
-      items: z
-        .array(
-          z.object({
-            id: z.string().min(1),
-            name: z.string().min(1),
-            description: z.string().optional(),
-            color: z.number().int().min(0).max(0xffffff).optional(),
-            max: z.number().int().min(0).optional().describe('Most the player can carry (0 = no limit).'),
-            use: z.object({ heal: z.number().optional(), setVariable: z.string().optional(), setValue: z.union([z.number(), z.string(), z.boolean()]).optional(), consume: z.boolean().optional(), message: z.string().optional() }).optional(),
-          }),
-        )
-        .max(100),
-    }),
-  },
-  {
-    name: 'write_minigames',
-    kind: 'act',
-    description: 'Replace the project\'s whole list of minigames (start from story_overview and send everything back, changed). A minigame has a name, a kind and settings: "timing" {rounds, zone, speed, shrink, allowedMisses}, "sequence" {length, buttons (2-4), showSeconds, allowedMistakes} or "pairs" {pairs, allowedMisses}; all kinds can have title, instructions, winVariable, scoreVariable, rewardItem (an item id, given for the first win) and canQuit. Players reach one through an object with the minigameStation behaviour (settings {"minigame": "<name>"}) or the playMinigame action.',
-    schema: z.object({
-      minigames: z
-        .array(
-          z
-            .object({
-              name: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9 _-]{0,39}$/, 'Letters, digits, spaces, _ and - only.'),
-              kind: z.enum(['timing', 'sequence', 'pairs']),
-            })
-            .catchall(z.unknown()),
-        )
-        .max(40),
-    }),
   },
   {
     name: 'write_skins',

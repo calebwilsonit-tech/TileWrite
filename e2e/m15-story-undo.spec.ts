@@ -4,7 +4,7 @@ import path from 'node:path';
 import { launchEditor } from './helpers';
 
 const tab = (page: Page, name: string) => page.locator('.dv-tab').getByText(name, { exact: true });
-const items = (page: Page) => page.evaluate(() => window.__store!.story.items.map((i) => i.name));
+const items = (page: Page) => page.evaluate(() => (window.__store!.dataList('items') as { id: string; name: string }[]).map((i) => i.name));
 
 test('M15: story edits (items, conversations, skins, the map) are undone and redone with Ctrl+Z / Ctrl+Y like everything else', async () => {
   test.setTimeout(150_000);

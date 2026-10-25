@@ -2,26 +2,19 @@ import { useState, type ReactElement } from 'react';
 import {
   CUTSCENE_STEP_LABELS,
   CutsceneStepSchema,
-  ItemSchema,
   checkCutscene,
   checkDialogue,
   newCutscene,
   newDialogue,
   newSkin,
-  newMinigame,
-  checkMinigame,
-  defaultInstructions,
-  MINIGAME_KINDS,
-  type MinigameData,
-  type MinigameKind,
   type SkinData,
   type CutsceneData,
   type CutsceneStep,
   type DialogueCondition,
   type DialogueData,
   type DialogueNode,
-  type ItemData,
 } from '@tilewright/runtime';
+import { dataKinds, host, type DataEditorProps, type DataKindDef } from '@tilewright/behaviors';
 import { store, useApp } from '../app/store';
 import { useStudio } from '../studio/store';
 import { storyNameProblem } from '../project/story';
@@ -33,17 +26,28 @@ import { InterfaceEditor } from './InterfaceEditor';
 import { connect, linkTarget, nodeHeight, portsOf, spotForNew } from '../model/dialogue-graph';
 import { CheckField, NumberField, SelectField, TextField, hexToNumber, numberToHex } from './fields';
 
-type Tab = 'items' | 'dialogues' | 'cutscenes' | 'minigames' | 'map' | 'skins' | 'interface';
+/** The fields a plugin's tab is drawn with, so it looks like the rest of this panel. */
+const EDITOR_UI = { TextField, NumberField, CheckField, SelectField, numberToHex, hexToNumber };
+
+/** The tabs of the Story panel: the data the plugins keep (what can be carried first, the rest after the cutscenes), then the engine's own. */
+function tabsOf(kinds: readonly DataKindDef[]): { id: string; label: string }[] {
+  const fromKind = (k: DataKindDef): { id: string; label: string } => ({ id: k.id, label: k.label });
+  const cap = (s: string): { id: string; label: string } => ({ id: s, label: s[0]!.toUpperCase() + s.slice(1) });
+  return [...kinds.filter((k) => k.carries).map(fromKind), cap('dialogues'), cap('cutscenes'), ...kinds.filter((k) => !k.carries).map(fromKind), cap('map'), cap('skins'), cap('interface')];
+}
 
 export function StoryPanel() {
   useApp((s) => s.storyVersion);
-  const [tab, setTab] = useState<Tab>('items');
+  const kinds = dataKinds();
+  const tabs = tabsOf(kinds);
+  const [chosen, setTab] = useState<string>('');
+  const tab = tabs.some((t) => t.id === chosen) ? chosen : tabs[0]!.id;
   return (
     <div className="story-panel" data-testid="story-panel">
       <div className="seg" role="tablist">
-        {(['items', 'dialogues', 'cutscenes', 'minigames', 'map', 'skins', 'interface'] as Tab[]).map((t) => (
-          <button key={t} role="tab" aria-selected={tab === t} className={tab === t ? 'on' : ''} data-testid={`story-tab-${t}`} onClick={() => setTab(t)}>
-            {t[0]!.toUpperCase() + t.slice(1)}
+        {tabs.map((t) => (
+          <button key={t.id} role="tab" aria-selected={tab === t.id} className={tab === t.id ? 'on' : ''} data-testid={`story-tab-${t.id}`} onClick={() => setTab(t.id)}>
+            {t.label}
           </button>
         ))}
       </div>
@@ -52,10 +56,9 @@ export function StoryPanel() {
           Translations…
         </button>
       </div>
-      {tab === 'items' && <ItemsTab />}
+      {kinds.map((k) => tab === k.id && <DataTab key={k.id} kind={k} />)}
       {tab === 'dialogues' && <DialoguesTab />}
       {tab === 'cutscenes' && <CutscenesTab />}
-      {tab === 'minigames' && <MinigamesTab />}
       {tab === 'map' && <WorldMapEditor />}
       {tab === 'skins' && <SkinsTab />}
       {tab === 'interface' && <InterfaceEditor />}
@@ -63,46 +66,36 @@ export function StoryPanel() {
   );
 }
 
-// ---------- items ----------
+// ---------- data the plugins keep (items, minigames...) ----------
 
-function ItemsTab() {
-  const items = store.story.items;
-  const update = (i: number, patch: Partial<ItemData>): void => store.setItems(items.map((it, j) => (j === i ? { ...it, ...patch } : it)));
-  const add = (): void => {
-    let n = items.length + 1;
-    while (items.some((i) => i.id === `item${n}`)) n++;
-    store.setItems([...items, ItemSchema.parse({ id: `item${n}`, name: 'New item' })]);
-  };
+/** The tab of one kind of data: the plugin's own editor, or (if it brought none) the records as they are written. */
+function DataTab({ kind }: { kind: DataKindDef }) {
+  const records = store.dataList(kind.id);
+  const editor = host.editor.dataEditors.get(kind.id);
+  if (!editor) {
+    return (
+      <div className="story-body">
+        <p className="hint">{kind.blurb ?? `The ${kind.label.toLowerCase()} of this project.`} The plugin that keeps them brings no editor, so they are listed as they are saved.</p>
+        <pre>{JSON.stringify(records, null, 2)}</pre>
+      </div>
+    );
+  }
+  const Editor = editor.component as (props: DataEditorProps) => ReactElement;
   return (
-    <div className="story-body">
-      <p className="hint">Things the player can carry. Pick them up with a Pickup (item setting), receive them from conversations and cutscenes, and use them from the quick slots (1-4) or the inventory.</p>
-      {items.map((it, i) => (
-        <fieldset key={i} className="story-card" data-testid={`item-${it.id}`}>
-          <legend>{it.name}</legend>
-          <TextField label="Id (used in dialogues and event rows)" testId={`item-id-${i}`} value={it.id} onCommit={(v) => ItemSchema.shape.id.safeParse(v).success && !items.some((o, j) => j !== i && o.id === v) ? update(i, { id: v }) : store.notify('warn', 'Item ids use letters, numbers, - and _, and each must be different.')} />
-          <TextField label="Name" testId={`item-name-${i}`} value={it.name} onCommit={(v) => update(i, { name: v || it.name })} />
-          <TextField label="Description" value={it.description} onCommit={(v) => update(i, { description: v })} />
-          <label className="field">
-            <span>Colour</span>
-            <input type="color" value={numberToHex(it.color)} onChange={(e) => update(i, { color: hexToNumber(e.target.value) })} />
-          </label>
-          <NumberField label="Most you can carry (0 = no limit)" value={it.max} min={0} step={1} onCommit={(v) => update(i, { max: Math.round(v) })} />
-          <CheckField label="Can be used" testId={`item-usable-${i}`} value={!!it.use} onChange={(on) => update(i, { use: on ? ItemSchema.shape.use.unwrap().parse({}) : undefined })} />
-          {it.use && (
-            <div className="story-sub">
-              <NumberField label="Heals (hit points)" testId={`item-heal-${i}`} value={it.use.heal} min={0} step={1} onCommit={(v) => update(i, { use: { ...it.use!, heal: v } })} />
-              <TextField label="Sets this variable when used (optional)" value={it.use.setVariable} onCommit={(v) => update(i, { use: { ...it.use!, setVariable: v } })} />
-              <TextField label="Message when used" value={it.use.message} onCommit={(v) => update(i, { use: { ...it.use!, message: v } })} />
-              <CheckField label="Used up when used" value={it.use.consume} onChange={(v) => update(i, { use: { ...it.use!, consume: v } })} />
-            </div>
-          )}
-          <button className="small" onClick={() => store.setItems(items.filter((_, j) => j !== i))}>Delete item</button>
-        </fieldset>
-      ))}
-      <button data-testid="item-add" onClick={add}>
-        Add an item
-      </button>
-    </div>
+    <Editor
+      records={records}
+      change={(next) => store.setData(kind.id, next)}
+      known={store.dataKnown()}
+      carriedChoices={store.carriedChoices()}
+      notify={(k, text) => store.notify(k, text)}
+      playWith={(start) => {
+        void store.flushStory().then(() => {
+          store.autoPlay = start;
+          store.play();
+        });
+      }}
+      ui={EDITOR_UI}
+    />
   );
 }
 
@@ -174,7 +167,6 @@ function DialoguesTab() {
 }
 
 function DialogueEditor({ d, onDeleted }: { d: DialogueData; onDeleted(): void }) {
-  const items = store.story.items;
   const [mode, setMode] = useState<'list' | 'graph'>(() => {
     try {
       return localStorage.getItem('tw.dialogueView') === 'graph' ? 'graph' : 'list';
@@ -192,7 +184,7 @@ function DialogueEditor({ d, onDeleted }: { d: DialogueData; onDeleted(): void }
       /* the choice just is not remembered */
     }
   };
-  const known = { items: new Set(items.map((i) => i.id)), variables: new Set<string>() };
+  const known = { carried: store.dataKnown().carried, variables: new Set<string>() };
   const problems = checkDialogue(d, known);
   const put = (next: DialogueData): void => store.putDialogue(next);
   const setNode = (i: number, node: DialogueNode): void => put({ ...d, nodes: d.nodes.map((n, j) => (j === i ? node : n)) });
@@ -287,7 +279,7 @@ function DialogueEditor({ d, onDeleted }: { d: DialogueData; onDeleted(): void }
           data-testid="dialogue-test"
           onClick={() => {
             void store.flushStory().then(() => {
-              store.autoPlay = { dialogue: d.name };
+              store.autoPlay = { action: 'startDialogue', params: { dialogue: d.name } };
               store.play();
             });
           }}
@@ -327,7 +319,7 @@ function describeNode(n: DialogueNode): string {
 type TargetOptions = { value: string; label: string }[];
 
 function ConditionFields({ c, onChange }: { c: DialogueCondition; onChange(c: DialogueCondition): void }) {
-  const items = store.story.items;
+  const carried = store.carriedChoices();
   return (
     <div className="story-sub">
       <SelectField<'variable' | 'item'>
@@ -337,7 +329,7 @@ function ConditionFields({ c, onChange }: { c: DialogueCondition; onChange(c: Di
           { value: 'variable', label: 'a variable' },
           { value: 'item', label: 'an item the player carries' },
         ]}
-        onChange={(k) => onChange(k === 'item' ? { kind: 'item', item: items[0]?.id ?? '', atLeast: 1 } : { kind: 'variable', name: '', op: '>=', value: 1 })}
+        onChange={(k) => onChange(k === 'item' ? { kind: 'item', item: carried[0]?.value ?? '', atLeast: 1 } : { kind: 'variable', name: '', op: '>=', value: 1 })}
       />
       {c.kind === 'variable' ? (
         <>
@@ -352,7 +344,7 @@ function ConditionFields({ c, onChange }: { c: DialogueCondition; onChange(c: Di
         </>
       ) : (
         <>
-          <SelectField<string> label="Item" value={c.item} options={[{ value: '', label: '(choose)' }, ...items.map((i) => ({ value: i.id, label: i.name }))]} onChange={(v) => onChange({ ...c, item: v })} />
+          <SelectField<string> label="Item" value={c.item} options={[{ value: '', label: '(choose)' }, ...carried]} onChange={(v) => onChange({ ...c, item: v })} />
           <NumberField label="At least how many" value={c.atLeast} min={1} step={1} onCommit={(v) => onChange({ ...c, atLeast: v })} />
         </>
       )}
@@ -361,7 +353,7 @@ function ConditionFields({ c, onChange }: { c: DialogueCondition; onChange(c: Di
 }
 
 function NodeFields({ n, targets, onChange }: { n: DialogueNode; targets: TargetOptions; onChange(n: DialogueNode): void }) {
-  const items = store.story.items;
+  const carried = store.carriedChoices();
   const next = (value: string | undefined, apply: (v: string | undefined) => DialogueNode, label = 'Then go to'): ReactElement => (
     <SelectField<string> label={label} value={value ?? ''} options={targets.filter((t) => t.value !== n.id)} onChange={(v) => onChange(apply(v === '' ? undefined : v))} />
   );
@@ -389,7 +381,7 @@ function NodeFields({ n, targets, onChange }: { n: DialogueNode; targets: Target
                 options={targets.filter((t) => t.value !== n.id)}
                 onChange={(v) => onChange({ ...n, options: n.options.map((x, j) => (j === i ? { ...x, next: v === '' ? undefined : v } : x)) })}
               />
-              <CheckField label="Only shown when a condition holds" value={!!o.if} onChange={(on) => onChange({ ...n, options: n.options.map((x, j) => (j === i ? { ...x, if: on ? ({ kind: 'item', item: items[0]?.id ?? '', atLeast: 1 } as DialogueCondition) : undefined } : x)) })} />
+              <CheckField label="Only shown when a condition holds" value={!!o.if} onChange={(on) => onChange({ ...n, options: n.options.map((x, j) => (j === i ? { ...x, if: on ? ({ kind: 'item', item: carried[0]?.value ?? '', atLeast: 1 } as DialogueCondition) : undefined } : x)) })} />
               {o.if && <ConditionFields c={o.if} onChange={(c) => onChange({ ...n, options: n.options.map((x, j) => (j === i ? { ...x, if: c } : x)) })} />}
               <button className="small" onClick={() => onChange({ ...n, options: n.options.filter((_, j) => j !== i) })}>
                 Remove option
@@ -422,7 +414,7 @@ function NodeFields({ n, targets, onChange }: { n: DialogueNode; targets: Target
     case 'give':
       return (
         <>
-          <SelectField<string> label="Item" testId={`dn-item-${n.id}`} value={n.item} options={[{ value: '', label: '(choose)' }, ...items.map((i) => ({ value: i.id, label: i.name }))]} onChange={(v) => onChange({ ...n, item: v })} />
+          <SelectField<string> label="Item" testId={`dn-item-${n.id}`} value={n.item} options={[{ value: '', label: '(choose)' }, ...carried]} onChange={(v) => onChange({ ...n, item: v })} />
           <NumberField label="How many (negative takes away)" value={n.amount} step={1} onCommit={(v) => onChange({ ...n, amount: v })} />
           {next(n.next, (v) => ({ ...n, next: v }))}
         </>
@@ -497,7 +489,7 @@ function CutscenesTab() {
 }
 
 function CutsceneEditor({ c, onDeleted }: { c: CutsceneData; onDeleted(): void }) {
-  const known = { dialogues: new Set(store.story.dialogues.keys()), items: new Set(store.story.items.map((i) => i.id)) };
+  const known = { dialogues: new Set(store.story.dialogues.keys()), carried: store.dataKnown().carried };
   const problems = checkCutscene(c, known);
   const put = (next: CutsceneData): void => store.putCutscene(next);
   const [mode, setMode] = useState<'list' | 'timeline'>(() => {
@@ -576,7 +568,7 @@ function CutsceneEditor({ c, onDeleted }: { c: CutsceneData; onDeleted(): void }
               case 'dialogue':
                 return <SelectField<string> key={f.key} label={f.label} testId={tid} value={String(value)} options={[{ value: '', label: '(choose)' }, ...[...store.story.dialogues.keys()].map((n) => ({ value: n, label: n }))]} onChange={set} />;
               case 'item':
-                return <SelectField<string> key={f.key} label={f.label} testId={tid} value={String(value)} options={[{ value: '', label: '(choose)' }, ...store.story.items.map((n) => ({ value: n.id, label: n.name }))]} onChange={set} />;
+                return <SelectField<string> key={f.key} label={f.label} testId={tid} value={String(value)} options={[{ value: '', label: '(choose)' }, ...store.carriedChoices()]} onChange={set} />;
               case 'value':
                 return <TextField key={f.key} label={f.label} testId={tid} value={String(value)} onCommit={(v) => set(parseValue(v))} />;
               case 'sound':
@@ -634,7 +626,7 @@ function CutsceneEditor({ c, onDeleted }: { c: CutsceneData; onDeleted(): void }
           data-testid="cutscene-test"
           onClick={() => {
             void store.flushStory().then(() => {
-              store.autoPlay = { cutscene: c.name };
+              store.autoPlay = { action: 'playCutscene', params: { cutscene: c.name } };
               store.play();
             });
           }}
@@ -650,103 +642,6 @@ function CutsceneEditor({ c, onDeleted }: { c: CutsceneData; onDeleted(): void }
           Delete cutscene
         </button>
       </div>
-    </div>
-  );
-}
-
-// ---------- minigames ----------
-
-function MinigamesTab() {
-  const list = store.minigames;
-  const [fresh, setFresh] = useState('');
-  const [kind, setKind] = useState<MinigameKind>('timing');
-  const known = { items: new Set(store.story.items.map((i) => i.id)) };
-  const update = (i: number, patch: Partial<MinigameData>): void => store.setMinigames(list.map((m, j) => (j === i ? ({ ...m, ...patch } as MinigameData) : m)));
-  const create = (): void => {
-    const problem = storyNameProblem(fresh, list.map((m) => m.name), 'minigame');
-    if (problem) return store.notify('warn', problem);
-    store.setMinigames([...list, newMinigame(kind, fresh.trim())]);
-    setFresh('');
-  };
-  return (
-    <div className="story-body" data-testid="minigames-tab">
-      <p className="hint">Small games inside your game. Give an object the Minigame behaviour (or use the "Play a minigame" action) to let the player play one. Winning sets a flag, can give an item once, and the "A minigame has been won" condition lets event rows react.</p>
-      <div className="row">
-        <input data-testid="minigame-new-name" placeholder="New minigame name" value={fresh} onChange={(e) => setFresh(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && create()} />
-        <select data-testid="minigame-new-kind" value={kind} onChange={(e) => setKind(e.target.value as MinigameKind)}>
-          {MINIGAME_KINDS.map((k) => (
-            <option key={k.kind} value={k.kind}>
-              {k.label}
-            </option>
-          ))}
-        </select>
-        <button data-testid="minigame-new" onClick={create}>
-          Create
-        </button>
-      </div>
-      <p className="hint">{MINIGAME_KINDS.find((k) => k.kind === kind)?.blurb}</p>
-      {list.map((m, i) => {
-        const problems = checkMinigame(m, known);
-        const id = m.name.replace(/[^A-Za-z0-9]+/g, '-');
-        return (
-          <fieldset key={m.name} className="story-card" data-testid={`minigame-${id}`}>
-            <legend>
-              {m.name} ({MINIGAME_KINDS.find((k) => k.kind === m.kind)?.label})
-            </legend>
-            <TextField label="Heading shown to the player" testId={`minigame-title-${id}`} value={m.title} placeholder={m.name} onCommit={(v) => update(i, { title: v })} />
-            <TextField label="What to do" value={m.instructions} placeholder={defaultInstructions(m.kind)} onCommit={(v) => update(i, { instructions: v })} />
-            {m.kind === 'timing' && (
-              <>
-                <NumberField label="Rounds to win" testId={`minigame-rounds-${id}`} value={m.rounds} min={1} max={12} step={1} onCommit={(v) => update(i, { rounds: Math.round(v) })} />
-                <NumberField label="Width of the zone (0.05 - 0.6 of the bar)" value={m.zone} min={0.05} max={0.6} step={0.01} onCommit={(v) => update(i, { zone: v })} />
-                <NumberField label="Speed of the marker" value={m.speed} min={0.2} max={4} step={0.1} onCommit={(v) => update(i, { speed: v })} />
-                <CheckField label="The zone shrinks every round" value={m.shrink} onChange={(v) => update(i, { shrink: v })} />
-                <NumberField label="Misses allowed" value={m.allowedMisses} min={0} max={9} step={1} onCommit={(v) => update(i, { allowedMisses: Math.round(v) })} />
-              </>
-            )}
-            {m.kind === 'sequence' && (
-              <>
-                <NumberField label="Length of the pattern" testId={`minigame-length-${id}`} value={m.length} min={2} max={14} step={1} onCommit={(v) => update(i, { length: Math.round(v) })} />
-                <NumberField label="Different arrows (2 - 4)" value={m.buttons} min={2} max={4} step={1} onCommit={(v) => update(i, { buttons: Math.round(v) })} />
-                <NumberField label="Seconds each arrow is shown" value={m.showSeconds} min={0.15} max={2} step={0.05} onCommit={(v) => update(i, { showSeconds: v })} />
-                <NumberField label="Mistakes allowed" value={m.allowedMistakes} min={0} max={9} step={1} onCommit={(v) => update(i, { allowedMistakes: Math.round(v) })} />
-              </>
-            )}
-            {m.kind === 'pairs' && (
-              <>
-                <NumberField label="Pairs of cards" testId={`minigame-pairs-${id}`} value={m.pairs} min={2} max={10} step={1} onCommit={(v) => update(i, { pairs: Math.round(v) })} />
-                <NumberField label="Wrong guesses allowed" value={m.allowedMisses} min={0} max={40} step={1} onCommit={(v) => update(i, { allowedMisses: Math.round(v) })} />
-              </>
-            )}
-            <TextField label="Variable set to true when won (optional)" value={m.winVariable} onCommit={(v) => update(i, { winVariable: v.trim() })} />
-            <TextField label="Variable that receives the score (optional)" value={m.scoreVariable} onCommit={(v) => update(i, { scoreVariable: v.trim() })} />
-            <SelectField<string> label="Item given for the first win" value={m.rewardItem} options={[{ value: '', label: '(none)' }, ...store.story.items.map((n) => ({ value: n.id, label: n.name }))]} onChange={(v) => update(i, { rewardItem: v })} />
-            <CheckField label="The player may give up (Esc / P)" value={m.canQuit} onChange={(v) => update(i, { canQuit: v })} />
-            {problems.map((p) => (
-              <p key={p} className="hint warn">
-                {p}
-              </p>
-            ))}
-            <div className="row">
-              <button
-                data-testid={`minigame-test-${id}`}
-                onClick={() => {
-                  void store.flushStory().then(() => {
-                    store.autoPlay = { minigame: m.name };
-                    store.play();
-                  });
-                }}
-              >
-                Test in the game
-              </button>
-              <button className="small" onClick={() => store.setMinigames(list.filter((_, j) => j !== i))}>
-                Delete minigame
-              </button>
-            </div>
-          </fieldset>
-        );
-      })}
-      {list.length === 0 && <p className="hint">No minigames yet.</p>}
     </div>
   );
 }
@@ -796,7 +691,7 @@ function SkinsTab() {
               { value: 'variable', label: 'when a flag or counter is set' },
               { value: 'item', label: 'while the player carries an item' },
             ]}
-            onChange={(k) => update(i, { unlock: k === 'item' ? { kind: 'item', item: store.story.items[0]?.id ?? '' } : k === 'variable' ? { kind: 'variable', name: '', atLeast: 1 } : { kind: 'always' } })}
+            onChange={(k) => update(i, { unlock: k === 'item' ? { kind: 'item', item: store.carriedChoices()[0]?.value ?? '' } : k === 'variable' ? { kind: 'variable', name: '', atLeast: 1 } : { kind: 'always' } })}
           />
           {s.unlock.kind === 'variable' && (
             <>
@@ -805,7 +700,7 @@ function SkinsTab() {
             </>
           )}
           {s.unlock.kind === 'item' && (
-            <SelectField<string> label="Item" value={s.unlock.item} options={[{ value: '', label: '(choose)' }, ...store.story.items.map((n) => ({ value: n.id, label: n.name }))]} onChange={(v) => update(i, { unlock: { kind: 'item', item: v } })} />
+            <SelectField<string> label="Item" value={s.unlock.item} options={[{ value: '', label: '(choose)' }, ...store.carriedChoices()]} onChange={(v) => update(i, { unlock: { kind: 'item', item: v } })} />
           )}
           <button className="small" onClick={() => store.setSkins(skins.filter((_, j) => j !== i))}>
             Delete skin

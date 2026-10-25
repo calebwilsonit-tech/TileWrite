@@ -1,11 +1,8 @@
 import {
   C,
-  addItem,
-  autoSlot,
   facingOfGridDir,
   findPath,
   isGravityDir,
-  itemCount,
   teleportBody,
   type Body,
   type Entity,
@@ -271,13 +268,10 @@ class GameView implements ScriptGame {
     this.viaPlugin('heal', [this.entityOf(target), amount], undefined);
   }
   itemCount(item: string): number {
-    return itemCount(this.ctx.runtime.vars, item);
+    return this.viaPlugin('itemCount', [item], 0);
   }
   giveItem(item: string, amount = 1): number {
-    const got = addItem(this.ctx.runtime.vars, item, amount, this.ctx.assets.items.get(item));
-    if (got > 0) autoSlot(this.ctx.runtime.vars, item);
-    this.ctx.events.emit(amount >= 0 ? 'item-given' : 'item-taken', { item, amount: got });
-    return got;
+    return this.viaPlugin('giveItem', [item, amount], 0);
   }
   startDialogue(name: string): boolean {
     return this.viaPlugin('startDialogue', [name], false);

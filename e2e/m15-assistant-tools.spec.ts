@@ -39,9 +39,9 @@ test('M15: Claude writes minigames, skins, a world map and the sound mix, edits 
 
   // each is a card; nothing happens until it is approved
   await expect(page.getByTestId('proposal').first()).toContainText('minigames');
-  expect(await page.evaluate(() => window.__store!.minigames.length)).toBe(0);
+  expect(await page.evaluate(() => (window.__store!.dataList('minigames') as { name: string; kind: string }[]).length)).toBe(0);
   await page.getByTestId('proposal-apply').click();
-  expect(await page.evaluate(() => window.__store!.minigames.map((m) => `${m.name}:${m.kind}`))).toEqual(['Duel:timing', 'Cards:pairs']);
+  expect(await page.evaluate(() => (window.__store!.dataList('minigames') as { name: string; kind: string }[]).map((m) => `${m.name}:${m.kind}`))).toEqual(['Duel:timing', 'Cards:pairs']);
 
   await expect(page.getByTestId('proposal').nth(1)).toContainText('skins');
   await page.getByTestId('proposal-apply').click();

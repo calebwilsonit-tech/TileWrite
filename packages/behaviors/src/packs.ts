@@ -2,6 +2,8 @@ import { host, PluginError, type EditorExtensions, type PluginApi, type PluginDe
 import type { InputActionDef } from './plugins/extensions';
 import { behaviorList } from './framework';
 import { PluginManifestSchema } from './plugins/manifest';
+import { setProjectLayers } from './plugins/layers';
+import type { ProjectLayerData } from '@tilewright/runtime';
 
 /**
  * Packs, the first name for plugins. A "pack" here is a plugin written as a plain object (id, name, version, `install`); the
@@ -94,6 +96,12 @@ export const legacyPacks = (): readonly string[] => legacy;
 
 /** The packs a project file asks for (a file with no list is a project from before plugins existed). */
 export const packsOfProject = (project: { plugins?: readonly string[] | undefined }): readonly string[] => project.plugins ?? legacy;
+
+/** Use a project's plugins and the collision layers it names (what opening a project and playing it start with). */
+export function useProject(project: { plugins?: readonly string[] | undefined; collisionLayers?: readonly ProjectLayerData[] | undefined }): void {
+  setActivePacks(packsOfProject(project));
+  setProjectLayers(project.collisionLayers);
+}
 
 /**
  * Turn exactly these packs on (and everything else off). `undefined` means "all the engine's own packs", which is what a project made

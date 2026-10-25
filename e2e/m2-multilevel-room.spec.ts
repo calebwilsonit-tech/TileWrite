@@ -1,4 +1,5 @@
-import { _electron as electron, expect, test, type Page } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
+import { launchEditor } from './helpers';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -38,8 +39,8 @@ const player = (page: Page) =>
   });
 
 test('M2: bridge, stairs, ledge drop, pit respawn and wall fade, played through the real input path', async () => {
-  const app = await electron.launch({ args: [path.join(root, 'packages', 'editor')] });
-  const page = await app.firstWindow();
+  // (the handles these tests read, such as the sample's, exist only when the editor is started for tests)
+  const { app, page } = await launchEditor();
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => {

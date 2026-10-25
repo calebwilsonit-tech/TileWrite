@@ -58,6 +58,8 @@ export const PluginManifestSchema = z.object({
   changelog: z.string().max(200).default(''),
   /** Folder of finished sample games the plugin ships (each a project folder; the project screen offers them). */
   samples: z.string().max(200).default(''),
+  /** Files in a project that this plugin keeps ("assets/items.json"). A project that has such a file with something in it but does not have the plugin on gets the plugin turned on when it opens, so nothing it holds goes quiet. */
+  data: z.array(z.string().max(200)).default([]),
   /** Folder of art, sounds, screens, templates and pages the plugin brings (copied into a game that uses them). */
   assets: z.string().max(200).default(''),
   /** True for the plugins that ship with the editor. */

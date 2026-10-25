@@ -7,3 +7,9 @@
 
 // lighting: the model of lights and shadows and the questions asked of it (@tilewright/plugin-lighting/model)
 export * from '@tilewright/plugin-lighting/model';
+
+// items: what the player carries, the quick slots, the shape of an item (@tilewright/plugin-inventory/items)
+export * from '@tilewright/plugin-inventory/items';
+
+// minigames: the shape of a minigame and how one is played (@tilewright/plugin-story/minigames)
+export * from '@tilewright/plugin-story/minigames';

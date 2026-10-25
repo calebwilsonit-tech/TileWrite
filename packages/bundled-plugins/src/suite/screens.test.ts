@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { ItemSchema, MapNodeSchema, Simulation, UiDocSchema, UiScreenSchema, UiThemeSchema, UiWidgetSchema, WorldMapSchema, completeLayout, openRole, roleOfScreen, screenForRole, type SlotInfo, type VariableValue } from '@tilewright/runtime';
+import { ItemSchema, putRecord } from '@tilewright/plugin-sdk';
+import { MapNodeSchema, Simulation, UiDocSchema, UiScreenSchema, UiThemeSchema, UiWidgetSchema, WorldMapSchema, completeLayout, openRole, roleOfScreen, screenForRole, type SlotInfo, type VariableValue } from '@tilewright/runtime';
 import {
   activateWidget,
   adjustWidget,
@@ -269,8 +270,8 @@ describe('Controls', () => {
 describe('Inventory', () => {
   function stocked() {
     const g = game();
-    g.sim.assets.items.set('key', ItemSchema.parse({ id: 'key', name: 'Brass key', description: 'Opens a door.' }));
-    g.sim.assets.items.set('bread', ItemSchema.parse({ id: 'bread', name: 'Bread', description: 'Tasty.', use: { heal: 2, message: 'Mmm.' } }));
+    putRecord(g.sim.assets, 'items', 'key', ItemSchema.parse({ id: 'key', name: 'Brass key', description: 'Opens a door.' }));
+    putRecord(g.sim.assets, 'items', 'bread', ItemSchema.parse({ id: 'bread', name: 'Bread', description: 'Tasty.', use: { heal: 2, message: 'Mmm.' } }));
     return g;
   }
 

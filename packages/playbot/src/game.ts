@@ -8,12 +8,10 @@ import {
   teleportBody,
   type CompatFlags,
   type CutsceneData,
-  type MinigameData,
   type TableData,
   type WorldMapData,
   type DialogueData,
   type Entity,
-  type ItemData,
   type PrefabMap,
   type SceneData,
   type SimContext,
@@ -22,7 +20,7 @@ import {
   type TileSet,
   type UiDoc,
 } from '@tilewright/runtime';
-import { addStandardSystems, contextOf, resolveRef, routeInput, withPluginScreens } from '@tilewright/behaviors';
+import { addStandardSystems, contextOf, fillAssetData, resolveRef, routeInput, withPluginScreens } from '@tilewright/behaviors';
 import { placeAtSpawn } from '@tilewright/behaviors';
 
 export interface GameSetup {
@@ -32,10 +30,10 @@ export interface GameSetup {
   /** Every scene of the game, by path. With this, portals, checkpoints and "go to" actions change scene as they do in play. */
   scenes?: ReadonlyMap<string, SceneData>;
   prefabs?: PrefabMap;
-  items?: readonly ItemData[];
   dialogues?: ReadonlyMap<string, DialogueData>;
   cutscenes?: ReadonlyMap<string, CutsceneData>;
-  minigames?: readonly MinigameData[];
+  /** The records of the kinds of data plugins keep (items, minigames...), by kind. */
+  data?: Record<string, readonly unknown[]>;
   worldMap?: WorldMapData | null;
   tables?: readonly TableData[];
   sprites?: ReadonlyMap<string, SpriteData>;
@@ -68,10 +66,9 @@ export class Game {
     this.prefabs = setup.prefabs;
     this.scenePath = setup.scenePath ?? '';
     for (const [k, v] of setup.prefabs ?? []) this.sim.assets.prefabs.set(k, v);
-    for (const i of setup.items ?? []) this.sim.assets.items.set(i.id, i);
     for (const [k, v] of setup.dialogues ?? []) this.sim.assets.dialogues.set(k, v);
     for (const [k, v] of setup.cutscenes ?? []) this.sim.assets.cutscenes.set(k, v);
-    for (const m of setup.minigames ?? []) this.sim.assets.minigames.set(m.name, m);
+    fillAssetData(this.sim.assets, setup.data ?? {});
     for (const t of setup.tables ?? []) this.sim.assets.tables.set(t.name, t);
     this.sim.assets.worldMap = setup.worldMap ?? null;
     this.sim.assets.ui = withPluginScreens(setup.ui ?? this.sim.assets.ui);

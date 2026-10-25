@@ -5,7 +5,7 @@ import { Bot, Game, extractPushPuzzle, solvePush, type PlayReport } from '@tilew
 import type { SceneData } from '@tilewright/runtime';
 import { loadScene, openProject } from '../packages/editor/src/renderer/project/io';
 import { loadAllPrefabs } from '../packages/editor/src/renderer/project/prefabs';
-import { loadCutscenes, loadDialogues, loadItems } from '../packages/editor/src/renderer/project/story';
+import { loadCutscenes, loadData, loadDialogues } from '../packages/editor/src/renderer/project/story';
 import type { AssetFs } from '../packages/editor/src/renderer/studio/assets';
 import { fight } from '@tilewright/plugin-combat/playbot';
 import { holdPlatesWithEchoes } from '@tilewright/plugin-storytender/playbot';
@@ -42,10 +42,10 @@ export async function loadSlice(projectDir: string): Promise<{ game: Game; scene
   const scenes = new Map<string, SceneData>();
   for (const p of project.scenes) scenes.set(p, await loadScene(nodeFs, projectDir, p));
   const { prefabs } = await loadAllPrefabs(nodeFs, projectDir);
-  const items = await loadItems(nodeFs, projectDir);
+  const data = await loadData(nodeFs, projectDir);
   const dialogues = await loadDialogues(nodeFs, projectDir);
   const cutscenes = await loadCutscenes(nodeFs, projectDir);
-  const game = new Game({ scene: scenes.get(project.startScene)!, scenePath: project.startScene, scenes, prefabs, items: items.items, dialogues: dialogues.items, cutscenes: cutscenes.items });
+  const game = new Game({ scene: scenes.get(project.startScene)!, scenePath: project.startScene, scenes, prefabs, data: data.data, dialogues: dialogues.items, cutscenes: cutscenes.items });
   return { game, scenes, prefabs };
 }
 

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { C, ItemSchema, itemCount, newMinigame, symbolDirs, type MinigameData, type TransformIso } from '@tilewright/runtime';
+import { C, type TransformIso } from '@tilewright/runtime';
+import { ItemSchema, itemCount, newMinigame, openMinigame, putRecord, symbolDirs, type MinigameData } from '@tilewright/plugin-sdk';
 import { GRID_PLUS_X, ctxOf, flatScene, player, rig, thing, type Rig } from '@tilewright/plugin-sdk/testing';
 import { beginMinigame } from '@tilewright/plugin-story';
 import { newAction, newCondition, newRow, output } from '@tilewright/behaviors';
@@ -12,8 +13,8 @@ function arcadeRig(m: MinigameData, extraScene?: (s: ReturnType<typeof flatScene
   scene.entities.push(player('p', 5.5, 5.5), thing('arcade', 'Arcade', 6.5, 5.5, { minigameStation: { minigame: m.name } }));
   extraScene?.(scene);
   const r = rig(scene);
-  r.sim.assets.minigames.set(m.name, m);
-  r.sim.assets.items.set('medal', ItemSchema.parse({ id: 'medal', name: 'Medal' }));
+  putRecord(r.sim.assets, 'minigames', m.name, m);
+  putRecord(r.sim.assets, 'items', 'medal', ItemSchema.parse({ id: 'medal', name: 'Medal' }));
   return r;
 }
 
@@ -23,7 +24,7 @@ describe('minigame station', () => {
     r.run(2);
     expect(r.get('arcade').get<{ text: string }>('label')?.text).toBe('E: play');
     r.run(1, { interact: 1 });
-    expect(r.sim.runtime.minigame?.phase).toBe('intro');
+    expect(openMinigame(r.sim.runtime)?.phase).toBe('intro');
     expect(r.sim.modal).toBe('freeze');
     const x = r.get('p').get<TransformIso>(C.Transform)!.x;
     r.run(20, GRID_PLUS_X);
@@ -31,7 +32,7 @@ describe('minigame station', () => {
     expect(output(r.get('arcade'), 'playing')).toBe(true);
     r.run(1);
     r.run(1, { pause: 1 }); // give up
-    expect(r.sim.runtime.minigame).toBeNull();
+    expect(openMinigame(r.sim.runtime)).toBeNull();
     expect(r.sim.runtime.vars['minigame:Duel:played']).toBe(1);
     expect(r.sim.runtime.vars['minigame:Duel:won']).toBeUndefined();
     r.run(1);
@@ -46,7 +47,7 @@ describe('minigame station', () => {
       r.run(1);
       r.run(1, { interact: 1 }); // start
       r.run(1);
-      const st = r.sim.runtime.minigame!;
+      const st = openMinigame(r.sim.runtime)!;
       for (let i = 0; i < 600 && st.phase === 'play'; i++) {
         const centre = st.zoneAt + st.zoneSize / 2;
         r.run(1, Math.abs(st.pos - centre) < 0.03 ? { interact: 1 } : {});
@@ -57,7 +58,7 @@ describe('minigame station', () => {
       r.run(1);
     };
     play();
-    expect(r.sim.runtime.minigame).toBeNull();
+    expect(openMinigame(r.sim.runtime)).toBeNull();
     r.run(1);
     expect(r.sim.runtime.vars['minigame:Duel:won']).toBe(true);
     expect(r.sim.runtime.vars['duelWon']).toBe(true);
@@ -76,7 +77,7 @@ describe('minigame station', () => {
     r.get('arcade').get<{ onlyUntilWon: boolean }>('minigameStation')!.onlyUntilWon = true;
     r.run(2);
     r.run(1, { interact: 1 });
-    expect(r.sim.runtime.minigame).toBeNull();
+    expect(openMinigame(r.sim.runtime)).toBeNull();
     const problems: string[] = [];
     r.sim.events.on('problem', (e) => void problems.push(String(e.text)));
     expect(beginMinigame(ctxOf(r), 'Nope')).toBe(false);
@@ -96,9 +97,9 @@ describe('minigame station', () => {
       { ...newRow('won'), conditions: [cond('minigameWon', { minigame: 'Duel' })], actions: [act('setVariable', { name: 'wonRow', op: 'set', value: '1' })] },
     ];
     const r = rig(scene);
-    r.sim.assets.minigames.set('Duel', timing());
+    putRecord(r.sim.assets, 'minigames', 'Duel', timing());
     r.run(3);
-    expect(r.sim.runtime.minigame).not.toBeNull();
+    expect(openMinigame(r.sim.runtime)).not.toBeNull();
     r.run(1, { pause: 1 }); // give up
     r.run(3);
     expect(r.sim.runtime.vars['ended']).toBe(1);
@@ -116,7 +117,7 @@ describe('minigame station', () => {
     r.run(1);
     r.run(1, { interact: 1 });
     r.run(1);
-    const st = r.sim.runtime.minigame!;
+    const st = openMinigame(r.sim.runtime)!;
     for (let i = 0; i < 1000 && st.phase === 'show'; i++) r.run(1);
     expect(st.phase).toBe('play');
     const dirs = symbolDirs(4);

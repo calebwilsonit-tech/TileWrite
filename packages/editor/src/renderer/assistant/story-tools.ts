@@ -1,6 +1,6 @@
-import { CutsceneSchema, DialogueSchema, ItemSchema, LanguageSchema, MinigameSchema, MixerSchema, ProjectInputSchema, SkinSchema, UiLayoutSchema, WorldMapSchema, checkProjectInput, checkUiLayout, completeLayout, defaultUiLayout, checkCutscene, checkDialogue, checkMinigame, checkMixer, checkWorldMap, newLanguage, type CutsceneData, type DialogueData, type ItemData, type ProjectInput, type UiLayout, type MinigameData, type MixerData, type RegionData, type SkinData, type WorldMapData } from '@tilewright/runtime';
+import { CutsceneSchema, DialogueSchema, LanguageSchema, MixerSchema, ProjectInputSchema, SkinSchema, UiLayoutSchema, WorldMapSchema, checkProjectInput, checkUiLayout, completeLayout, defaultUiLayout, checkCutscene, checkDialogue, checkMixer, checkWorldMap, newLanguage, type CutsceneData, type DialogueData, type ProjectInput, type UiLayout, type MixerData, type RegionData, type SkinData, type WorldMapData } from '@tilewright/runtime';
 import { lineDiff, type ToolOutput } from '@tilewright/assistant';
-import { hudPieceKinds, hudPieces } from '@tilewright/behaviors';
+import { dataKinds, dataKnown, hudPieceKinds, hudPieces, type DataKindDef } from '@tilewright/behaviors';
 import { store } from '../app/store';
 import { assetFs } from '../project/assetFs';
 import { collectStrings, coverage, deleteLanguage, interfaceTexts, loadLanguages, saveLanguage } from '../project/localization';
@@ -19,14 +19,14 @@ const undoStory = (label: string) => async (): Promise<boolean> => {
   return true;
 };
 
-const knownItems = (): Set<string> => new Set(store.story.items.map((i) => i.id));
+const knownCarried = (): ReadonlySet<string> => store.dataKnown().carried;
 
 function dialogueProblems(d: DialogueData): string[] {
-  return checkDialogue(d, { items: knownItems(), variables: new Set<string>() }).map((p) => p.text);
+  return checkDialogue(d, { carried: knownCarried(), variables: new Set<string>() }).map((p) => p.text);
 }
 
 function cutsceneProblems(c: CutsceneData): string[] {
-  return checkCutscene(c, { dialogues: new Set(store.story.dialogues.keys()), items: knownItems(), sounds: new Set(studio.sounds.map((s) => s.name)) }).map((p) => p.text);
+  return checkCutscene(c, { dialogues: new Set(store.story.dialogues.keys()), carried: knownCarried(), sounds: new Set(studio.sounds.map((s) => s.name)) }).map((p) => p.text);
 }
 
 /** One line per step, for a reader (or a diff). */
@@ -40,7 +40,7 @@ function describeCutscene(c: CutsceneData): string {
 
 async function allSources() {
   const scenes = await store.loadAllScenes();
-  return collectStrings(store.story, [...scenes].map(([path, scene]) => ({ path, scene })), undefined, store.minigames, interfaceTexts(store.uiLayout, store.state.project?.project));
+  return collectStrings(store.story, [...scenes].map(([path, scene]) => ({ path, scene })), undefined, store.data, interfaceTexts(store.uiLayout, store.state.project?.project));
 }
 
 /** Reading tools about the story data. Returns null when the name is not one of them. */
@@ -54,10 +54,9 @@ export async function runStoryRead(name: string, input: Record<string, unknown>)
         const { languages } = await loadLanguages(assetFs, p.dir);
         return text(
           json({
-            items: store.story.items,
+            data: Object.fromEntries(dataKinds().map((d) => [d.id, { records: store.dataList(d.id), problems: d.check?.(store.dataList(d.id), store.dataKnown()) ?? [] }])),
             dialogues: [...store.story.dialogues.values()].map((d) => ({ name: d.name, start: d.start, steps: d.nodes.length, problems: dialogueProblems(d) })),
             cutscenes: [...store.story.cutscenes.values()].map((c) => ({ name: c.name, steps: c.steps.length, problems: cutsceneProblems(c) })),
-            minigames: store.minigames.map((m) => ({ ...m, problems: checkMinigame(m, { items: knownItems() }) })),
             skins: store.skins,
             worldMap: store.worldMap ? { ...store.worldMap, problems: checkWorldMap(store.worldMap, store.state.project?.project.scenes ?? []) } : null,
             interface: { layout: store.uiLayout, problems: checkUiLayout(store.uiLayout, { pieces: hudPieces() }) },
@@ -149,65 +148,49 @@ function writeCutscene(input: Record<string, unknown>): Proposal {
   };
 }
 
-function writeItems(input: Record<string, unknown>): Proposal {
-  const raw = input.items as unknown[];
-  const items: ItemData[] = [];
+/** Replace the whole list of one kind of data a plugin keeps (items, minigames...). */
+function writeData(def: DataKindDef, input: Record<string, unknown>): Proposal {
+  const raw = input[def.listKey] as unknown[];
+  const records: unknown[] = [];
   for (const r of raw) {
-    const p = ItemSchema.safeParse(r);
-    if (!p.success) fail(`An item is not valid: ${p.error.issues.slice(0, 3).map((i) => `${i.path.join('.')}: ${i.message}`).join('; ')}`);
-    else items.push(p.data);
+    const p = def.schema.safeParse(r);
+    if (!p.success) fail(`A ${def.noun} is not valid: ${p.error.issues.slice(0, 3).map((i) => `${(i as { path?: PropertyKey[] }).path?.join('.') ?? ''}: ${i.message}`).join('; ')}`);
+    else records.push(p.data);
   }
-  const ids = items.map((i) => i.id);
-  const dup = ids.find((id, i) => ids.indexOf(id) !== i);
-  if (dup) fail(`Two items share the id "${dup}".`);
-  const previous = store.story.items;
-  const used = new Set<string>();
-  for (const d of store.story.dialogues.values()) for (const n of d.nodes) if (n.type === 'give') used.add(n.item);
-  const orphaned = [...used].filter((id) => !ids.includes(id));
-  const describe = (list: readonly ItemData[]): string => list.map((i) => `${i.id}: ${JSON.stringify(i)}`).join('\n');
-  return {
-    tool: 'write_items',
-    title: 'Change the item list',
-    lines: [`The item list goes from ${previous.length} to ${items.length} item${items.length === 1 ? '' : 's'}.`, ...orphaned.map((id) => `Warning: a conversation gives the item "${id}", which is no longer in the list.`)],
-    diff: { name: 'items.json', lines: lineDiff(describe(previous), describe(items)) },
-    async apply() {
-      store.asStoryStep('Claude: change the items', () => store.setItems(items));
-      await store.flushStory();
-      return `The project now has ${items.length} item(s).`;
-    },
-    undo: undoStory('Claude: change the items'),
-  };
-}
-
-const lines = (v: unknown): string => JSON.stringify(v, null, 1);
-
-function writeMinigames(input: Record<string, unknown>): Proposal {
-  const raw = input.minigames as unknown[];
-  const list: MinigameData[] = [];
-  for (const r of raw) {
-    const p = MinigameSchema.safeParse(r);
-    if (!p.success) fail(`A minigame is not valid: ${p.error.issues.slice(0, 3).map((i) => `${i.path.join('.')}: ${i.message}`).join('; ')}`);
-    else list.push(p.data);
-  }
-  const names = list.map((m) => m.name);
+  const names = records.map((r) => def.keyOf(r));
   const dup = names.find((n, i) => names.indexOf(n) !== i);
-  if (dup) fail(`Two minigames share the name "${dup}".`);
-  const previous = store.minigames;
-  const problems = list.flatMap((m) => checkMinigame(m, { items: knownItems() }));
-  const label = 'Claude: change the minigames';
+  if (dup) fail(`Two ${def.noun}s share the ${def.keyName} "${dup}".`);
+  const previous = store.dataList(def.id);
+  // what a conversation gives that the new list no longer has
+  const orphaned: string[] = [];
+  if (def.carries) {
+    const used = new Set<string>();
+    for (const d of store.story.dialogues.values()) for (const n of d.nodes) if (n.type === 'give') used.add(n.item);
+    orphaned.push(...[...used].filter((id) => !names.includes(id) && previous.some((r) => def.keyOf(r) === id)));
+  }
+  const known = dataKnown({ ...store.data, [def.id]: records });
+  const problems = def.check?.(records, known) ?? [];
+  const label = `Claude: change the ${def.label.toLowerCase()}`;
+  const describe = (list: readonly unknown[]): string => list.map((r) => `${def.keyOf(r)}: ${JSON.stringify(r)}`).join('\n');
   return {
-    tool: 'write_minigames',
-    title: 'Change the minigames',
-    lines: [`The minigame list goes from ${previous.length} to ${list.length}.`, ...problems.map((p) => `Warning: ${p}`)],
-    diff: { name: 'minigames.json', lines: lineDiff(previous.map((m) => lines(m)).join('\n'), list.map((m) => lines(m)).join('\n')) },
+    tool: `write_${def.id}`,
+    title: `Change the ${def.label.toLowerCase()}`,
+    lines: [
+      `The ${def.noun} list goes from ${previous.length} to ${records.length} ${def.noun}${records.length === 1 ? '' : 's'}.`,
+      ...orphaned.map((id) => `Warning: a conversation gives the ${def.noun} "${id}", which is no longer in the list.`),
+      ...problems.map((p) => `Warning: ${p}`),
+    ],
+    diff: { name: def.file.replace(/^.*\//, ''), lines: lineDiff(describe(previous), describe(records)) },
     async apply() {
-      store.asStoryStep(label, () => store.setMinigames(list));
+      store.asStoryStep(label, () => store.setData(def.id, records));
       await store.flushStory();
-      return `The project now has ${list.length} minigame(s).${problems.length ? ` The checker still reports: ${problems.join(' | ')}` : ' The checker found no problems.'}`;
+      return `The project now has ${records.length} ${def.noun}(s).${problems.length ? ` The checker still reports: ${problems.join(' | ')}` : ' The checker found no problems.'}`;
     },
     undo: undoStory(label),
   };
 }
+
+const lines = (v: unknown): string => JSON.stringify(v, null, 1);
 
 function writeSkins(input: Record<string, unknown>): Proposal {
   const raw = input.skins as unknown[];
@@ -221,7 +204,7 @@ function writeSkins(input: Record<string, unknown>): Proposal {
   const dup = ids.find((id, i) => ids.indexOf(id) !== i);
   if (dup) fail(`Two skins share the id "${dup}".`);
   const previous = store.skins;
-  const problems = skinProblems(list, { sprites: new Set(studio.assets.keys()), items: knownItems() });
+  const problems = skinProblems(list, { sprites: new Set(studio.assets.keys()), items: knownCarried() });
   const label = 'Claude: change the skins';
   return {
     tool: 'write_skins',
@@ -470,10 +453,6 @@ export async function prepareStoryAction(name: string, input: Record<string, unk
       return writeDialogue(input);
     case 'write_cutscene':
       return writeCutscene(input);
-    case 'write_items':
-      return writeItems(input);
-    case 'write_minigames':
-      return writeMinigames(input);
     case 'write_skins':
       return writeSkins(input);
     case 'write_world_map':
@@ -490,7 +469,9 @@ export async function prepareStoryAction(name: string, input: Record<string, unk
       return setRegions(input);
     case 'write_translation':
       return writeTranslation(input);
-    default:
-      return null;
+    default: {
+      const kind = dataKinds().find((d) => name === `write_${d.id}`);
+      return kind ? writeData(kind, input) : null;
+    }
   }
 }

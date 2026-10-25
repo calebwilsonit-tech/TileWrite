@@ -1,4 +1,4 @@
-import { packsOfProject, setActivePacks } from '@tilewright/behaviors';
+import { useProject } from '@tilewright/behaviors';
 import { store } from '../app/store';
 import { connectPluginHost } from './editor-host';
 import { pluginManager } from './manager';
@@ -11,7 +11,7 @@ export function startPlugins(): void {
   // when a plugin is installed, updated or removed, the open project turns on what it asks for again
   pluginManager.subscribe(() => {
     const p = store.state.project;
-    if (p) setActivePacks(packsOfProject(p.project));
+    if (p) useProject(p.project);
   });
   void pluginManager.init().catch((e: unknown) => store.notify('error', `Could not look for plugins: ${e instanceof Error ? e.message : String(e)}`));
 }

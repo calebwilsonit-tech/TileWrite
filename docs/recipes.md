@@ -35,7 +35,7 @@ Short, step-by-step ways to make common things. Names in **bold** are buttons, p
 ## A guard that gets angry and calms down
 1. Place a **Guard**, select it and add **State Machine** (Inspector).
 2. **Start from an example -> Guard**. Click the *Chase* card and change its **Speed**, or add a **Message** like "Hey! You there!".
-3. Drag from the dot on *Look around* to *Patrol* and set the arrow to "it has been here 8 s" so it settles down sooner. Play to see it change mood; the Problems panel warns if a state can never be reached. See [ai-and-combat.md](ai-and-combat.md).
+3. Drag from the dot on *Look around* to *Patrol* and set the arrow to "it has been here 8 s" so it settles down sooner. Play to see it change mood; the Problems panel warns if a state can never be reached. See [ai-and-combat.md](../packages/plugins/combat/docs/ai-and-combat.md).
 
 ## A boss in two phases
 1. Draw a **Region** over the arena and turn on *Bosses here only act while the player is inside*.

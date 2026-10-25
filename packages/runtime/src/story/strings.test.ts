@@ -48,7 +48,7 @@ describe('translations', () => {
 describe('cutscene sound checks', () => {
   it('say which step names a sound that is not there, or has none chosen', () => {
     const c = CutsceneSchema.parse({ name: 'C', steps: [{ id: 'a', type: 'wait' }, { id: 'b', type: 'sound', name: 'boom' }, { id: 'c', type: 'music', name: '' }, { id: 'd', type: 'sound', name: '' }] });
-    const known = { dialogues: new Set<string>(), items: new Set<string>() };
+    const known = { dialogues: new Set<string>(), carried: new Set<string>() };
     expect(checkCutscene(c, known).map((p) => p.text)).toEqual(['Step 4 (Play a sound) has no sound chosen.']);
     const text = checkCutscene(c, { ...known, sounds: new Set(['chime']) }).map((p) => p.text);
     expect(text).toEqual(['Step 2 (Play a sound) uses the sound "boom", which is not in Assets -> Sounds.', 'Step 4 (Play a sound) has no sound chosen.']);

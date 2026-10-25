@@ -24,7 +24,7 @@ In **Project settings -> Controls** each built-in action shows the keys and butt
 Words in these screens (the title, the line under it, labels and texts) are part of **Translations**.
 
 ## Formatting words
-See [story-systems.md](story-systems.md): `[b]`, `[i]`, `[u]`, `[s]`, `[color=gold]` work in conversations, choices, messages and the title's subtitle.
+See [story-systems.md](../packages/plugins/story/docs/story-systems.md): `[b]`, `[i]`, `[u]`, `[s]`, `[color=gold]` work in conversations, choices, messages and the title's subtitle.
 
 ## Claude
 The assistant can change all of this as approved cards: `write_ui_layout`, `write_controls` and `set_project_settings`.

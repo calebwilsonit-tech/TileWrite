@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
-import { DialogueSchema, ItemSchema, newCutscene, newDialogue, stringifyScene, type EntityData, type SceneData } from '@tilewright/runtime';
-import { attachBehavior, newAction, newRow } from '@tilewright/behaviors';
+import { beforeAll, describe, expect, it } from 'vitest';
+import { DialogueSchema, newCutscene, newDialogue, stringifyScene, type EntityData, type SceneData } from '@tilewright/runtime';
+import { attachBehavior, newAction, newRow, setActivePacks } from '@tilewright/behaviors';
 import { checkProject, type StoryData } from './check';
 import type { ProjectFs } from './io';
 import { templateById } from './templates';
@@ -26,7 +26,9 @@ function memoryFs(): ProjectFs & { files: Map<string, string> } {
   };
 }
 
-const story = (over: Partial<StoryData> = {}): StoryData => ({ items: [], dialogues: new Map(), cutscenes: new Map(), ...over });
+const story = (over: Partial<StoryData> = {}): StoryData => ({ dialogues: new Map(), cutscenes: new Map(), ...over });
+
+beforeAll(() => setActivePacks(['inventory', 'story']));
 
 function setup(mutate?: (main: SceneData, other: SceneData) => void, extraScene = true) {
   const t = templateById('empty-iso').build('T');
@@ -116,7 +118,7 @@ describe('checkProject', () => {
     });
     const d = DialogueSchema.parse({ name: 'Keeper', start: 'a', nodes: [{ id: 'a', type: 'line', text: 'Hello' }] });
     const c = { ...newCutscene('Intro'), steps: [{ id: 's1', type: 'message' as const, async: false, text: 'Hi' }] };
-    const found = await checkProject(fs, '/p', project, new Map(), story({ items: [ItemSchema.parse({ id: 'gem', name: 'Gem' })], dialogues: new Map([['Keeper', d]]), cutscenes: new Map([['Intro', c]]) }));
+    const found = await checkProject(fs, '/p', project, new Map(), story({ dialogues: new Map([['Keeper', d]]), cutscenes: new Map([['Intro', c]]) }), undefined, undefined, [], [], { items: [{ id: 'gem', name: 'Gem' }] });
     expect(found).toEqual([]);
   });
 

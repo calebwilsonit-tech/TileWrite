@@ -220,6 +220,83 @@ export interface ScreenRoleDef {
   help?: string;
 }
 
+// ---------- what the player carries ----------
+
+/**
+ * The thing that keeps what the player carries (an inventory). Conversations, cutscenes, skins and scripts ask it how many of a thing the
+ * player has and give or take some; the engine itself keeps no inventory.
+ */
+export interface CarrierDef {
+  id: string;
+  count(vars: Record<string, VariableValue>, id: string): number;
+  /** Give (or, negative, take) some of a thing; returns how many actually were. */
+  give(ctx: SimContext, id: string, amount: number): number;
+  /** The variable that holds how many of a thing are carried (a screen can show it: "How many are carried"). */
+  variable(id: string): string;
+}
+
+// ---------- the project's own data ----------
+
+/** What a check of a kind of data may ask about the rest of the project. */
+export interface DataKnown {
+  /** The names of the records of another kind ("items"), or none when no plugin that is on keeps that kind. */
+  ids(kind: string): ReadonlySet<string>;
+  /** The names of everything the player can carry or be given: the records of every kind that says it `carries`. */
+  carried: ReadonlySet<string>;
+}
+
+/** What the editor hands the editor of a kind of data. */
+export interface DataEditorProps {
+  /** The records now (a copy to read; change them with `change`). */
+  records: readonly any[]; // eslint-disable-line @typescript-eslint/no-explicit-any
+  /** Replace the whole list; the editor saves it, makes it one undo step and tells the running game. */
+  change(next: any[]): void; // eslint-disable-line @typescript-eslint/no-explicit-any
+  known: DataKnown;
+  /** Everything that can be given or carried, to choose from: the records of every kind that says it `carries`. */
+  carriedChoices: { value: string; label: string }[];
+  notify(kind: 'info' | 'warn', text: string): void;
+  /** Start the next Play with an action of the game already run (the "Test" buttons): `{ action: 'playMinigame', params: { minigame: 'Duel' } }`. */
+  playWith(start: { action: string; params: Record<string, unknown> }): void;
+  /** The editor's own fields and layout, so a plugin's editor looks like the rest (the SDK's `EditorUi` types it). */
+  ui: unknown;
+}
+
+/**
+ * A kind of data the project keeps in a file of its own (the items of a game, its minigames, its recipes), owned by a plugin. The
+ * engine loads the file when the plugin is on (into `assets.data`, by key), saves it when it is edited, checks it, collects its words
+ * for translation and shows its editor as a tab in the Story panel. With the plugin off the file is left alone, never lost.
+ */
+export interface DataKindDef {
+  /** The name of the kind and of the key in `assets.data` ("items"). */
+  id: string;
+  /** The tab in the Story panel ("Items"). */
+  label: string;
+  /** One line of help shown above the editor. */
+  blurb?: string;
+  /** The file in the project ("assets/items.json") and the list inside it ("items"). */
+  file: string;
+  listKey: string;
+  /** What one record looks like. Anything with `safeParse` (a Zod schema) does. */
+  schema: { safeParse(value: unknown): { success: true; data: any } | { success: false; error: { issues: { message: string }[] } } }; // eslint-disable-line @typescript-eslint/no-explicit-any
+  /** The name a record goes by (an id, or a name): records are looked up by it and two may not share it. */
+  keyOf(record: any): string; // eslint-disable-line @typescript-eslint/no-explicit-any
+  /** The word for one record, used in messages ("item", "minigame"), and what its key is called ("id", "name"). */
+  noun: string;
+  keyName: 'id' | 'name';
+  /** The file is written even when the list is empty (so a new project has it). Otherwise it is written once there is something in it, or it already exists. */
+  alwaysWritten?: boolean;
+  /** A new record for the Add button. */
+  create(existing: readonly any[]): any; // eslint-disable-line @typescript-eslint/no-explicit-any
+  /** The records of this kind are things the player can carry and be given (conversations and cutscenes can give them). */
+  carries?: boolean;
+  /** Plain-English problems with the whole list. */
+  check?(records: readonly any[], known: DataKnown): string[]; // eslint-disable-line @typescript-eslint/no-explicit-any
+  /** The words of a record that a person reads, for the translations list; `where` says what to call it ("Item Bread"). */
+  texts?(record: any): { text: string; where: string }[]; // eslint-disable-line @typescript-eslint/no-explicit-any
+  /** What Claude is told the `write_<id>` tool does, with the schema's shape added by the editor. */
+  assistant?: { description: string };
+}
+
 // ---------- the editor ----------
 
 export interface InspectorDef {
@@ -289,10 +366,17 @@ export interface ValidationScene {
   getEntity(id: string): EntityData | undefined;
 }
 
+/** What a check may ask about the rest of the project: the records of the data kinds, and the names of the conversations and cutscenes. */
+export interface ProjectKnown {
+  data: DataKnown;
+  dialogues: ReadonlySet<string>;
+  cutscenes: ReadonlySet<string>;
+}
+
 /** Looks at a scene and says what is wrong with it. Runs with the editor's Problems panel and before export. */
 export interface ValidatorDef {
   id: string;
-  check(scene: ValidationScene): ProblemDef[];
+  check(scene: ValidationScene, project?: ProjectKnown): ProblemDef[];
 }
 
 /** What a playbot strategy or move can see of the open scene. */
@@ -412,6 +496,8 @@ export interface Extensions {
   whoFilters: Map<string, WhoFilterDef & OwnedBy>;
   defeatChecks: Map<string, DefeatCheckDef & OwnedBy>;
   screenLayers: Map<string, ScreenLayerDef & OwnedBy>;
+  dataKinds: Map<string, DataKindDef & OwnedBy>;
+  carriers: Map<string, CarrierDef & OwnedBy>;
   unlockRules: Map<string, UnlockRuleDef & OwnedBy>;
   scriptMethods: Map<string, ScriptMethodDef & OwnedBy>;
   blockTypes: Map<string, BlockTypeDef & OwnedBy>;

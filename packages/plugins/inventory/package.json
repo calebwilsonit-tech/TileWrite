@@ -8,10 +8,12 @@
   "types": "./src/index.ts",
   "dependencies": {
     "@tilewright/plugin-sdk": "*",
-    "@tilewright/plugin-combat": "*"
+    "@tilewright/plugin-combat": "*",
+    "zod": "^4.6.7"
   },
   "exports": {
     ".": "./src/index.ts",
-    "./editor": "./src/editor.ts"
+    "./editor": "./src/editor.ts",
+    "./items": "./src/items.ts"
   }
 }

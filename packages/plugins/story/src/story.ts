@@ -1,5 +1,6 @@
-import { C, type Entity, type TransformIso, type SimContext, facingOfGridDir, minigameWon, stateOf, input, setOutput, interactedBy, occupants, behaviorDef } from '@tilewright/plugin-sdk';
+import { C, type Entity, type TransformIso, type SimContext, facingOfGridDir, stateOf, input, setOutput, interactedBy, occupants, behaviorDef } from '@tilewright/plugin-sdk';
 import { beginDialogue, beginMinigame, playCutscene } from './director';
+import { minigameWon, openMinigame } from './minigames';
 
 
 const transform = (e: Entity): TransformIso => e.require<TransformIso>(C.Transform);
@@ -118,14 +119,14 @@ export const minigameStation = behaviorDef<MinigameStation>({
   summary: (s) => (s.minigame ? `Plays the minigame "${s.minigame}" when used.` : 'Choose which minigame it plays.'),
   update(ctx, e, s) {
     const st = stateOf(e, 'minigameStation', () => ({ playing: false, played: false }));
-    if (st.playing && !ctx.runtime.minigame) {
+    if (st.playing && !openMinigame(ctx.runtime)) {
       st.playing = false;
       st.played = true;
     }
     const won = s.minigame !== '' && minigameWon(ctx.runtime.vars, s.minigame);
     const canPlay = s.minigame !== '' && !(s.onlyUntilWon && won);
     const near = nearestPlayer(ctx, e, s.reach);
-    if (s.hint && canPlay && near && !ctx.runtime.minigame) hint(e, 'E: play');
+    if (s.hint && canPlay && near && !openMinigame(ctx.runtime)) hint(e, 'E: play');
     else hint(e, null);
     if (canPlay && !st.playing && interactedBy(ctx, e, s.reach, 'minigameStation') && beginMinigame(ctx, s.minigame)) st.playing = true;
     setOutput(e, 'playing', st.playing);

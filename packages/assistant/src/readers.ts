@@ -134,7 +134,7 @@ const GROUPS: { id: string; label: string; test(path: string): boolean }[] = [
   { id: 'structures', label: 'Structures', test: (p) => p.endsWith('.structure.json') },
   { id: 'tables', label: 'Data tables', test: (p) => p.endsWith('.table.json') },
   { id: 'screens', label: 'Interface screens and layout', test: (p) => /(^|\/)(screens|ui)\.json$/.test(p) },
-  { id: 'story', label: 'Story (conversations, cutscenes, items, the world map)', test: (p) => /(^|\/)(dialogues|cutscenes|items|worldmap|minigames|skins)[^/]*\.json$/.test(p) || /(^|\/)(dialogues|cutscenes)\//.test(p) },
+  { id: 'story', label: 'Story (conversations, cutscenes, lists of things, the world map)', test: (p) => /(^|\/)(dialogues|cutscenes|items|worldmap|minigames|skins)[^/]*\.json$/.test(p) || /(^|\/)(dialogues|cutscenes)\//.test(p) },
   { id: 'scripts', label: 'Scripts', test: (p) => /\.(ts|js)$/.test(p) },
   { id: 'sounds', label: 'Sounds (I cannot listen to these)', test: (p) => fileKind(p) === 'audio' },
   { id: 'images', label: 'Pictures (PNG, JPG...)', test: (p) => fileKind(p) === 'image' },

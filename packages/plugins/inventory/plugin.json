@@ -8,6 +8,7 @@
   "engine": "^1.0.0",
   "dependencies": {},
   "permissions": [],
+  "data": ["assets/items.json"],
   "entry": {
     "runtime": "src/index.ts"
   },

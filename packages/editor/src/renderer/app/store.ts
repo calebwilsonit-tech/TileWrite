@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react';
-import { SLOPE, extractPrefab, type CrashReport, type InputRecording, resolveInstance, type CutsceneData, type DialogueData, type EntityData, type ItemData, type PrefabData, type SceneData, type SlopeDir } from '@tilewright/runtime';
+import { SLOPE, extractPrefab, type CrashReport, type InputRecording, resolveInstance, type CutsceneData, type DialogueData, type EntityData, type PrefabData, type SceneData, type SlopeDir } from '@tilewright/runtime';
 import { EditorDoc } from '../model/doc';
 import { isWallTile } from '../model/layers';
 import { loadLanguages } from '../project/localization';
@@ -13,13 +13,13 @@ import { analyseLevel, analysePushPuzzles, type LevelIssue } from '@tilewright/p
 import { checkProject, type ProjectProblem } from '../project/check';
 import { deletePlaythrough, listPlaythroughs, loadPlaythrough, nextPlaythroughName, savePlaythrough } from '../project/playthroughs';
 import { Game, newPlaythrough, replayPlaythrough, type GameSetup } from '@tilewright/playbot';
-import { eventsToScript, hudPieceKinds, packsOfProject, setActivePacks, syncCustomBlocks } from '@tilewright/behaviors';
+import { dataKinds, dataKnown, eventsToScript, hudPieceKinds, setActivePacks, setProjectLayers, syncCustomBlocks, useProject, type DataKnown, type ProjectKnown } from '@tilewright/behaviors';
 import { reloadScripts, type BreakHit, type ScriptProblemEntry } from '../code/script-manager';
 import { deleteScript as deleteScriptFile, loadScripts as loadScriptFiles, saveScript as saveScriptFile } from '../project/scripts';
 import { setPlayerRequired } from '../model/validate';
 import { deleteComponent, deleteCustomBehavior, deleteTable, loadComponents, loadCustomBehaviors, loadEventDefs, loadTables, saveComponent, saveCustomBehavior, saveEventDefs, saveTable } from '../project/blocks';
 import { loadProjectInput, loadUiDoc, loadUiLayout, saveProjectInput, saveUiDoc, saveUiLayout, storyNameProblem } from '../project/story';
-import { deleteCutscene, deleteDialogue, loadCutscenes, loadDialogues, loadItems, loadMinigames, loadSkins, loadWorldMap, saveCutscene, saveDialogue, saveItems, saveMinigames, saveSkins, saveWorldMap } from '../project/story';
+import { deleteCutscene, deleteDialogue, loadCutscenes, loadData, loadDialogues, loadSkins, loadWorldMap, saveAllData, saveCutscene, saveData, saveDialogue, saveSkins, saveWorldMap } from '../project/story';
 import {
   UserError,
   autosaveScene,
@@ -35,15 +35,14 @@ import {
   type OpenProject,
   type ProjectFs,
 } from '../project/io';
-import { DEFAULT_TILESET, emptyUiDoc, type UiDoc, defaultUiLayout, completeLayout, type CustomBehaviorData, type CustomComponentData, type EventDef, type TableData, emptyProjectInput, groupOf, newScene, pauseButtonRow, compatOf, tilesetFromList, type AutotileRuleData, type ProjectData, type ProjectInput, type UiLayout, type MinigameData, type SkinData, type WorldMapData, type TileDefData } from '@tilewright/runtime';
+import { DEFAULT_TILESET, emptyUiDoc, type UiDoc, defaultUiLayout, completeLayout, type CustomBehaviorData, type CustomComponentData, type EventDef, type TableData, emptyProjectInput, groupOf, newScene, pauseButtonRow, compatOf, tilesetFromList, type AutotileRuleData, type ProjectData, type ProjectInput, type UiLayout, type SkinData, type WorldMapData, type TileDefData } from '@tilewright/runtime';
 
 /** Everything the Story panel edits, as it is at one moment (the parts are replaced, never changed in place). */
 interface StorySnapshot {
-  items: ItemData[];
+  data: Record<string, unknown[]>;
   dialogues: Map<string, DialogueData>;
   cutscenes: Map<string, CutsceneData>;
   skins: SkinData[];
-  minigames: MinigameData[];
   worldMap: WorldMapData | null;
 }
 
@@ -467,7 +466,10 @@ class AppStore {
     if (p.migratedFrom !== undefined) {
       this.notify('warn', `This project was made in an older format (${p.migratedFrom}). Tilewright reads it as the newest, and nothing on disk changes until you save. The first save keeps a copy of the project file as it was, because an older Tilewright cannot open the newer format.`);
     }
-    setActivePacks(packsOfProject(p.project));
+    if (p.addedPlugins?.length) {
+      this.notify('info', `This project has data that belongs to the ${p.addedPlugins.join(', ')} plugin${p.addedPlugins.length === 1 ? '' : 's'}, which ${p.addedPlugins.length === 1 ? 'was' : 'were'} not on. ${p.addedPlugins.length === 1 ? 'It is' : 'They are'} on now, so that data keeps working as it did; the project file is updated on the next save.`);
+    }
+    useProject(p.project);
     setPlayerRequired(p.project.plugins === undefined);
     await api().recent.add(p.dir, p.project.name);
     this.set({ project: p, workspace: 'world', recent: await api().recent.list() });
@@ -641,11 +643,11 @@ class AppStore {
 
   // ---- story: items, dialogues, cutscenes ----
 
-  story = { items: [] as ItemData[], dialogues: new Map<string, DialogueData>(), cutscenes: new Map<string, CutsceneData>() };
+  story = { dialogues: new Map<string, DialogueData>(), cutscenes: new Map<string, CutsceneData>() };
+  /** The records of every kind of data the plugins that are on keep (items, minigames...), each saved in the kind's own file. */
+  data: Record<string, unknown[]> = {};
   /** The player's other looks (Settings -> Appearance), saved in ssets/skins.json. */
   skins: SkinData[] = [];
-  /** Small games inside the game (Story -> Minigames), saved in assets/minigames.json. */
-  minigames: MinigameData[] = [];
   /** The map of places the player can open (Story -> Map), saved in assets/worldmap.json; null when there is none. */
   worldMap: WorldMapData | null = null;
   /** The project's data tables (assets/tables), custom components and behaviours (assets/components, assets/behaviors) and event names (assets/events.json). */
@@ -708,7 +710,7 @@ class AppStore {
   /** The interface screens made in the UI designer, saved in assets/screens.json. */
   uiDoc: UiDoc = emptyUiDoc();
   /** Something to start as soon as the next Play begins (the Story panel's "Test" buttons). */
-  autoPlay: { cutscene?: string; dialogue?: string; minigame?: string } | null = null;
+  autoPlay: { action: string; params: Record<string, unknown> } | null = null;
   private storyTimers = new Map<string, number>();
   /** Writes that have started but not finished, so a delete can wait for them instead of being undone by them. */
   private storyWrites = new Map<string, Promise<void>>();
@@ -716,7 +718,7 @@ class AppStore {
   // ---- undo for story edits (items, conversations, cutscenes, skins, minigames, the world map) ----
 
   private storySnapshot(): StorySnapshot {
-    return { items: this.story.items, dialogues: this.story.dialogues, cutscenes: this.story.cutscenes, skins: this.skins, minigames: this.minigames, worldMap: this.worldMap };
+    return { data: this.data, dialogues: this.story.dialogues, cutscenes: this.story.cutscenes, skins: this.skins, worldMap: this.worldMap };
   }
 
   /** Put the story back as it was in a snapshot (the files follow: removed conversations and cutscenes are deleted from disk). */
@@ -725,9 +727,9 @@ class AppStore {
     const goneDialogues = [...this.story.dialogues.keys()].filter((n) => !s.dialogues.has(n));
     const goneCutscenes = [...this.story.cutscenes.keys()].filter((n) => !s.cutscenes.has(n));
     const hadMap = this.worldMap !== null;
-    this.story = { items: s.items, dialogues: s.dialogues, cutscenes: s.cutscenes };
+    this.story = { dialogues: s.dialogues, cutscenes: s.cutscenes };
+    this.data = s.data;
     this.skins = s.skins;
-    this.minigames = s.minigames;
     this.worldMap = s.worldMap;
     this.set({ storyVersion: this.state.storyVersion + 1 });
     this.maybeHotReload();
@@ -778,9 +780,9 @@ class AppStore {
   async loadStory(): Promise<void> {
     const p = this.state.project;
     if (!p) {
-      this.story = { items: [], dialogues: new Map(), cutscenes: new Map() };
+      this.story = { dialogues: new Map(), cutscenes: new Map() };
+      this.data = {};
       this.skins = [];
-      this.minigames = [];
       this.worldMap = null;
       this.input = emptyProjectInput();
       this.uiLayout = defaultUiLayout();
@@ -792,7 +794,7 @@ class AppStore {
       syncCustomBlocks([], []);
       return;
     }
-    const [items, dialogues, cutscenes, skins, minigames, world] = await Promise.all([loadItems(assetFs, p.dir), loadDialogues(assetFs, p.dir), loadCutscenes(assetFs, p.dir), loadSkins(assetFs, p.dir), loadMinigames(assetFs, p.dir), loadWorldMap(assetFs, p.dir)]);
+    const [data, dialogues, cutscenes, skins, world] = await Promise.all([loadData(assetFs, p.dir), loadDialogues(assetFs, p.dir), loadCutscenes(assetFs, p.dir), loadSkins(assetFs, p.dir), loadWorldMap(assetFs, p.dir)]);
     const [inputFile, uiFile, uiDocFile, tablesFile, componentsFile, behaviorsFile, eventsFile] = await Promise.all([loadProjectInput(assetFs, p.dir), loadUiLayout(assetFs, p.dir), loadUiDoc(assetFs, p.dir), loadTables(assetFs, p.dir), loadComponents(assetFs, p.dir), loadCustomBehaviors(assetFs, p.dir), loadEventDefs(assetFs, p.dir)]);
     this.tables = tablesFile.items;
     this.components = componentsFile.items;
@@ -804,10 +806,10 @@ class AppStore {
     this.uiDoc = uiDocFile.doc;
     this.worldMap = world.map;
     this.skins = skins.skins;
-    this.minigames = minigames.minigames;
-    this.story = { items: items.items, dialogues: dialogues.items, cutscenes: cutscenes.items };
+    this.data = data.data;
+    this.story = { dialogues: dialogues.items, cutscenes: cutscenes.items };
     this.set({ storyVersion: this.state.storyVersion + 1 });
-    for (const problem of [...items.problems, ...dialogues.problems, ...cutscenes.problems, ...skins.problems, ...minigames.problems, ...world.problems, ...inputFile.problems, ...uiFile.problems, ...uiDocFile.problems, ...tablesFile.problems, ...componentsFile.problems, ...behaviorsFile.problems, ...eventsFile.problems]) this.notify('warn', problem);
+    for (const problem of [...data.problems, ...dialogues.problems, ...cutscenes.problems, ...skins.problems, ...world.problems, ...inputFile.problems, ...uiFile.problems, ...uiDocFile.problems, ...tablesFile.problems, ...componentsFile.problems, ...behaviorsFile.problems, ...eventsFile.problems]) this.notify('warn', problem);
   }
 
   /** Save a story file a moment after the last edit (typing in a field must not write a file per keystroke). */
@@ -830,9 +832,8 @@ class AppStore {
     this.storyTimers.clear();
     const p = this.state.project;
     if (!p) return;
-    await saveItems(assetFs, p.dir, this.story.items);
+    await saveAllData(assetFs, p.dir, this.data);
     if (this.skins.length > 0 || (await assetFs.exists(joinPath(p.dir, 'assets/skins.json')))) await saveSkins(assetFs, p.dir, this.skins);
-    if (this.minigames.length > 0 || (await assetFs.exists(joinPath(p.dir, 'assets/minigames.json')))) await saveMinigames(assetFs, p.dir, this.minigames);
     if (this.worldMap) await saveWorldMap(assetFs, p.dir, this.worldMap);
     for (const t of this.tables) await saveTable(assetFs, p.dir, t);
     for (const c of this.components) await saveComponent(assetFs, p.dir, c);
@@ -845,14 +846,49 @@ class AppStore {
     for (const c of this.story.cutscenes.values()) await saveCutscene(assetFs, p.dir, c);
   }
 
-  setItems(items: ItemData[]): void {
+  /** The records of one kind of data (empty when no plugin that is on keeps it). */
+  dataList(kind: string): readonly unknown[] {
+    return this.data[kind] ?? [];
+  }
+
+  /** What checks may ask about the data of the project: the names of the records of each kind, and of everything that can be carried. */
+  dataKnown(): DataKnown {
+    return dataKnown(this.data);
+  }
+
+  /** What a scene check may ask about the rest of the project. */
+  projectKnown(): ProjectKnown {
+    return { data: this.dataKnown(), dialogues: new Set(this.story.dialogues.keys()), cutscenes: new Set(this.story.cutscenes.keys()) };
+  }
+
+  /** The things that can be given or carried, for a list to choose from: `{ value, label }` for each record of a kind that carries. */
+  carriedChoices(): { value: string; label: string }[] {
+    return dataKinds()
+      .filter((d) => d.carries)
+      .flatMap((d) => this.dataList(d.id).map((r) => ({ value: d.keyOf(r), label: String((r as { name?: unknown }).name ?? d.keyOf(r)) })));
+  }
+
+  /** Replace the records of one kind (an edit in its Story tab, or a change by the assistant): one undo step, saved a moment later. */
+  setData(kind: string, records: unknown[]): void {
+    const def = dataKinds().find((d) => d.id === kind);
+    if (!def) return;
     const before = this.storySnapshot();
-    this.story = { ...this.story, items };
-    this.recordStory('Edit the items', 'items', before);
+    this.data = { ...this.data, [kind]: records };
+    this.recordStory(`Edit the ${def.label.toLowerCase()}`, `data:${kind}`, before);
     this.set({ storyVersion: this.state.storyVersion + 1 });
     this.maybeHotReload();
     const p = this.state.project;
-    if (p) this.persistLater('items', () => saveItems(assetFs, p.dir, this.story.items));
+    if (p) this.persistLater(`data:${kind}`, () => saveData(assetFs, p.dir, def, this.dataList(kind)));
+  }
+
+  /** Read the data of the plugins that are on again (after the plugins of the project were changed): what was edited is saved first. */
+  async reloadData(): Promise<void> {
+    const p = this.state.project;
+    if (!p) return;
+    const r = await loadData(assetFs, p.dir);
+    this.data = r.data;
+    for (const problem of r.problems) this.notify('warn', problem);
+    this.set({ storyVersion: this.state.storyVersion + 1 });
   }
 
   // ---- data tables, custom components and behaviours, event names ----
@@ -951,14 +987,17 @@ class AppStore {
   }
 
   /** Change the project's name, first scene, tile size or title screen. Saved at once. */
-  async updateProjectSettings(patch: Partial<Pick<ProjectData, 'name' | 'startScene' | 'iso' | 'title' | 'plugins' | 'compat' | 'assistantDeny'>>): Promise<boolean> {
+  async updateProjectSettings(patch: Partial<Pick<ProjectData, 'name' | 'startScene' | 'iso' | 'title' | 'plugins' | 'compat' | 'assistantDeny' | 'collisionLayers'>>): Promise<boolean> {
     const p = this.state.project;
     if (!p) return false;
     const ok = await this.guard('Saving the project settings', async () => {
       const project = { ...p.project, ...patch };
       await this.saveProjectFile(p.dir, project);
+      if (patch.collisionLayers) setProjectLayers(patch.collisionLayers);
       if (patch.plugins) {
+        if (this.storyTimers.size > 0) await this.flushStory(); // (edits still waiting to be written belong to the plugins that were on)
         setActivePacks(patch.plugins);
+        await this.reloadData();
         setPlayerRequired(this.doc?.entities.some((e) => e.tags.includes('player')) ?? false);
       }
       this.set({ project: { ...p, project }, docVersion: this.state.docVersion + 1, storyVersion: this.state.storyVersion + 1 });
@@ -975,16 +1014,6 @@ class AppStore {
     this.maybeHotReload();
     const p = this.state.project;
     if (p) this.persistLater('skins', () => saveSkins(assetFs, p.dir, this.skins));
-  }
-
-  setMinigames(minigames: MinigameData[]): void {
-    const before = this.storySnapshot();
-    this.minigames = minigames;
-    this.recordStory('Edit the minigames', 'minigames', before);
-    this.set({ storyVersion: this.state.storyVersion + 1 });
-    this.maybeHotReload();
-    const p = this.state.project;
-    if (p) this.persistLater('minigames', () => saveMinigames(assetFs, p.dir, this.minigames));
   }
 
   setWorldMap(map: WorldMapData | null): void {
@@ -1201,7 +1230,7 @@ class AppStore {
   headlessSetup(): GameSetup | null {
     const scene = this.doc?.toScene();
     if (!scene) return null;
-    return { scene, scenePath: this.state.scenePath ?? '', prefabs: this.prefabs, items: this.story.items, dialogues: this.story.dialogues, cutscenes: this.story.cutscenes, minigames: this.minigames, tables: this.tables };
+    return { scene, scenePath: this.state.scenePath ?? '', prefabs: this.prefabs, data: this.data, dialogues: this.story.dialogues, cutscenes: this.story.cutscenes, tables: this.tables };
   }
 
   /** The game, headless, from the open scene as it is now (unsaved edits included). */
@@ -1214,7 +1243,7 @@ class AppStore {
       scenePath: over ? over.start : (this.state.scenePath ?? ''),
       ...(over ? { scenes: over.scenes } : {}),
       prefabs: this.prefabs,
-      items: this.story.items,
+      data: this.data,
       dialogues: this.story.dialogues,
       cutscenes: this.story.cutscenes,
       tables: this.tables,
@@ -1269,7 +1298,7 @@ class AppStore {
     await this.flushStory().catch(() => undefined);
     const { studio } = await import('../studio/store');
     await studio.flushMixer().catch(() => undefined);
-    const problems = await checkProject(realFs, p.dir, p.project, this.prefabs, this.story, new Set(studio.assets.keys()), new Set(studio.sounds.map((s) => s.name)), (await loadLanguages(assetFs, p.dir)).languages, this.skins, this.minigames, studio.mixer, this.worldMap, { input: this.input, layout: this.uiLayout, tables: this.tables });
+    const problems = await checkProject(realFs, p.dir, p.project, this.prefabs, this.story, new Set(studio.assets.keys()), new Set(studio.sounds.map((s) => s.name)), (await loadLanguages(assetFs, p.dir)).languages, this.skins, this.data, studio.mixer, this.worldMap, { input: this.input, layout: this.uiLayout, tables: this.tables });
     this.set({ projectCheck: { problems, at: Date.now() } });
     return problems;
   }

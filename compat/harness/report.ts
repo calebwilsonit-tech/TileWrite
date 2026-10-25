@@ -9,7 +9,7 @@ import { checkProject } from '../../packages/editor/src/renderer/project/check';
 import { EditorDoc } from '../../packages/editor/src/renderer/model/doc';
 import { projectText } from '../../packages/editor/src/renderer/project/io';
 import { loadAllPrefabs } from '../../packages/editor/src/renderer/project/prefabs';
-import { loadCutscenes, loadDialogues, loadItems, loadMinigames, loadSkins, loadWorldMap, loadProjectInput, loadUiLayout } from '../../packages/editor/src/renderer/project/story';
+import { loadCutscenes, loadData, loadDialogues, loadSkins, loadWorldMap, loadProjectInput, loadUiLayout } from '../../packages/editor/src/renderer/project/story';
 import { loadTables } from '../../packages/editor/src/renderer/project/blocks';
 import { joinPath } from '../../packages/editor/src/renderer/project/api';
 import { gameOn, loadProject, unload, type LoadedProject } from './load';
@@ -110,13 +110,12 @@ export async function buildReport(dir: string): Promise<CompatReport> {
     const scenarios: CompatReport['scenarios'] = {};
     for (const sc of scenariosOf(dir)) scenarios[sc.name] = runSteps(gameOn(p, sc.scene || p.project.startScene), sc.steps, sc.every ?? 30, sc.watch);
 
-    const [prefabs, items, dialogues, cutscenes, skins, minigames, worldMap, controls, layout, tables] = await Promise.all([
+    const [prefabs, data, dialogues, cutscenes, skins, worldMap, controls, layout, tables] = await Promise.all([
       loadAllPrefabs(nodeFs, dir),
-      loadItems(nodeFs, dir),
+      loadData(nodeFs, dir),
       loadDialogues(nodeFs, dir),
       loadCutscenes(nodeFs, dir),
       loadSkins(nodeFs, dir),
-      loadMinigames(nodeFs, dir),
       loadWorldMap(nodeFs, dir),
       loadProjectInput(nodeFs, dir),
       loadUiLayout(nodeFs, dir),
@@ -127,12 +126,12 @@ export async function buildReport(dir: string): Promise<CompatReport> {
       dir,
       p.project,
       prefabs.prefabs,
-      { items: items.items, dialogues: dialogues.items, cutscenes: cutscenes.items },
+      { dialogues: dialogues.items, cutscenes: cutscenes.items },
       new Set(),
       undefined,
       [],
       skins.skins,
-      minigames.minigames,
+      data.data,
       undefined,
       worldMap.map,
       { input: controls.input, layout: layout.layout, tables: tables.items },

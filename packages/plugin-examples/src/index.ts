@@ -1,5 +1,5 @@
 import type { PluginDefinition } from '@tilewright/plugin-sdk';
-import { behaviorExample, blockExample, bridgeExample, componentExample, defeatExample, eventsExample, inputExample, layerExample, physicsExample, screenLayerExample, scriptExample, systemExample, unlockExample, whoExample } from './game';
+import { behaviorExample, blockExample, bridgeExample, componentExample, defeatExample, eventsExample, inputExample, carrierExample, dataKindExample, layerExample, physicsExample, screenLayerExample, scriptExample, systemExample, unlockExample, whoExample } from './game';
 import { gameUiExample, listSourceExample, menuEntryExample, screenExample, stringsExample, widgetExample } from './ui';
 import { exportTargetExample, exporterExample, importerExample, inspectorExample, panelExample, prefabExample, templateExample, toolExample, validatorExample } from './editor';
 import { assistantExample, moveExample, strategyExample } from './tools';
@@ -24,6 +24,8 @@ export const EXAMPLES: { point: string; plugin: PluginDefinition }[] = [
   { point: 'whoFilter', plugin: whoExample },
   { point: 'defeatCheck', plugin: defeatExample },
   { point: 'screenLayer', plugin: screenLayerExample },
+  { point: 'dataKind / dataEditor', plugin: dataKindExample },
+  { point: 'carrier', plugin: carrierExample },
   { point: 'scriptMethod', plugin: scriptExample },
   { point: 'unlockRule', plugin: unlockExample },
   { point: 'bridgeSource', plugin: bridgeExample },

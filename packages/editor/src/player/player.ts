@@ -3,14 +3,14 @@ import 'pixi.js/unsafe-eval'; // Pixi's shader helpers without `new Function`, w
 import { IsoRenderer, compatOf, crashReport, formatCrashReport, tilesetFromList, type SpriteData } from '@tilewright/runtime';
 import * as sdk from '@tilewright/plugin-sdk';
 import { PluginsBundleSchema } from '@tilewright/exporter';
-import { activate, defaultImporter, evaluatePlugin, host, parseManifest, installScriptGlobals, loadScript, packsOfProject, setActivePacks, syncCustomBlocks, type Transpiler } from '@tilewright/behaviors';
+import { activate, defaultImporter, evaluatePlugin, host, parseManifest, installScriptGlobals, loadScript, syncCustomBlocks, useProject, type Transpiler } from '@tilewright/behaviors';
 import { GameManifestSchema, ScriptsBundleSchema, type GameManifest } from '@tilewright/exporter';
 import { joinPath } from '../renderer/project/api';
 import { assetFs } from '../renderer/project/assetFs';
 import { loadScene, openProject } from '../renderer/project/io';
 import { loadAllPrefabs } from '../renderer/project/prefabs';
 import { loadComponents, loadCustomBehaviors, loadTables } from '../renderer/project/blocks';
-import { loadCutscenes, loadDialogues, loadItems, loadMinigames, loadProjectInput, loadSkins, loadUiDoc, loadUiLayout, loadWorldMap } from '../renderer/project/story';
+import { loadCutscenes, loadData, loadDialogues, loadProjectInput, loadSkins, loadUiDoc, loadUiLayout, loadWorldMap } from '../renderer/project/story';
 import { loadAllSprites } from '../renderer/studio/assets';
 import { PlaySession } from '../renderer/viewport/play-session';
 
@@ -143,23 +143,22 @@ async function boot(): Promise<void> {
       }
     }
   }
-  setActivePacks(packsOfProject(project));
+  useProject(project);
   const [tables, components, customBehaviors] = await Promise.all([loadTables(assetFs, root), loadComponents(assetFs, root), loadCustomBehaviors(assetFs, root)]);
   for (const p of syncCustomBlocks(components.items, customBehaviors.items)) console.warn(p);
-  const [{ prefabs, problems: prefabProblems }, { sprites, problems: spriteProblems }, items, dialogues, cutscenes, skins, minigames, worldMap, controls, ui] = await Promise.all([
+  const [{ prefabs, problems: prefabProblems }, { sprites, problems: spriteProblems }, data, dialogues, cutscenes, skins, worldMap, controls, ui] = await Promise.all([
     loadAllPrefabs(assetFs, root),
     loadAllSprites(assetFs, root),
-    loadItems(assetFs, root),
+    loadData(assetFs, root),
     loadDialogues(assetFs, root),
     loadCutscenes(assetFs, root),
     loadSkins(assetFs, root),
-    loadMinigames(assetFs, root),
     loadWorldMap(assetFs, root),
     loadProjectInput(assetFs, root),
     loadUiLayout(assetFs, root),
   ]);
   const uiDoc = await loadUiDoc(assetFs, root);
-  for (const p of [...prefabProblems, ...spriteProblems, ...items.problems, ...dialogues.problems, ...cutscenes.problems, ...skins.problems, ...minigames.problems, ...worldMap.problems, ...controls.problems, ...ui.problems]) console.warn(p);
+  for (const p of [...prefabProblems, ...spriteProblems, ...data.problems, ...dialogues.problems, ...cutscenes.problems, ...skins.problems, ...worldMap.problems, ...controls.problems, ...ui.problems]) console.warn(p);
 
   // scripts were compiled when the game was exported; they become behaviours exactly as in the editor
   const bundle = ScriptsBundleSchema.parse(JSON.parse(await assetFs.read(joinPath(root, 'scripts.json'))));
@@ -201,9 +200,9 @@ async function boot(): Promise<void> {
     from: null,
     prefabs,
     sprites,
-    story: { items: items.items, dialogues: dialogues.items, cutscenes: cutscenes.items },
+    story: { dialogues: dialogues.items, cutscenes: cutscenes.items },
+    data: data.data,
     skins: skins.skins,
-    minigames: minigames.minigames,
     worldMap: worldMap.map,
     tables: tables.items,
     layout: ui.layout,

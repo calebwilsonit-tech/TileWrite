@@ -1,12 +1,7 @@
 import { confirmMinigame } from '@tilewright/plugin-story';
+import { clickMinigame, defaultInstructions, minigamesOf, openMinigame, pairColumns, symbolDirs, type MinigameData, type MinigameState } from '@tilewright/plugin-story/minigames';
 import {
   contextOf,
-  clickMinigame,
-  defaultInstructions,
-  pairColumns,
-  symbolDirs,
-  type MinigameData,
-  type MinigameState,
   type Simulation,
 } from '@tilewright/plugin-sdk';
 
@@ -86,8 +81,8 @@ export class MinigameView {
   }
 
   update(): void {
-    const st = this.sim.runtime.minigame;
-    const m = st ? this.sim.assets.minigames.get(st.name) : undefined;
+    const st = openMinigame(this.sim.runtime);
+    const m = st ? minigamesOf(this.sim.assets).get(st.name) : undefined;
     if (!st || !m) {
       this.box?.remove();
       this.box = null;

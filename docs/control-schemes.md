@@ -25,7 +25,7 @@ The mouse reaches the game as actions: `pointer_primary` and `pointer_secondary`
 `view.rotation` (0-3) turns the whole picture a quarter turn: tiles show the sides that now face the camera, objects are redrawn and depth sorted for the new angle, stairs and pits too. Picking, the camera, pointer cells, box selection and walking all follow it. Use the Camera Rig's Q/E, the *Turn the world to another view* action, or script `runtime.view.rotation`. The camera keeps looking at the same place.
 
 ## Time
-See [time-and-turns.md](time-and-turns.md): real time at 1x-8x, paused, or by turns.
+See [time-and-turns.md](../packages/plugins/turns/docs/time-and-turns.md): real time at 1x-8x, paused, or by turns.
 
 ## Tested by
 `packages/behaviors/src/controls.test.ts` (click to move around a wall, hotspots, the grid cursor, box selection with the camera in the snapshot, queued orders, two hundred units under 8 ms a tick, the camera rig, ghost placement with costs and reasons), `packages/runtime/src/iso/rotate.test.ts`, `e2e/p2-rotate.spec.ts`.

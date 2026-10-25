@@ -204,7 +204,7 @@ export function loadScene(sim: Simulation, scene: SceneData, opts: LoadOptions =
   if (sim.runtime.scene !== '') sim.runtime.vars[`visited:${sim.runtime.scene}`] = true;
   sim.runtime.persistentIds = entities.filter((e) => e.tags.includes('persistent')).map((e) => e.id);
   sim.runtime.dialogue = null;
-  sim.runtime.minigame = null;
+  sim.runtime.modals = {};
   sim.runtime.announce = [];
   sim.runtime.cutscene = null;
   sim.runtime.travel = null;

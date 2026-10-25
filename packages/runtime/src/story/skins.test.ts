@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { C } from '../scene/components';
 import { Entity } from '../scene/world';
-import { ITEM_PREFIX } from './items';
 import { SkinsFileSchema, applySkin, availableSkins, newSkin, skinUnlocked } from './skins';
 
 function player(): Entity {
@@ -19,8 +18,10 @@ describe('skins', () => {
     expect(skinUnlocked(flag, {})).toBe(false);
     expect(skinUnlocked(flag, { beat_boss: true })).toBe(true);
     expect(skinUnlocked(flag, { beat_boss: 0 })).toBe(false);
+    const has = (counts: Record<string, number>): { count(id: string): number } => ({ count: (id) => counts[id] ?? 0 });
     expect(skinUnlocked(item, {})).toBe(false);
-    expect(skinUnlocked(item, { [ITEM_PREFIX + 'cape']: 1 })).toBe(true);
+    expect(skinUnlocked(item, {}, has({}))).toBe(false);
+    expect(skinUnlocked(item, {}, has({ cape: 1 }))).toBe(true);
     expect(availableSkins([always, flag, item], { beat_boss: 2 }).map((s) => s.id)).toEqual(['red', 'gold']);
   });
 

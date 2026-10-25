@@ -14,8 +14,6 @@ export interface SourceInfo {
 }
 
 const BUILTIN: SourceInfo[] = [
-  { value: 'items', label: 'the items the player carries', variables: [['item.id', 'Item id'], ['item.name', 'Item name'], ['item.count', 'How many carried'], ['item.description', 'Its description'], ['item.detail', 'Description, what E does, quick slot'], ['item.usable', 'Can it be used (1 or 0)'], ['item.slot', 'Its quick slot (0 for none)']] },
-  { value: 'quickslots', label: 'the four quick slots', variables: [['slot.number', 'Slot number'], ['slot.item', 'Item id in it'], ['slot.name', 'Item name'], ['slot.count', 'How many'], ['slot.color', 'Item colour']] },
   { value: 'saves', label: 'the save slots (the autosave and three of your own)', variables: [['save.slot', 'Slot id'], ['save.name', 'Autosave, Slot 1...'], ['save.detail', 'Where and when, or "empty"'], ['save.exists', 'Is there a save (1 or 0)'], ['save.damaged', 'Is it damaged (1 or 0)'], ['save.manual', 'Is it one the player saves to (1 or 0)']] },
   { value: 'controls', label: 'the controls the player can change', variables: [['control.action', 'Action id'], ['control.label', 'Its name'], ['control.binding', 'The keys now']] },
   { value: 'places', label: 'the places on the world map the player can travel to', variables: [['place.id', 'Place id'], ['place.name', 'Its name'], ['place.here', 'Is the player there (1 or 0)'], ['place.hint', '"you are here" or nothing'], ['place.scene', 'Its scene']] },

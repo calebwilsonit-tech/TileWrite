@@ -3,7 +3,6 @@ import '../project/schema'; // sets up Zod before the schemas below are built
 import { CURRENT_SCHEMA_VERSION, type VariableValue } from '../project/schema';
 import { C } from '../scene/components';
 import type { Entity } from '../scene/world';
-import { ITEM_PREFIX } from './items';
 
 /**
  * Cosmetic skins: other looks for the player character (a different colour, or a different drawn sprite) that the
@@ -39,7 +38,7 @@ export function newSkin(id: string, name: string): SkinData {
 }
 
 /** Whether the player can use a skin now. */
-export function skinUnlocked(skin: SkinData, vars: Record<string, VariableValue>): boolean {
+export function skinUnlocked(skin: SkinData, vars: Record<string, VariableValue>, carrying?: { count(id: string): number }): boolean {
   const u = skin.unlock;
   switch (u.kind) {
     case 'always':
@@ -50,15 +49,14 @@ export function skinUnlocked(skin: SkinData, vars: Record<string, VariableValue>
       return Number.isFinite(n) && n >= u.atLeast;
     }
     case 'item': {
-      const n = vars[ITEM_PREFIX + u.item];
-      return typeof n === 'number' && n > 0;
+      return (carrying?.count(u.item) ?? 0) > 0;
     }
   }
 }
 
 /** The skins the player may pick from, the original look first. */
-export function availableSkins(skins: readonly SkinData[], vars: Record<string, VariableValue>): SkinData[] {
-  return skins.filter((s) => skinUnlocked(s, vars));
+export function availableSkins(skins: readonly SkinData[], vars: Record<string, VariableValue>, carrying?: { count(id: string): number }): SkinData[] {
+  return skins.filter((s) => skinUnlocked(s, vars, carrying));
 }
 
 interface OriginalLook {

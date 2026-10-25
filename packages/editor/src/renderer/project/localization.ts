@@ -1,8 +1,8 @@
-import { LanguageSchema, defaultInstructions, newLanguage, type MinigameData, type CutsceneData, type DialogueData, type EventRow, type ItemData, type LanguageData, type SceneData, type UiLayout } from '@tilewright/runtime';
+import { LanguageSchema, newLanguage, type CutsceneData, type DialogueData, type EventRow, type LanguageData, type SceneData, type UiLayout } from '@tilewright/runtime';
 import { joinPath } from './api';
 import { UserError } from './io';
 import type { AssetFs } from '../studio/assets';
-import { host } from '@tilewright/behaviors';
+import { dataTexts, host, type ProjectDataSet } from '@tilewright/behaviors';
 
 export const LOCALE_DIR = 'assets/localization';
 const EXT = '.strings.json';
@@ -27,10 +27,10 @@ function* eventRows(rows: readonly EventRow[]): Generator<EventRow> {
  * blocks) is left out on purpose, because changing it changes the puzzle.
  */
 export function collectStrings(
-  story: { items: readonly ItemData[]; dialogues: ReadonlyMap<string, DialogueData>; cutscenes: ReadonlyMap<string, CutsceneData> },
+  story: { dialogues: ReadonlyMap<string, DialogueData>; cutscenes: ReadonlyMap<string, CutsceneData> },
   scenes: readonly { path: string; scene: SceneData }[],
   menus: readonly string[] = host.strings(),
-  minigames: readonly MinigameData[] = [],
+  data: ProjectDataSet = {},
   interfaceStrings: readonly string[] = [],
 ): SourceString[] {
   const seen = new Map<string, string>();
@@ -58,15 +58,7 @@ export function collectStrings(
       } else if (s.type === 'message') add(s.text, `Cutscene ${name}`);
     }
   }
-  for (const i of story.items) {
-    add(i.name, `Item ${i.name}`);
-    add(i.description, `Item ${i.name}`);
-    add(i.use?.message, `Item ${i.name}`);
-  }
-  for (const m of minigames) {
-    add(m.title || m.name, `Minigame ${m.name}`);
-    add(m.instructions || defaultInstructions(m.kind), `Minigame ${m.name}`);
-  }
+  for (const t of dataTexts(data)) add(t.text, t.where);
   for (const { path, scene } of scenes) {
     const label = `Scene ${path.replace(/^.*\//, '').replace('.scene.json', '')}`;
     for (const row of eventRows(scene.events)) for (const a of row.actions) if (a.type === 'message') add(a.params.text, label);

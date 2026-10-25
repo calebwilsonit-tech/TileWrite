@@ -1,4 +1,5 @@
-import { QUICK_SLOTS, addItem, itemCount, quickSlots, type SimContext } from '@tilewright/plugin-sdk';
+import type { SimContext } from '@tilewright/plugin-sdk';
+import { QUICK_SLOTS, addItem, itemCount, itemsOf, quickSlots } from './items';
 import { heal } from '@tilewright/plugin-combat';
 
 
@@ -7,7 +8,7 @@ import { heal } from '@tilewright/plugin-combat';
  * message, and use it up. Returns false if the player does not have it or it cannot be used.
  */
 export function useItem(ctx: SimContext, id: string): boolean {
-  const def = ctx.assets.items.get(id);
+  const def = itemsOf(ctx.assets).get(id);
   if (!def?.use || itemCount(ctx.runtime.vars, id) <= 0) return false;
   const u = def.use;
   const player = ctx.world.withTag('player')[0];

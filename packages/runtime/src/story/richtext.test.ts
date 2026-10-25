@@ -46,7 +46,7 @@ describe('inline text formatting', () => {
 describe('dialogue checks for formatting', () => {
   it('reports an unclosed tag in a line and in a choice', async () => {
     const { checkDialogue } = await import('./dialogue');
-    const known = { items: new Set<string>(), variables: new Set<string>() };
+    const known = { carried: new Set<string>(), variables: new Set<string>() };
     const d = {
       name: 'T',
       start: 'a',

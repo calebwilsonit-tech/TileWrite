@@ -1,18 +1,16 @@
 # Tilewright documentation
 
-Start with the tutorial in the app (the project screen's **Take the tutorial** button, or **Commands -> Start the tutorial**): in about ten minutes you build a small puzzle room without writing code. To see what a whole game looks like, open the finished sample from the project screen (**See a finished game**); it is a copy you can change.
+Start with the tutorial in the app (the project screen's **Take the tutorial** button, or **Commands -> Start the tutorial**): in about ten minutes you build a small playable room without writing code. To see what a whole game looks like, open the finished sample from the project screen (**See a finished game**); it is a copy you can change.
 
 | If you want to... | Read |
 | --- | --- |
 | Learn what every panel and tool does | [editor.md](editor.md) |
-| Make something specific (a lever door, an echo puzzle, a boss...) | [recipes.md](recipes.md) |
+| Make something specific (a lever door, a pressure plate, a boss...) | [recipes.md](recipes.md) |
 | Change the pause menu, give the game a look, add to a menu | [recipes/](recipes/README.md) |
 | Look up a behaviour and its settings | [behaviours.md](behaviours.md) (generated from the engine) |
 | Look up an event-sheet condition or action | [event-blocks.md](event-blocks.md) (generated) |
 | Wire things together and write event sheets | [logic.md](logic.md) |
-| Echoes, lights and words | [echoes-light-words.md](echoes-light-words.md) |
-| Enemies, stealth, bosses | [ai-and-combat.md](ai-and-combat.md) |
-| Conversations, cutscenes, items, saves, menus | [story-systems.md](story-systems.md) |
+| What each plugin that ships with Tilewright adds (combat and AI, story and items, turns, simulation, lighting...), one guide each | [plugins/README.md](plugins/README.md#the-plugins-that-ship-with-tilewright) |
 | What the engine assumes about games, and what is changing (phase 2) | [genre_audit.md](genre_audit.md) |
 | Blocks, what is solid, gravity in any direction, placing blocks while the game runs | [blocks-and-gravity.md](blocks-and-gravity.md) |
 | Why blocks turned see-through and were passed through on a wall (a case study) | [gravity_diagnosis.md](gravity_diagnosis.md) |
@@ -22,8 +20,6 @@ Start with the tutorial in the app (the project screen's **Take the tutorial** b
 | Control schemes, the pointer, building with ghosts, the four isometric views | [control-schemes.md](control-schemes.md) |
 | Procedural maps (rooms, caves, islands, towns), seeds, new runs, very large maps | [procedural-maps.md](procedural-maps.md) |
 | Buttons, wires, logic nodes and graphs: the three levels of logic, breakpoints | [logic.md](logic.md) |
-| Resources, production chains, day and night, waves, routes, villagers with needs, fire and growth | [simulation-helpers.md](simulation-helpers.md) |
-| Real time, speed-up and turn-based play | [time-and-turns.md](time-and-turns.md) |
 | Writing a plugin: the guide, every extension point | [plugins/](plugins/README.md) |
 | Switching plugins on; the older plugin API | [packs-and-plugins.md](packs-and-plugins.md) |
 | Design screens, menus, HUDs, inventories, shops: the UI designer | [ui-designer.md](ui-designer.md) |
@@ -42,6 +38,6 @@ Start with the tutorial in the app (the project screen's **Take the tutorial** b
 | Use Claude inside the editor | [assistant.md](assistant.md) |
 | Turn a game into a program | [export.md](export.md) |
 | Compile the editor itself on Windows | [BUILDING.md](BUILDING.md) |
-| See how a whole game is built (and tested) | [acceptance.md](acceptance.md), [reference_game.md](reference_game.md) |
+| See how a whole game is built (and tested): the reference game is a plugin | [its guides](plugins/README.md#the-plugins-that-ship-with-tilewright) |
 | How the engine works inside | [runtime.md](runtime.md), [physics.md](physics.md) |
 | Make the editor easier to see and use | [accessibility.md](accessibility.md) |

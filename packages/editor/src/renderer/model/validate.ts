@@ -15,6 +15,7 @@ import {
   listPacks,
   host,
   possibleBridges,
+  type ProjectKnown,
 } from '@tilewright/behaviors';
 
 export interface Problem {
@@ -49,7 +50,7 @@ function prefabTags(n: { tags: string[]; children: unknown[] }): string[] {
   return [...n.tags, ...n.children.flatMap((c) => prefabTags(c as { tags: string[]; children: unknown[] }))];
 }
 
-export function validateScene(doc: EditorDoc, sprites?: ReadonlySet<string>, prefabNames?: ReadonlySet<string>, storyVars?: ReadonlySet<string>, sounds?: ReadonlySet<string>): Problem[] {
+export function validateScene(doc: EditorDoc, sprites?: ReadonlySet<string>, prefabNames?: ReadonlySet<string>, storyVars?: ReadonlySet<string>, sounds?: ReadonlySet<string>, project?: ProjectKnown): Problem[] {
   const out: Problem[] = [];
   const map = doc.map;
 
@@ -318,7 +319,7 @@ export function validateScene(doc: EditorDoc, sprites?: ReadonlySet<string>, pre
 
   // checks the plugins that are on bring
   for (const v of host.ext.validators.values()) {
-    for (const p of v.check(doc)) {
+    for (const p of v.check(doc, project)) {
       const owner = p.entity ? doc.getEntity(p.entity) : undefined;
       const at = owner ? (owner.components.transform as T | undefined) : p.x !== undefined && p.y !== undefined ? { x: p.x, y: p.y, h: 0 } : undefined;
       out.push({ id: p.id, severity: p.severity, message: p.message, ...(at ? { target: p.entity ? pos('entity', p.entity, at) : ({ kind: 'cell', x: at.x, y: at.y } as Problem['target']) } : {}) });

@@ -1,10 +1,12 @@
 import { hudPieceKinds } from '@tilewright/plugin-sdk';
+import { itemsOf } from '@tilewright/plugin-inventory/items';
 import { MINIGAME_CSS, MINIGAME_STRINGS, MinigameView } from './minigame-ui';
 import { screenWords } from './screens';
 import { WORLD_MAP_CSS } from './world-map';
 import {
   activeActionLabels,
   availableSkins,
+  carryingOf,
   completeLayout,
   defaultUiLayout,
   themeVars,
@@ -206,7 +208,7 @@ export class GameUi implements GameUiLike {
   }
 
   private itemName(id: string): string {
-    return this.tr(this.host.sim.assets.items.get(id)?.name ?? id);
+    return this.tr(itemsOf(this.host.sim.assets).get(id)?.name ?? id);
   }
 
   toast(text: string): void {
@@ -243,7 +245,7 @@ export class GameUi implements GameUiLike {
   /** Open the screen that plays the Pause part (the project's own, or the one the plugin ships). */
   openMenu(): void {
     const r = this.host.sim.runtime;
-    if (r.dialogue || r.cutscene || r.minigame) return;
+    if (r.dialogue || r.cutscene || Object.keys(r.modals).length > 0) return;
     openRole(this.host.sim, 'pause');
   }
 
@@ -275,7 +277,7 @@ export class GameUi implements GameUiLike {
   /** The options a settings choice offers: appearances (skins) and languages, each shown by its own name. */
   private choicesFor(what: string): { value: string; label: string }[] {
     const sim = this.host.sim;
-    if (what === 'skin') return [{ value: '', label: 'Original' }, ...availableSkins(sim.assets.skins, sim.runtime.vars).map((s) => ({ value: s.id, label: s.name }))];
+    if (what === 'skin') return [{ value: '', label: 'Original' }, ...availableSkins(sim.assets.skins, sim.runtime.vars, carryingOf(contextOf(sim))).map((s) => ({ value: s.id, label: s.name }))];
     if (what === 'language') return languageChoices(sim.assets.strings).map((l) => ({ value: l.code, label: l.name }));
     return [];
   }

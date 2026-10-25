@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Rng } from '../core/rng';
+import { Rng } from '@tilewright/runtime';
 import {
   MinigamesFileSchema,
   checkMinigame,
@@ -251,7 +251,7 @@ describe('match the pairs', () => {
 
 describe('checks', () => {
   it('warns about impossible or missing things in plain English', () => {
-    const known = { items: new Set(['key']) };
+    const known = { carried: new Set(['key']) };
     expect(checkMinigame(newMinigame('timing', 'T'), known)).toEqual([]);
     expect(checkMinigame({ ...newMinigame('timing', 'T'), rewardItem: 'gem' }, known)[0]).toMatch(/item "gem"/);
     expect(checkMinigame({ ...newMinigame('timing', 'T'), rounds: 12, zone: 0.08 } as MinigameData, known)[0]).toMatch(/almost impossible/);

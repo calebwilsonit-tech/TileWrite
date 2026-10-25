@@ -1,20 +1,15 @@
 import {
   C,
-  addItem,
   advanceDialogue,
-  autoSlot,
+  carryingOf,
   chooseDialogue,
   emitFx,
   facingOfGridDir,
-  minigameKey,
   startDialogue,
-  startMinigame,
-  stepMinigame,
   type CutsceneEffect,
   type CutsceneState,
   type CutsceneStep,
   type DialogueHost,
-  type MinigameOutcome,
   type SimContext,
   type TransformIso,
   newNav,
@@ -23,10 +18,11 @@ import {
   resolveRef,
   resolvePoint,
 } from '@tilewright/plugin-sdk';
+import { minigameKey, minigamesOf, openMinigame, setMinigame, startMinigame, stepMinigame, type MinigameOutcome } from './minigames';
 
 /** What conversations can read and change in a running game. */
 function hostOf(ctx: SimContext): DialogueHost {
-  return { vars: ctx.runtime.vars, items: ctx.assets.items, emit: (type, data) => void ctx.events.emit(type, data), tr: (s) => ctx.assets.strings.t(s) };
+  return { vars: ctx.runtime.vars, carrying: carryingOf(ctx), emit: (type, data) => void ctx.events.emit(type, data), tr: (s) => ctx.assets.strings.t(s) };
 }
 
 // ---------- dialogue ----------
@@ -103,13 +99,13 @@ export function dialogueSystem(ctx: SimContext): void {
 
 /** Open a minigame. Returns false when there is none by that name or one is already open. */
 export function beginMinigame(ctx: SimContext, name: string): boolean {
-  const m = ctx.assets.minigames.get(name);
+  const m = minigamesOf(ctx.assets).get(name);
   if (!m) {
     ctx.events.emit('problem', { text: `Something wants to start the minigame "${name}", which does not exist.` });
     return false;
   }
-  if (ctx.runtime.minigame) return false;
-  ctx.runtime.minigame = startMinigame(m, ctx.rng);
+  if (openMinigame(ctx.runtime)) return false;
+  setMinigame(ctx.runtime, startMinigame(m, ctx.rng));
   ctx.events.emit('minigame-started', { name });
   return true;
 }
@@ -117,7 +113,7 @@ export function beginMinigame(ctx: SimContext, name: string): boolean {
 /** Write down how a play went: the standard variables, the ones the minigame names, and the reward for a first win. */
 export function endMinigame(ctx: SimContext, name: string, outcome: MinigameOutcome): void {
   const vars = ctx.runtime.vars;
-  const m = ctx.assets.minigames.get(name);
+  const m = minigamesOf(ctx.assets).get(name);
   const firstWin = outcome.won && vars[minigameKey(name, 'won')] !== true;
   vars[minigameKey(name, 'played')] = (typeof vars[minigameKey(name, 'played')] === 'number' ? (vars[minigameKey(name, 'played')] as number) : 0) + 1;
   const best = vars[minigameKey(name, 'best')];
@@ -127,22 +123,19 @@ export function endMinigame(ctx: SimContext, name: string, outcome: MinigameOutc
     if (m.scoreVariable) vars[m.scoreVariable] = outcome.score;
     if (outcome.won && m.winVariable) vars[m.winVariable] = true;
     if (firstWin && m.rewardItem) {
-      const got = addItem(vars, m.rewardItem, m.rewardAmount, ctx.assets.items.get(m.rewardItem));
-      if (got > 0) {
-        autoSlot(vars, m.rewardItem);
-        ctx.events.emit('item-given', { item: m.rewardItem, amount: got });
-      }
+      const got = carryingOf(ctx)?.give(m.rewardItem, m.rewardAmount) ?? 0;
+      if (got > 0) ctx.events.emit('item-given', { item: m.rewardItem, amount: got });
     }
   }
-  ctx.runtime.minigame = null;
+  setMinigame(ctx.runtime, null);
   // the event sheet is frozen in this tick, so the news goes out at the start of the next one
   ctx.runtime.announce.push({ type: 'minigame-ended', data: { name, won: outcome.won, score: outcome.score, quit: outcome.quit } });
 }
 
 /** A click on the screen standing for the confirm button (start, or leave the result). */
 export function confirmMinigame(ctx: SimContext): void {
-  const st = ctx.runtime.minigame;
-  const m = st && ctx.assets.minigames.get(st.name);
+  const st = openMinigame(ctx.runtime);
+  const m = st && minigamesOf(ctx.assets).get(st.name);
   if (!st || !m) return;
   if (st.phase === 'play' || st.phase === 'show') return; // clicks in the middle of a game go to the arrows and cards
   const outcome = stepMinigame(m, st, { confirm: true }, 0, ctx.rng);
@@ -151,11 +144,11 @@ export function confirmMinigame(ctx: SimContext): void {
 
 /** Runs first each tick: the minigame on screen listens to the real buttons (the world is frozen under it). */
 export function minigameSystem(ctx: SimContext): void {
-  const st = ctx.runtime.minigame;
+  const st = openMinigame(ctx.runtime);
   if (!st) return;
-  const m = ctx.assets.minigames.get(st.name);
+  const m = minigamesOf(ctx.assets).get(st.name);
   if (!m) {
-    ctx.runtime.minigame = null;
+    setMinigame(ctx.runtime, null);
     return;
   }
   const ui = ctx.uiInput;
@@ -306,8 +299,7 @@ function startStep(ctx: SimContext, cs: CutsceneState, step: CutsceneStep, insta
       ctx.runtime.vars[step.name] = step.value;
       break;
     case 'give': {
-      const got = addItem(ctx.runtime.vars, step.item, step.amount, ctx.assets.items.get(step.item));
-      if (got > 0) autoSlot(ctx.runtime.vars, step.item);
+      carryingOf(ctx)?.give(step.item, step.amount);
       break;
     }
     case 'message':
