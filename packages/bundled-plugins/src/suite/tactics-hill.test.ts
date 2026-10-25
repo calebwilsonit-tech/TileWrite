@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { C, TileMap, tileMapToRows, type SceneData, type TransformIso } from '@tilewright/runtime';
+import { C, TileMap, legacyFlags, tileMapToRows, type SceneData, type TransformIso } from '@tilewright/runtime';
 import { newAction, newCondition, newRow, setActivePacks } from '@tilewright/behaviors';
 import { thing } from '@tilewright/plugin-sdk/testing';
 import { Game, PointerBot } from '@tilewright/playbot';
@@ -48,7 +48,7 @@ function battlefield(): SceneData {
 
 describe('a battle with a second hill and a third enemy, under the block physics', () => {
   it('is won by the bot: no enemy gets stuck partway across a cell on its turn', () => {
-    const game = new Game({ scene: battlefield(), compat: { fadeBySight: true, blockPhysics: true, loadRestoresHealth: false, pauseAction: false } });
+    const game = new Game({ scene: battlefield(), compat: { ...legacyFlags(), fadeBySight: true, blockPhysics: true } });
     const bot = new PointerBot(game);
     bot.wait(0.3);
     expect(battle(bot)).toMatchObject({ active: true, team: 'blue' });

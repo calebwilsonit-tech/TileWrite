@@ -273,6 +273,11 @@ export class Simulation {
   private readonly systems: { name: string; fn: System; mode: SystemMode }[] = [];
   /** Buttons held down while a menu or conversation had the controls: ignored until they are let go. */
   private readonly suppressed = new Set<string>();
+  /**
+   * Buttons the interface takes this tick (a screen that has the keyboard focus on a widget takes the button that presses it). The
+   * world does not see them, and keeps not seeing them until they are let go; the interface itself still does (`uiInput`).
+   */
+  claimInput: ((snapshot: ActionSnapshot) => readonly string[]) | null = null;
 
   constructor(seed = 1) {
     this.rng = new Rng(seed);
@@ -307,6 +312,10 @@ export class Simulation {
       for (const k of [...this.suppressed]) if (!(k in snapshot)) this.suppressed.delete(k);
       gameplay = {};
       for (const [k, v] of Object.entries(snapshot)) if (!this.suppressed.has(k)) gameplay[k] = v;
+    }
+    if (this.claimInput) for (const k of this.claimInput(snapshot)) {
+      delete gameplay[k];
+      this.suppressed.add(k);
     }
     // game time passes only while the world is really moving (not paused, not turn-based, not frozen by a conversation)
     if (modal !== 'freeze' && this.runtime.clock.mode === 'realtime') this.runtime.clock.elapsed++;

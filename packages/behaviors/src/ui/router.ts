@@ -1,4 +1,4 @@
-import { closeScreen, openRole, roleOfScreen, openScreen, screenBlocksInput, screenNamed, screenPauses, sync, type Simulation, type UiScreen } from '@tilewright/runtime';
+import { closeScreen, openRole, roleOfScreen, openScreen, screenBlocksInput, screenIsOverlay, screenNamed, screenPauses, sync, type Simulation, type UiScreen } from '@tilewright/runtime';
 
 /**
  * One place decides what a press of Back (the pause button: Esc, the pad's Start or B) does, for every screen the game
@@ -18,8 +18,11 @@ export interface RouterHost {
 /** What Back does on one screen. */
 export type BackAction = { kind: 'close' } | { kind: 'previous' } | { kind: 'goto'; to: string } | { kind: 'swallow' } | { kind: 'pass' };
 
-/** Back's meaning on a screen, from the screen's own setting (and, for `auto`, from its name and whether it blocks input). */
-export function backAction(s: UiScreen): BackAction {
+/**
+ * Back's meaning on a screen, from the screen's own setting (and, for `auto`, from its role and whether it takes the buttons).
+ * A screen the player opened as a menu is closed by Back whether or not it takes the buttons; only an overlay (a heads-up display) lets it pass.
+ */
+export function backAction(s: UiScreen, menusClose = true): BackAction {
   switch (s.back) {
     case 'close':
       return { kind: 'close' };
@@ -29,10 +32,15 @@ export function backAction(s: UiScreen): BackAction {
       return s.backTo ? { kind: 'goto', to: s.backTo } : { kind: 'previous' };
     case 'nothing':
       return { kind: 'swallow' };
+    case 'pass':
+      return { kind: 'pass' };
     default:
       if (roleOfScreen(s) === 'pause') return { kind: 'close' };
       if (roleOfScreen(s) === 'title') return { kind: 'swallow' };
-      return screenBlocksInput(s) ? { kind: 'previous' } : { kind: 'pass' };
+      if (screenIsOverlay(s)) return { kind: 'pass' };
+      if (screenBlocksInput(s)) return { kind: 'previous' };
+      // the older rule (the project does not have `backClosesMenus`): anything that does not take the buttons lets Back through
+      return menusClose ? { kind: 'close' } : { kind: 'pass' };
   }
 }
 
@@ -56,7 +64,7 @@ export function backFromScreens(sim: Simulation, fresh: ReadonlySet<string> = ne
   for (const s of offerOrder(sim)) {
     // a screen that opened on this very press (a Quick Action did it) is not also sent the press as Back
     if (fresh.has(s.name)) continue;
-    const a = backAction(s);
+    const a = backAction(s, sim.compat.backClosesMenus);
     if (a.kind === 'pass') continue;
     switch (a.kind) {
       case 'close': {
@@ -128,8 +136,8 @@ function route(h: RouterHost, busy: boolean, fresh: ReadonlySet<string>): void {
 }
 
 /** What Back does on a screen, in words (for the screens overlay and the designer). */
-export function backWords(s: UiScreen): string {
-  const a = backAction(s);
+export function backWords(s: UiScreen, menusClose = true): string {
+  const a = backAction(s, menusClose);
   switch (a.kind) {
     case 'close':
       return 'Back closes it';
@@ -140,7 +148,7 @@ export function backWords(s: UiScreen): string {
     case 'swallow':
       return 'Back does nothing (it keeps Back)';
     default:
-      return 'Back passes through';
+      return 'Back passes through (to the game)';
   }
 }
 
@@ -152,7 +160,7 @@ export function describeScreens(sim: Simulation): string {
   if (order.length === 0) lines.push('  (none)');
   for (const [i, s] of order.entries()) {
     const kind = [screenPauses(s) ? 'pauses' : '', screenBlocksInput(s) ? 'takes buttons' : ''].filter(Boolean).join(', ') || 'shows only';
-    lines.push(`${i === 0 ? '>' : ' '} ${s.name}  [${kind}]  ${backWords(s)}${s.priority !== 0 ? `  priority ${s.priority}` : ''}`);
+    lines.push(`${i === 0 ? '>' : ' '} ${s.name}  [${kind}]  ${backWords(s, sim.compat.backClosesMenus)}${s.priority !== 0 ? `  priority ${s.priority}` : ''}`);
   }
   const l = r.ui.last;
   lines.push(l ? `Last press of ${l.action}, tick ${l.tick}: ${l.result}` : 'Last press of Back: none yet');

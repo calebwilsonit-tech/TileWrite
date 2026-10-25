@@ -12,7 +12,7 @@ A screen is a tree of widgets. **+ New screen** makes one. Under the picture:
 | --- | --- |
 | *The game waits while this screen is open* | menus freeze the world; a heads-up display does not |
 | *The game's own buttons stop, and Back belongs to this screen* | walking and jumping do nothing while it is open. Usually the same as the line above; turn only this one on for a shop window the world keeps moving behind |
-| *When the player presses Back* | what Esc (or the pad's B) does on this screen: **the usual** (close Pause, nothing on Title, go back from any other menu, ignore on a heads-up display), **go back to the screen before**, **close it and anything opened from it**, **go to a screen I choose**, or **nothing** (the screen keeps Back for itself) |
+| *When the player presses Back* | what Esc (or the pad's B) does on this screen: **the usual** (close Pause, nothing on Title, go back from any menu that takes the buttons, close any other menu, ignore on a heads-up display: the HUD role, or a screen that is up from the start and takes no buttons), **go back to the screen before**, **close it and anything opened from it**, **go to a screen I choose**, **nothing** (the screen keeps Back for itself), or **let it through to the game** (Back reaches whatever is under it, so it can open Pause) |
 | *Which screen gets the buttons first* | with several screens open, the higher number first; equal: the one opened last |
 | *Opens when the game starts* | the title screen, or a HUD that is always there |
 | *Darken the game behind it* | 0 to 1 |
@@ -20,7 +20,7 @@ A screen is a tree of widgets. **+ New screen** makes one. Under the picture:
 
 Screens named **Title**, **Pause** and **Settings** replace the built-in title screen, pause menu and settings. Any other screen is opened by an action. The **Open or close an interface screen** action (also in Quick actions as *Open a screen*, *Close a screen*, *Go back one screen*) opens it, closes it, goes back to the screen underneath, or closes everything. Several screens can be open at once, the last on top.
 
-**One press, one screen.** The screen that handles a press of Back takes it: nothing under it reacts to the same press, so backing out of the inventory does not also open Pause, and closing Pause leaves it closed. (Before phase 3, Back from a screen you made could land on Pause, a Pause that did not freeze the game could not be closed with Back, and closing a Pause with a heads-up display open opened it again at once.) Switch on **Screens (while playing)** in the Layers panel to see the open screens, what Back does on each, and which one handled the last press.
+**One press, one screen.** The screen that handles a press of Back takes it: nothing under it reacts to the same press, so backing out of the inventory does not also open Pause, and closing Pause leaves it closed. (Before phase 3, Back from a screen you made could land on Pause, a Pause that did not freeze the game could not be closed with Back, and closing a Pause with a heads-up display open opened it again at once.) (The rule that Back closes a menu that does not take the buttons is the compatibility flag `backClosesMenus`: every new project has it; a project made before plays as it did, where Esc on such a menu fell through to Pause. See [compat_flags.md](compat_flags.md).) Switch on **Screens (while playing)** in the Layers panel to see the open screens, what Back does on each, and which one handled the last press.
 
 ## Widgets
 

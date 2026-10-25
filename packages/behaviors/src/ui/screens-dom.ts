@@ -1,6 +1,7 @@
-import { parseRichText, pictureOf, readPointer, type Simulation, type TransformIso, type UiNode, type UiStyle } from '@tilewright/runtime';
+import { parseRichText, pictureOf, readPointer, screenIsOverlay, type Simulation, type TransformIso, type UiNode, type UiScreen, type UiStyle } from '@tilewright/runtime';
 import {
   activateWidget,
+  claimedButtons,
   adjustWidget,
   explicitNeighbour,
   focusables,
@@ -196,6 +197,9 @@ export class UiScreens {
   private current = new Map<string, ViewNode>();
   private readonly tooltip = document.createElement('div');
   private focusKey = '';
+  /** The widgets that can have the focus on the screen on top, as of the last step (what `claimInput` looks at before the next one). */
+  private focusableKeys = new Set<string>();
+  private readonly claim = (snapshot: Readonly<Record<string, number>>): string[] => claimedButtons(snapshot, this.focusKey, this.focusableKeys);
   private lastTick = -1;
   private seen = new Set<string>();
   private drag: { from: ViewNode; ghost: HTMLElement; x0: number; y0: number; started: boolean } | null = null;
@@ -209,6 +213,7 @@ export class UiScreens {
     /** The designer draws the same screens but nothing reacts, and hidden widgets are shown faintly. */
     private readonly design = false,
   ) {
+    if (!design) sim.claimInput = this.claim;
     this.root.className = 'tw-screens';
     this.root.setAttribute('data-testid', 'tw-screens');
     this.tooltip.className = 'tw-tooltip';
@@ -284,8 +289,11 @@ export class UiScreens {
     const top = screens[screens.length - 1];
     if (top && !this.design && sim.tick !== this.lastTick) {
       this.lastTick = sim.tick;
-      this.navigate(top.view);
-    } else if (!top) this.focusKey = '';
+      this.navigate(top.view, top.screen);
+    } else if (!top) {
+      this.focusKey = '';
+      this.focusableKeys = new Set();
+    }
     this.paintFocus();
     this.drawMinimaps();
   }
@@ -301,7 +309,7 @@ export class UiScreens {
     const top = screens[screens.length - 1];
     if (!top) return;
     this.lastTick = sim.tick;
-    this.navigate(top.view);
+    this.navigate(top.view, top.screen);
   }
 
   /** Interface hanging over objects, kept above them as the camera moves. */
@@ -757,9 +765,11 @@ export class UiScreens {
 
   // ---------- keys and gamepads ----------
 
-  private navigate(view: ViewNode): void {
+  private navigate(view: ViewNode, screen: UiScreen): void {
     const ui = this.sim.uiInput;
     const all = focusables(view);
+    // (a heads-up display's buttons are clicked, not walked to with the keyboard: its focus does not take the button away from the game)
+    this.focusableKeys = screenIsOverlay(screen) ? new Set() : new Set(all.map((f) => f.key));
     if (all.length === 0) return;
     if (this.capturingKey) return;
     let cur = all.find((f) => f.key === this.focusKey) ?? null;
@@ -792,6 +802,7 @@ export class UiScreens {
     if (cur && ui.pressed('interact')) {
       if (cur.node.type === 'keybind') this.capturingKey = cur.key;
       activateWidget(this.sim, cur);
+      ui.consume('interact'); // the press went to the widget: nothing after it in this tick acts on it too
     }
   }
 
@@ -885,6 +896,7 @@ export class UiScreens {
   }
 
   dispose(): void {
+    if (this.sim.claimInput === this.claim) this.sim.claimInput = null;
     this.root.remove();
     this.drag?.ghost.remove();
     void walkView;

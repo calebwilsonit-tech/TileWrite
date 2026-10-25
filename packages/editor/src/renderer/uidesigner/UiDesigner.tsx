@@ -103,11 +103,12 @@ function ScreenProps({ doc, screenId }: { doc: UiDoc; screenId: string }) {
         label="When the player presses Back (Esc, the pad's B)"
         value={s.back}
         options={[
-          { value: 'auto', label: 'the usual: close Pause, go back from other menus, let a heads-up display ignore it' },
+          { value: 'auto', label: 'the usual: close Pause, close or go back from other menus, let a heads-up display ignore it' },
           { value: 'previous', label: 'go back to the screen before it' },
           { value: 'close', label: 'close it, and anything opened from it' },
           { value: 'screen', label: 'go to a screen I choose' },
           { value: 'nothing', label: 'nothing (the screen keeps Back for itself)' },
+          { value: 'pass', label: 'let it through to the game (it can open Pause)' },
         ]}
         onChange={(v) => set((x) => (x.back = v as typeof x.back))}
       />

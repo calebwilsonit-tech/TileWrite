@@ -445,6 +445,14 @@ export function isFocusable(n: ViewNode): boolean {
   return n.visible && n.enabled && (INTERACTIVE.has(n.node.type) || n.node.on.click.length > 0 || (n.node.type === 'grid' && false));
 }
 
+/**
+ * The buttons the interface takes this tick: "interact" when a screen has the keyboard focus on a widget that is still there, because
+ * that press will activate the widget and must not also make the game talk to whoever is standing nearby.
+ */
+export function claimedButtons(snapshot: Readonly<Record<string, number>>, focusKey: string, focusableKeys: ReadonlySet<string>): string[] {
+  return (snapshot.interact ?? 0) > 0 && focusKey !== '' && focusableKeys.has(focusKey) ? ['interact'] : [];
+}
+
 export function focusables(view: ViewNode): ViewNode[] {
   const out: ViewNode[] = [];
   walkView(view, (n) => {

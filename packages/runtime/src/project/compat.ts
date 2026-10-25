@@ -20,6 +20,11 @@ export const COMPAT_FLAGS = {
     help: 'Off: the older behaviour, where a loaded game always started at full health (the health is made on the first tick, after the load had already tried to set it). On: the health in the save is used.',
     since: 3,
   },
+  backClosesMenus: {
+    label: 'Back (Esc) closes a menu you made, even one that does not take the buttons',
+    help: 'Off: the older rule, where Back passes straight through any screen that does not take the buttons, so Esc on such a menu (an inventory that leaves the game running, say) opens Pause instead of closing it. On: Back closes any screen the player opened as a menu; only a heads-up display (the HUD role, a screen that is up from the start and takes no buttons, or one set to "let it through") lets Back pass.',
+    since: 3,
+  },
   pauseAction: {
     label: 'The pause button is a Quick Action you can see and change',
     help: 'Off: the pause button opens the screen used as Pause by itself, which nothing in the project shows (the older rule). On: it does nothing by itself; the Quick Action "When the pause button is pressed, open the Pause screen", which every new scene starts with, does it, so you can change or remove it. Back (closing a screen) works either way.',

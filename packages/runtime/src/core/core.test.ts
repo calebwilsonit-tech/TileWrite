@@ -143,3 +143,45 @@ describe('Simulation determinism', () => {
     expect(t.y).toBeCloseTo(5 + 4 * Math.SQRT1_2, 5);
   });
 });
+
+describe('a button the interface takes (claimInput)', () => {
+  /** A simulation with a system that counts how many times the world saw "interact" pressed. */
+  function rig(): { sim: Simulation; seen: () => number } {
+    const sim = new Simulation(1);
+    let n = 0;
+    sim.addSystem('count', (ctx) => void (ctx.input.pressed('interact') && n++));
+    return { sim, seen: () => n };
+  }
+
+  it('is not seen by the world: a screen that takes the press does not also make the game talk to whoever is near', () => {
+    const { sim, seen } = rig();
+    sim.claimInput = (snapshot) => ((snapshot.interact ?? 0) > 0 ? ['interact'] : []);
+    for (let i = 0; i < 10; i++) sim.step({ interact: 1 }); // held for ten ticks
+    expect(seen()).toBe(0);
+    sim.step({});
+    sim.claimInput = null;
+    sim.step({ interact: 1 });
+    expect(seen()).toBe(1); // when nothing claims it, the world sees the press as before
+  });
+
+  it('keeps ignoring a button that was taken until it is let go, so it cannot fire when the screen closes', () => {
+    const { sim, seen } = rig();
+    sim.claimInput = (snapshot) => ((snapshot.interact ?? 0) > 0 ? ['interact'] : []);
+    sim.step({ interact: 1 });
+    sim.claimInput = null; // the screen is gone, the button is still down
+    for (let i = 0; i < 5; i++) sim.step({ interact: 1 });
+    expect(seen()).toBe(0);
+    sim.step({});
+    sim.step({ interact: 1 });
+    expect(seen()).toBe(1);
+  });
+
+  it('is still seen by the interface itself (uiInput), which is how it finds the press to act on', () => {
+    const sim = new Simulation(1);
+    sim.claimInput = () => ['interact'];
+    let ui = false;
+    sim.addSystem('ui', (ctx) => void (ui ||= ctx.uiInput.pressed('interact')));
+    sim.step({ interact: 1 });
+    expect(ui).toBe(true);
+  });
+});

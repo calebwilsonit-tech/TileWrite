@@ -684,6 +684,7 @@
     "screenForRole",
     "screenHash",
     "screenIntentToGrid",
+    "screenIsOverlay",
     "screenKit",
     "screenNamed",
     "screenPauses",

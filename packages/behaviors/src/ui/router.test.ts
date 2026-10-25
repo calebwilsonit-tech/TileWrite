@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { InputMap, Simulation, UiDocSchema, newWidget, openScreen, openStartScreens, pauseButtonRow, physicsSystem, DEFAULT_INPUT_MAP, type UiNode, type UiScreen } from '@tilewright/runtime';
+import { InputMap, Simulation, legacyFlags, UiDocSchema, newWidget, openScreen, openStartScreens, pauseButtonRow, physicsSystem, DEFAULT_INPUT_MAP, type UiNode, type UiScreen } from '@tilewright/runtime';
 import { backAction, routeInput, type RouterHost } from './router';
 import { addStandardSystems } from '../index';
 
@@ -29,8 +29,9 @@ const screen = (name: string, extra: Partial<UiScreen> = {}): UiScreen => ({
 });
 
 /** A game with these screens and no built-in menu (a game made in the designer). */
-function game(screens: UiScreen[]): { sim: Simulation; host: RouterHost; opened: string[]; press(...actions: string[]): void; stack(): string[] } {
+function game(screens: UiScreen[], compat: { backClosesMenus: boolean } = { backClosesMenus: true }): { sim: Simulation; host: RouterHost; opened: string[]; press(...actions: string[]): void; stack(): string[] } {
   const sim = new Simulation(1);
+  sim.compat = { ...legacyFlags(), ...compat };
   sim.assets.ui = UiDocSchema.parse({ screens });
   const opened: string[] = [];
   const host: RouterHost = { sim };
@@ -231,10 +232,82 @@ describe('what Back means on a screen', () => {
     expect(backAction(screen('Pause'))).toEqual({ kind: 'close' });
     expect(backAction(screen('Title', { modal: true }))).toEqual({ kind: 'swallow' });
     expect(backAction(screen('Settings', { modal: true }))).toEqual({ kind: 'previous' });
-    expect(backAction(screen('Hud'))).toEqual({ kind: 'pass' });
+    expect(backAction(screen('Hud', { role: 'hud' }))).toEqual({ kind: 'pass' });
+    expect(backAction(screen('Hud', { opensOnStart: true }))).toEqual({ kind: 'pass' }); // up from the start and takes no buttons: an overlay
+    expect(backAction(screen('Backpack'))).toEqual({ kind: 'close' }); // a menu that does not take the buttons: Back closes it (it used to fall through to Pause)
     expect(backAction(screen('Hud', { back: 'close' }))).toEqual({ kind: 'close' });
     expect(backAction(screen('X', { back: 'screen', backTo: 'Y' }))).toEqual({ kind: 'goto', to: 'Y' });
     expect(backAction(screen('X', { back: 'screen' }))).toEqual({ kind: 'previous' });
+  });
+});
+
+describe('Back on every kind of screen (the owner reported that a menu they made let Esc fall through to Pause)', () => {
+  type Role = '' | 'hud' | 'pause' | 'title' | 'inventory';
+  type Setting = 'auto' | 'previous' | 'close' | 'screen' | 'nothing' | 'pass';
+  /** What Back should do, worked out from the rules in words, not from the code. */
+  function expected(o: { blocks: boolean; back: Setting; role: Role; opensOnStart: boolean; backTo: boolean }): string {
+    if (o.back === 'close') return 'close';
+    if (o.back === 'previous') return 'previous';
+    if (o.back === 'screen') return o.backTo ? 'goto' : 'previous';
+    if (o.back === 'nothing') return 'swallow';
+    if (o.back === 'pass') return 'pass';
+    // auto: Pause closes, Title keeps Back, a heads-up display (the role, or a screen that is up from the start and takes nothing) lets it through;
+    // any other screen is a menu: one that takes the buttons goes back to what is under it, one that does not closes
+    if (o.role === 'pause') return 'close';
+    if (o.role === 'title') return 'swallow';
+    if (o.role === 'hud') return 'pass';
+    if (o.opensOnStart && !o.blocks) return 'pass';
+    return o.blocks ? 'previous' : 'close';
+  }
+
+  const roles: Role[] = ['', 'hud', 'pause', 'title', 'inventory'];
+  const settings: Setting[] = ['auto', 'previous', 'close', 'screen', 'nothing', 'pass'];
+  const cases = roles.flatMap((role) => settings.flatMap((back) => [false, true].flatMap((blocks) => [false, true].map((opensOnStart) => ({ role, back, blocks, opensOnStart })))));
+
+  it.each(cases)('role "$role", Back "$back", takes the buttons: $blocks, opens on start: $opensOnStart', ({ role, back, blocks, opensOnStart }) => {
+    const s = screen('Some screen', { ...(role ? { role } : {}), back: back as never, backTo: back === 'screen' ? 'Elsewhere' : '', modal: blocks, opensOnStart });
+    expect(backAction(s).kind).toBe(expected({ role, back, blocks, opensOnStart, backTo: true }));
+  });
+
+  it('Esc on a menu you made (it does not take the buttons) closes it and does not open Pause', () => {
+    const g = game([screen('Hud', { role: 'hud', opensOnStart: true }), screen('Backpack'), screen('Pause', { role: 'pause', modal: true })]);
+    openStartScreens(g.sim);
+    idle(g);
+    openScreen(g.sim, 'Backpack');
+    idle(g);
+    g.press('pause');
+    expect(g.stack()).toEqual(['Hud']); // closed, and Pause did not open on the same press
+    idle(g);
+    g.press('pause');
+    expect(g.stack()).toEqual(['Hud', 'Pause']); // the next press opens it, as it should
+  });
+
+  it('a project from before (no backClosesMenus) keeps the older rule: a menu that does not take the buttons lets Esc through to Pause', () => {
+    const g = game([screen('Hud', { opensOnStart: true }), screen('Backpack'), screen('Pause', { role: 'pause', modal: true })], { backClosesMenus: false });
+    openStartScreens(g.sim);
+    idle(g);
+    openScreen(g.sim, 'Backpack');
+    idle(g);
+    g.press('pause');
+    expect(g.stack()).toEqual(['Hud', 'Backpack', 'Pause']); // as it always was
+    expect(backAction(screen('Backpack'), false)).toEqual({ kind: 'pass' });
+    expect(backAction(screen('Backpack'), true)).toEqual({ kind: 'close' });
+    // the explicit settings mean the same with or without the flag
+    expect(backAction(screen('Backpack', { back: 'close' }), false)).toEqual({ kind: 'close' });
+    expect(backAction(screen('Backpack', { back: 'pass' }), true)).toEqual({ kind: 'pass' });
+  });
+
+  it('a screen that is up from the start and takes nothing (a status bar) lets Esc through; `pass` lets any screen do so', () => {
+    const g = game([screen('Status bar', { opensOnStart: true }), screen('Pause', { role: 'pause', modal: true })]);
+    openStartScreens(g.sim);
+    idle(g);
+    g.press('pause');
+    expect(g.stack()).toEqual(['Status bar', 'Pause']);
+    const h = game([screen('Tip', { back: 'pass' }), screen('Pause', { role: 'pause', modal: true })]);
+    openScreen(h.sim, 'Tip');
+    idle(h);
+    h.press('pause');
+    expect(h.stack()).toEqual(['Tip', 'Pause']);
   });
 });
 

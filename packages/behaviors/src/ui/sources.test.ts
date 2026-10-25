@@ -175,3 +175,16 @@ describe('buttons that ask the game to do something', () => {
     expect(sim.runtime.ui.stack).toEqual(['Start', 'Menu']);
   });
 });
+
+describe('the buttons the interface takes', () => {
+  it('takes "interact" only when a screen has the focus on a widget that is still there', async () => {
+    const { claimedButtons } = await import('./screens-logic');
+    const keys = new Set(['a', 'b']);
+    expect(claimedButtons({ interact: 1 }, 'a', keys)).toEqual(['interact']);
+    expect(claimedButtons({ interact: 0 }, 'a', keys)).toEqual([]); // not pressed
+    expect(claimedButtons({}, 'a', keys)).toEqual([]);
+    expect(claimedButtons({ interact: 1 }, '', keys)).toEqual([]); // nothing focused
+    expect(claimedButtons({ interact: 1 }, 'gone', keys)).toEqual([]); // the focused widget was removed
+    expect(claimedButtons({ move_up: 1 }, 'a', keys)).toEqual([]); // walking is never taken
+  });
+});

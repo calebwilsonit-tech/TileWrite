@@ -186,8 +186,12 @@ export const UiScreenSchema = z.object({
   pauses: z.boolean().optional(),
   /** The game's own buttons (walking, jumping) do nothing while this screen is open, and Back belongs to it. Unset: follows `modal`. */
   blocksInput: z.boolean().optional(),
-  /** What the Back button (Esc, the pad's B) does on this screen. `auto`: close Pause, do nothing on Title, go to the previous screen on any other that blocks input, and let it pass on one that does not. */
-  back: z.enum(['auto', 'previous', 'close', 'screen', 'nothing']).default('auto'),
+  /**
+   * What the Back button (Esc, the pad's B) does on this screen. `auto`: close Pause, do nothing on Title, let it pass on a heads-up
+   * display (the role, or a screen that is up from the start and takes no buttons), go to the previous screen on any other that takes
+   * the buttons, and close any other menu. `pass` lets Back through to whatever is under it, on any screen.
+   */
+  back: z.enum(['auto', 'previous', 'close', 'screen', 'nothing', 'pass']).default('auto'),
   /** For `back: 'screen'`: the screen Back goes to. */
   backTo: z.string().default(''),
   /** When several screens are open the one with the higher number is offered the buttons first (equal: the one opened last). */
@@ -209,6 +213,9 @@ export const UiScreenSchema = z.object({
   from: z.object({ plugin: z.string(), screen: z.string(), revision: z.number().int().default(1), hash: z.string().default('') }).optional(),
 });
 export type UiScreen = z.infer<typeof UiScreenSchema>;
+
+/** A heads-up display or other overlay: it is not a menu the player opened, so Back is not meant for it (the role, or a screen that is up from the start and takes no buttons). */
+export const screenIsOverlay = (s: Pick<UiScreen, 'modal' | 'blocksInput' | 'opensOnStart' | 'name' | 'role'>): boolean => roleOfScreen(s) === 'hud' || (s.opensOnStart && !screenBlocksInput(s));
 
 /** Does the game wait while this screen is open? */
 export const screenPauses = (s: Pick<UiScreen, 'modal' | 'pauses'>): boolean => s.pauses ?? s.modal;
