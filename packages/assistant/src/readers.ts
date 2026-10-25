@@ -3,10 +3,13 @@
  * the kinds Claude cannot take in. Pure (bytes in, words out); the editor does the file access.
  */
 
-export type FileKind = 'text' | 'image' | 'audio' | 'font' | 'archive' | 'binary';
+export type FileKind = 'text' | 'image' | 'audio' | 'font' | 'archive' | 'document' | 'binary';
 
 const TEXT_EXT = new Set(['.json', '.md', '.txt', '.csv', '.ts', '.js', '.mjs', '.cjs', '.css', '.html', '.svg', '.yaml', '.yml', '.xml', '.log', '.ini', '.tsv']);
 const IMAGE_EXT: Record<string, ImageMime> = { '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.gif': 'image/gif', '.webp': 'image/webp' };
+/** Pictures the API cannot take as they are: they are turned into PNG first (an SVG is text as well, so it is read both ways). */
+const CONVERTED_EXT = new Set(['.bmp', '.psd', '.aseprite', '.ase']);
+const DOCUMENT_EXT = new Set(['.pdf']);
 const AUDIO_EXT = new Set(['.wav', '.ogg', '.mp3', '.flac', '.m4a', '.aac', '.opus', '.mid', '.midi']);
 const FONT_EXT = new Set(['.ttf', '.otf', '.woff', '.woff2']);
 const ARCHIVE_EXT = new Set(['.zip', '.twpack', '.gz', '.7z', '.rar']);
@@ -19,10 +22,14 @@ export const extOf = (path: string): string => {
   return i > slash ? path.slice(i).toLowerCase() : '';
 };
 
+/** A picture file of any kind the assistant can look at: the API's own types, and those that are converted (BMP, PSD, Aseprite, SVG). */
+export const isPictureFile = (path: string): boolean => fileKind(path) === 'image' || extOf(path) === '.svg';
+
 export function fileKind(path: string): FileKind {
   const ext = extOf(path);
   if (TEXT_EXT.has(ext)) return 'text';
-  if (ext in IMAGE_EXT) return 'image';
+  if (ext in IMAGE_EXT || CONVERTED_EXT.has(ext)) return 'image';
+  if (DOCUMENT_EXT.has(ext)) return 'document';
   if (AUDIO_EXT.has(ext)) return 'audio';
   if (FONT_EXT.has(ext)) return 'font';
   if (ARCHIVE_EXT.has(ext)) return 'archive';
@@ -128,6 +135,7 @@ export interface IndexedFile {
   size?: number | undefined;
 }
 
+/** The kinds a project's files are grouped in (the index, and the kind filter of search_project). */
 const GROUPS: { id: string; label: string; test(path: string): boolean }[] = [
   { id: 'scenes', label: 'Scenes', test: (p) => p.endsWith('.scene.json') },
   { id: 'sprites', label: 'Sprites (pictures made in the sprite studio)', test: (p) => p.endsWith('.sprite.json') },
@@ -137,10 +145,19 @@ const GROUPS: { id: string; label: string; test(path: string): boolean }[] = [
   { id: 'story', label: 'Story (conversations, cutscenes, lists of things, the world map)', test: (p) => /(^|\/)(dialogues|cutscenes|items|worldmap|minigames|skins)[^/]*\.json$/.test(p) || /(^|\/)(dialogues|cutscenes)\//.test(p) },
   { id: 'scripts', label: 'Scripts', test: (p) => /\.(ts|js)$/.test(p) },
   { id: 'sounds', label: 'Sounds (I cannot listen to these)', test: (p) => fileKind(p) === 'audio' },
-  { id: 'images', label: 'Pictures (PNG, JPG...)', test: (p) => fileKind(p) === 'image' },
+  { id: 'images', label: 'Pictures (PNG, JPG, BMP, PSD, Aseprite, SVG...)', test: (p) => isPictureFile(p) },
+  { id: 'documents', label: 'Documents (PDF)', test: (p) => fileKind(p) === 'document' },
   { id: 'languages', label: 'Translations', test: (p) => p.includes('localization/') },
   { id: 'notes', label: 'Notes and documents', test: (p) => fileKind(p) === 'text' && /\.(md|txt)$/.test(p) },
 ];
+
+/** The id of the group a file belongs to ("scenes", "sprites", "sounds"...), or "other". */
+export function groupIdOf(path: string): string {
+  return GROUPS.find((g) => g.test(path))?.id ?? 'other';
+}
+
+/** Every group id, for a tool that filters by kind. */
+export const GROUP_IDS: readonly string[] = [...GROUPS.map((g) => g.id), 'other'];
 
 /**
  * A short, stable text that says what is in the project and where, so Claude can ask for what it wants with `read_project_file`.

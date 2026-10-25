@@ -211,9 +211,23 @@ export const TOOLS: ToolSpec[] = [
     schema: z.object({ folder: z.string().optional().describe('A folder like "assets/sprites"; empty for the project folder.') }),
   },
   {
+    name: 'search_project',
+    kind: 'read',
+    description: 'Search the project: for words inside its text files (scenes, conversations, screens, scripts, notes, tables, translations...) and for files by name or kind. "query" is looked for in file names and in the text; with "kind" alone you get every file of that kind (for example every sprite, or every sound). Answers give the path and line, so read_project_file or the specific tools can follow. Use it to find where something is used before changing or deleting it.',
+    schema: z.object({
+      query: z.string().max(200).optional().describe('Words to look for (a file name, or text inside files). Leave out to list a kind.'),
+      where: z.enum(['both', 'names', 'text']).optional().describe('"names" looks only at file names, "text" only inside files; default both.'),
+      kind: z.string().optional().describe('Only this kind of file: scenes, sprites, structures, tables, screens, story, scripts, sounds, images, documents, languages, notes, other.'),
+      folder: z.string().optional().describe('Only inside this folder, like "assets/sprites".'),
+      caseSensitive: z.boolean().optional(),
+      regex: z.boolean().optional().describe('The query is a regular expression (for text).'),
+      limit: z.number().int().min(1).max(100).optional().describe('Most matching lines to show (default 40).'),
+    }),
+  },
+  {
     name: 'read_project_file',
     kind: 'read',
-    description: 'Read one file of the project by its path (from project_index or list_project_files). Text files come back as text; a picture comes back as a picture you can see; a sprite comes back as a description and a picture of its first frame; a file a plugin can read comes back as that plugin explains it. Sounds cannot be heard: you get only the file details (type, length, size) and must not guess how a sound sounds. A path may not leave the project folder.',
+    description: 'Read one file of the project by its path (from project_index or list_project_files). Text files come back as text; a picture (PNG, JPEG, GIF, WebP, and BMP, PSD, Aseprite and SVG turned into PNG; a big one made smaller) comes back as a picture you can see, with its size, frames and the colours in it; a PDF comes back as the document itself (its pages), or its text when it is too big to send whole; a sprite comes back as a description and a picture of its first frame; a scene, a screens file, a conversation and the project file come back as their text AND a picture drawn from it (the map of a scene with its objects, regions and wires, and its logic graphs; each screen as a wireframe; a conversation as boxes and arrows; the tiles); a file a plugin can read comes back as that plugin explains it. Sounds cannot be heard: you get the length (MP3 too), levels in decibels, clipping, silence at the ends, any loop points stored in the file and a picture of the waveform, and must not guess how a sound sounds. A path may not leave the project folder.',
     schema: z.object({ path: z.string().min(1).describe('The path from the project folder, like "assets/screens.json".'), offset: z.number().int().min(0).optional().describe('For a long text file: start reading this many characters in (the reply says when there is more).') }),
   },
   {

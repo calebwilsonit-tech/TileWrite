@@ -1,7 +1,9 @@
 import { useSyncExternalStore } from 'react';
-import { DEFAULT_SETTINGS, MAX_ATTACHMENTS, MAX_ATTACHMENT_BYTES, buildContext, cleanSettings, formatProjectIndex, approvalClass, mayRunUnasked, whyAsked, type AssistantSettings, type Attachment, type Mode, type ToolOutput, type Usage, NO_USAGE } from '@tilewright/assistant';
+import { DEFAULT_SETTINGS, MAX_ATTACHMENTS, MAX_PDF_ATTACHMENT_BYTES, buildContext, cleanSettings, formatProjectIndex, pdfFacts, approvalClass, mayRunUnasked, whyAsked, type AssistantSettings, type Attachment, type Mode, type ToolOutput, type Usage, NO_USAGE } from '@tilewright/assistant';
 import { host } from '@tilewright/behaviors';
 import { pluginToolName, toolsOffered } from './plugin-tools';
+import { PictureProblem, bytesToBase64, pictureForClaude } from './pictures';
+import { browserRasterize } from './pictures-browser';
 
 export { pluginToolName };
 import { store } from '../app/store';
@@ -71,6 +73,7 @@ export const TOOL_LABELS: Record<string, string> = {
   project_index: 'Looked at the project\'s files',
   list_project_files: 'Looked inside a folder',
   read_project_file: 'Read a file',
+  search_project: 'Searched the project',
   list_image_providers: 'Checked which picture makers exist',
 };
 
@@ -134,29 +137,37 @@ class AssistantStore {
     this.set({ draft });
   }
 
-  /** Pictures to send with the next message (from the attach button, a paste or a drop). Wrong kinds and big ones are refused with a word. */
+  /**
+   * Pictures and PDFs to send with the next message (from the attach button, a paste or a drop). PNG, JPEG, GIF and WebP go as they
+   * are; BMP, PSD, Aseprite and SVG become PNG, and a picture that is too big is made smaller, each with a word about it. A PDF
+   * goes whole. Anything else is refused with a word.
+   */
   async attach(files: readonly File[]): Promise<void> {
+    const warn = (text: string): void => this.push({ kind: 'notice', id: nextId('n'), level: 'warn', text });
     for (const file of files) {
       if (this.state.attachments.length >= MAX_ATTACHMENTS) {
-        this.push({ kind: 'notice', id: nextId('n'), level: 'warn', text: `A message can carry at most ${MAX_ATTACHMENTS} pictures.` });
+        warn(`A message can carry at most ${MAX_ATTACHMENTS} pictures or documents.`);
         break;
       }
-      if (!['image/png', 'image/jpeg', 'image/gif', 'image/webp'].includes(file.type)) {
-        this.push({ kind: 'notice', id: nextId('n'), level: 'warn', text: `"${file.name}" is not a picture Claude can look at (PNG, JPEG, GIF or WebP).` });
+      const name = file.name || 'picture';
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      if (file.type === 'application/pdf' || /\.pdf$/i.test(name)) {
+        if (pdfFacts(bytes).isPdf === false) warn(`"${name}" does not look like a PDF file.`);
+        else if (bytes.length > MAX_PDF_ATTACHMENT_BYTES) warn(`"${name}" is ${(bytes.length / 1024 / 1024).toFixed(1)} MB, which is too big to send (the limit is ${MAX_PDF_ATTACHMENT_BYTES / 1024 / 1024} MB).`);
+        else {
+          const data = bytesToBase64(bytes);
+          this.set({ attachments: [...this.state.attachments, { name, mediaType: 'application/pdf', data, url: '' }] });
+        }
         continue;
       }
-      if (file.size > MAX_ATTACHMENT_BYTES) {
-        this.push({ kind: 'notice', id: nextId('n'), level: 'warn', text: `"${file.name}" is ${(file.size / 1024 / 1024).toFixed(1)} MB, which is too big (the limit is ${(MAX_ATTACHMENT_BYTES / 1024 / 1024).toFixed(1)} MB). Use a smaller copy.` });
-        continue;
+      try {
+        const pic = await pictureForClaude(name, bytes, browserRasterize);
+        const data = bytesToBase64(pic.data);
+        if (pic.data !== bytes) this.push({ kind: 'notice', id: nextId('n'), level: 'info', text: `"${name}" was changed to be sent: ${pic.facts.split('. ').filter((s) => /converted|reduced|enlarged|flattened/.test(s)).join('. ') || 'made into a PNG'}` });
+        this.set({ attachments: [...this.state.attachments, { name, mediaType: pic.mediaType, data, url: `data:${pic.mediaType};base64,${data}` }] });
+      } catch (e) {
+        warn(e instanceof PictureProblem ? `"${name}" is not a picture Claude can look at: ${e.message}` : `"${name}" is not a picture Claude can look at (PNG, JPEG, GIF, WebP, BMP, PSD, Aseprite or SVG, or a PDF).`);
       }
-      const url = await new Promise<string>((resolve, reject) => {
-        const r = new FileReader();
-        r.onload = () => resolve(String(r.result));
-        r.onerror = () => reject(r.error);
-        r.readAsDataURL(file);
-      });
-      const data = url.slice(url.indexOf(',') + 1);
-      this.set({ attachments: [...this.state.attachments, { name: file.name || 'picture', mediaType: file.type as Attachment['mediaType'], data, url }] });
     }
   }
 

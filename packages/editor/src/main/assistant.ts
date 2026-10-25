@@ -1,9 +1,10 @@
-import { app, ipcMain, safeStorage, type WebContents } from 'electron';
+import { app, ipcMain, nativeImage, safeStorage, type WebContents } from 'electron';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { Conversation, MAX_ATTACHMENTS, MAX_EXTRA_TOOLS, MAX_ATTACHMENT_BYTES, cleanSettings, type AssistantSettings, type Attachment, type ExtraTool, type Mode, type ModelClient, type RunTool, type ToolOutput, type TurnResult, type Usage, userTurnText } from '@tilewright/assistant';
+import { Conversation, MAX_EXTRA_TOOLS, MAX_ATTACHMENT_BYTES, cleanSettings, cleanToolOutput, type AssistantSettings, type ExtraTool, type Mode, type ModelClient, type RunTool, type ToolOutput, type TurnResult, type Usage, userTurnText } from '@tilewright/assistant';
 import { createModelClient, friendlyError } from '@tilewright/assistant/src/sdk-client';
 import { providerFetch, type ProviderFetchRequest } from './provider-fetch';
+import { cleanAttachments } from './attachments';
 
 /**
  * The Claude assistant's side of the editor that must not live in the window: the API key and every call to
@@ -75,19 +76,20 @@ interface Pending {
   resolve(out: ToolOutput): void;
 }
 
-/** Pictures from the window: only the picture types the API takes, at most six, none too big. Anything else is dropped. */
-function cleanAttachments(raw: unknown): Attachment[] {
-  if (!Array.isArray(raw)) return [];
-  const out: Attachment[] = [];
-  for (const a of raw) {
-    const r = a as Partial<Attachment> | null;
-    if (!r || typeof r.data !== 'string' || typeof r.name !== 'string') continue;
-    if (!['image/png', 'image/jpeg', 'image/gif', 'image/webp'].includes(String(r.mediaType))) continue;
-    if (!/^[A-Za-z0-9+/]+=*$/.test(r.data) || r.data.length * 0.75 > MAX_ATTACHMENT_BYTES) continue;
-    out.push({ name: r.name.slice(0, 80), mediaType: r.mediaType as Attachment['mediaType'], data: r.data });
-    if (out.length >= MAX_ATTACHMENTS) break;
+/** A picture that is still too big when it arrives is made smaller with Electron's own image code (PNG and JPEG are read by it). */
+function shrinkPicture(bytes: Uint8Array): Uint8Array | null {
+  const image = nativeImage.createFromBuffer(Buffer.from(bytes));
+  if (image.isEmpty()) return null;
+  const { width, height } = image.getSize();
+  let side = Math.min(1568, Math.max(width, height));
+  for (let round = 0; round < 6; round++) {
+    const k = side / Math.max(width, height);
+    const small = k < 1 ? image.resize({ width: Math.max(1, Math.round(width * k)), height: Math.max(1, Math.round(height * k)), quality: 'good' }) : image;
+    const png = small.toPNG();
+    if (png.length <= MAX_ATTACHMENT_BYTES) return png;
+    side = Math.floor(side * 0.7);
   }
-  return out;
+  return null;
 }
 
 /** The tools plugins add: names the API accepts, a description, an object schema; at most MAX_EXTRA_TOOLS (the editor tells the person when some are left out). */
@@ -213,8 +215,11 @@ export function registerAssistant(deps: { /** What the person allowed a plugin (
     extraTools = cleanExtraTools(args.pluginTools);
     notes = Array.isArray(args.notes) ? args.notes.filter((n): n is string => typeof n === 'string').map((n) => n.slice(0, 1500)).slice(0, 40) : [];
     settings = cleanSettings(args.settings);
-    const text = userTurnText(args.mode, String(args.text ?? ''));
-    return turn((signal) => conversation.send(text, { context: String(args.context ?? ''), attachments: cleanAttachments(args.attachments), signal, hooks }));
+    const sent = cleanAttachments(args.attachments, shrinkPicture);
+    // what could not be sent is told to Claude too, so it does not answer as if it had seen it
+    const left = sent.notes.length > 0 ? `\n\n(Not sent with this message: ${sent.notes.join(' ')})` : '';
+    const text = userTurnText(args.mode, String(args.text ?? '')) + left;
+    return turn((signal) => conversation.send(text, { context: String(args.context ?? ''), attachments: sent.attachments, signal, hooks }));
   });
 
   ipcMain.handle('assistant:retry', (e, rawSettings: unknown) => {
@@ -233,10 +238,10 @@ export function registerAssistant(deps: { /** What the person allowed a plugin (
     conversation.reset();
   });
 
-  ipcMain.handle('assistant:tool-result', (_e, callId: string, out: ToolOutput) => {
+  ipcMain.handle('assistant:tool-result', (_e, callId: string, out: unknown) => {
     const p = pending.get(callId);
     if (!p) return;
     pending.delete(callId);
-    p.resolve(out);
+    p.resolve(cleanToolOutput(out));
   });
 }

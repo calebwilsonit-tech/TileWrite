@@ -100,7 +100,7 @@ describe('the index of a project', () => {
     expect(text).toContain('Scenes: 2');
     expect(text).toContain('Sprites (pictures made in the sprite studio): 1');
     expect(text).toContain('Sounds (I cannot listen to these): 1');
-    expect(text).toContain('Pictures (PNG, JPG...): 1');
+    expect(text).toContain('Pictures (PNG, JPG, BMP, PSD, Aseprite, SVG...): 1');
     expect(text).toContain('Translations: 1');
     expect(text).toContain('Other files: 2'); // project.json and weird.dat
   });

@@ -103,8 +103,8 @@ test('Phase 3: Claude reads the project (every kind of file, nothing outside it)
   expect(by('f1').text).toContain('Sounds (I cannot listen to these): 1');
   expect(by('f1').text).toContain('assets/audio/jump.wav');
   expect(by('f2').text).toContain('Add a second room.');
-  // a sound: only its details, and a plain statement of what is not known
-  expect(by('f3').text).toContain('1.00 seconds');
+  // a sound: its measurements, and a plain statement of what is not known
+  expect(by('f3').text).toContain('1.00 s');
   expect(by('f3').text).toContain('8000 Hz');
   expect(by('f3').text).toContain('I cannot listen to sound');
   // a picture is returned as a picture

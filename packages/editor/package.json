@@ -47,6 +47,7 @@
     "electron": "44.8.0",
     "electron-builder": "^26.15.3",
     "esbuild": "^0.28.2",
+    "fflate": "^0.8.3",
     "vite": "^8.3.4",
     "dockview-react": "^8.5.1",
     "monaco-editor": "^0.57.0",

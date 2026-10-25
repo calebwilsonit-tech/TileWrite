@@ -1,9 +1,15 @@
-import { PathProblem, cleanRelative, secretReason, describeAudio, describeUnreadable, extOf, fileKind, formatProjectIndex, limitText, looksLikeText, sniffImage, type IndexedFile, type ToolOutput } from '@tilewright/assistant';
+import { PathProblem, SearchProblem, cleanRelative, filterFiles, findByName, formatSearch, searchText, textMatcher, secretReason, describeAudio, describeUnreadable, extOf, extractPdfText, fileKind, formatProjectIndex, limitText, looksLikeText, pdfFacts, pdfFitsAsDocument, type IndexedFile, type SearchHit, type ToolOutput } from '@tilewright/assistant';
+import { unzlibSync } from 'fflate';
 import { host } from '@tilewright/behaviors';
 import { compositeFrame, encodePng, parseSprite } from '@tilewright/runtime';
 import { store } from '../app/store';
 import { api, joinPath } from '../project/api';
 import { fail, json } from './tool-core';
+import { PictureProblem, bytesToBase64, pictureForClaude } from './pictures';
+import { browserRasterize } from './pictures-browser';
+import { previewsFor } from './preview';
+import { analyse, decodeWav, describeLevels, mp3Info, tagLoops, type FileInfo } from './audio';
+import { decodeInBrowser } from './audio-browser';
 
 /**
  * Claude reading the project's files. Every path Claude names is checked here (`cleanRelative`: nothing that leaves the
@@ -13,8 +19,7 @@ import { fail, json } from './tool-core';
 /** Folders that are not part of the project's content. */
 const SKIPPED = new Set(['saves', '.tilewright', 'node_modules', '.git', 'release', 'dist', 'exports']);
 /** What one read may hand back. */
-const MAX_BYTES = 8 * 1024 * 1024;
-const MAX_IMAGE_BYTES = 3_500_000;
+const MAX_BYTES = 40 * 1024 * 1024;
 const MAX_FILES = 3000;
 
 const text = (t: string): ToolOutput => ({ content: t });
@@ -67,12 +72,7 @@ export async function listProjectFiles(dir?: string): Promise<IndexedFile[]> {
   return out;
 }
 
-const base64 = (bytes: Uint8Array): string => {
-  let bin = '';
-  const chunk = 0x8000;
-  for (let i = 0; i < bytes.length; i += chunk) bin += String.fromCharCode(...bytes.subarray(i, i + chunk));
-  return btoa(bin);
-};
+const base64 = bytesToBase64;
 
 /** A sprite file as words (size, layers, frames, animations) and a picture of its first frame. */
 function describeSprite(path: string, raw: string): ToolOutput {
@@ -97,6 +97,56 @@ function describeSprite(path: string, raw: string): ToolOutput {
   }
   const png = encodePng(s.width * scale, s.height * scale, big);
   return { content: [{ type: 'image', source: { type: 'base64', media_type: 'image/png', data: base64(png) } }, { type: 'text', text: lines.join('\n') }] };
+}
+
+/** The pictures a file can give, drawn from its data; null for a file with none or one that is not what its name says. */
+function previewOf(path: string, whole: string): ReturnType<typeof previewsFor> {
+  const p = store.state.project;
+  if (!p) return null;
+  try {
+    return previewsFor(path, JSON.parse(whole), { tileset: p.project.tileset, iso: p.project.iso });
+  } catch {
+    return null; // not JSON, or not drawable: the text is still there
+  }
+}
+
+/**
+ * A sound as far as it can be measured and seen: its length (also for MP3), levels, clipping, silence at the ends, the loop points
+ * stored in it and a picture of its waveform. Claude still cannot hear it, and is told so.
+ */
+async function readSound(path: string, bytes: Uint8Array): Promise<ToolOutput> {
+  const ext = extOf(path);
+  const wav = ext === '.wav' ? decodeWav(bytes) : null;
+  if (wav) return soundOutput(analyse(path, wav.info, wav.decoded));
+  const header = ext === '.mp3' ? mp3Info(bytes) : null;
+  const info: FileInfo = header ?? { format: ext.slice(1).toUpperCase() || 'sound', loops: [], cues: [] };
+  info.loops = [...info.loops, ...(ext === '.mp3' || ext === '.wav' ? [] : tagLoops(bytes))];
+  try {
+    const decoded = await decodeInBrowser(bytes);
+    return soundOutput(analyse(path, { ...info, sampleRate: info.sampleRate ?? decoded.sampleRate, channels: info.channels ?? decoded.channels.length }, decoded));
+  } catch {
+    // it could not be decoded here: what the header says, or the plain details
+    return text(header || info.loops.length > 0 ? describeLevels(path, info, null) : describeAudio(path, bytes));
+  }
+}
+
+const soundOutput = (a: { text: string; png: Uint8Array }): ToolOutput => ({ content: [{ type: 'image', source: { type: 'base64', media_type: 'image/png', data: base64(a.png) } }, { type: 'text', text: a.text }] });
+
+/** A PDF goes to the API whole when it fits, so Claude sees its pages as the person does; otherwise its text is pulled out. */
+function readPdf(clean: string, bytes: Uint8Array): ToolOutput {
+  const facts = pdfFacts(bytes);
+  const size = `${(bytes.length / 1024 / 1024).toFixed(1)} MB`;
+  const pages = facts.pages > 0 ? `${facts.pages} page${facts.pages === 1 ? '' : 's'}` : 'an unknown number of pages';
+  if (!facts.isPdf) return text(`${clean}: its name says it is a PDF, but its contents are not a PDF file I can read.`);
+  const why = pdfFitsAsDocument(facts, bytes.length);
+  if (why === null) {
+    return { content: [{ type: 'document', title: clean, source: { type: 'base64', media_type: 'application/pdf', data: base64(bytes) } }, { type: 'text', text: `${clean}: a PDF, ${pages}, ${size}. The pages are attached above.` }] };
+  }
+  if (facts.encrypted) return text(`${clean}: a PDF (${pages}, ${size}), but ${why}, so it cannot be read. Ask the user for an unlocked copy.`);
+  const found = extractPdfText(bytes, unzlibSync);
+  const head = `${clean}: a PDF, ${pages}, ${size}. I cannot attach it whole because ${why}.`;
+  if (!found.readable) return text(`${head} Almost no text could be pulled out of it (it may be scanned pictures, or use fonts that hide their letters). Ask the user for a smaller part, or for the text.`);
+  return text(`${head} This is the text that could be pulled out of it, without page breaks (some fonts lose their letters):\n\n${limitText(found.text)}`);
 }
 
 async function readProjectFile(rel: string, offset: number): Promise<ToolOutput> {
@@ -124,13 +174,20 @@ async function readProjectFile(rel: string, offset: number): Promise<ToolOutput>
   }
 
   const kind = fileKind(clean);
-  if (kind === 'image') {
-    const mime = sniffImage(bytes);
-    if (!mime) return text(`${clean}: its name says it is a picture, but its contents are not a picture file I can read.`);
-    if (bytes.length > MAX_IMAGE_BYTES) return text(`${clean}: a picture of ${(bytes.length / 1024 / 1024).toFixed(1)} MB, which is too big to look at (the limit is ${(MAX_IMAGE_BYTES / 1024 / 1024).toFixed(1)} MB). Ask the user for a smaller copy.`);
-    return { content: [{ type: 'image', source: { type: 'base64', media_type: mime, data: base64(bytes) } }, { type: 'text', text: `${clean} (${bytes.length} bytes)` }] };
+  if (kind === 'image' || ext === '.svg') {
+    try {
+      const pic = await pictureForClaude(clean, bytes, browserRasterize);
+      // an SVG is a picture and text: its source comes with the drawn picture
+      const source = ext === '.svg' ? `\n\nThe SVG source:\n${limitText(new TextDecoder().decode(bytes), 12_000)}` : '';
+      return { content: [{ type: 'image', source: { type: 'base64', media_type: pic.mediaType, data: base64(pic.data) } }, { type: 'text', text: pic.facts + source }] };
+    } catch (e) {
+      if (e instanceof PictureProblem) return text(`${clean}: ${e.message}`);
+      if (ext !== '.svg') return text(`${clean}: the picture could not be read (${e instanceof Error ? e.message : String(e)}).`);
+      // an SVG that cannot be drawn is still text
+    }
   }
-  if (kind === 'audio') return text(describeAudio(clean, bytes));
+  if (kind === 'document') return readPdf(clean, bytes);
+  if (kind === 'audio') return readSound(clean, bytes);
   if (kind === 'text' || (kind === 'binary' && looksLikeText(bytes))) {
     const whole = new TextDecoder().decode(bytes);
     if (clean.endsWith('.sprite.json')) {
@@ -143,9 +200,74 @@ async function readProjectFile(rel: string, offset: number): Promise<ToolOutput>
     const from = Math.min(offset, whole.length);
     const part = whole.slice(from, from + 40_000);
     const more = from + part.length < whole.length;
-    return text(`${part}${more ? `\n... (more: ${whole.length - from - part.length} characters; ask again with offset ${from + part.length})` : ''}`);
+    const body = `${part}${more ? `\n... (more: ${whole.length - from - part.length} characters; ask again with offset ${from + part.length})` : ''}`;
+    // scenes, screens, conversations and tile sets come with a picture drawn from their data (on the first page only)
+    const looks = from === 0 ? previewOf(clean, whole) : null;
+    if (!looks) return text(body);
+    const images = looks.pictures.map((p) => ({ type: 'image' as const, source: { type: 'base64' as const, media_type: 'image/png' as const, data: base64(p.png) } }));
+    const intro = `${clean}: ${looks.pictures.length === 1 ? 'a picture' : `${looks.pictures.length} pictures`} drawn from this file come first (${looks.pictures.map((p) => p.caption).join('; ')}). ${looks.notes.join(' ')}`;
+    return { content: [...images, { type: 'text', text: `${intro}\n\nThe file itself:\n${body}` }] };
   }
   return text(describeUnreadable(clean, kind, bytes.length));
+}
+
+/** Text files searched at most this big, and this many of them: a search is quick, never a read of the whole project. */
+const SEARCH_FILE_BYTES = 1_500_000;
+const SEARCH_FILES = 800;
+
+async function searchProject(input: Record<string, unknown>): Promise<ToolOutput> {
+  const query = typeof input.query === 'string' ? input.query.trim() : '';
+  const kind = typeof input.kind === 'string' && input.kind ? input.kind : undefined;
+  const folder = typeof input.folder === 'string' ? input.folder : undefined;
+  const where = input.where === 'names' || input.where === 'text' ? input.where : 'both';
+  const limit = Math.min(100, Math.max(1, Number(input.limit ?? 40)));
+  if (!query && !kind && !folder) return fail('Give a query, or a kind or folder to list.');
+  let files: IndexedFile[];
+  try {
+    files = filterFiles(await listProjectFiles(), { kind, folder });
+  } catch (e) {
+    if (e instanceof SearchProblem) return fail(e.message);
+    throw e;
+  }
+  const names = where === 'text' ? [] : findByName(files, query);
+  const hits: SearchHit[] = [];
+  let searched = 0;
+  let skipped = 0;
+  let cut = false;
+  if (query && where !== 'names') {
+    let match: (line: string) => number;
+    try {
+      match = textMatcher(query, { caseSensitive: input.caseSensitive === true, regex: input.regex === true });
+    } catch (e) {
+      if (e instanceof SearchProblem) return fail(e.message);
+      throw e;
+    }
+    for (const f of files) {
+      if (fileKind(f.path) !== 'text') continue;
+      if (searched + skipped >= SEARCH_FILES) {
+        cut = true;
+        break;
+      }
+      if ((f.size ?? 0) > SEARCH_FILE_BYTES) {
+        skipped++;
+        continue;
+      }
+      let body: string;
+      try {
+        body = await api().fs.read(absolute(f.path));
+      } catch {
+        skipped++;
+        continue;
+      }
+      searched++;
+      hits.push(...searchText(f.path, body, match, limit - hits.length));
+      if (hits.length >= limit) {
+        cut = true;
+        break;
+      }
+    }
+  }
+  return text(formatSearch({ query, names, hits, searched, skipped, cut, kind }, { names: 40, hits: limit }));
 }
 
 /** The reading tools for files. Null when the name is not one of them. */
@@ -170,6 +292,8 @@ export async function runFileRead(name: string, input: Record<string, unknown>):
       const shown = entries.filter((e) => !(e.dir && SKIPPED.has(e.name)) && !secretReason(`${above}${e.name}`, deny)).sort((a, b) => Number(b.dir) - Number(a.dir) || a.name.localeCompare(b.name));
       return text(shown.length === 0 ? '(empty)' : shown.map((e) => (e.dir ? `${e.name}/` : `${e.name}${e.size !== undefined ? ` (${e.size} bytes)` : ''}`)).join('\n'));
     }
+    case 'search_project':
+      return searchProject(input);
     case 'read_project_file':
       return readProjectFile(String(input.path ?? ''), Number(input.offset ?? 0));
     case 'list_image_providers': {

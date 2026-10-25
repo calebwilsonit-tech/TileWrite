@@ -37,7 +37,37 @@ export interface ModelClient {
   stream(call: ModelCall): Promise<Anthropic.Message>;
 }
 
-export type ToolContentBlock = { type: 'text'; text: string } | { type: 'image'; source: { type: 'base64'; media_type: 'image/png' | 'image/jpeg' | 'image/gif' | 'image/webp'; data: string } };
+export type ToolContentBlock =
+  | { type: 'text'; text: string }
+  | { type: 'image'; source: { type: 'base64'; media_type: 'image/png' | 'image/jpeg' | 'image/gif' | 'image/webp'; data: string } }
+  | { type: 'document'; title?: string; source: { type: 'base64'; media_type: 'application/pdf'; data: string } };
+
+/**
+ * What the window hands back for a tool call, checked before it goes to the API: only text, pictures and PDFs, with their sizes
+ * kept in bounds, so a plugin's tool (or a bug) cannot put something else in a conversation.
+ */
+export function cleanToolOutput(raw: unknown): ToolOutput {
+  const o = (raw ?? {}) as { content?: unknown; isError?: unknown };
+  const isError = o.isError === true;
+  if (typeof o.content === 'string') return { content: o.content, ...(isError ? { isError } : {}) };
+  if (!Array.isArray(o.content)) return { isError: true, content: 'The tool returned nothing Claude can read.' };
+  const out: ToolContentBlock[] = [];
+  let weight = 0;
+  for (const b of o.content.slice(0, 20)) {
+    const r = b as Partial<ToolContentBlock> & { source?: { type?: unknown; media_type?: unknown; data?: unknown } };
+    if (r.type === 'text' && typeof r.text === 'string') out.push({ type: 'text', text: r.text });
+    else if ((r.type === 'image' || r.type === 'document') && r.source?.type === 'base64' && typeof r.source.data === 'string' && /^[A-Za-z0-9+/]+=*$/.test(r.source.data)) {
+      weight += r.source.data.length;
+      if (weight > MAX_TOOL_FILE_BASE64) {
+        out.push({ type: 'text', text: '(A file was left out: together they were too big to send.)' });
+        continue;
+      }
+      if (r.type === 'image' && ['image/png', 'image/jpeg', 'image/gif', 'image/webp'].includes(String(r.source.media_type))) out.push({ type: 'image', source: { type: 'base64', media_type: r.source.media_type as 'image/png', data: r.source.data } });
+      else if (r.type === 'document' && r.source.media_type === 'application/pdf') out.push({ type: 'document', ...(typeof r.title === 'string' ? { title: r.title.slice(0, 200) } : {}), source: { type: 'base64', media_type: 'application/pdf', data: r.source.data } });
+    }
+  }
+  return { content: out.length > 0 ? out : 'The tool returned nothing Claude can read.', ...(isError ? { isError } : {}) };
+}
 
 export interface ToolOutput {
   content: string | ToolContentBlock[];
@@ -66,7 +96,7 @@ export type StopReason = 'end_turn' | 'refusal' | 'max_tokens' | 'cancelled' | '
 /** A picture the person attached to a question. */
 export interface Attachment {
   name: string;
-  mediaType: 'image/png' | 'image/jpeg' | 'image/gif' | 'image/webp';
+  mediaType: 'image/png' | 'image/jpeg' | 'image/gif' | 'image/webp' | 'application/pdf';
   /** Base64, no prefix. */
   data: string;
 }
@@ -76,6 +106,10 @@ export const MAX_ATTACHMENTS = 6;
 /** The most tools of plugins (and the lists of their kinds of data) one conversation is given. */
 export const MAX_EXTRA_TOOLS = 100;
 export const MAX_ATTACHMENT_BYTES = 3_500_000;
+/** A PDF the person attaches may be bigger (the API takes 32 MB a request, and pages count too). */
+export const MAX_PDF_ATTACHMENT_BYTES = 12 * 1024 * 1024;
+/** The most pictures and PDFs one tool result may carry together (base64 characters). */
+export const MAX_TOOL_FILE_BASE64 = 20 * 1024 * 1024;
 
 export interface TurnResult {
   stopReason: StopReason;
@@ -148,12 +182,17 @@ export class Conversation {
 
   /** Ask a question. `context` (project facts) is added to the first message of a conversation only. */
   async send(text: string, opts: { context?: string; attachments?: readonly Attachment[]; signal: AbortSignal; hooks?: TurnHooks }): Promise<TurnResult> {
-    const content: (Anthropic.TextBlockParam | Anthropic.ImageBlockParam)[] = [];
+    const content: (Anthropic.TextBlockParam | Anthropic.ImageBlockParam | Anthropic.DocumentBlockParam)[] = [];
     if (!this.started && opts.context) content.push({ type: 'text', text: opts.context });
     // pictures come before the words that talk about them
     for (const a of (opts.attachments ?? []).slice(0, MAX_ATTACHMENTS)) {
-      content.push({ type: 'text', text: `(Attached picture: ${a.name})` });
-      content.push({ type: 'image', source: { type: 'base64', media_type: a.mediaType, data: a.data } });
+      if (a.mediaType === 'application/pdf') {
+        content.push({ type: 'text', text: `(Attached document: ${a.name})` });
+        content.push({ type: 'document', title: a.name, source: { type: 'base64', media_type: 'application/pdf', data: a.data } });
+      } else {
+        content.push({ type: 'text', text: `(Attached picture: ${a.name})` });
+        content.push({ type: 'image', source: { type: 'base64', media_type: a.mediaType, data: a.data } });
+      }
     }
     content.push({ type: 'text', text });
     this.messages.push({ role: 'user', content });

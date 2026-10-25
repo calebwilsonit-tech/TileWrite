@@ -406,7 +406,7 @@ export function AssistantPanel() {
         <div className="attachments" data-testid="attachments">
           {attachments.map((a, i) => (
             <span key={i} className="attachment">
-              <img src={a.url} alt={a.name} title={a.name} style={{ maxWidth: 48, maxHeight: 48 }} />
+              {a.url ? <img src={a.url} alt={a.name} title={a.name} style={{ maxWidth: 48, maxHeight: 48 }} /> : <span title={a.name}>📄 {a.name.length > 14 ? `${a.name.slice(0, 12)}…` : a.name}</span>}
               <button aria-label={`Remove ${a.name}`} data-testid={`attachment-remove-${i}`} onClick={() => assistant.removeAttachment(i)}>
                 ✕
               </button>
@@ -426,7 +426,7 @@ export function AssistantPanel() {
         <input
           ref={picker}
           type="file"
-          accept="image/png,image/jpeg,image/gif,image/webp"
+          accept="image/png,image/jpeg,image/gif,image/webp,image/bmp,image/svg+xml,application/pdf,.psd,.aseprite,.ase,.bmp,.svg,.pdf"
           multiple
           hidden
           data-testid="assistant-file"
@@ -435,7 +435,7 @@ export function AssistantPanel() {
             e.target.value = '';
           }}
         />
-        <button data-testid="assistant-attach" title={`Attach a picture (up to ${MAX_ATTACHMENTS}): drop one here, paste one, or choose a file`} onClick={() => picker.current?.click()}>
+        <button data-testid="assistant-attach" title={`Attach a picture or a PDF (up to ${MAX_ATTACHMENTS}): drop one here, paste one, or choose a file. PNG, JPEG, GIF, WebP, BMP, PSD, Aseprite and SVG pictures are fine; big ones are made smaller.`} onClick={() => picker.current?.click()}>
           📎
         </button>
         <textarea
