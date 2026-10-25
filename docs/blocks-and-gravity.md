@@ -37,7 +37,11 @@ Gravity pulls toward one of six sides: down (the floor), up (the ceiling), or to
 - the condition **Gravity points a way** reads it;
 - the event **gravity turns for something** and **lands** tell your rows when it happened.
 
-When gravity turns for a body, the body keeps the middle it had, forgets how it was moving, and falls toward the new surface. It is never put inside a block; if the turn would leave it inside one, it is pushed out. Its picture turns to match (a drawn sprite is turned so its head points the way "up" is; a plain box is drawn as the box it is).
+When gravity turns for a body, the body keeps the middle it had, forgets how it was moving, and falls toward the new surface. In a project with the compatibility flag **timedGravity** (every new project) the turn takes time: the body swings round its middle over the time the scene says (Inspector with nothing selected: **Gravity takes this long to turn**, 0.25 seconds when it does not say, 0 for at once; a body can have its own `turnSeconds`), and every tick it is checked against the blocks and objects: it is pushed out of anything it swings into, and if it cannot be freed it waits for room (up to three quarters of a second) instead of going into the block. A project without the flag turns at once, as it always did. It is never put inside a block either way. Its picture turns to match (a drawn sprite is turned so its head points the way "up" is; a plain box is drawn as the box it is).
+
+**A picture for each way gravity pulls.** Select the object, and in the Inspector's *Drawn sprite* open *A picture for each way gravity pulls*: choose a drawing of its own for a direction (a character drawn clinging to a wall, one hanging from the ceiling). It is drawn upright when gravity pulls that way; for a direction with none, the sprite above is turned. In the file this is `byGravity` on the sprite (`{ "-x": "hero-on-wall" }`); a script reads which way an object is pulled with `me.gravity` and sets it with `me.gravity = "+x"` (which says so, as a problem, when the project plays with the older physics, the direction is not one of the six, or the object has no Body).
+
+**Saving.** A save keeps which way gravity pulls when that is not the way the scene says, and the player's own gravity if it has one, so a game saved on a wall loads on the wall.
 
 The controls follow the surface: on a floor or a ceiling the move keys go the same on-screen ways; on a wall, up is up the wall and right runs along it. Jump goes away from the surface it stands on.
 
@@ -55,7 +59,7 @@ It works the way Minecraft does. Point at any face (the ground too) and it light
 | Right-click, or Ctrl+click | removes the block you point at (or use the **removes it** mode) |
 | Middle-click | copies the block: its tile, its shape and the way round it is |
 | R | turns stairs and ramps (north, east, south, west) |
-| 1 to 9 | pick a tile from the **hotbar** (it keeps the tiles you used lately; a new one takes the place of the one added longest ago) |
+| 1 to 9 | pick from the **hotbar**: it keeps the blocks you used lately, each with its tile, its shape (whole block, stairs, ramp), the way it faces and whether it is solid, so key 3 can be "brick stairs facing west"; a new one takes the place of the one added longest ago. The ghost beside the face is drawn as the real shape |
 | Alt+click | changes the tile of a block; the **paints one face** mode changes one face |
 | Space+drag | moves the picture (the right and middle buttons belong to this tool) |
 
@@ -72,4 +76,7 @@ A block is refused (with a message in the Problems panel and the Console) when t
 
 ## What to look at while you work
 
-Layers panel -> **Gravity (while playing)** draws, for every body, an arrow for the way it is pulled, a dot where it touches what it stands on (green: it stands, red: it does not), the box the physics tests it with, and, for the thing the camera follows, the white line to the camera that decides which walls fade. A wall fades only when that line runs through it.
+Layers panel -> **Gravity (while playing)** draws, for every body, an arrow for the way it is pulled, a dot where it touches what it stands on (green: it stands, red: it does not), the box the physics tests it with, and, for the thing the camera follows, the line of sight as a volume: its box slid toward the camera, drawn in steps (nudged a few pixels apart only so they can be told apart: on the screen they all lie on the same spot), with every block the box runs into outlined in orange. A wall fades only when it is one of those.
+
+## What "blocks" means here (and what it does not)
+The world is still saved as a height map: every cell has a floor and a column. It is *read as* blocks: bodies, picking, the Blocks tool, gravity in six directions and the picture all treat a column as a stack of blocks. A stair or ramp painted with the older tools (Slope, Bridge) stays what it was in the file until you edit it with the Blocks tool, which turns that column into blocks as one undo step; a project you never edit that way is never changed. A stair and a ramp of the same way round are the same solid to the physics (the ramp's picture is the only difference). Stairs and ramps turn four ways about the up axis (north, east, south, west); they cannot be tilted onto a side. Making the whole world blocks, with no height map, would change every saved scene and is a separate piece of work (DECISIONS.md, D056).

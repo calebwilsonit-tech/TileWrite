@@ -3,7 +3,7 @@ import { ANIMATOR, type Animator } from '../anim/animator';
 import type { CellMark } from '../story/cutscene';
 import type { BlockFace, CellStack } from '../tilemap/tilemap';
 import { DEFAULT_ISO, gridToScreen, relToScreen, rotateGrid, screenToCell, screenToGrid, unrotateVec, type Cell, type IsoConfig, type ViewRotation } from '../iso/math';
-import { ATTACH, C, LABEL, type Attach, type Label, type Sprite, type TransformIso } from '../scene/components';
+import { ATTACH, C, LABEL, pictureForGravity, type Attach, type Label, type Sprite, type TransformIso } from '../scene/components';
 import { gravityFrame, spriteBox } from '../physics/gravity';
 import type { Body } from '../physics/physics';
 import type { ScreenLayer, ScreenLayerFactory } from './screen-layers';
@@ -868,8 +868,8 @@ export class IsoRenderer {
       const frame = turned ? gravityFrame(gdir) : null;
       const oriented = frame ? spriteBox(frame, { x: t.x, y: t.y, h: t.h }, s.w, s.d, s.height) : null;
       // a picture of its own for this gravity, when the object has one (then it is drawn upright, as made)
-      const own = gdir !== undefined ? s.byGravity?.[gdir] : undefined;
-      const ownSheet = own !== undefined && own !== '' && this.sprites.has(own);
+      const own = pictureForGravity(s, gdir);
+      const ownSheet = own !== undefined && this.sprites.has(own);
       const drawn: Sprite = ownSheet ? { ...s, asset: own } : s;
       const sheetBased = drawn.asset !== undefined && drawn.asset !== '' && this.sprites.has(drawn.asset);
       const look: Sprite = oriented && !sheetBased ? { ...drawn, w: oriented.x1 - oriented.x0, d: oriented.y1 - oriented.y0, height: oriented.z1 - oriented.z0, noShadow: true } : drawn;

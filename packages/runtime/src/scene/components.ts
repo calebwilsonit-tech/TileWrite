@@ -97,3 +97,9 @@ export function makeSprite(partial: Partial<Sprite> = {}): Sprite {
     ...partial,
   };
 }
+
+/** The picture an object has of its own for the way gravity pulls it now (`Sprite.byGravity`), or undefined when it has none (then the one picture is turned). */
+export function pictureForGravity(s: Pick<Sprite, 'byGravity'>, gravity: string | undefined): string | undefined {
+  const name = gravity === undefined ? undefined : (s.byGravity as Record<string, string> | undefined)?.[gravity];
+  return name !== undefined && name !== '' ? name : undefined;
+}

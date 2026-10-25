@@ -4,7 +4,7 @@ import { createProjectViaUi, dragCells, launchEditor, pickTool, shot } from './h
 import { addObject, loadSampleGame, saveSample, setText, tab } from './sample-helpers';
 import { blocksView } from '../packages/runtime/src/render/occlusion';
 import { boxAt, type DepthBox } from '../packages/runtime/src/render/depth';
-import type { Game } from '@tilewright/playbot';
+import { Bot, type Game } from '@tilewright/playbot';
 
 const where = (page: Page, x: number, y: number, z: number, face: 'top' | 'left' | 'right' = 'top') =>
   page.evaluate(([a, b, c, f]) => window.__viewport!.blockToClient(a as number, b as number, c as number, f as 'top' | 'left' | 'right'), [x, y, z, face] as const);
@@ -132,98 +132,127 @@ test('Phase 3 sample: gravity room - the floor, a wall and the ceiling in a room
   await app.close();
 
   // ===== no editor from here: the saved room, played =====
+  // The bot plays it with nothing but buttons (no writing of positions), and after every single tick the body is checked against the
+  // very solids the physics uses (the project's tiles included), so a moment inside a block cannot slip between two looks.
   const { game } = await loadSampleGame(dir);
+  const bot = new Bot(game);
   const body = (): Body => game.player.get<Body>(C.Body)!;
   const feet = (): TransformIso => game.player.get<TransformIso>(C.Transform)!;
-  const field = new SolidField(game.sim.map!);
-  const inside = (): boolean => {
-    const b = body();
-    return field.overlaps(bodyBox(gravityFrame(b.g ?? '-z'), { x: feet().x, y: feet().y, h: feet().h }, b.radius, b.height), { wade: b.wade });
-  };
+  const field = new SolidField(game.sim.map!, game.sim.assets.tileset);
   let overlapped = 0;
   let fadedTicks = 0;
   let wrongFades = 0;
+  let ticks = 0;
+  const boxNow = (b: Body) => b.turn?.box ?? bodyBox(gravityFrame(b.g ?? '-z'), { x: feet().x, y: feet().y, h: feet().h }, b.radius, b.height);
   const check = (): void => {
-    if (inside()) overlapped++;
-    // the blocks the sight rule fades must really stand between the camera and the player, and those that do must fade (the
-    // rule is checked a second way: the player's box is slid toward the camera in small steps and measured against each block)
+    ticks++;
     const b = body();
-    const box = bodyBox(gravityFrame(b.g ?? '-z'), { x: feet().x, y: feet().y, h: feet().h }, b.radius, b.height);
+    const box = boxNow(b);
+    if (field.overlaps(box, { wade: b.wade })) overlapped++;
+    // the blocks the sight rule fades must really stand between the camera and the player, and those that do must fade
+    // (checked a second way: the body is slid toward the camera in small steps and measured against each block)
     const depth: DepthBox = { id: 0, minX: box.x0, maxX: box.x1, minY: box.y0, maxY: box.y1, minZ: box.z0, maxZ: box.z1 };
     const blocks = sceneBlocks(game);
-    const fading = blocks.filter((k) => blocksView(depth, k.box));
-    if (fading.length > 0) fadedTicks++;
+    if (blocks.some((k) => blocksView(depth, k.box))) fadedTicks++;
     for (const k of blocks) {
-      // the other way of knowing: slide the whole body toward the camera in small steps and see how far it is inside the block
       const covered = coverage(depth, k.box);
       const fades = blocksView(depth, k.box);
-      if (fades && covered < 0.1) {
-        wrongFades++;
-        console.log('FADE-NOT-IN-WAY', game.sim.tick, JSON.stringify(k.box), JSON.stringify(depth), covered);
-      }
-      if (!fades && covered > 0.2) {
-        wrongFades++;
-        console.log('IN-WAY-NOT-FADED', game.sim.tick, JSON.stringify(k.box), JSON.stringify(depth), covered);
-      }
+      if ((fades && covered < 0.1) || (!fades && covered > 0.2)) wrongFades++;
     }
   };
-  const run = (ticks: number, actions: Record<string, number> = {}): void => {
-    for (let i = 0; i < ticks; i++) {
-      game.step(actions);
-      if (i % 5 === 0) check();
+  /** Press these buttons for some ticks (the bot's only way to act), looking after every tick. */
+  const hold = (actions: Record<string, number>, ticksToHold: number): void => {
+    for (let i = 0; i < ticksToHold; i++) {
+      bot.step(actions);
+      check();
     }
   };
-  run(30);
+  /** Press the buttons until the test says it is there, or the time is up; returns whether it got there. */
+  const until = (actions: Record<string, number>, done: () => boolean, max = 600): boolean => {
+    for (let i = 0; i < max; i++) {
+      if (done()) return true;
+      bot.step(actions);
+      check();
+    }
+    return done();
+  };
+  const settle = (ticksToWait = 90): void => hold({}, ticksToWait);
+  // which buttons walk toward +x, -x, +y and -y on the floor (the picture's diagonals)
+  const PLUS_X = { move_right: 1, move_down: 1 };
+  const MINUS_X = { move_left: 1, move_up: 1 };
+  const PLUS_Y = { move_left: 1, move_down: 1 };
+  const MINUS_Y = { move_right: 1, move_up: 1 };
+  const r = (): number => body().radius;
+
+  settle(30);
   expect(body().state).toBe('ground');
   expect(feet().h).toBeCloseTo(0, 3);
-  const right = { move_right: 1, move_down: 1 }; // +x
-  const up = { move_right: 1, move_up: 1 }; // -y
+  expect(feet().x).toBeCloseTo(3.5, 1);
+  expect(feet().y).toBeCloseTo(3.5, 1);
 
-  // on the floor: the doorway of the arch lets the player through; the low overhang does not
-  const arch = game.sim.world.withTag('player')[0]!;
-  arch.get<TransformIso>(C.Transform)!.x = 7.5;
-  arch.get<TransformIso>(C.Transform)!.y = 10.5;
-  run(15);
-  run(60, up); // north, through the doorway at (7, 8)
-  expect(feet().y).toBeLessThan(7.5);
-  arch.get<TransformIso>(C.Transform)!.x = 8.5;
-  arch.get<TransformIso>(C.Transform)!.y = 3.5;
-  run(10);
-  run(40, right); // east along y = 3 into the overhang at (10, 3)
-  expect(feet().x).toBeLessThan(10 - body().radius + 1e-3);
+  // the low overhang at (10, 3): east along y = 3.5 the body is stopped at the block, not inside it
+  until(PLUS_X, () => feet().x >= 10 - r() - 0.02, 400);
+  hold(PLUS_X, 30);
+  expect(feet().x).toBeCloseTo(10 - r(), 1);
+  expect(feet().h).toBeCloseTo(0, 3);
 
-  // turn gravity toward the west wall: it falls to the wall, and the pillar that sticks out of it stops a walk along the wall
-  arch.get<TransformIso>(C.Transform)!.x = 4.5;
-  arch.get<TransformIso>(C.Transform)!.y = 2.5;
-  run(10);
-  run(5, { gravity_west: 1 });
-  run(60);
+  // down the east side of the room and back along y = 10.5 to the arch, then north through its doorway at (7, 8)
+  expect(until(PLUS_Y, () => feet().y >= 10.5, 400)).toBe(true);
+  expect(until(MINUS_X, () => feet().x <= 7.5, 400)).toBe(true);
+  expect(until(MINUS_Y, () => feet().y <= 6.5, 400)).toBe(true);
+  expect(feet().x).toBeGreaterThan(7 + 0.05);
+  expect(feet().x).toBeLessThan(8 - 0.05); // it went through the doorway (the walls beside it are blocks)
+
+  // west along y = 6.5 to the pillar that stands in the west wall at (0, 6): stopped at its face, x = 1 + radius
+  until(MINUS_X, () => feet().x <= 1 + r() + 0.02, 600);
+  hold(MINUS_X, 30);
+  expect(feet().x).toBeCloseTo(1 + r(), 1);
+  // and up to y = 2.5, clear of it
+  expect(until(MINUS_Y, () => feet().y <= 2.5, 400)).toBe(true);
+
+  // gravity toward the west wall (key 2): it turns over a moment, falls to the wall, and stands on it
+  hold({ gravity_west: 1 }, 1);
+  settle(120);
   expect(body().g).toBe('-x');
+  expect(body().turn).toBeUndefined();
   expect(body().state).toBe('ground');
   expect(feet().x).toBeCloseTo(0, 3);
-  run(150, { move_left: 1, move_down: 1 }); // along the wall toward the pillar (+y on a wall)
+  // along the wall toward the pillar that sticks out of it: the walk stops against it
+  until({ move_left: 1, move_down: 1 }, () => feet().y >= 6 - r() - 0.02, 600);
+  hold({ move_left: 1, move_down: 1 }, 40);
   expect(body().state).toBe('ground');
+  expect(feet().y).toBeGreaterThan(5);
+  expect(feet().y).toBeCloseTo(6 - r(), 1);
+  expect(feet().x).toBeCloseTo(0, 3);
 
   // to the ceiling and back to the floor
-  run(5, { gravity_ceiling: 1 });
-  run(120);
+  hold({ gravity_ceiling: 1 }, 1);
+  settle(150);
   expect(body().g).toBe('+z');
   expect(body().state).toBe('ground');
   expect(feet().h).toBeCloseTo(5, 3); // the underside of the ceiling
-  run(150, up); // walks upside down under the ceiling
-  run(5, { gravity_floor: 1 });
-  run(120);
+  const startY = feet().y;
+  hold(MINUS_Y, 90); // walks upside down under the ceiling
+  expect(feet().y).toBeLessThan(startY - 0.5);
+  expect(feet().h).toBeCloseTo(5, 3);
+  hold({ gravity_floor: 1 }, 1);
+  settle(150);
   expect(body().g).toBe('-z');
   expect(body().state).toBe('ground');
   expect(feet().h).toBeCloseTo(0, 3);
-  run(5, { gravity_south: 1 });
-  run(120);
+  hold({ gravity_south: 1 }, 1);
+  settle(150);
   expect(body().g).toBe('+y');
   expect(body().state).toBe('ground');
-  run(5, { gravity_floor: 1 });
-  run(120);
+  // it stands on the first face south of it: the pillar's, which sticks out of the west wall at y = 6 (the body is beside it)
+  expect(feet().y).toBeCloseTo(6, 3);
+  expect(feet().x).toBeLessThan(1);
+  hold({ gravity_floor: 1 }, 1);
+  settle(150);
   expect(body().state).toBe('ground');
+  expect(feet().h).toBeCloseTo(0, 3);
 
+  expect(ticks).toBeGreaterThan(1000); // every one of them was looked at
   expect(overlapped, 'ticks when the player was inside a block').toBe(0);
   expect(wrongFades, 'blocks that faded without being in the way (or stayed solid in the way)').toBe(0);
   expect(fadedTicks).toBeGreaterThan(0); // the ceiling and walls do fade when the player is behind them

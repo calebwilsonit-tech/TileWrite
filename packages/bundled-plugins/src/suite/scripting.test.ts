@@ -179,6 +179,25 @@ export default defineScript({
     expect(() => r2.run(1)).toThrow(/There is no event action called "doesNotExist"/);
   });
 
+  it('says so when setting gravity does nothing (the older physics, a bad direction, no body), like the event rows do', async () => {
+    const source = `export default defineScript({ name: 'Flip', settings: { dir: 'sideways' }, update(me) { me.gravity = me.settings.dir as string; } });`;
+    const { id } = await install('Flip.script.ts', source);
+    const problems = (flags: Record<string, boolean>, dir: string, withBody = true): string[] => {
+      const e = withScript(id, { dir });
+      if (withBody) e.components.body = { vx: 0, vy: 0, vz: 0, radius: 0.3, height: 1, state: 'ground', stepUp: 0.35, stepDown: 0.4, ledge: 'fall', pits: 'fall', wade: false, gravity: 1, peakZ: 0, layer: 4, mask: 65535, noclip: false, blockedBy: [], blockedTerrain: false, standingOn: null };
+      const r = rig(scene(e));
+      Object.assign(r.sim.compat, flags);
+      const said: string[] = [];
+      r.sim.events.on('problem', (d) => void said.push(String(d.text)));
+      r.run(2);
+      return said;
+    };
+    expect(problems({ blockPhysics: true }, '+x')).toEqual([]); // works: nothing to say
+    expect(problems({ blockPhysics: false }, '+x')[0]).toMatch(/older physics.*Compatibility/);
+    expect(problems({ blockPhysics: true }, 'sideways')[0]).toMatch(/"sideways".*does nothing.*-z, \+z/);
+    expect(problems({ blockPhysics: true }, '+x', false)[0]).toMatch(/has no Body/);
+  });
+
   it('can spawn prefabs and react to events', async () => {
     const prefab: PrefabData = { schemaVersion: 1, name: 'Spark', root: { name: 'Spark', tags: ['spark'], components: { transform: { x: 0, y: 0, h: 0, facing: 2 } }, children: [] } };
     const source = `

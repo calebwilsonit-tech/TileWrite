@@ -49,11 +49,11 @@ import {
   type Body,
   type IsoConfig,
   bodyBox,
-  cameraDirection,
   gravityFrame,
+  SolidField,
 } from '@tilewright/runtime';
 import { POINTER_BINDINGS, closeScreen, type CompatFlags } from '@tilewright/runtime';
-import { drawArrow, drawBox, drawCone, drawContact, drawFootprint, drawLightRadius, drawPath, drawWire, shapesOf, wireShapes } from './debug-draw';
+import { drawArrow, drawBox, drawCone, drawContact, drawFootprint, drawLightRadius, drawPath, drawSweep, drawWire, shapesOf, sweptBlocks, wireShapes } from './debug-draw';
 import { assetFs } from '../project/assetFs';
 import { joinPath } from '../project/api';
 import { loadScene as loadSceneFile } from '../project/io';
@@ -641,7 +641,6 @@ export class PlaySession {
   /** Gravity: which way each body is pulled, what it touches, its box, and the line of sight to the camera that decides what fades. */
   private drawGravityDebug(g: Graphics, iso: IsoConfig): void {
     const { sim } = this;
-    const dir = cameraDirection(iso);
     for (const e of sim.world.query(C.Transform, C.Body)) {
       const t = e.require<TransformIso>(C.Transform);
       const b = e.require<Body>(C.Body);
@@ -651,7 +650,10 @@ export class PlaySession {
       const mid = { x: (box.x0 + box.x1) / 2, y: (box.y0 + box.y1) / 2, h: (box.z0 + box.z1) / 2 };
       drawArrow(g, mid, frame.g, 1.2, iso, 0x6aa8ff);
       drawContact(g, { x: t.x, y: t.y, h: t.h }, iso, b.state === 'ground');
-      if (e.id === this.o.renderer.focus) drawArrow(g, mid, [dir.x, dir.y, dir.z], 3, iso, 0xffffff);
+      if (e.id === this.o.renderer.focus && sim.map) {
+        // the line of sight is a volume (a box slid toward the camera), not an arrow: an arrow along it is a dot on the screen
+        drawSweep(g, box, sweptBlocks(new SolidField(sim.map, sim.assets.tileset), box, iso, sim.map), iso);
+      }
     }
   }
 

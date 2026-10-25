@@ -146,6 +146,8 @@ export class EditorDoc {
   generator: GeneratorSpec | null = null;
   /** Which way gravity pulls in this scene ('-z', down, when not set). */
   gravity: GravityDir = '-z';
+  /** Seconds a turn of gravity takes in this scene (not set: the project's rule, 0.25 with the timedGravity flag, else at once). */
+  gravityTurn: number | undefined = undefined;
   /** May the game place and break blocks while it runs, and how many edits one run may make. */
   blockRules: { runtime: boolean; limit: number } = { runtime: false, limit: 200 };
   /** Returns false to refuse a change to a cell (a locked layer). */
@@ -173,6 +175,7 @@ export class EditorDoc {
     const rules = copy.generator ? GeneratorSpecSchema.safeParse(copy.generator) : null;
     doc.generator = rules?.success ? rules.data : null;
     doc.gravity = copy.gravity ?? '-z';
+    doc.gravityTurn = copy.gravityTurn;
     doc.blockRules = { runtime: copy.blocks?.runtime ?? false, limit: copy.blocks?.limit ?? 200 };
     return doc;
   }
@@ -194,6 +197,7 @@ export class EditorDoc {
       graphs: this.graphs,
       ...(this.generator ? { generator: this.generator } : {}),
       ...(this.gravity !== '-z' ? { gravity: this.gravity } : {}),
+      ...(this.gravityTurn !== undefined ? { gravityTurn: this.gravityTurn } : {}),
       ...(this.blockRules.runtime ? { blocks: this.blockRules } : {}),
     });
   }
@@ -227,6 +231,23 @@ export class EditorDoc {
       },
       undo: () => {
         this.gravity = before;
+        this.emit({ type: 'events' });
+      },
+    });
+  }
+
+  /** How long a turn of gravity takes in this scene, in seconds (an undo step); undefined goes back to the project's rule. */
+  setGravityTurn(seconds: number | undefined): void {
+    const before = this.gravityTurn;
+    if (before === seconds) return;
+    this.run({
+      label: 'Change how long gravity takes to turn',
+      redo: () => {
+        this.gravityTurn = seconds;
+        this.emit({ type: 'events' });
+      },
+      undo: () => {
+        this.gravityTurn = before;
         this.emit({ type: 'events' });
       },
     });

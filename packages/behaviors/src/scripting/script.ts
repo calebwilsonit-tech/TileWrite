@@ -169,7 +169,18 @@ class EntityView implements ScriptEntity {
   }
   set gravity(dir: string) {
     const b = this.entity.get<Body>(C.Body);
-    if (b && isGravityDir(dir)) b.gdir = dir;
+    // (said as a problem, like the event rows that turn gravity: the Problems panel and the console show it)
+    const say = (text: string): void => void this.ctx.events.emit('problem', { text });
+    if (!isGravityDir(dir)) {
+      say(`A script set gravity to "${dir}", which does nothing: use one of -z, +z, -x, +x, -y, +y.`);
+      return;
+    }
+    if (!b) {
+      say(`A script set gravity for "${this.entity.name}", which has no Body for it to pull.`);
+      return;
+    }
+    b.gdir = dir; // (kept either way, so reading it back gives what was set)
+    if (!this.ctx.compat.blockPhysics) say('A script set gravity, which does nothing here: this project plays with the older physics, where gravity only points down. Turn on "Bodies collide with every block" in Project settings -> Compatibility to use gravity in other directions.');
   }
   input(name: string): boolean {
     return signalInput(this.entity, name);

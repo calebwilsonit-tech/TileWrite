@@ -32,7 +32,8 @@ function comp<T extends Rec>(e: EntityData, name: string): T | undefined {
 function SpriteAssetFields({ e, edit }: { e: EntityData; edit: (label: string, fn: (x: EntityData) => void) => void }) {
   const names = useStudio((s) => s.names);
   useStudio((s) => s.assetsVersion);
-  const sprite = e.components.sprite as { asset?: string } | undefined;
+  const sprite = e.components.sprite as { asset?: string; byGravity?: Record<string, string> } | undefined;
+  const byGravity = sprite?.byGravity;
   const asset = sprite?.asset ?? '';
   const data = asset ? studio.assets.get(asset) : undefined;
   const anim = e.components.animator as Animator | undefined;
@@ -64,6 +65,31 @@ function SpriteAssetFields({ e, edit }: { e: EntityData; edit: (label: string, f
       )}
       {data && clipNames.length > 0 && !states && (
         <SelectField<string> testId="insp-clip" label="Plays" value={anim?.clip ?? ''} options={clipOptions(false)} onChange={(v) => edit('Change animation', (x) => setPlainClip(x, data, v))} />
+      )}
+      {sprite && (
+        <details data-testid="insp-by-gravity">
+          <summary>A picture for each way gravity pulls</summary>
+          <p className="hint">Without one, the sprite above is turned so its head points up whichever way gravity pulls this object. Choose a drawing of its own for a direction (a character that is drawn clinging to the wall, say) and that one is used, upright.</p>
+          {GRAVITY_DIRS.filter((d) => d !== '-z').map((d) => (
+            <SelectField<string>
+              key={d}
+              testId={`insp-gravity-sprite-${d}`}
+              label={GRAVITY_NAMES[d]}
+              value={byGravity?.[d] ?? ''}
+              options={[{ value: '', label: '(turn the sprite above)' }, ...names.map((n) => ({ value: n, label: n }))]}
+              onChange={(v) =>
+                edit('Choose a picture for a gravity', (x) => {
+                  const s = x.components.sprite as { byGravity?: Record<string, string> };
+                  const next = { ...(s.byGravity ?? {}) };
+                  if (v) next[d] = v;
+                  else delete next[d];
+                  if (Object.keys(next).length > 0) s.byGravity = next;
+                  else delete s.byGravity;
+                })
+              }
+            />
+          ))}
+        </details>
       )}
       <div className="row">
         <button
@@ -229,6 +255,17 @@ function SceneInspector() {
         options={GRAVITY_DIRS.map((d) => ({ value: d, label: GRAVITY_NAMES[d] }))}
         onChange={(v) => doc.setGravity(v)}
       />
+      {project?.project.compat?.blockPhysics && (
+        <NumberField
+          testId="scene-gravity-turn"
+          label={project.project.compat.timedGravity ? 'Gravity takes this long to turn (seconds, 0 = at once)' : 'Gravity takes this long to turn (seconds; this project turns it at once unless you set a time)'}
+          min={0}
+          max={5}
+          step={0.05}
+          value={doc.gravityTurn ?? (project.project.compat.timedGravity ? 0.25 : 0)}
+          onCommit={(v) => doc.setGravityTurn(v)}
+        />
+      )}
       <p className="hint">{project?.project.compat?.blockPhysics ? 'Any object can have its own gravity (its Body settings). A switch or a rule can turn it while the game runs.' : 'Gravity in any direction needs "Bodies collide with every block" in Project settings -> Compatibility; this project plays with the older physics, where it always points down.'}</p>
       <fieldset data-testid="scene-blocks-rules">
         <legend>Blocks while playing</legend>

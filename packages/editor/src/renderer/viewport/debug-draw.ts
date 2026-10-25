@@ -1,5 +1,5 @@
 import type { Graphics } from 'pixi.js';
-import { gridToScreen, type Aabb, type IsoConfig } from '@tilewright/runtime';
+import { FADE_ON, cameraDirection, gridToScreen, viewOverlap, type Aabb, type DepthBox, type IsoConfig, type SolidField } from '@tilewright/runtime';
 import { PALETTE } from './palette';
 import { facingVector } from '@tilewright/behaviors';
 
@@ -214,6 +214,53 @@ export function drawBox(g: Graphics, b: Aabb, iso: IsoConfig, color: number, alp
   const edges = [[0, 1], [1, 2], [2, 3], [3, 0], [4, 5], [5, 6], [6, 7], [7, 4], [0, 4], [1, 5], [2, 6], [3, 7]] as const;
   for (const [i, j] of edges) g.moveTo(c[i]!.x, c[i]!.y).lineTo(c[j]!.x, c[j]!.y);
   g.stroke({ width: 1, color, alpha });
+}
+
+const depthBox = (b: Aabb, id = 0): DepthBox => ({ id, minX: b.x0, maxX: b.x1, minY: b.y0, maxY: b.y1, minZ: b.z0, maxZ: b.z1 });
+
+/**
+ * The line of sight, as a volume: the box slid toward the camera until it leaves the scene (`reach` cells), and the solid blocks it runs into.
+ * Those are the blocks that fade (the same test the renderer asks, see `viewOverlap`). The camera looks along one direction, so on the
+ * screen the slid box lies exactly over the box itself; a single arrow along it is a dot, which is why the volume is drawn instead.
+ */
+export function sweptBlocks(field: Pick<SolidField, 'some'>, focus: Aabb, iso: IsoConfig, map: { width: number; height: number }, reach = 24): Aabb[] {
+  const d = cameraDirection(iso);
+  const far: Aabb = { x0: focus.x0, x1: focus.x1 + d.x * reach, y0: focus.y0, y1: focus.y1 + d.y * reach, z0: focus.z0, z1: focus.z1 + d.z * reach };
+  const hits: Aabb[] = [];
+  field.some(far, { wade: false }, (piece) => {
+    if (piece.x0 < 0 || piece.y0 < 0 || piece.x1 > map.width || piece.y1 > map.height) return false; // (past the edge of the map everything counts as solid: that is not a block anyone sees)
+    if (viewOverlap(depthBox(focus), depthBox(piece), iso) > FADE_ON) hits.push(piece);
+    return false;
+  });
+  return hits;
+}
+
+/**
+ * Draw the swept box and the blocks it hits. The box is drawn where it stands and again at steps along the line of sight, each step nudged
+ * a few pixels aside (only so the steps can be told apart: they all lie on the same spot of the picture), joined by a line; every block
+ * it hits is outlined and its top face tinted.
+ */
+export function drawSweep(g: Graphics, focus: Aabb, hits: readonly Aabb[], iso: IsoConfig, reach = 24): void {
+  const d = cameraDirection(iso);
+  const steps = Math.max(1, Math.min(6, Math.floor(reach / 4)));
+  let prev: { x: number; y: number } | null = null;
+  for (let i = 0; i <= steps; i++) {
+    const t = (reach * i) / steps;
+    const box: Aabb = { x0: focus.x0 + d.x * t, x1: focus.x1 + d.x * t, y0: focus.y0 + d.y * t, y1: focus.y1 + d.y * t, z0: focus.z0 + d.z * t, z1: focus.z1 + d.z * t };
+    const nudge = i * 5;
+    const c = corners(box, iso).map((p) => ({ x: p.x - nudge, y: p.y - nudge }));
+    const edges = [[0, 1], [1, 2], [2, 3], [3, 0], [4, 5], [5, 6], [6, 7], [7, 4], [0, 4], [1, 5], [2, 6], [3, 7]] as const;
+    for (const [a, b] of edges) g.moveTo(c[a]!.x, c[a]!.y).lineTo(c[b]!.x, c[b]!.y);
+    g.stroke({ width: 1, color: i === 0 ? 0xffffff : 0x6ad2ff, alpha: i === 0 ? 0.95 : 0.35 });
+    const mid = { x: (c[0]!.x + c[6]!.x) / 2, y: (c[0]!.y + c[6]!.y) / 2 };
+    if (prev) g.moveTo(prev.x, prev.y).lineTo(mid.x, mid.y).stroke({ width: 1, color: 0x6ad2ff, alpha: 0.5 });
+    prev = mid;
+  }
+  for (const h of hits) {
+    drawBox(g, h, iso, 0xff9a3c, 1);
+    const top = corners(h, iso).slice(4);
+    g.poly(top.flatMap((p) => [p.x, p.y])).fill({ color: 0xff9a3c, alpha: 0.25 });
+  }
 }
 
 /** An arrow from a point along a direction (in grid space, `len` levels or cells long). */
