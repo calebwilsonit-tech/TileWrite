@@ -1,6 +1,7 @@
 import { FACING_NAMES, GRAVITY_DIRS, GRAVITY_NAMES, type Animator, type EntityData, type GravityDir, type RegionData } from '@tilewright/runtime';
 import { behaviorList } from '@tilewright/behaviors';
 import { CollisionLayerFields } from './CollisionLayers';
+import { MissingPluginData } from './MissingPluginData';
 import { applySprite, setLocomotionClips, setPlainClip } from '../studio/apply';
 import { BehaviorsSection } from './BehaviorsSection';
 import { PluginComponentsSection } from './PluginComponents';
@@ -165,18 +166,7 @@ function EntityInspector({ ids }: { ids: string[] }) {
       <AttachSection entity={e} />
       <QuickActionsSection entity={e} />
       <WiresSection entityId={e.id} />
-      {Object.keys(e.components).some((k) => !isHidden(k)) && (
-        <fieldset>
-          <legend>Other components</legend>
-          <ul className="plain">
-            {Object.keys(e.components)
-              .filter((k) => !isHidden(k))
-              .map((k) => (
-                <li key={k}>{k}</li>
-              ))}
-          </ul>
-        </fieldset>
-      )}
+      <MissingPluginData entity={e} hidden={isHidden} />
       <div className="row">
         <button onClick={rotateSelection}>Rotate</button>
         <button onClick={() => { copySelection(); pasteClipboard(); }}>Duplicate</button>

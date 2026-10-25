@@ -6,7 +6,7 @@ import { z } from 'zod';
  */
 
 export const PACK_FORMAT = 'tilewright-pack';
-export const PACK_KINDS = ['tile', 'tileset', 'prop', 'attachment', 'character', 'animation', 'ui', 'structure', 'behaviour', 'sound', 'template'] as const;
+export const PACK_KINDS = ['tile', 'tileset', 'prop', 'attachment', 'character', 'animation', 'ui', 'structure', 'behaviour', 'sound', 'template', 'plugin'] as const;
 
 /** Licences an item can be shared under. "custom" means the author explains it in the description. */
 export const LICENCES = ['CC0-1.0', 'CC-BY-4.0', 'CC-BY-NC-4.0', 'free-for-any-game', 'custom'] as const;

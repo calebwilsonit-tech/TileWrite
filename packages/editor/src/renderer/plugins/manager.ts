@@ -4,6 +4,7 @@ import { api } from '../project/api';
 import { joinPath } from '../project/api';
 import { installIsolatedEditorPart } from './isolated';
 import { browserWorker, preflightGamePart } from './preflight';
+import { hubClient, pluginBundleOf } from './hub-plugins';
 
 /**
  * Plugins other people wrote, kept on this computer: found in the plugin store (a folder per id and version), read, approved by the
@@ -37,7 +38,12 @@ interface Saved {
   pinned: Record<string, string>;
   /** Folders opened in development mode. */
   dev: string[];
+  /** Where a plugin was got from, so it can be updated from there. */
+  sources: Record<string, PluginSource>;
 }
+
+/** Where an installed plugin came from. */
+export type PluginSource = { via: 'address'; address: string } | { via: 'hub'; hub: string; item: string };
 
 const fsOf = (dir: string): PluginFs => ({
   readText: (p) => api().fs.read(joinPath(dir, p)),
@@ -50,6 +56,7 @@ class PluginManager {
   private grants: Record<string, string[]> = {};
   private pinned: Record<string, string> = {};
   private dev = new Set<string>();
+  private sources: Record<string, PluginSource> = {};
   private readonly listeners = new Set<() => void>();
   private stopWatching: (() => void) | null = null;
   version = 0;
@@ -70,11 +77,12 @@ class PluginManager {
     this.grants = s.grants ?? {};
     this.pinned = s.pinned ?? {};
     this.dev = new Set(s.dev ?? []);
+    this.sources = s.sources ?? {};
   }
 
   private async save(): Promise<void> {
     const cur = await api().settings.get();
-    const plugins: Saved = { trust: this.trust.toJSON(), grants: this.grants, pinned: this.pinned, dev: [...this.dev] };
+    const plugins: Saved = { trust: this.trust.toJSON(), grants: this.grants, pinned: this.pinned, dev: [...this.dev], sources: this.sources };
     await api().settings.set({ ...cur, plugins });
   }
 
@@ -173,7 +181,63 @@ class PluginManager {
   }
 
   async installFromAddress(address: string): Promise<InstalledPlugin> {
-    return this.installFromBundle(await api().plugins.fetch(address));
+    const p = await this.installFromBundle(await api().plugins.fetch(address));
+    await this.remember(p.id, { via: 'address', address });
+    return p;
+  }
+
+  /** Install a plugin that is shared on the asset hub (it still has to be allowed before it runs, like any plugin from outside). */
+  async installFromHub(item: string, hub?: string): Promise<InstalledPlugin> {
+    const client = hubClient(hub);
+    const { pack } = await client.download(item);
+    const p = await this.installFromBundle(pluginBundleOf(pack));
+    await this.remember(p.id, { via: 'hub', hub: client.address, item });
+    return p;
+  }
+
+  private async remember(id: string, source: PluginSource): Promise<void> {
+    this.sources[id] = source;
+    await this.save();
+  }
+
+  /** Where the plugin was got from, when it can be asked again for a newer version. */
+  sourceOf(id: string): PluginSource | undefined {
+    return this.sources[id];
+  }
+
+  /** Ask where the plugin came from whether there is a newer version. Nothing is installed. */
+  async checkUpdate(id: string): Promise<{ current: string; latest: string; newer: boolean; text: string }> {
+    const source = this.sources[id];
+    if (!source) throw new Error('This plugin was not installed from an address or the hub, so there is nowhere to look for a newer version.');
+    const text = source.via === 'address' ? await api().plugins.fetch(source.address) : pluginBundleOf((await hubClient(source.hub).download(source.item)).pack);
+    const manifest = (JSON.parse(JSON.parse(text).files['plugin.json'] as string) as { version?: string }).version ?? '0.0.0';
+    const current = this.chosen(id)?.version ?? '0.0.0';
+    return { current, latest: manifest, newer: compareVersionText(manifest, current) > 0, text };
+  }
+
+  /** The person asked to update: the newer version is installed next to the old one (and needs allowing again, since its code changed). */
+  async update(id: string): Promise<{ updated: boolean; message: string }> {
+    const r = await this.checkUpdate(id);
+    if (!r.newer) return { updated: false, message: `You have the newest version (${r.current}).` };
+    await this.installFromBundle(r.text);
+    if (this.pinned[id]) delete this.pinned[id];
+    await this.save();
+    await this.refresh();
+    return { updated: true, message: `Updated ${r.current} to ${r.latest}. The new version has to be allowed before it runs.` };
+  }
+
+  /** The recent projects that list the plugin, by name (a project that cannot be read is skipped). */
+  async usedBy(id: string): Promise<string[]> {
+    const out: string[] = [];
+    for (const r of await api().recent.list()) {
+      try {
+        const project = JSON.parse(await api().fs.read(joinPath(r.dir, 'project.json'))) as { plugins?: string[]; packs?: string[] };
+        if ((project.plugins ?? project.packs ?? []).includes(id)) out.push(r.name);
+      } catch {
+        /* not there any more, or not readable */
+      }
+    }
+    return out;
   }
 
   /** Open a folder as a plugin being written: it is used where it is, and changes to it are picked up at once. */
@@ -211,7 +275,10 @@ class PluginManager {
   }
 
   async remove(id: string, version?: string): Promise<void> {
-    if (!version) host.forget(id);
+    if (!version) {
+      host.forget(id);
+      delete this.sources[id];
+    }
     await api().plugins.remove(id, version);
     if (!version || this.pinned[id] === version) delete this.pinned[id];
     await this.save();

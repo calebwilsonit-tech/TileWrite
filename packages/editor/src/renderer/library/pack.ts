@@ -11,7 +11,7 @@ export const PACK_FORMAT = 'tilewright-pack';
 /** 2: a pack can hold whole interface screens (`uiScreens`). A pack without them is still written as 1, so older versions read it. */
 export const PACK_VERSION = 2;
 
-export const PACK_KINDS = ['tile', 'tileset', 'prop', 'attachment', 'character', 'animation', 'ui', 'structure', 'behaviour', 'sound', 'template'] as const;
+export const PACK_KINDS = ['tile', 'tileset', 'prop', 'attachment', 'character', 'animation', 'ui', 'structure', 'behaviour', 'sound', 'template', 'plugin'] as const;
 export type PackKind = (typeof PACK_KINDS)[number];
 
 export const PACK_KIND_LABELS: Record<PackKind, string> = {
@@ -26,6 +26,7 @@ export const PACK_KIND_LABELS: Record<PackKind, string> = {
   behaviour: 'Behaviour',
   sound: 'Sound',
   template: 'Template',
+  plugin: 'Plugin',
 };
 
 export const PackFileSchema = z.object({

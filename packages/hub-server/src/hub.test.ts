@@ -38,6 +38,19 @@ function make(opts = {}) {
   return { hub, store, sign, advance: (ms: number) => void (t += ms), admin: hub.actor(`Bearer ${'a'.repeat(32)}`) };
 }
 
+describe('a plugin on the hub', () => {
+  it('is a pack of kind plugin with its files under assets/plugin; it has code, so it waits for a moderator', () => {
+    const files = ['plugin.json', 'plugin.cjs'].map((f) => ({ path: `assets/plugin/${f}`, encoding: 'utf8', data: f === 'plugin.json' ? '{"id":"farming"}' : 'module.exports={}' }));
+    const check = checkIncomingPack(pack({ kind: 'plugin', code: true, files }), 300);
+    expect(check.ok).toBe(true);
+    expect(check.hasCode).toBe(true);
+    const { hub, sign } = make();
+    const item = hub.publish(sign('maker'), pack({ kind: 'plugin', code: true, files }), 300);
+    expect(item.kind).toBe('plugin');
+    expect(item.status).toBe('pending');
+  });
+});
+
 describe('checking a pack before it is kept', () => {
   it('accepts a good one and explains each way a pack can be refused', () => {
     expect(checkIncomingPack(pack(), 100).ok).toBe(true);

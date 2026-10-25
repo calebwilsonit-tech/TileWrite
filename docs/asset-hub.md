@@ -1,6 +1,6 @@
 # The Asset Hub
 
-The **Hub** panel (bottom dock) is a window onto a community **Asset Hub**: a server where people share asset packs of tiles, props, characters, structures, interface pieces, behaviours and sounds. Everything is free to take; the author decides under which licence. The hub itself is a small program you can run on your own computer or host for a community (see [HUB_HOSTING.md](HUB_HOSTING.md)). Tilewright does not ship with an address for a public hub and never contacts one by itself: the Hub panel only talks to the address you type.
+The **Hub** panel (bottom dock) is a window onto a community **Asset Hub**: a server where people share asset packs of tiles, props, characters, structures, interface pieces, behaviours and sounds, and plugins (a pack of kind *plugin*, held for a moderator like any pack with code; install it from **Project settings, Plugins**). Everything is free to take; the author decides under which licence. The hub itself is a small program you can run on your own computer or host for a community (see [HUB_HOSTING.md](HUB_HOSTING.md)). Tilewright does not ship with an address for a public hub and never contacts one by itself: the Hub panel only talks to the address you type.
 
 ## Taking something
 1. Type the hub's address (for a hub on your own computer: `http://localhost:8787`) and press **Connect**. Addresses on the internet must start with `https://`.
