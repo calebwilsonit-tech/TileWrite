@@ -23,7 +23,11 @@ Phase 3, Rule A: **nothing the owner has made may break.** This folder is how th
   presses its switches and walks on the wall and the ceiling.
 - **Scripts:** each script type-checks against the script API exactly as the Code window does and compiles to the same code.
 - **Saves and playthroughs** already in the project folder still open and still replay.
-- **Export:** which files an export would ship (a hash of each, line endings ignored), and the manifest.
+- **Export:** which files an export would ship (a hash of each, line endings ignored), and the manifest. And, in `compat/export.test.ts`, a real
+  export of every project in the corpus (the files copied, the scripts compiled into `scripts.json`, `game.json` written, exactly as the
+  Export button does before it puts the folder beside the player), the exported folder opened the way the player opens it, a game started
+  on its first scene, and the same button list played in it and in the project: every checkpoint must be the same. (`e2e/m12-export.spec.ts` and
+  `e2e/p2-export-samples.spec.ts` run exported games as programs.)
 - **The script API** only grows (`baselines/script-api.json` keeps every name it ever had).
 - **Pictures:** `e2e/compat-screens.spec.ts` opens each scene in the editor and compares it with a golden picture
   (one set per operating system, written the first time on a computer). Only Windows pictures (`*-win32.png`) are committed. In CI a missing

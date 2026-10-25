@@ -35,7 +35,7 @@ const transpiler = tsTranspiler(ts as unknown as Parameters<typeof tsTranspiler>
  * registered as a behaviour, and the project's packs are switched on. Call `unload()` when finished with it, because
  * the behaviour registry is global.
  */
-export async function loadProject(dir: string): Promise<LoadedProject> {
+export async function loadProject(dir: string, from: 'sources' | { compiled: Record<string, { js: string; map?: string }>; names: string[] } = 'sources'): Promise<LoadedProject> {
   const problems: string[] = [];
   const log: string[] = [];
   clearScripts();
@@ -61,7 +61,8 @@ export async function loadProject(dir: string): Promise<LoadedProject> {
     loadMinigames(nodeFs, dir),
     loadWorldMap(nodeFs, dir),
     loadProjectInput(nodeFs, dir),
-    loadScripts(nodeFs, dir),
+    // an exported game has no script sources, only the compiled ones (see `compiled` below)
+    from === 'sources' ? loadScripts(nodeFs, dir) : Promise.resolve({ scripts: new Map<string, string>(), problems: [] as string[] }),
   ]);
   problems.push(
     ...prefabProblems,
@@ -81,9 +82,21 @@ export async function loadProject(dir: string): Promise<LoadedProject> {
 
   installScriptGlobals({ log: (kind, text) => log.push(`${kind}: ${text}`) });
   const importer = defaultImporter();
-  for (const [name, source] of [...scripts.scripts].sort((a, b) => a[0].localeCompare(b[0]))) {
+  // the player starts the compiled scripts the way a project starts its sources
+  const precompiled =
+    from === 'sources'
+      ? null
+      : {
+          transpile: (_source: string, file: string) => {
+            const n = /([^/\\]+)\.script\.ts$/.exec(file)?.[1] ?? '';
+            const c = from.compiled[n];
+            return c ? { js: c.js, ...(c.map ? { map: c.map } : {}), problems: [] } : { js: '', problems: [{ line: 0, message: `The compiled script "${n}" is missing.` }] };
+          },
+        };
+  const toStart: [string, string][] = from === 'sources' ? [...scripts.scripts].sort((a, b) => a[0].localeCompare(b[0])) : from.names.map((n): [string, string] => [n, '']);
+  for (const [name, source] of toStart) {
     const file = `assets/scripts/${name}.script.ts`;
-    const r = await loadScript(file, source, transpiler, importer, []);
+    const r = await loadScript(file, source, precompiled ?? transpiler, importer, []);
     if (!r.loaded) {
       for (const p of r.problems) problems.push(`Script ${name}${p.line > 0 ? `, line ${p.line}` : ''}: ${p.message}`);
       continue;
