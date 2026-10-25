@@ -1,6 +1,6 @@
 import { Container, Graphics, Text } from 'pixi.js';
 import { drawCone, drawFootprint, drawLightRadius, drawPath, drawWire, type ConeShape, type FootprintShape, type LightShape, type PathShape, type WireShape } from './debug-draw';
-import { DEFAULT_ISO, gridToScreen, type IsoConfig, type RegionData, type TileMap } from '@tilewright/runtime';
+import { DEFAULT_ISO, gridToScreen, shapeBoxes, type IsoConfig, type RegionData, type TileMap } from '@tilewright/runtime';
 import { collisionKind, type CollisionKind, type P } from '../tools/algorithms';
 import type { Preview } from '../tools/tools';
 import { PALETTE } from './palette';
@@ -213,19 +213,22 @@ export class OverlayDrawer {
     g.poly(poly).fill({ color, alpha: 0.35 }).stroke({ width: 2, color, alpha: 0.95 });
   }
 
-  /** A block-shaped ghost: where a block would be put (see-through, with its edges). */
-  solid(g: Graphics, x: number, y: number, z: number, color: number, alpha: number, iso: IsoConfig = DEFAULT_ISO): void {
+  /** A block-shaped ghost: where a block would be put (see-through, with its edges). A stair or a ramp is drawn as the steps it really is. */
+  solid(g: Graphics, x: number, y: number, z: number, color: number, alpha: number, iso: IsoConfig = DEFAULT_ISO, shape: 'cube' | 'stairs' | 'ramp' = 'cube', rot = 0): void {
     const P = (dx: number, dy: number, dz: number): number[] => {
       const p = gridToScreen(x + dx, y + dy, z + dz, iso);
       return [p.x, p.y];
     };
-    // the three faces that look toward the camera (the top, the south side and the east side)
-    for (const [corners, shade] of [
-      [[[0, 0, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1]], 1],
-      [[[0, 1, 0], [1, 1, 0], [1, 1, 1], [0, 1, 1]], 0.75],
-      [[[1, 0, 0], [1, 1, 0], [1, 1, 1], [1, 0, 1]], 0.6],
-    ] as [[number, number, number][], number][]) {
-      g.poly(corners.flatMap(([a, b, c]) => P(a, b, c))).fill({ color, alpha: alpha * shade }).stroke({ width: 1, color, alpha: 0.7 });
+    // each piece of the shape (the physics sees the same boxes), lowest first; of each the three faces that look toward the camera
+    const pieces = [...shapeBoxes(shape, rot)].sort((a, b) => a[5] - b[5]);
+    for (const [x0, x1, y0, y1, z0, z1] of pieces) {
+      for (const [corners, shade] of [
+        [[[x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1]], 1],
+        [[[x0, y1, z0], [x1, y1, z0], [x1, y1, z1], [x0, y1, z1]], 0.75],
+        [[[x1, y0, z0], [x1, y1, z0], [x1, y1, z1], [x1, y0, z1]], 0.6],
+      ] as [[number, number, number][], number][]) {
+        g.poly(corners.flatMap(([a, b, c]) => P(a, b, c))).fill({ color, alpha: alpha * shade }).stroke({ width: 1, color, alpha: 0.7 });
+      }
     }
   }
 

@@ -18,7 +18,7 @@ import {
 import { FACE_OF_BLOCK, attachmentEntity, attachmentSprites, prefabById } from './prefabs';
 import { normalise, pasteEdits, placedEntities, rotateStructure, type Region, type Structure } from '../structures/structure';
 import { PALETTE } from '../viewport/palette';
-import { blockDragCells, cellBeside, faceNormal, planePoint, useInHotbar, type Cell3 } from './block-edit';
+import { blockDragCells, cellBeside, faceNormal, planePoint, sameSlot, useInHotbar, type Cell3 } from './block-edit';
 
 export const MAX_HEIGHT = 12;
 
@@ -40,7 +40,7 @@ export type Preview =
   /** One face of a block, lit (what a click would put a block against). */
   | { kind: 'face'; x: number; y: number; z: number; face: BlockFace; color: number }
   /** Blocks that would be put down: shown see-through. */
-  | { kind: 'solid'; cells: { x: number; y: number; z: number }[]; color: number; alpha: number }
+  | { kind: 'solid'; cells: { x: number; y: number; z: number }[]; color: number; alpha: number; shape?: 'cube' | 'stairs' | 'ramp'; rot?: number }
   | { kind: 'ghost'; x: number; y: number; h: number; prefab: string };
 
 export interface ToolEnv {
@@ -920,8 +920,8 @@ function blocksTool(): ToolImpl {
     });
     if (edits.length === 0) return;
     doc.paint(cells.length > 1 ? 'Add blocks' : 'Add block', edits);
-    const used = useInHotbar(env.opts.hotbar, env.opts.hotbarNext, tile);
-    if (used.hotbar.join() !== env.opts.hotbar.join() || used.next !== env.opts.hotbarNext) env.setOptions({ hotbar: used.hotbar, hotbarNext: used.next });
+    const used = useInHotbar(env.opts.hotbar, env.opts.hotbarNext, { tile, shape: env.opts.blockShape, rot: env.opts.blockRot, solid: env.opts.blockSolid });
+    if (used.hotbar.length !== env.opts.hotbar.length || used.next !== env.opts.hotbarNext || used.hotbar.some((s, i) => s !== env.opts.hotbar[i] && !sameSlot(s, env.opts.hotbar[i]!))) env.setOptions({ hotbar: used.hotbar, hotbarNext: used.next });
   };
 
   /** Where the pointer is on the plane of the face the drag began on, as a cell. */
@@ -938,7 +938,7 @@ function blocksTool(): ToolImpl {
   };
 
   const showCells = (env: ToolEnv, cells: Cell3[]): void => {
-    env.setPreview([{ kind: 'solid', cells: cells.slice(0, 600), color: 0xffffff, alpha: 0.35 }]);
+    env.setPreview([{ kind: 'solid', cells: cells.slice(0, 600), color: 0xffffff, alpha: 0.35, shape: env.opts.blockShape, rot: env.opts.blockRot }]);
   };
 
   return {
@@ -992,7 +992,7 @@ function blocksTool(): ToolImpl {
       const beside = cellBeside(hit);
       env.setPreview([
         { kind: 'face', x: hit.x, y: hit.y, z: hit.z, face: hit.face, color: 0xffd34a },
-        ...(env.opts.blockMode === 'add' && env.doc.map.inBounds(beside.x, beside.y) && beside.z >= 0 ? [{ kind: 'solid' as const, cells: [beside], color: 0xffffff, alpha: 0.35 }] : []),
+        ...(env.opts.blockMode === 'add' && env.doc.map.inBounds(beside.x, beside.y) && beside.z >= 0 ? [{ kind: 'solid' as const, cells: [beside], color: 0xffffff, alpha: 0.35, shape: env.opts.blockShape, rot: env.opts.blockRot }] : []),
       ]);
     },
     key(key, env) {
@@ -1001,8 +1001,8 @@ function blocksTool(): ToolImpl {
         return true;
       }
       if (/^[1-9]$/.test(key)) {
-        const tile = env.opts.hotbar[Number(key) - 1];
-        if (tile !== undefined) env.setOptions({ tile });
+        const slot = env.opts.hotbar[Number(key) - 1];
+        if (slot) env.setOptions({ tile: slot.tile, blockShape: slot.shape, blockRot: slot.rot, blockSolid: slot.solid });
         return true;
       }
       return false;

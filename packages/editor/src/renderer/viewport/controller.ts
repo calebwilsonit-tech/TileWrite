@@ -433,7 +433,7 @@ export class ViewportController {
       if (pv.kind === 'box') this.overlay.box(this.ghostG, pv.box, pv.color, this.renderer.iso);
       if (pv.kind === 'cube') this.overlay.cube(this.ghostG, pv.x, pv.y, pv.z, pv.color, this.renderer.iso);
       if (pv.kind === 'face') this.overlay.face(this.ghostG, pv.x, pv.y, pv.z, pv.face, pv.color, this.renderer.iso);
-      if (pv.kind === 'solid') for (const c of pv.cells) this.overlay.solid(this.ghostG, c.x, c.y, c.z, pv.color, pv.alpha, this.renderer.iso);
+      if (pv.kind === 'solid') for (const c of pv.cells) this.overlay.solid(this.ghostG, c.x, c.y, c.z, pv.color, pv.alpha, this.renderer.iso, pv.shape, pv.rot);
       if (pv.kind === 'ghost') {
         const prefab = prefabById(pv.prefab, store.prefabs);
         const data = prefab.make(pv.x, pv.y, pv.h);

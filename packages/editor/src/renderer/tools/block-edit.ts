@@ -75,14 +75,29 @@ export function blockDragCells(start: Cell3, end: Cell3, face: BlockFace, box: b
   return out;
 }
 
-/** A hotbar of up to nine tiles: a tile that is used and not on it takes the place of the one added longest ago. */
-export function useInHotbar(hotbar: readonly number[], next: number, tile: number): { hotbar: number[]; next: number } {
-  if (hotbar.includes(tile)) return { hotbar: [...hotbar], next };
+/** One place on the hotbar: the tile, and the shape of the block, the way round it faces and whether it can be walked into. */
+export interface HotbarSlot {
+  tile: number;
+  shape: 'cube' | 'stairs' | 'ramp';
+  rot: 0 | 1 | 2 | 3;
+  solid: boolean;
+}
+
+/** A plain block of this tile (what the hotbar starts with). */
+export const cubeSlot = (tile: number): HotbarSlot => ({ tile, shape: 'cube', rot: 0, solid: true });
+
+/** Two slots are the same when they would put the same block (a cube has no way round). */
+export const sameSlot = (a: HotbarSlot, b: HotbarSlot): boolean => a.tile === b.tile && a.shape === b.shape && a.solid === b.solid && (a.shape === 'cube' || a.rot === b.rot);
+
+/** A hotbar of up to nine blocks: one that is used and not on it takes the place of the one added longest ago. */
+export function useInHotbar(hotbar: readonly HotbarSlot[], next: number, slot: HotbarSlot): { hotbar: HotbarSlot[]; next: number } {
+  const used: HotbarSlot = slot.shape === 'cube' ? { ...slot, rot: 0 } : slot;
+  if (hotbar.some((s) => sameSlot(s, used))) return { hotbar: [...hotbar], next };
   const out = [...hotbar];
   if (out.length < 9) {
-    out.push(tile);
+    out.push(used);
     return { hotbar: out, next };
   }
-  out[next % 9] = tile;
+  out[next % 9] = used;
   return { hotbar: out, next: (next + 1) % 9 };
 }

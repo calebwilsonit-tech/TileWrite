@@ -41,16 +41,21 @@ function Hotbar({ options }: { options: ToolOptions }) {
     <div className="opt hotbar" data-testid="hotbar" role="group" aria-label="Hotbar of block tiles">
       <span>Hotbar (keys 1 to 9)</span>
       <div className="seg">
-        {options.hotbar.map((id, i) => (
-          <button key={`${i}-${id}`} data-testid={`hotbar-${i + 1}`} className={options.tile === id ? 'on' : ''} title={names(id)} onClick={() => store.setOptions({ tile: id })}>
-            {i + 1} {names(id)}
-          </button>
-        ))}
+        {options.hotbar.map((slot, i) => {
+          const label = `${names(slot.tile)}${slot.shape === 'cube' ? '' : ` ${slot.shape}${slot.rot ? ` ${ROT_NAMES[slot.rot]}` : ''}`}${slot.solid ? '' : ' (not solid)'}`;
+          const on = options.tile === slot.tile && options.blockShape === slot.shape && options.blockSolid === slot.solid && (slot.shape === 'cube' || options.blockRot === slot.rot);
+          return (
+            <button key={`${i}-${label}`} data-testid={`hotbar-${i + 1}`} className={on ? 'on' : ''} title={label} onClick={() => store.setOptions({ tile: slot.tile, blockShape: slot.shape, blockRot: slot.rot, blockSolid: slot.solid })}>
+              {i + 1} {label}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
 }
 
+const ROT_NAMES = ['north', 'east', 'south', 'west'] as const;
 const DEFAULT_NAMES: Record<number, string> = { 1: 'grass', 2: 'stone', 3: 'sand', 4: 'water', 5: 'brick', 6: 'wood' };
 
 export function ToolOptionsView({ tool, options }: { tool: ToolId; options: ToolOptions }) {

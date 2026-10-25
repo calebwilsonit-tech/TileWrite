@@ -102,13 +102,13 @@ test('Phase 3: blocks are placed, removed, copied and dragged out the way Minecr
   const f = await where(page, 22, 20, -1);
   await page.mouse.click(f.x, f.y);
   expect((await blockAt(page, 22, 20, 0))!.tile).toBe(5);
-  expect((await options(page)).hotbar).toContain(5);
+  expect((await options(page)).hotbar.map((s: { tile: number }) => s.tile)).toContain(5);
   const stair = await where(page, 20, 20, 0);
   await page.mouse.click(stair.x, stair.y, { button: 'middle' });
   const copied = await options(page);
   expect([copied.blockShape, copied.blockRot, copied.tile]).toEqual(['stairs', 3, 1]);
   await page.keyboard.press('4');
-  expect((await options(page)).tile).toBe((await options(page)).hotbar[3]);
+  expect((await options(page)).tile).toBe((await options(page)).hotbar[3]!.tile);
 
   // a stair or a bridge can be edited as blocks too (a column with stairs on top is a stack of blocks and a stair)
   await page.getByTestId('block-shape-cube').click();

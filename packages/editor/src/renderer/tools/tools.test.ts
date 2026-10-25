@@ -3,6 +3,7 @@ import { FLAG, SLOPE, newScene } from '@tilewright/runtime';
 import { EditorDoc } from '../model/doc';
 import type { ToolOptions } from '../app/store';
 import { TOOLS, toolState, type Pointer, type Preview, type ToolEnv } from './tools';
+import { cubeSlot } from './block-edit';
 import type { ToolId } from '../app/store';
 
 const baseOpts: ToolOptions = {
@@ -18,7 +19,7 @@ const baseOpts: ToolOptions = {
   outline: false,
   edge: 1,
   blockMode: 'add', spacing: 1, avoidPaths: true, attachment: '', zFrom: 0, zTo: 3,
-  blockShape: 'cube', blockRot: 0, blockSolid: true, blockHeight: 2, hotbar: [1, 2, 3], hotbarNext: 0, pluginTool: '',
+  blockShape: 'cube', blockRot: 0, blockSolid: true, blockHeight: 2, hotbar: [1, 2, 3].map(cubeSlot), hotbarNext: 0, pluginTool: '',
 };
 
 function setup(w = 12, h = 12, opts: Partial<ToolOptions> = {}) {

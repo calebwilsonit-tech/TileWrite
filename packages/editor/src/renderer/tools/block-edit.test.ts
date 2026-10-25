@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { newScene } from '@tilewright/runtime';
 import { EditorDoc } from '../model/doc';
-import { blockDragCells, cellBeside, faceNormal, planePoint, useInHotbar } from './block-edit';
+import { blockDragCells, cellBeside, cubeSlot, faceNormal, planePoint, useInHotbar } from './block-edit';
 import { TOOLS, type Pointer, type Preview, type ToolEnv } from './tools';
 import type { ToolOptions } from '../app/store';
 
@@ -53,22 +53,33 @@ describe('the Blocks tool: where blocks go', () => {
 
 describe('the hotbar', () => {
   it('keeps a tile where it is and gives a new one the place of the one added longest ago', () => {
-    let state = { hotbar: [1, 2, 3], next: 0 };
-    state = useInHotbar(state.hotbar, state.next, 2);
-    expect(state.hotbar).toEqual([1, 2, 3]);
-    for (const t of [4, 5, 6, 7, 8, 9]) state = useInHotbar(state.hotbar, state.next, t);
-    expect(state.hotbar).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9]);
-    state = useInHotbar(state.hotbar, state.next, 12);
-    expect(state.hotbar[0]).toBe(12);
-    state = useInHotbar(state.hotbar, state.next, 13);
-    expect(state.hotbar.slice(0, 2)).toEqual([12, 13]);
+    let state = { hotbar: [1, 2, 3].map(cubeSlot), next: 0 };
+    state = useInHotbar(state.hotbar, state.next, cubeSlot(2));
+    expect(state.hotbar.map((s) => s.tile)).toEqual([1, 2, 3]);
+    for (const t of [4, 5, 6, 7, 8, 9]) state = useInHotbar(state.hotbar, state.next, cubeSlot(t));
+    expect(state.hotbar.map((s) => s.tile)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+    state = useInHotbar(state.hotbar, state.next, cubeSlot(12));
+    expect(state.hotbar[0]!.tile).toBe(12);
+    state = useInHotbar(state.hotbar, state.next, cubeSlot(13));
+    expect(state.hotbar.slice(0, 2).map((s) => s.tile)).toEqual([12, 13]);
+  });
+
+  it('remembers the shape, the way round and whether it is solid, not only the tile', () => {
+    let state = { hotbar: [1, 2].map(cubeSlot), next: 0 };
+    state = useInHotbar(state.hotbar, state.next, { tile: 1, shape: 'stairs', rot: 3, solid: true }); // the same tile as slot 1, a different block
+    expect(state.hotbar).toHaveLength(3);
+    state = useInHotbar(state.hotbar, state.next, { tile: 1, shape: 'stairs', rot: 3, solid: true }); // used again: not added twice
+    expect(state.hotbar).toHaveLength(3);
+    state = useInHotbar(state.hotbar, state.next, { tile: 1, shape: 'stairs', rot: 1, solid: true }); // the other way round
+    state = useInHotbar(state.hotbar, state.next, { tile: 1, shape: 'cube', rot: 2, solid: false }); // a cube has no way round, but can be not solid
+    expect(state.hotbar.map((s) => [s.tile, s.shape, s.rot, s.solid])).toEqual([[1, 'cube', 0, true], [2, 'cube', 0, true], [1, 'stairs', 3, true], [1, 'stairs', 1, true], [1, 'cube', 0, false]]);
   });
 });
 
 describe('the Blocks tool, used', () => {
   const opts: ToolOptions = {
     tile: 2, size: 1, height: 3, density: 0.5, slopeDir: 2, bridgeLevel: 1, blockFrom: 0, blockTo: 0, prefab: 'crate', outline: false, edge: 1, blockMode: 'add',
-    spacing: 1, avoidPaths: true, attachment: '', zFrom: 0, zTo: 3, blockShape: 'cube', blockRot: 0, blockSolid: true, blockHeight: 2, hotbar: [1, 2, 3], hotbarNext: 0, pluginTool: '',
+    spacing: 1, avoidPaths: true, attachment: '', zFrom: 0, zTo: 3, blockShape: 'cube', blockRot: 0, blockSolid: true, blockHeight: 2, hotbar: [1, 2, 3].map(cubeSlot), hotbarNext: 0, pluginTool: '',
   };
   function rig(hit: { x: number; y: number; z: number; face: 'top' | 'n' | 'e' | 's' | 'w' } | null) {
     const doc = EditorDoc.fromScene(newScene('T', 12, 12));
@@ -147,12 +158,27 @@ describe('the Blocks tool, used', () => {
     expect(r.env.opts.tile).toBe(2);
   });
 
+  it('a key on the hotbar brings back the shape and way round the block was used with, and the ghost is that shape', () => {
+    const r = rig({ x: 4, y: 4, z: -1, face: 'top' });
+    Object.assign(r.env.opts, { tile: 5, blockShape: 'stairs', blockRot: 3 });
+    TOOLS.blocks.down(r.at(4, 4), r.env);
+    TOOLS.blocks.up(r.at(4, 4), r.env);
+    const at = r.env.opts.hotbar.findIndex((s) => s.shape === 'stairs');
+    expect(r.env.opts.hotbar[at]).toEqual({ tile: 5, shape: 'stairs', rot: 3, solid: true });
+    Object.assign(r.env.opts, { tile: 1, blockShape: 'cube', blockRot: 0 });
+    expect(TOOLS.blocks.key!(String(at + 1), r.env)).toBe(true);
+    expect([r.env.opts.tile, r.env.opts.blockShape, r.env.opts.blockRot]).toEqual([5, 'stairs', 3]);
+    TOOLS.blocks.hover!(r.at(4, 4), r.env);
+    const ghost = r.preview().find((p) => p.kind === 'solid');
+    expect(ghost).toMatchObject({ kind: 'solid', shape: 'stairs', rot: 3 });
+  });
+
   it('a click uses a tile that is not on the hotbar, and it goes on the hotbar', () => {
     const r = rig({ x: 4, y: 4, z: -1, face: 'top' });
     r.env.opts.tile = 6;
     TOOLS.blocks.down(r.at(4, 4), r.env);
     TOOLS.blocks.up(r.at(4, 4), r.env);
-    expect(r.env.opts.hotbar).toContain(6);
+    expect(r.env.opts.hotbar.map((s) => s.tile)).toContain(6);
   });
 
   it('a drag along a face fills a line in one undo step, and a Shift-drag builds layers', () => {

@@ -2,6 +2,7 @@ import { useSyncExternalStore } from 'react';
 import { SLOPE, extractPrefab, type CrashReport, type InputRecording, resolveInstance, type CutsceneData, type DialogueData, type EntityData, type PrefabData, type SceneData, type SlopeDir } from '@tilewright/runtime';
 import { EditorDoc } from '../model/doc';
 import { isWallTile } from '../model/layers';
+import { cubeSlot, type HotbarSlot } from '../tools/block-edit';
 import { loadLanguages } from '../project/localization';
 import { api, joinPath } from '../project/api';
 import { applyAccessibility, cleanAccessibility } from './accessibility';
@@ -118,7 +119,7 @@ export interface ToolOptions {
   /** The Blocks tool: how many layers deep a Shift-drag builds. */
   blockHeight: number;
   /** The Blocks tool: the nine tiles of the hotbar (keys 1 to 9), and which slot the next new tile takes. */
-  hotbar: number[];
+  hotbar: HotbarSlot[];
   hotbarNext: number;
   /** The Plugin tool: which tool a plugin added is in use (its id). */
   pluginTool: string;
@@ -260,7 +261,7 @@ const initial: AppState = {
     blockRot: 0,
     blockSolid: true,
     blockHeight: 2,
-    hotbar: [1, 2, 3, 4, 5, 6],
+    hotbar: [1, 2, 3, 4, 5, 6].map(cubeSlot),
     hotbarNext: 0,
     pluginTool: '',
     zFrom: 0,
