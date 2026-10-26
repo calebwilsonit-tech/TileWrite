@@ -487,7 +487,8 @@ export function scrollToRow(sim: Simulation, key: string, s: Scroller, row: numb
  * away with the wheel is left alone (the widget did not move inside the content).
  */
 export function followFocus(sim: Simulation, itemKey: string, chain: { key: string; scroller: Scroller }[]): boolean {
-  const spot = chain.map((c) => `${c.key}:${(scrollState(sim, c.key).metrics.items[itemKey] ?? []).join(',')}`).join(';');
+  // (to the pixel: a widget does not count as moved because a scroll left a fraction of a pixel of rounding in its place)
+  const spot = chain.map((c) => `${c.key}:${(scrollState(sim, c.key).metrics.items[itemKey] ?? []).map((v) => Math.round(v)).join(',')}`).join(';');
   const sig = `${itemKey}|${spot}`;
   const had = sim.runtime.scratch.get('ui.focusfollow') as string | undefined;
   if (had === sig) return false;

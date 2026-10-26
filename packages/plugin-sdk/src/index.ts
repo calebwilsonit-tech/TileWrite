@@ -17,6 +17,9 @@ export {
   type ActionSnapshot,
   activeActionLabels,
   UI_ACTIONS,
+  type FieldDef,
+  type MapSpec,
+  defaultMapLayer,
   addImpact,
   advanceDialogue,
   type Assets,
@@ -261,6 +264,11 @@ export {
   withPacks,
   withPluginScreens,
   trackMaps,
+  type MapLayerDef,
+  type MapLayerPaint,
+  type MarkerSourceDef,
+  type FogRuleDef,
+  type UiPartDef,
 } from '@tilewright/behaviors';
 
 export {

@@ -40,6 +40,10 @@ describe('the example plugins', () => {
       ['widget', (h) => h.ext.widgets.size],
       ['screen / screenRole', (h) => h.ext.screens.size + h.ext.screenRoles.size],
       ['listSource', (h) => h.ext.listSources.size],
+      ['mapLayer', (h) => h.ext.mapLayers.size],
+      ['markerSource', (h) => h.ext.markerSources.size],
+      ['fogRule', (h) => h.ext.fogRules.size],
+      ['uiPart', (h) => h.ext.uiParts.size],
       ['menuEntry', (h) => h.ext.menuEntries.size],
       ['panel', (h) => h.editor.panels.size],
       ['tool', (h) => h.editor.tools.size],
@@ -114,5 +118,31 @@ describe('the mock picture provider', () => {
     expect([...a]).not.toEqual([...c]);
     const img = decodePng(a);
     expect([img.width, img.height]).toEqual([16, 8]);
+  });
+});
+
+describe('the examples for maps and control parts do what they say', () => {
+  it('a map layer draws, a marker source gives markers, a fog rule reveals cells, a part is picked as a prefab', () => {
+    const layer = install('mapLayer');
+    const drawn: string[] = [];
+    const ctx = { strokeStyle: '', fillStyle: '', lineWidth: 0, beginPath: () => drawn.push('begin'), moveTo: () => undefined, lineTo: () => drawn.push('line'), stroke: () => drawn.push('stroke'), fillText: (t: string) => drawn.push(t) };
+    layer.host.ext.mapLayers.get('example-compass')!.draw({ ctx: ctx as never, settings: { size: 40 }, width: 300, height: 200, toView: (x: number, y: number) => ({ x: x * 10, y: y * 10 }), sim: {} as never, world: {} as never, cellPx: 10, zoom: 1 });
+    expect(drawn).toEqual(['begin', 'line', 'stroke', 'N']);
+
+    const src = install('markerSource');
+    const sim = { world: { withTag: (t: string) => (t === 'ally' ? [{ id: 4, name: 'Bard', get: (c: string) => (c === 'transform' ? { x: 3, y: 5 } : { hp: 2 }) }] : []) } };
+    expect(src.host.ext.markerSources.get('example-party')!.rows(sim as never, { source: '', settings: {} })).toEqual([{ id: 'ally4', x: 3, y: 5, scope: { 'marker.name': 'Bard', 'ally.hurt': 2 } }]);
+
+    const fog = install('fogRule');
+    const known: string[] = [];
+    const torchSim = { world: { withTag: (t: string) => (t === 'torch' ? [{ get: () => ({ x: 5, y: 5 }) }] : []) } };
+    fog.host.ext.fogRules.get('example-torches')!.reveal(torchSim as never, { radius: 1 }, { w: 10, h: 10, regions: [] }, (x, y) => known.push(`${x},${y}`));
+    expect(known).toContain('5,5');
+    expect(known).toContain('5,4');
+    expect(known).not.toContain('7,5');
+
+    const part = install('uiPart');
+    expect(part.host.ext.uiParts.get('Brass thumb')!.suits).toEqual(['slider']);
+    expect(part.host.ext.uiParts.get('Brass thumb')!.widget.style.fill).toBe('#c9a227');
   });
 });

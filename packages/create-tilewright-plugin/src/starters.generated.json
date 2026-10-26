@@ -184,6 +184,38 @@
     "source": "import { definePlugin, newWidget, type PluginDefinition, type UiScreen } from '@tilewright/plugin-sdk';\nimport manifest from '../plugin.json' with { type: 'json' };\n\nexport const listSourceExample: PluginDefinition = definePlugin(manifest, {\n  install: (api) =>\n    api.listSource({\n      id: 'example-badges',\n      label: 'Badges the player has earned',\n      fields: { 'badge.name': 'The name of the badge' },\n      rows: (sim) =>\n        Object.keys(sim.runtime.vars)\n          .filter((k) => k.startsWith('badge:') && sim.runtime.vars[k])\n          .map((k) => ({ id: k.slice(6), scope: { 'badge.name': k.slice(6) } })),\n    }),\n});\n\nexport default listSourceExample;\n"
   },
   {
+    "id": "map-layer",
+    "point": "mapLayer",
+    "title": "a map layer",
+    "description": "A \"Compass\" layer for the Map widget: a north arrow in a corner, with a colour and size the designer sets.",
+    "deps": {},
+    "source": "import { definePlugin, newWidget, type PluginDefinition, type UiScreen } from '@tilewright/plugin-sdk';\nimport manifest from '../plugin.json' with { type: 'json' };\n\nexport const mapLayerExample: PluginDefinition = definePlugin(manifest, {\n  install: (api) =>\n    api.mapLayer({\n      id: 'example-compass',\n      label: 'Compass (a north arrow)',\n      fields: [\n        { key: 'colour', label: 'Colour', type: 'colour', default: '#f4efe6' },\n        { key: 'size', label: 'Size (pixels)', type: 'number', default: 36 },\n      ],\n      draw({ ctx, settings, width, toView }) {\n        const size = Number(settings.size ?? 36);\n        // north is where \"up the map\" is in the world: a little step toward y = 0, as the map is turned now\n        const from = toView(0, 1);\n        const to = toView(0, 0);\n        const a = Math.atan2(to.y - from.y, to.x - from.x);\n        const cx = width - size;\n        const cy = size;\n        ctx.strokeStyle = String(settings.colour ?? '#f4efe6');\n        ctx.lineWidth = 3;\n        ctx.beginPath();\n        ctx.moveTo(cx, cy);\n        ctx.lineTo(cx + Math.cos(a) * size * 0.5, cy + Math.sin(a) * size * 0.5);\n        ctx.stroke();\n        ctx.fillStyle = ctx.strokeStyle;\n        ctx.fillText('N', cx + Math.cos(a) * size * 0.7 - 4, cy + Math.sin(a) * size * 0.7 + 4);\n      },\n    }),\n});\n\nexport default mapLayerExample;\n"
+  },
+  {
+    "id": "marker-source",
+    "point": "markerSource",
+    "title": "a marker source",
+    "description": "Markers for \"the party\": one for every object with the tag \"ally\", carrying its name and how hurt it is.",
+    "deps": {},
+    "source": "import { definePlugin, newWidget, type PluginDefinition, type UiScreen } from '@tilewright/plugin-sdk';\nimport manifest from '../plugin.json' with { type: 'json' };\n\nexport const markerSourceExample: PluginDefinition = definePlugin(manifest, {\n  install: (api) =>\n    api.markerSource({\n      id: 'example-party',\n      label: 'The party (objects tagged ally)',\n      rows: (sim) =>\n        sim.world.withTag('ally').flatMap((e) => {\n          const t = e.get<{ x: number; y: number }>('transform');\n          return t ? [{ id: `ally${e.id}`, x: t.x, y: t.y, scope: { 'marker.name': e.name, 'ally.hurt': e.get<{ hp?: number }>('state:health')?.hp ?? 0 } }] : [];\n        }),\n    }),\n});\n\nexport default markerSourceExample;\n"
+  },
+  {
+    "id": "fog-rule",
+    "point": "fogRule",
+    "title": "a fog rule",
+    "description": "Reveals a map around every object tagged \"torch\" (so lit places are known).",
+    "deps": {},
+    "source": "import { definePlugin, newWidget, type PluginDefinition, type UiScreen } from '@tilewright/plugin-sdk';\nimport manifest from '../plugin.json' with { type: 'json' };\n\nexport const fogRuleExample: PluginDefinition = definePlugin(manifest, {\n  install: (api) =>\n    api.fogRule({\n      id: 'example-torches',\n      label: 'Around lit torches',\n      fields: [{ key: 'radius', label: 'Radius (cells)', type: 'number', default: 3 }],\n      reveal(sim, settings, world, reveal) {\n        const r = Number(settings.radius ?? 3);\n        for (const e of sim.world.withTag('torch')) {\n          const t = e.get<{ x: number; y: number }>('transform');\n          if (!t) continue;\n          for (let y = Math.floor(t.y - r); y <= Math.ceil(t.y + r); y++) for (let x = Math.floor(t.x - r); x <= Math.ceil(t.x + r); x++) if (x >= 0 && y >= 0 && x < world.w && y < world.h && (x - t.x) ** 2 + (y - t.y) ** 2 <= r * r) reveal(x, y);\n        }\n      },\n    }),\n});\n\nexport default fogRuleExample;\n"
+  },
+  {
+    "id": "ui-part",
+    "point": "uiPart",
+    "title": "a control part",
+    "description": "A brass thumb for sliders, ready to pick in the designer’s list of parts.",
+    "deps": {},
+    "source": "import { definePlugin, newWidget, type PluginDefinition, type UiScreen } from '@tilewright/plugin-sdk';\nimport manifest from '../plugin.json' with { type: 'json' };\n\nexport const uiPartExample: PluginDefinition = definePlugin(manifest, {\n  install(api) {\n    const thumb = newWidget('panel', 'brass-thumb', 'Brass thumb');\n    Object.assign(thumb, { w: 22, h: 22, style: { fill: '#c9a227', border: '#6b4e0a', borderWidth: 3, radius: 60, shadow: true }, states: { pressed: { fill: '#ffe08a' }, focus: { border: '#ffffff' } } });\n    api.uiPart({ name: 'Brass thumb', label: 'Brass thumb', suits: ['slider'], widget: thumb });\n  },\n});\n\nexport default uiPartExample;\n"
+  },
+  {
     "id": "menu-entry",
     "point": "menuEntry",
     "title": "a menu entry",

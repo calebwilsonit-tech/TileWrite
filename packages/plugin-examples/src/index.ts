@@ -1,6 +1,6 @@
 import type { PluginDefinition } from '@tilewright/plugin-sdk';
 import { behaviorExample, blockExample, bridgeExample, componentExample, defeatExample, eventsExample, inputExample, carrierExample, dataKindExample, layerExample, physicsExample, screenLayerExample, scriptExample, systemExample, unlockExample, whoExample } from './game';
-import { gameUiExample, listSourceExample, menuEntryExample, screenExample, stringsExample, widgetExample } from './ui';
+import { fogRuleExample, gameUiExample, listSourceExample, mapLayerExample, markerSourceExample, menuEntryExample, screenExample, stringsExample, uiPartExample, widgetExample } from './ui';
 import { exportTargetExample, exporterExample, importerExample, inspectorExample, panelExample, prefabExample, templateExample, toolExample, validatorExample } from './editor';
 import { assistantExample, moveExample, strategyExample } from './tools';
 
@@ -30,6 +30,10 @@ export const EXAMPLES: { point: string; plugin: PluginDefinition }[] = [
   { point: 'widget', plugin: widgetExample },
   { point: 'screen / screenRole', plugin: screenExample },
   { point: 'listSource', plugin: listSourceExample },
+  { point: 'mapLayer', plugin: mapLayerExample },
+  { point: 'markerSource', plugin: markerSourceExample },
+  { point: 'fogRule', plugin: fogRuleExample },
+  { point: 'uiPart', plugin: uiPartExample },
   { point: 'menuEntry', plugin: menuEntryExample },
   { point: 'strings', plugin: stringsExample },
   { point: 'gameUi', plugin: gameUiExample },
