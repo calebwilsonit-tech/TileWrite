@@ -135,10 +135,11 @@ function rawMarkers(sim: MapSim, kind: MarkerKind, run: MapRun, mapId: string): 
       const world = sim.assets.worldMap;
       if (!world) break;
       const custom = (k: string, node: MapNode): boolean => host.ext.unlockRules.get(k)?.met(sim.runtime.vars, node) ?? false;
+      const home = world.nodes.find((n) => placeState(n, sim.runtime.vars, sim.runtime.scene, custom) === 'here');
       world.nodes.forEach((n, i) => {
         const state = placeState(n, sim.runtime.vars, sim.runtime.scene, custom);
         if (state === 'hidden') return; // a place nobody has heard of is not drawn at all
-        out.push({ rowId: n.id, x: n.x, y: n.y, scope: { 'place.id': n.id, 'place.name': sim.assets.strings.t(n.label), 'place.scene': n.scene, 'place.here': state === 'here' ? 1 : 0, 'place.state': state, 'place.icon': n.icon, 'place.x': n.x, 'place.y': n.y, index: i + 1 }, label: sim.assets.strings.t(n.label), state });
+        out.push({ rowId: n.id, x: n.x, y: n.y, scope: { 'place.distance': home ? Math.round(Math.hypot(n.x - home.x, n.y - home.y)) : 0, 'place.id': n.id, 'place.name': sim.assets.strings.t(n.label), 'place.scene': n.scene, 'place.here': state === 'here' ? 1 : 0, 'place.state': state, 'place.icon': n.icon, 'place.x': n.x, 'place.y': n.y, index: i + 1 }, label: sim.assets.strings.t(n.label), state });
       });
       break;
     }
@@ -168,7 +169,7 @@ export interface MarkerContext {
   spec: MapSpec;
   run: MapRun;
   zoom: number;
-  fogs: { id: string; state: FogState }[];
+  fogs: { id: string; state: FogState; /** The cells the layer covers (null: all); a place outside them is known. */ rect: { x0: number; y0: number; x1: number; y1: number } | null }[];
   /** A place in the world as a place in the window. */
   toView(x: number, y: number): { x: number; y: number };
   /** Which layer draws markers of a kind. */
@@ -186,12 +187,17 @@ export function collectMarkers(c: MarkerContext): MapMarker[] {
       const id = `${kind.id}:${raw.rowId}`;
       if (hidden.has(id) || hidden.has(raw.rowId)) continue;
       const revealed: Scope = {};
-      c.fogs.forEach((f, i) => {
-        const v = isRevealed(f.state, Math.floor(raw.x), Math.floor(raw.y)) ? 1 : 0;
+      // a place is known (marker.revealed) when every fog layer that covers it has revealed it; marker.revealed.<layer> asks one layer
+      let known = 1;
+      c.fogs.forEach((f) => {
+        const cx = Math.floor(raw.x);
+        const cy = Math.floor(raw.y);
+        const outside = f.rect !== null && (cx < f.rect.x0 || cx >= f.rect.x1 || cy < f.rect.y0 || cy >= f.rect.y1);
+        const v = outside || isRevealed(f.state, cx, cy) ? 1 : 0;
         revealed[`marker.revealed.${f.id}`] = v;
-        if (i === 0) revealed['marker.revealed'] = v;
+        if (v === 0) known = 0;
       });
-      if (c.fogs.length === 0) revealed['marker.revealed'] = 1;
+      revealed['marker.revealed'] = known;
       const distance = here ? Math.hypot(raw.x - here.x, raw.y - here.y) : 0;
       const base: Scope = { ...raw.scope, 'marker.id': id, 'marker.kind': kind.id, 'marker.x': raw.x, 'marker.y': raw.y, 'marker.label': raw.label ?? '', 'map.zoom': c.zoom, 'map.distance': Math.round(distance * 100) / 100, ...revealed };
       const state = withScope(sim, base, () => (raw.state && raw.state !== '' ? raw.state : kind.state ? fillValues(kind.state, sourceOf(sim)) : ''));

@@ -40,7 +40,6 @@ test('Add-on: a corner minimap that rotates with the camera and shows enemy dots
   await page.getByTestId('ui-map-turn').selectOption('camera');
   await setText(page, 'ui-map-cell', '6');
   await setText(page, 'ui-map-zoom', '2');
-  await page.getByTestId('ui-map-nav-placeholder').count();
   // enemies: a second kind of marker, from objects tagged enemy, drawn with the red dot
   await page.getByTestId('ui-map-marker-add').click();
   await page.getByTestId('ui-map-marker-1-toggle').click();
@@ -79,7 +78,7 @@ test('Add-on: a corner minimap that rotates with the camera and shows enemy dots
         const r = e.getBoundingClientRect();
         return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
       };
-      const dots = [...mini.querySelectorAll('[data-name="Red dot"]')].map(centre).sort((a, b) => b.x - a.x);
+      const dots = [...mini.querySelectorAll('[data-name="Red dot"]')].sort((a, b) => ((a as HTMLElement).dataset.id ?? '').localeCompare((b as HTMLElement).dataset.id ?? '')).map(centre);
       const player = [...mini.querySelectorAll('.tw-part')].filter((e) => (e as HTMLElement).dataset.name !== 'Red dot').map(centre).find((c) => Math.abs(c.x - (mini.getBoundingClientRect().left + mini.getBoundingClientRect().width / 2)) < 3);
       const canvas = mini.querySelector<HTMLCanvasElement>('canvas.tw-map-layer')!;
       return { dx: dots[0]!.x - (player?.x ?? 0), dy: dots[0]!.y - (player?.y ?? 0), sig: canvas.dataset.sig ?? '' };

@@ -201,10 +201,10 @@ describe('fog and discovery', () => {
     trackMaps(sim);
     const count = (i: number): number => (city(sim).map!.layers[i]!.data as { draw: { cells: Uint8Array } }).draw.cells.reduce((s, c) => s + c, 0);
     expect(count(0)).toBe(16); // the whole Garden
-    expect(count(1)).toBe(0);
+    expect(count(1)).toBe(16 * 12 - 9); // the layer covers only the Crypt: everything else is known to it, the Crypt is not
     sim.runtime.vars.found = 1;
     trackMaps(sim);
-    expect(count(1)).toBe(9); // the whole Crypt, once the condition holds
+    expect(count(1)).toBe(16 * 12); // the whole Crypt too, once the condition holds
     expect(count(2)).toBeGreaterThan(0);
   });
 
@@ -234,6 +234,25 @@ describe('fog and discovery', () => {
     const cellsOf = (i: number): number => (city(loaded).map!.layers[i]!.data as { draw: { cells: Uint8Array } }).draw.cells.reduce((s, c) => s + c, 0);
     expect(cellsOf(0)).toBe(4);
     expect(cellsOf(1)).toBe(0);
+  });
+
+  it('a layer covers only the part of the map it names, so several can each cover their own region', () => {
+    const sim = game({
+      layers: [fog({ reveal: 'variable', condition: '{north} = 1', area: '0,0,16,4' }), layer('fog', 'south', { reveal: 'variable', condition: '{south} = 1', area: '0,8,16,4' })],
+      markers: [{ id: 'pins', from: 'hand', show: '{marker.revealed} = 1', hand: [hand('n', 3, 1), hand('mid', 3, 6), hand('s', 3, 10)] }, { id: 'all', from: 'hand', show: '{marker.revealed.south} = 1', hand: [hand('x', 3, 1), hand('y', 3, 10)] }] as never,
+    });
+    const cells = (i: number): Uint8Array => (city(sim).map!.layers[i]!.data as { draw: { cells: Uint8Array } }).draw.cells;
+    trackMaps(sim);
+    expect(cells(0)[1 * 16 + 3]).toBe(0); // the north is covered until it is found
+    expect(cells(0)[6 * 16 + 3]).toBe(1); // what the layer does not cover is never hidden by it
+    expect(ids(city(sim))).toEqual(['pins:mid', 'all:x']); // (the south layer does not cover the north, so a place there is known to it)
+    sim.runtime.vars.north = 1;
+    trackMaps(sim);
+    expect(cells(0)[1 * 16 + 3]).toBe(1);
+    expect(ids(city(sim))).toEqual(['pins:n', 'pins:mid', 'all:x']);
+    sim.runtime.vars.south = 1;
+    trackMaps(sim);
+    expect(ids(city(sim))).toEqual(['pins:n', 'pins:mid', 'pins:s', 'all:x', 'all:y']);
   });
 
   it('a plugin adds a rule', () => {
@@ -300,6 +319,8 @@ describe('markers: where they come from, their state, what shows, what merges', 
       ['towns:cave', 300, 100, 'locked'], // a place nobody has heard of (the ruin) is not on the map at all
     ]);
     expect(v.map!.markers[3]!.scope['place.name']).toBe('Cave');
+    // how far each is from the place the player is in (map units), so close places can be left out
+    expect(v.map!.markers.filter((m) => m.kind === 'towns').map((m) => m.scope['place.distance'])).toEqual([0, 200]);
   });
 
   it('a plugin adds a source', () => {

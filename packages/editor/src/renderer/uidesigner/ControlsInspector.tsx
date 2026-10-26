@@ -576,7 +576,7 @@ export function MapSection({ doc, w, edit }: Props) {
 
       <h4>Markers</h4>
       {m.markers.map((k, i) => (
-        <MarkerEditor key={k.id} doc={doc} index={i} kind={k} count={m.markers.length} set={set} sources={sourceFor} />
+        <MarkerEditor key={i} doc={doc} index={i} kind={k} count={m.markers.length} set={set} sources={sourceFor} />
       ))}
       <button
         data-testid="ui-map-marker-add"

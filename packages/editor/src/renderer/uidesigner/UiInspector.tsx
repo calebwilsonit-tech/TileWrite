@@ -293,6 +293,8 @@ export function UiInspector({ doc, widgetId }: { doc: UiDoc; widgetId: string | 
         <legend>What happens</legend>
         <h4>When it is clicked (or pressed with the keys)</h4>
         <ActionListEditor testId="ui-on-click" actions={w.on.click as never} onChange={(next) => edit((n) => (n.on.click = next as never))} />
+        <h4>When it is pointed at (the mouse is over it, or the keys or the pad chose it)</h4>
+        <ActionListEditor testId="ui-on-hover" actions={w.on.hover as never} onChange={(next) => edit((n) => (n.on.hover = next as never))} />
         {['slider', 'toggle', 'dropdown', 'tabs'].includes(w.type) && (
           <>
             <h4>When its value changes</h4>

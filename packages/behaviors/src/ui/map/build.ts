@@ -2,7 +2,7 @@ import { MapSpecSchema, evalUiCondition, type MapLayer, type MapSpec, type Simul
 import { host } from '../../plugins/host';
 import { partNode, makePart, controlState } from '../screens-controls';
 import { instanceStub, withScope, type ViewNode } from '../screens-logic';
-import { fogDraw } from './fog';
+import { coveredRect, fogDraw } from './fog';
 import { parseColour, regionItems, settingBool, settingNumber, settingText, terrainColours, cssOfRgba } from './layers';
 import { collectMarkers, followedCell, type MapMarker } from './markers';
 import { choosable as choosableOf, startMarker } from './nav';
@@ -135,7 +135,7 @@ export function buildMap(sim: Simulation, out: ViewNode, node: UiNode, depth: nu
   // which layers are on show now
   const plans: LayerPlan[] = [];
   const fogLayers = spec.layers.filter((l) => l.kind === 'fog');
-  const fogs = fogLayers.map((l) => ({ id: l.id, state: fogCells(sim, node.id, l.id, run, world.w, world.h, settingBool(l.settings.saved, true)) }));
+  const fogs = fogLayers.map((l) => ({ id: l.id, state: fogCells(sim, node.id, l.id, run, world.w, world.h, settingBool(l.settings.saved, true)), rect: coveredRect(l.settings, world) }));
   const markerLayers = spec.layers.map((l, i) => ({ l, i })).filter((x) => x.l.kind === 'markers');
   const layerOf = (kind: string): number => {
     for (const { l, i } of markerLayers) {

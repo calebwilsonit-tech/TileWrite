@@ -159,10 +159,32 @@ export function updateFog(sim: MapSim, mapId: string, layer: MapLayer, run: MapR
 }
 
 /** How a fog layer is drawn: the cells known, and the look of the others. */
+/** The cells a fog layer covers: all of them, or the rectangle or region its "area" names. What is outside is never covered, and counts as known. */
+export function coveredRect(s: Record<string, unknown>, world: { w: number; h: number; regions: readonly RegionData[] }): { x0: number; y0: number; x1: number; y1: number } | null {
+  const a = settingText(s.area, 'all').trim();
+  if (a === '' || a === 'all') return null;
+  return areaCells(a, world);
+}
+
+const masked = new WeakMap<object, { key: string; cells: Uint8Array }>();
+
 export function fogDraw(sim: MapSim, mapId: string, layer: MapLayer, run: MapRun, world: MapWorld): FogDraw {
   const s = layer.settings;
   const f = fogCells(sim, mapId, layer.id, run, world.w, world.h, settingBool(s.saved, true));
-  return { version: f.version, cells: f.cells, w: f.w, h: f.h, look: settingText(s.look, 'hidden'), colour: settingText(s.colour, '#0b0d12'), picture: settingText(s.picture), dim: settingNumber(s.dimAmount, 0.55) };
+  let cells = f.cells;
+  const rect = coveredRect(s, world);
+  if (rect) {
+    const key = `${f.version}|${rect.x0},${rect.y0},${rect.x1},${rect.y1}`;
+    let m = masked.get(f);
+    if (!m || m.key !== key) {
+      const copy = new Uint8Array(f.cells);
+      for (let y = 0; y < f.h; y++) for (let x = 0; x < f.w; x++) if (x < rect.x0 || x >= rect.x1 || y < rect.y0 || y >= rect.y1) copy[y * f.w + x] = 1;
+      m = { key, cells: copy };
+      masked.set(f, m);
+    }
+    cells = m.cells;
+  }
+  return { version: f.version, cells, w: f.w, h: f.h, look: settingText(s.look, 'hidden'), colour: settingText(s.colour, '#0b0d12'), picture: settingText(s.picture), dim: settingNumber(s.dimAmount, 0.55) };
 }
 
 /** Every map widget of the project: in screens and in UI prefabs (a fog layer keeps working while its screen is closed). */

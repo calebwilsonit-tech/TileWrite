@@ -408,7 +408,7 @@ export const MAP_LAYER_FIELDS: Record<string, FieldDef[]> = {
     { key: 'follow', label: 'Object that reveals (tag)', type: 'tag', default: 'player' },
     { key: 'radius', label: 'Radius (cells)', type: 'number', default: 4 },
     { key: 'condition', label: 'Condition', type: 'condition' },
-    { key: 'area', label: 'Cells it covers (all, a region name, or x,y,w,h)', type: 'text', default: 'all' },
+    { key: 'area', label: 'Cells it covers (all, a region name, or x,y,w,h)', type: 'text', default: 'all', help: 'Only this part is covered by the fog; the rest of the map is never hidden by this layer.' },
     { key: 'table', label: 'Table (columns x, y; or region)', type: 'table' },
     { key: 'remember', label: 'Stays revealed after the object leaves', type: 'bool', default: true },
     { key: 'look', label: 'Hidden cells look', type: 'choice', options: [{ value: 'hidden', label: 'hidden (covered)' }, { value: 'dim', label: 'dimmed' }, { value: 'desaturate', label: 'drained of colour' }, { value: 'picture', label: 'a picture' }], default: 'hidden' },
