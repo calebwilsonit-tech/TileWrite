@@ -5,6 +5,8 @@ import { screenWords } from './screens';
 import { WORLD_MAP_CSS } from './world-map';
 import {
   activeActionLabels,
+  UI_ACTIONS,
+  trackMaps,
   availableSkins,
   carryingOf,
   completeLayout,
@@ -166,7 +168,11 @@ export class GameUi implements GameUiLike {
       saves: () => this.slotCache,
       refreshSaves: () => void this.refreshSlots(),
       title: () => (this.titleInfo ? { text: this.tr(this.titleInfo.text), subtitle: this.tr(this.titleInfo.subtitle) } : null),
-      controls: () => Object.entries(host.actionLabels?.() ?? activeActionLabels()).map(([action, label]) => ({ action, label })),
+      // (the buttons the engine's own menus, lists and maps use are listed only in a project that has them switched on)
+      controls: () =>
+        Object.entries(host.actionLabels?.() ?? activeActionLabels())
+          .filter(([action]) => !(action in UI_ACTIONS) || host.sim.compat.uiScroll || host.sim.compat.uiControls)
+          .map(([action, label]) => ({ action, label })),
       can: (what) => (what === 'quit' ? host.quit !== undefined : what === 'fullscreen' ? host.fullscreen !== undefined : false),
       choices: (what) => this.choicesFor(what),
     });
@@ -338,6 +344,8 @@ export class GameUi implements GameUiLike {
   /** Back, and the keys that open Pause, the inventory and the map, are decided in one place (see router.ts). */
   private handleInput(): void {
     routeInput({ sim: this.host.sim, pauseKeyOpensPause: this.host.pauseKeyOpensPause?.() ?? true });
+    // every fog layer of every map learns what its rule knows, whether or not a map is on screen
+    trackMaps(this.host.sim);
   }
 
   /** The heads-up display is always there: its screen goes at the bottom of the stack whenever something has emptied the stack. */

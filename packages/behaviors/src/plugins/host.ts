@@ -138,6 +138,14 @@ export interface PluginApi {
   screenRole(def: X.ScreenRoleDef): void;
   /** Rows for lists and grids in screens ("saves", "party members"...). */
   listSource(def: X.ListSourceDef): void;
+  /** A kind of map layer (it appears in the Map widget's list of layers, with the fields it lists). */
+  mapLayer(def: X.MapLayerDef): void;
+  /** A place the markers of a map can come from. */
+  markerSource(def: X.MarkerSourceDef): void;
+  /** A rule that reveals cells of a map's fog. */
+  fogRule(def: X.FogRuleDef): void;
+  /** A UI prefab the designer can pick for a part of a control: a slider's thumb, a scrollbar, a pop-up list's option, a marker. */
+  uiPart(def: X.UiPartDef): void;
   /** A row in another screen's menu (the Pause menu's "menu:pause" list). */
   menuEntry(def: X.MenuEntryDef): void;
 
@@ -237,6 +245,10 @@ const emptyExtensions = (): Extensions => ({
   screens: new Map(),
   screenRoles: new Map(),
   listSources: new Map(),
+  mapLayers: new Map(),
+  markerSources: new Map(),
+  fogRules: new Map(),
+  uiParts: new Map(),
   menuEntries: new Map(),
   inspectors: new Map(),
   exporters: new Map(),
@@ -653,6 +665,18 @@ export class PluginHost {
       },
       listSource(def) {
         host.add(rec, id, 'listSources', def.id, { ...def, rows: host.watched(id, `the list "${def.label}"`, def.rows.bind(def)) });
+      },
+      mapLayer(def) {
+        host.add(rec, id, 'mapLayers', def.id, { ...def, draw: host.guarded(id, `the map layer "${def.label}"`, def.draw.bind(def), undefined) });
+      },
+      markerSource(def) {
+        host.add(rec, id, 'markerSources', def.id, { ...def, rows: host.watched(id, `the marker source "${def.label}"`, def.rows.bind(def)) });
+      },
+      fogRule(def) {
+        host.add(rec, id, 'fogRules', def.id, { ...def, reveal: host.guarded(id, `the fog rule "${def.label}"`, def.reveal.bind(def), undefined) });
+      },
+      uiPart(def) {
+        host.add(rec, id, 'uiParts', def.name, def);
       },
       panel(def) {
         const mount = host.guarded(id, `the panel "${def.title}"`, def.mount.bind(def), undefined);

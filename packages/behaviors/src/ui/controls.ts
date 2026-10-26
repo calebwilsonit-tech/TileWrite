@@ -151,6 +151,8 @@ export function builtinPart(kind: string, role: string): UiNode | null {
       return builtin('popup.search', { type: 'panel', w: 200, h: 28, wMode: 'fill', hMode: 'fixed', layout: 'row', align: 'center', padding: 6, style: { ...BOX, borderWidth: 1, radius: 4 }, children: [{ id: 'builtin.popup.search.text', name: 'Search', type: 'text', text: '🔍 {popup.query}', wMode: 'fill', hMode: 'auto' }] });
     case 'popup.empty':
       return builtin('popup.empty', { type: 'text', text: 'Nothing matches.', wMode: 'fill', hMode: 'auto', style: { opacity: 0.7 } });
+    case 'map.marker':
+      return builtin('map.marker', { type: 'panel', w: 16, h: 16, layout: 'free', style: { fill: 'var(--tw-accent, #ffd98a)', border: 'var(--tw-border, #d9c6a0)', borderWidth: 2, radius: 60 }, children: [{ id: 'builtin.map.marker.ring', name: 'Highlight ring', type: 'panel', anchor: 'c', w: 30, h: 30, visible: '{marker.highlight} = 1', style: { border: 'var(--tw-accent, #ffd98a)', borderWidth: 3, radius: 60 } }] });
     case 'toggle.box':
       return builtin('toggle.box', { type: 'panel', w: 22, h: 22, layout: 'column', align: 'center', padding: 0, style: { ...BOX, radius: 4 }, states: { hover: { fill: 'var(--tw-highlight, #6aa8ff)' }, focus: { border: 'var(--tw-accent, #ffd98a)' }, disabled: { opacity: 0.4 } }, children: [{ id: 'builtin.toggle.box.mark', name: 'Tick', type: 'text', text: '✓', wMode: 'auto', hMode: 'auto', visible: '{toggle.on} = 1', style: { align: 'center' } }] });
     case 'toggle.label':
@@ -415,7 +417,7 @@ export const chosenValues = (v: VariableValue | undefined): string[] =>
 export const joinValues = (list: string[]): string => list.join(',');
 
 /** The next highlighted option, moving up or down (round the ends, or stopping at them). */
-export function moveHighlight(options: PopupOption[], current: string, delta: -1 | 1, wrap = true): string {
+export function movePopupHighlight(options: PopupOption[], current: string, delta: -1 | 1, wrap = true): string {
   if (options.length === 0) return '';
   const i = options.findIndex((o) => o.value === current);
   if (i < 0) return options[delta > 0 ? 0 : options.length - 1]!.value;

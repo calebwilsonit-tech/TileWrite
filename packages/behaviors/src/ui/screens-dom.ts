@@ -23,6 +23,7 @@ import { editingFieldKey, openPopupKey, placePopup, pointerPosition, popupRun, s
 import { closePopup, commitEditing, driveSliderKeys, noteOptionFocus, setPopupQuery, setSliderThumb, typeInto, wheelSlider } from './screens-controls';
 import { canScroll, axesOf, driveScroller, dragTo, followFocus, mainAxis, offsetRange, releaseDrag, scrollBy, scrollState, scrollTo, type ScrollState } from './scrolling';
 import { applyMap, drawMaps, wireMap } from './map/dom';
+import { driveMapKeys } from './map/actions';
 
 /**
  * Draws the interface screens as plain DOM (so the editor's Play and an exported game use exactly the same thing) and passes
@@ -77,7 +78,7 @@ export const SCREENS_CSS = `
 .tw-w.engine-control { display: flex; align-items: center; }
 .tw-w.engine-slider { touch-action: none; cursor: pointer; }
 .tw-w.tw-popup-list { z-index: 2000; overflow: hidden; }
-.tw-w.tw-map { overflow: hidden; touch-action: none; }
+.tw-w.tw-map { overflow: hidden; touch-action: none; isolation: isolate; }
 .tw-w.tw-map canvas.tw-map-canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .tw-w.tw-map .tw-map-markers { position: absolute; inset: 0; pointer-events: none; }
 .tw-hidden-input { position: fixed; left: -4000px; top: 0; width: 10px; height: 10px; opacity: 0; }
@@ -1428,6 +1429,8 @@ export class UiScreens {
       for (const a of Object.values(cur.slider.spec.actions)) sliderActions.add(a);
       driveSliderKeys(this.sim, cur);
     }
+    // a map that has the focus moves its highlight, pans or zooms with its own mapped buttons (which are then not also moves of the focus)
+    const mapUsed = cur?.node.type === 'map' && cur.map ? driveMapKeys(this.sim, cur) : new Set<string>();
     const dirs: [string, 'up' | 'down' | 'left' | 'right'][] = [
       ['move_up', 'up'],
       ['move_down', 'down'],
@@ -1436,7 +1439,7 @@ export class UiScreens {
     ];
     for (const [action, dir] of dirs) {
       if (!ui.pressed(action)) continue;
-      if (sliderActions.has(action)) break;
+      if (sliderActions.has(action) || mapUsed.has(action)) break;
       this.autoFocus = false;
       if (!cur) {
         cur = pool[0]!;

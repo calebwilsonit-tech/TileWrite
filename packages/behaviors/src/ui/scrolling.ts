@@ -10,7 +10,7 @@ import { contextOf } from '../story/context';
  * Positions are in pixels along the scroller's own axes: offset 0 shows the start of the content.
  */
 
-export interface Axis {
+export interface ScrollAxis {
   /** Where it is, where it is going, and how fast it was moving when the player let go. */
   o: number;
   t: number;
@@ -36,8 +36,8 @@ export interface Hold {
 }
 
 export interface ScrollState {
-  x: Axis;
-  y: Axis;
+  x: ScrollAxis;
+  y: ScrollAxis;
   metrics: ScrollMetrics;
   holds: Record<string, Hold>;
   /** The last values reported, so a change is reported once. */
@@ -48,7 +48,7 @@ export interface ScrollState {
 }
 
 const EMPTY_METRICS = (): ScrollMetrics => ({ viewW: 0, viewH: 0, contentW: 0, contentH: 0, items: {}, row: 0 });
-const newAxis = (): Axis => ({ o: 0, t: 0, v: 0 });
+const newAxis = (): ScrollAxis => ({ o: 0, t: 0, v: 0 });
 
 const STATES = 'ui.scrollers';
 
@@ -242,7 +242,7 @@ export function dragTo(s: Scroller, st: ScrollState, axis: 'x' | 'y', offset: nu
 }
 
 /** Ease the offset toward where it is going. `ms` is the length of the step. */
-function approach(s: Scroller, a: Axis, r: { min: number; max: number }, dt: number, reduce: boolean): void {
+function approach(s: Scroller, a: ScrollAxis, r: { min: number; max: number }, dt: number, reduce: boolean): void {
   if (s.motion === 'instant' || reduce) {
     a.o = a.t;
     return;

@@ -247,8 +247,8 @@ export const MarkerKindSchema = z.object({
   /** Markers closer than this on the picture (pixels) merge into one (0: never). */
   cluster: z.number().min(0).default(0),
   clusterPrefab: Name.default(''),
-  /** A marker that follows an object while the game runs (the player, enemies). */
-  follows: z.boolean().default(false),
+  /** Markers of objects (tags, prefabs) move with them (on); off keeps each where it was first seen. */
+  follows: z.boolean().default(true),
   /** Words the marker carries ({row.name}); markers can show them. */
   label: z.string().default(''),
   /** The marker keeps its size when the map zooms, or grows with it. */
@@ -304,8 +304,10 @@ export const MapSpecSchema = z.object({
       turnAngle: z.number().default(0),
       /** Pixels one cell takes at zoom 1. */
       cell: z.number().min(1).max(256).default(8),
+      /** Zoom 1 is the whole world fitting the window (on), or one picture pixel to one screen pixel (off). */
+      fit: z.boolean().default(true),
     })
-    .default({ zoom: 1, zoomMin: 0.25, zoomMax: 8, centre: 'auto', turn: 'none', turnAngle: 0, cell: 8 }),
+    .default({ zoom: 1, zoomMin: 0.25, zoomMax: 8, centre: 'auto', turn: 'none', turnAngle: 0, cell: 8, fit: true }),
   nav: z
     .object({
       /** How the highlight picks the next marker: by direction on the screen, in list order, or the nearest one. */

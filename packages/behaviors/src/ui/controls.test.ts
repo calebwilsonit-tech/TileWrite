@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { Simulation, UiDocSchema, currentFlags, legacyFlags, newWidget, openScreen, type CompatFlags, type UiNode, type UiScreen } from '@tilewright/runtime';
 import { activateWidget, findOnScreens, focusables, isFocusable, openScreens, stepWidget, walkView, type ViewNode } from './screens-logic';
 import { buildSlider, choosePopupOption, closePopup, commitEditing, driveSliderKeys, highlightNext, openPopup, setPopupQuery, setSliderThumb, stepNumberField, typeInto, wheelSlider } from './screens-controls';
-import { curvePairs, filterOptions, formatSlider, moveHighlight, numberList, placePopup, pointerPosition, sliderPositionOf, sliderValueAt, snapSliderValue, stepSliderValue, takeFocusRequest, SLIDER_DEFAULTS, cleanTyped, parseNumberField } from './controls';
+import { curvePairs, filterOptions, formatSlider, movePopupHighlight, numberList, placePopup, pointerPosition, sliderPositionOf, sliderValueAt, snapSliderValue, stepSliderValue, takeFocusRequest, SLIDER_DEFAULTS, cleanTyped, parseNumberField } from './controls';
 import { routeInput } from './router';
 import { scrollState } from './scrolling';
 
@@ -301,10 +301,10 @@ describe('a pop-up list', () => {
 
   it('highlight moves up and down round the ends, and the pop-up is placed inside the screen', () => {
     const opts = ['a', 'b', 'c'].map((value) => ({ value, label: value, icon: '', detail: '', group: '', scope: {} }));
-    expect(moveHighlight(opts, 'a', -1)).toBe('c');
-    expect(moveHighlight(opts, 'c', 1)).toBe('a');
-    expect(moveHighlight(opts, 'c', 1, false)).toBe('c');
-    expect(moveHighlight(opts, '', 1)).toBe('a');
+    expect(movePopupHighlight(opts, 'a', -1)).toBe('c');
+    expect(movePopupHighlight(opts, 'c', 1)).toBe('a');
+    expect(movePopupHighlight(opts, 'c', 1, false)).toBe('c');
+    expect(movePopupHighlight(opts, '', 1)).toBe('a');
     expect(filterOptions(opts, 'B').map((o) => o.value)).toEqual(['b']);
     const screenBox = { w: 1280, h: 720 };
     expect(placePopup('below', { x: 100, y: 100, w: 200, h: 30 }, { w: 200, h: 150 }, screenBox, 'box')).toMatchObject({ x: 100, y: 130, w: 200, flipped: false });

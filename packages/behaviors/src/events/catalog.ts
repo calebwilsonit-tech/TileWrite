@@ -26,6 +26,13 @@ const CORE: EventEntry[] = [
   { id: 'spawned', label: 'something is created' },
   { id: 'anim-event', label: 'an animation event fires' },
   { id: 'portal', label: 'the player walks through a portal' },
+  { id: 'map-marker-highlighted', label: 'a marker on a map is highlighted' },
+  { id: 'map-marker-chosen', label: 'a marker on a map is chosen' },
+  { id: 'map-area-revealed', label: 'part of a map is revealed' },
+  { id: 'ui-slider-changed', label: 'a slider is let go or stepped' },
+  { id: 'ui-choice', label: 'a choice is made in a pop-up list' },
+  { id: 'ui-scroll-bottom', label: 'a list is scrolled to its end' },
+  { id: 'ui-field-committed', label: 'words are typed into a field and kept' },
 ];
 
 /** The choices of the two pickers. These are live lists: plugins add to them and take from them when they are turned on and off. */

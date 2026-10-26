@@ -16,6 +16,7 @@ export {
   UiDocSchema,
   type ActionSnapshot,
   activeActionLabels,
+  UI_ACTIONS,
   addImpact,
   advanceDialogue,
   type Assets,
@@ -259,6 +260,7 @@ export {
   type WidgetDef,
   withPacks,
   withPluginScreens,
+  trackMaps,
 } from '@tilewright/behaviors';
 
 export {

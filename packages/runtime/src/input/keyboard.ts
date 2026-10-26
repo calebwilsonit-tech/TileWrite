@@ -193,6 +193,23 @@ export const DEFAULT_INPUT_MAP = {
   pause: ['key:Escape', 'key:KeyP', 'pad:button9'],
 };
 
+/**
+ * The buttons the interface itself uses when the project has the flags uiScroll and uiControls: scrolling, big steps of a slider, paging,
+ * zooming a map. They are ordinary actions: a project can give them other keys and buttons (Project settings, Controls), and every
+ * scroller, slider and map names the ones it listens to.
+ */
+export const UI_ACTIONS: Record<string, { label: string; bindings: string[] }> = {
+  ui_scroll_up: { label: 'Scroll up (menus, lists)', bindings: ['pad:axis3-'] },
+  ui_scroll_down: { label: 'Scroll down (menus, lists)', bindings: ['pad:axis3+'] },
+  ui_scroll_left: { label: 'Scroll left (menus, lists)', bindings: ['pad:axis2-'] },
+  ui_scroll_right: { label: 'Scroll right (menus, lists)', bindings: ['pad:axis2+'] },
+  ui_page_up: { label: 'Page up / a big step less', bindings: ['key:PageUp', 'pad:button4'] },
+  ui_page_down: { label: 'Page down / a big step more', bindings: ['key:PageDown', 'pad:button5'] },
+  ui_zoom_in: { label: 'Zoom a map in', bindings: ['key:Equal', 'pad:button7'] },
+  ui_zoom_out: { label: 'Zoom a map out', bindings: ['key:Minus', 'pad:button6'] },
+  ui_recentre: { label: 'Centre a map on where you are', bindings: ['key:KeyC', 'pad:button3'] },
+};
+
 /** The buttons every game has; plugins add the others. */
 export const CORE_ACTIONS = ['move_left', 'move_right', 'move_up', 'move_down', 'run', 'interact', 'jump', 'pause'] as const;
 
@@ -204,7 +221,7 @@ export function baseInput(extra: Record<string, { label: string; bindings: strin
     map[a] = [...DEFAULT_INPUT_MAP[a]];
     labels[a] = ACTION_LABELS[a]!;
   }
-  for (const [a, d] of Object.entries(extra)) {
+  for (const [a, d] of Object.entries({ ...UI_ACTIONS, ...extra })) {
     map[a] = [...d.bindings];
     labels[a] = d.label;
   }

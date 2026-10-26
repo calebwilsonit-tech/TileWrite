@@ -12,7 +12,7 @@ import {
   filterOptions,
   holdSteps,
   joinValues,
-  moveHighlight,
+  movePopupHighlight,
   parseNumberField,
   popupRun,
   requestFocus,
@@ -43,7 +43,7 @@ export function partNode(kind: string, role: string, prefab: string | undefined)
 }
 
 /** Make the view of one part, tied to the control it belongs to. */
-function makePart(sim: Simulation, owner: ViewNode, kind: string, role: string, node: UiNode, suffix: string, scope: Scope, place: Record<string, string>, mount: PartInfo['mount'], depth: number, visible: boolean, act?: ViewNode['act']): ViewNode {
+export function makePart(sim: Simulation, owner: ViewNode, kind: string, role: string, node: UiNode, suffix: string, scope: Scope, place: Record<string, string>, mount: PartInfo['mount'], depth: number, visible: boolean, act?: ViewNode['act']): ViewNode {
   const v = resolveNode(sim, node, `${owner.key}~${suffix}`, { ...owner.scope, ...scope }, depth + 1, visible);
   v.part = { of: owner.key, kind, role, place, mount };
   if (act) v.act = act;
@@ -51,7 +51,7 @@ function makePart(sim: Simulation, owner: ViewNode, kind: string, role: string, 
   return v;
 }
 
-const stateOf = (owner: ViewNode): Scope => ({ 'control.enabled': owner.enabled ? 1 : 0 });
+export const controlState = (owner: ViewNode): Scope => ({ 'control.enabled': owner.enabled ? 1 : 0 });
 
 function runList(sim: Simulation, n: ViewNode, which: 'click' | 'hover' | 'change' | 'changing', scope: Scope = {}): void {
   const actions = which === 'changing' ? (n.node.on.changing ?? []) : n.node.on[which];
@@ -75,7 +75,7 @@ export function buildSlider(sim: Simulation, out: ViewNode, node: UiNode, depth:
   out.fraction = view.at;
   out.slider = { spec, value: view.value, value2: view.value2, at: view.at, at2: view.at2, min: view.min, max: view.max, steps, text: view.text, active: run.active, dragging: run.dragging };
   const placed = sliderPlacement(spec, view, steps, (role) => partNode('slider', role, spec.parts[role]));
-  out.parts = placed.map((p) => makePart(sim, out, 'slider', p.role, p.node, `${p.role}${p.scope['slider.tick'] ?? ''}`, { ...p.scope, 'slider.dragging': run.dragging ? 1 : 0, ...stateOf(out) }, p.place, p.mount, depth, visible));
+  out.parts = placed.map((p) => makePart(sim, out, 'slider', p.role, p.node, `${p.role}${p.scope['slider.tick'] ?? ''}`, { ...p.scope, 'slider.dragging': run.dragging ? 1 : 0, ...controlState(out) }, p.place, p.mount, depth, visible));
 }
 
 /** Set one thumb of a slider. `dragging` runs the "while it changes" actions only; otherwise the "when it has changed" ones as well. */
@@ -179,7 +179,7 @@ export function buildPopup(sim: Simulation, out: ViewNode, node: UiNode, depth: 
   const parts: ViewNode[] = [];
   const open = run.open ? 1 : 0;
   const boxNode = partNode('popup', 'box', spec.parts.box);
-  if (boxNode) parts.push(makePart(sim, out, 'popup', 'box', boxNode, 'box', { 'popup.text': text, 'popup.open': open, 'popup.count': chosen.length, 'popup.query': run.query, ...stateOf(out) }, {}, 'content', depth, visible));
+  if (boxNode) parts.push(makePart(sim, out, 'popup', 'box', boxNode, 'box', { 'popup.text': text, 'popup.open': open, 'popup.count': chosen.length, 'popup.query': run.query, ...controlState(out) }, {}, 'content', depth, visible));
   const listNode = run.open && spec.place !== 'screen' ? partNode('popup', 'list', spec.parts.list) : null;
   if (listNode) {
     const list = makePart(sim, out, 'popup', 'list', listNode, 'list', { 'popup.text': text, 'popup.query': run.query, 'popup.count': filtered.length }, { maxRows: String(spec.maxRows) }, 'screen', depth, visible);
@@ -288,7 +288,7 @@ export function highlightNext(sim: Simulation, n: ViewNode, delta: -1 | 1): stri
   const info = n.popup;
   if (!info) return '';
   const run = popupRun(sim, n.key);
-  run.highlight = moveHighlight(info.options, run.highlight, delta);
+  run.highlight = movePopupHighlight(info.options, run.highlight, delta);
   return run.highlight;
 }
 
@@ -313,7 +313,7 @@ export function buildField(sim: Simulation, out: ViewNode, node: UiNode, depth: 
   const text = `${dots}${caret}`;
   out.engine = true;
   out.field = { spec, editing: run.editing, draft: run.draft, text: dots, number };
-  const scope: Scope = { 'field.text': text, 'field.value': value, 'field.empty': shown === '' && !run.editing ? 1 : 0, 'field.placeholder': sim.assets.strings.t(spec.placeholder), 'field.editing': run.editing ? 1 : 0, 'field.length': [...shown].length, 'field.max': spec.maxLength, ...stateOf(out) };
+  const scope: Scope = { 'field.text': text, 'field.value': value, 'field.empty': shown === '' && !run.editing ? 1 : 0, 'field.placeholder': sim.assets.strings.t(spec.placeholder), 'field.editing': run.editing ? 1 : 0, 'field.length': [...shown].length, 'field.max': spec.maxLength, ...controlState(out) };
   const parts: ViewNode[] = [];
   const box = partNode('field', 'box', spec.parts.box);
   if (box) parts.push(makePart(sim, out, 'field', 'box', box, 'box', scope, {}, 'content', depth, visible));
@@ -384,7 +384,7 @@ export function stepNumberField(sim: Simulation, n: ViewNode, delta: -1 | 1): bo
 export function buildToggle(sim: Simulation, out: ViewNode, node: UiNode, depth: number, visible: boolean): void {
   const parts = node.parts ?? {};
   out.engine = true;
-  const scope: Scope = { 'toggle.on': out.value, 'toggle.text': out.text, ...stateOf(out) };
+  const scope: Scope = { 'toggle.on': out.value, 'toggle.text': out.text, ...controlState(out) };
   const box = partNode('toggle', 'box', parts.box);
   const label = partNode('toggle', 'label', parts.label);
   out.parts = [box ? makePart(sim, out, 'toggle', 'box', box, 'box', scope, {}, 'content', depth, visible) : null, label ? makePart(sim, out, 'toggle', 'label', label, 'label', scope, {}, 'content', depth, visible) : null].filter((x): x is ViewNode => x !== null);
@@ -393,7 +393,7 @@ export function buildToggle(sim: Simulation, out: ViewNode, node: UiNode, depth:
 export function buildKeybind(sim: Simulation, out: ViewNode, node: UiNode, bindingText: string, capturing: boolean, depth: number, visible: boolean): void {
   const parts = node.parts ?? {};
   out.engine = true;
-  const scope: Scope = { 'bind.name': out.label || out.text, 'bind.key': capturing ? 'press a key…' : bindingText, 'bind.capturing': capturing ? 1 : 0, ...stateOf(out) };
+  const scope: Scope = { 'bind.name': out.label || out.text, 'bind.key': capturing ? 'press a key…' : bindingText, 'bind.capturing': capturing ? 1 : 0, ...controlState(out) };
   const name = partNode('keybind', 'name', parts.name);
   const key = partNode('keybind', 'key', parts.key);
   out.parts = [name ? makePart(sim, out, 'keybind', 'name', name, 'name', scope, {}, 'content', depth, visible) : null, key ? makePart(sim, out, 'keybind', 'key', key, 'key', scope, {}, 'content', depth, visible) : null].filter((x): x is ViewNode => x !== null);
@@ -404,7 +404,7 @@ export function buildTabs(sim: Simulation, out: ViewNode, node: UiNode, depth: n
   out.engine = true;
   const tab = partNode('tabs', 'tab', parts.tab);
   if (!tab) return;
-  out.parts = out.options.map((o, i) => makePart(sim, out, 'tabs', 'tab', tab, `tab#${o}`, { 'tab.name': o, 'tab.index': i + 1, 'tab.selected': o === out.choice ? 1 : 0, ...stateOf(out) }, {}, 'bar', depth, visible, { kind: 'tab', value: o }));
+  out.parts = out.options.map((o, i) => makePart(sim, out, 'tabs', 'tab', tab, `tab#${o}`, { 'tab.name': o, 'tab.index': i + 1, 'tab.selected': o === out.choice ? 1 : 0, ...controlState(out) }, {}, 'bar', depth, visible, { kind: 'tab', value: o }));
 }
 
 // ---------- scrollbars and edge indicators ----------

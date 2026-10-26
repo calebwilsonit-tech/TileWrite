@@ -16,6 +16,7 @@ import { runActionList } from '../events/sheet';
 import { host } from '../plugins/host';
 import { contextOf } from '../story/context';
 import { buildMap } from './map/build';
+import { chooseHighlighted, chooseMarker, findLiveMap, highlightMarker } from './map/actions';
 import { buildField, buildKeybind, buildPopup, buildScroller, buildSlider, buildTabs, buildToggle, choosePopupOption, closePopup, openPopup, startEditing, stepNumberField, stepPopup } from './screens-controls';
 import { lazyWindow, mainAxis, scrollBy, scrollState, scrollerOf } from './scrolling';
 import { sliderRun } from './controls';
@@ -48,11 +49,13 @@ export interface UiBridge {
   can?(what: string): boolean;
   /** The languages, appearances and so on a settings choice offers: name -> [value, shown name] pairs. */
   choices?(what: string): { value: string; label: string }[];
+  /** The tiles, heights and regions of a scene of the project, for a map of a scene that is not the one being played (null when not known yet). */
+  sceneGrid?(scene: string): import('./map/world').SceneGrid | null;
 }
 
 const BRIDGE = 'ui.bridge';
 export const setUiBridge = (sim: Simulation, bridge: UiBridge | null): void => void (bridge ? sim.runtime.scratch.set(BRIDGE, bridge) : sim.runtime.scratch.delete(BRIDGE));
-export const uiBridge = (sim: Simulation): UiBridge | undefined => sim.runtime.scratch.get(BRIDGE) as UiBridge | undefined;
+export const uiBridge = (sim: Pick<Simulation, 'runtime'>): UiBridge | undefined => sim.runtime.scratch.get(BRIDGE) as UiBridge | undefined;
 
 const sourceOf = (sim: Simulation): ValueSource => ({ vars: sim.runtime.vars, tables: sim.assets.tables, world: sim.world });
 
@@ -72,7 +75,7 @@ export function writeTarget(sim: Simulation, name: string, value: VariableValue)
 }
 
 /** Run something with extra named values in view (the row a list is on), and put everything back afterwards. */
-export function withScope<T>(sim: Simulation, scope: Record<string, VariableValue>, run: () => T): T {
+export function withScope<T>(sim: Pick<Simulation, 'runtime'>, scope: Record<string, VariableValue>, run: () => T): T {
   const vars = sim.runtime.vars;
   const before = new Map<string, VariableValue | undefined>();
   for (const [k, v] of Object.entries(scope)) {
@@ -149,7 +152,7 @@ export interface PartInfo {
 }
 
 /** What choosing a piece means; the control it belongs to is `ViewNode.owner`. */
-export type PartAct = { kind: 'option'; value: string } | { kind: 'tab'; value: string } | { kind: 'step'; delta: -1 | 1 } | { kind: 'scroll'; dir: -1 | 1 };
+export type PartAct = { kind: 'option'; value: string } | { kind: 'tab'; value: string } | { kind: 'step'; delta: -1 | 1 } | { kind: 'scroll'; dir: -1 | 1 } | { kind: 'marker'; id: string };
 
 export interface SliderInfo {
   spec: import('@tilewright/runtime').SliderSpec;
@@ -200,7 +203,8 @@ const num = (v: VariableValue | undefined, d = 0): number => (typeof v === 'numb
 
 function expandInstance(sim: Simulation, node: UiNode): UiNode {
   if (node.type !== 'instance') return node;
-  const prefab = sim.assets.ui.prefabs.find((p) => p.name === node.prefab);
+  // (the project's own UI prefab of that name first, then one a plugin ships)
+  const prefab = sim.assets.ui.prefabs.find((p) => p.name === node.prefab) ?? host.ext.uiParts.get(node.prefab);
   if (!prefab) return { ...node, type: 'spacer', children: [] };
   const copy = structuredClone(prefab.widget);
   const merged: UiNode = {
@@ -561,13 +565,13 @@ export function worldViews(sim: Simulation): WorldUiView[] {
 
 // ---------- doing things ----------
 
-const INTERACTIVE = new Set(['button', 'toggle', 'slider', 'dropdown', 'keybind', 'tabs', 'textfield', 'numberfield']);
+const INTERACTIVE = new Set(['button', 'toggle', 'slider', 'dropdown', 'keybind', 'tabs', 'textfield', 'numberfield', 'map']);
 
 /** Can the player aim at it with a key or a gamepad? */
 export function isFocusable(n: ViewNode): boolean {
   if (!n.visible || !n.enabled) return false;
   // a piece of a control is reached through the control, except the pieces that mean something on their own (an option, a tab)
-  if (n.part) return n.act !== undefined;
+  if (n.part) return n.act !== undefined && n.act.kind !== 'marker';
   // tabs drawn from parts are reached tab by tab
   if (n.node.type === 'tabs' && n.engine) return false;
   return INTERACTIVE.has(n.node.type) || n.node.on.click.length > 0;
@@ -619,6 +623,10 @@ export function activateWidget(sim: Simulation, n: ViewNode): void {
         case 'step':
           stepNumberField(sim, owner, n.act.delta);
           break;
+        case 'marker':
+          if (owner.map?.spec.nav.click === false) break;
+          chooseMarker(sim, findLiveMap(sim, owner.node.id) ?? { node: owner.node, key: owner.key, info: owner.map ?? null }, n.act.id);
+          break;
         case 'scroll':
           if (owner.scroll) {
             const sc = owner.scroll.scroller;
@@ -636,6 +644,10 @@ export function activateWidget(sim: Simulation, n: ViewNode): void {
       case 'dropdown':
         if (n.popup?.open) closePopup(sim, n.key);
         else openPopup(sim, n);
+        run(sim, n, 'click');
+        return;
+      case 'map':
+        chooseHighlighted(sim, findLiveMap(sim, n.node.id) ?? { node: n.node, key: n.key, info: n.map ?? null });
         run(sim, n, 'click');
         return;
       case 'textfield':
@@ -718,6 +730,8 @@ export function setChoice(sim: Simulation, n: ViewNode, choice: string): void {
 }
 
 export function hover(sim: Simulation, n: ViewNode): void {
+  // pointing at a marker of a map highlights it (a list beside the map follows)
+  if (n.act?.kind === 'marker' && n.owner) highlightMarker(sim, findLiveMap(sim, n.owner.node.id) ?? { node: n.owner.node, key: n.owner.key, info: n.owner.map ?? null }, n.act.id);
   run(sim, n, 'hover');
 }
 

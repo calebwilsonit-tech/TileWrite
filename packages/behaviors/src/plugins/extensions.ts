@@ -1,4 +1,4 @@
-import type { ScreenLayerFactory, Simulation, UiLayout, EventRow, MapNode, RegionData, TileMap, VariableValue, WireData, EntityData, ProjectData, SceneData, SimContext, UiScreen, UiNode, System, SystemMode, Entity } from '@tilewright/runtime';
+import type { FieldDef, ScreenLayerFactory, Simulation, UiLayout, EventRow, MapNode, RegionData, TileMap, VariableValue, WireData, EntityData, ProjectData, SceneData, SimContext, UiScreen, UiNode, System, SystemMode, Entity } from '@tilewright/runtime';
 import type { BehaviorDef } from '../framework';
 import type { ActionDef, ConditionDef } from '../events/sheet';
 
@@ -192,6 +192,63 @@ export interface ListSourceDef {
   rows(sim: Simulation, argument: string): { id: string; scope: Record<string, VariableValue> }[];
   /** What each name in a row's scope is, in plain words, for the designer's picker (`{"pet.name": "The pet's name"}`). */
   fields?: Record<string, string>;
+}
+
+// ---------- maps, scrollbars and the other parts of the controls the engine draws ----------
+
+/** What a map layer a plugin adds is given to draw with. */
+export interface MapLayerPaint {
+  sim: Simulation;
+  /** The layer's own settings, as the designer set them (the fields the kind lists). */
+  settings: Record<string, unknown>;
+  /** Draw on this, in pixels of the map's window. */
+  ctx: CanvasRenderingContext2D;
+  width: number;
+  height: number;
+  /** The world the map shows: its size in cells, and what is in each cell. */
+  world: { w: number; h: number; tileAt(x: number, y: number): number; heightAt(x: number, y: number): number; valueAt(x: number, y: number): number | string | undefined };
+  /** A place in the world (cells) as a place in the window (pixels), following the map's projection, zoom and turn. */
+  toView(x: number, y: number, height?: number): { x: number; y: number };
+  /** How many pixels a cell is across now. */
+  cellPx: number;
+  zoom: number;
+}
+
+/** A kind of layer a map can have (a weather map, a danger heat map, a scale bar). It appears in the designer's list of layers with its own fields. */
+export interface MapLayerDef {
+  id: string;
+  label: string;
+  /** The layer's settings, shown in the designer. */
+  fields: FieldDef[];
+  draw(paint: MapLayerPaint): void;
+}
+
+/** A place markers can come from, besides tags, regions, tables and the rest (the party, the enemies a plugin tracks, a data kind). */
+export interface MarkerSourceDef {
+  id: string;
+  label: string;
+  /** Settings of a marker kind that uses this source, shown in the designer. */
+  fields?: FieldDef[];
+  /** The markers now: where each is (cells) and what its prefab can read (`{marker.name}`...). */
+  rows(sim: Simulation, kind: { source: string; settings: Record<string, unknown> }): { id: string; x: number; y: number; scope: Record<string, VariableValue> }[];
+}
+
+/** A rule that reveals parts of a map's fog. `reveal` is called once a tick for each fog layer that uses it, and says which cells are now known. */
+export interface FogRuleDef {
+  id: string;
+  label: string;
+  fields: FieldDef[];
+  reveal(sim: Simulation, settings: Record<string, unknown>, world: { w: number; h: number; regions: RegionData[] }, reveal: (x: number, y: number) => void): void;
+}
+
+/** A piece the designer can pick for a part of a control (a slider's thumb, a scrollbar, a pop-up list's option, a map marker): an ordinary UI prefab a plugin ships. */
+export interface UiPartDef {
+  /** The name a widget writes in its parts ("Brass thumb"). */
+  name: string;
+  label: string;
+  /** Which controls it suits: slider, scrollbar, popup, toggle, field, tabs, keybind, map or any. */
+  suits: string[];
+  widget: UiNode;
 }
 
 /**
@@ -505,6 +562,10 @@ export interface Extensions {
   screens: Map<string, ScreenDef & OwnedBy>;
   screenRoles: Map<string, ScreenRoleDef & OwnedBy>;
   listSources: Map<string, ListSourceDef & OwnedBy>;
+  mapLayers: Map<string, MapLayerDef & OwnedBy>;
+  markerSources: Map<string, MarkerSourceDef & OwnedBy>;
+  fogRules: Map<string, FogRuleDef & OwnedBy>;
+  uiParts: Map<string, UiPartDef & OwnedBy>;
   menuEntries: Map<string, MenuEntryDef & OwnedBy>;
   inspectors: Map<string, InspectorDef & OwnedBy>;
   exporters: Map<string, ExporterDef & OwnedBy>;
