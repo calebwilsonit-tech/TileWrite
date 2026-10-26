@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { UiScreens, fillAssetData } from '@tilewright/behaviors';
-import { Simulation, findWidget, parentOf, walkWidgets, type UiDoc, type UiNode, type VariableValue } from '@tilewright/runtime';
+import { Simulation, compatOf, findWidget, parentOf, walkWidgets, type UiDoc, type UiNode, type VariableValue } from '@tilewright/runtime';
 import { store } from '../app/store';
 import { anchorForDrop, designScreen, linkFocus, moveWidget, rootOf, updateWidget, addWidget, type Dir } from './ui-edit';
 import { RESOLUTIONS, designer, useDesigner } from './state';
@@ -133,7 +133,14 @@ export function DesignCanvas({ doc }: { doc: UiDoc }) {
         for (const n of namesOnScreen(sc.root, d)) if (vars[n] === undefined) vars[n] = 0;
         Object.assign(vars, pv);
       }
+      sim.compat = compatOf(store.getState().project?.project ?? {});
+      // a map shows the scene that is open in the editor
+      sim.map = store.doc?.map ?? null;
+      sim.runtime.regions = store.doc?.regions ?? [];
       sim.runtime.ui.stack = sc ? [sc.name] : [];
+      const ds = designer.state;
+      ui.setPreview(sel && ds.previewState !== 'normal' ? sel : null, ds.previewState === 'normal' ? 'hover' : ds.previewState);
+      ui.openPopupPreview(sel && ds.previewOpen ? sel : null);
       ui.update();
       if (sc && sel) {
         const el = elements().get(sel);

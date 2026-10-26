@@ -4,7 +4,7 @@
 
 An event sheet is a list of rows, each reading like a line of instructions: **when** its conditions hold, **do** its actions. Rows can have sub-events that run only while the row holds. Objects are chosen as "the player", "anything tagged ...", or a particular object. See [logic.md](logic.md).
 
-There are 31 conditions and 59 actions.
+There are 31 conditions and 65 actions.
 
 ## Conditions
 
@@ -74,7 +74,7 @@ Id: `onEvent`.
 
 | Parameter | Key | Kind | Starts as | Choices and notes |
 | --- | --- | --- | --- | --- |
-| What happens | `name` | select | "pickup" | `pushed`, `landed`, `gravity-changed`, `block-placed`, `block-broken`, `fell`, `floor-fell`, `spawned`, `anim-event`, `portal`, `projectile-hit`, `damaged`, `died`, `attack`, `dodge`, `pickup`, `item-given`, `dialogue-started`, `dialogue-ended`, `minigame-started`, `minigame-ended`, `cutscene-started`, `cutscene-ended`, `noticed`, `lost`, `state-changed`, `boss-phase`, `boss-defeated`, `echo-made`, `sentence-changed`, `text-formatted`, `lantern-lit`, `rested`, `battle-started`, `turn-start`, `turn-end`, `round-start`, `battle-won`, `unit-moved`, `unit-attacked`, `building-placed`, `orders-given`, `click-move`, `hotspot-used`, `path-end`, `wave-started`, `wave-cleared`, `waves-done`, `produced`, `new-day`, `night-start`, `day-start`, `new-season`, `activity-done` |
+| What happens | `name` | select | "pickup" | `pushed`, `landed`, `gravity-changed`, `block-placed`, `block-broken`, `fell`, `floor-fell`, `spawned`, `anim-event`, `portal`, `map-marker-highlighted`, `map-marker-chosen`, `map-area-revealed`, `ui-slider-changed`, `ui-choice`, `ui-scroll-bottom`, `ui-field-committed`, `projectile-hit`, `damaged`, `died`, `attack`, `dodge`, `pickup`, `item-given`, `dialogue-started`, `dialogue-ended`, `minigame-started`, `minigame-ended`, `cutscene-started`, `cutscene-ended`, `noticed`, `lost`, `state-changed`, `boss-phase`, `boss-defeated`, `echo-made`, `sentence-changed`, `text-formatted`, `lantern-lit`, `rested`, `battle-started`, `turn-start`, `turn-end`, `round-start`, `battle-won`, `unit-moved`, `unit-attacked`, `building-placed`, `orders-given`, `click-move`, `hotspot-used`, `path-end`, `wave-started`, `wave-cleared`, `waves-done`, `produced`, `new-day`, `night-start`, `day-start`, `new-season`, `activity-done` |
 
 ### Time
 
@@ -626,6 +626,74 @@ Id: `uiScreen`.
 | --- | --- | --- | --- | --- |
 | Do | `op` | select | "open" | `open`, `close`, `toggle`, `back`, `closeAll` |
 | Screen | `screen` | screen | (empty) |  |
+
+#### Move a map's highlight
+
+Id: `mapHighlight`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Map (the name of its widget; blank: the first one) | `map` | text | (empty) |  |
+| Move | `how` | select | "next" | `up`, `down`, `left`, `right`, `next`, `previous`, `marker` |
+| Marker id (for "to the marker with this id") | `marker` | text | (empty) |  |
+
+#### Choose a marker on a map (what choosing it does is set on the map)
+
+Id: `mapChoose`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Map (the name of its widget; blank: the first one) | `map` | text | (empty) |  |
+| Marker id (blank: the highlighted one) | `marker` | text | (empty) |  |
+
+#### Zoom a map
+
+Id: `mapZoom`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Map (the name of its widget; blank: the first one) | `map` | text | (empty) |  |
+| Zoom | `how` | select | "in" | `in`, `out`, `to` |
+| By how much (1.25 = a quarter more), or the zoom to go to | `amount` | text | "1.25" |  |
+
+#### Move a map's view
+
+Id: `mapCamera`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Map (the name of its widget; blank: the first one) | `map` | text | (empty) |  |
+| Move | `to` | select | "cell" | `cell`, `marker`, `by`, `home` |
+| Across (a cell, or pixels) | `x` | text | "0" |  |
+| Down (a cell, or pixels) | `y` | text | "0" |  |
+| Marker id | `marker` | text | (empty) |  |
+| Zoom to (blank: leave it) | `zoom` | text | (empty) |  |
+
+#### Reveal or cover part of a map's fog
+
+Id: `mapReveal`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Map (the name of its widget; blank: the first one) | `map` | text | (empty) |  |
+| Fog layer (its id or name; blank: the first) | `layer` | text | (empty) |  |
+| Area: a region name, "x,y,w,h", or "circle:x,y,radius" | `area` | text | (empty) |  |
+| Do | `cover` | select | "reveal" | `reveal`, `cover` |
+
+#### Add, hide, show or remove a marker on a map
+
+Id: `mapMarker`.
+
+| Parameter | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Map (the name of its widget; blank: the first one) | `map` | text | (empty) |  |
+| Do | `op` | select | "add" | `add`, `remove`, `hide`, `show` |
+| Marker kind (its id on the map) | `kind` | text | (empty) |  |
+| Marker id (the row or object it is for) | `id` | text | (empty) |  |
+| Across (cells), when adding | `x` | text | "0" |  |
+| Down (cells), when adding | `y` | text | "0" |  |
+| Words it carries, when adding | `label` | text | (empty) |  |
+| State, when adding | `state` | text | (empty) |  |
 
 ### Advanced
 

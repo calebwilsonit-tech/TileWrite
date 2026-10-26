@@ -8,6 +8,7 @@ import { CheckField, NumberField, SelectField, TextField } from '../panels/field
 import { BindButton } from './BindingPicker';
 import { clearFocus, duplicateWidget, makePrefab, moveWidget, removeWidget, rootOf, unlinkInstance, updateWidget, wrapInPanel } from './ui-edit';
 import { designer } from './state';
+import { FieldSection, MapSection, PopupSection, ScrollingSection, SimplePartsSection, SliderSection } from './ControlsInspector';
 
 const GRID: UiAnchor[][] = [['tl', 't', 'tr'], ['l', 'c', 'r'], ['bl', 'b', 'br']];
 const COLOURS = [
@@ -50,7 +51,6 @@ function StyleEditor({ style, onChange, testPrefix }: { style: UiStyle; onChange
       <CheckField testId={`${testPrefix}-shadow`} label="Drop shadow" value={style.shadow === true} onChange={(v) => set({ shadow: v || undefined })} />
       <NumberField testId={`${testPrefix}-scale`} label="Size (1 = as made; everything inside grows or shrinks)" min={0.5} max={3} step={0.1} value={style.scale ?? 1} onCommit={(v) => set({ scale: v === 1 ? undefined : v })} />
       <CheckField testId={`${testPrefix}-themeScale`} label="Also follow the size set in Story, Interface" value={style.themeScale === true} onChange={(v) => set({ themeScale: v || undefined })} />
-      <CheckField testId={`${testPrefix}-scroll`} label="Scroll when what is inside does not fit" value={style.scroll === true} onChange={(v) => set({ scroll: v || undefined })} />
       <NumberField testId={`${testPrefix}-maxH`} label="Never taller than this much of its parent (%, 0 = no limit)" min={0} max={100} step={5} value={style.maxH ?? 0} onCommit={(v) => set({ maxH: v >= 10 ? v : undefined })} />
     </div>
   );
@@ -195,7 +195,7 @@ export function UiInspector({ doc, widgetId }: { doc: UiDoc; widgetId: string | 
         )}
         {w.type === 'keybind' && <TextField testId="ui-label" label="Name shown for the control (words; {control.label} in a list)" value={w.label ?? ''} onCommit={sets('label')} />}
         {w.type === 'image' && <SelectField<string> testId="ui-sprite" label="Sprite" value={w.sprite} options={[{ value: '', label: '(none)' }, ...sprites.map((s) => ({ value: s, label: s }))]} onChange={sets('sprite')} />}
-        {['bar', 'slider', 'toggle', 'dropdown'].includes(w.type) && (
+        {['bar', 'slider', 'toggle', 'dropdown', 'textfield', 'numberfield'].includes(w.type) && (
           <div className="row">
             <TextField testId="ui-value" label={w.type === 'bar' ? 'Fills with' : 'Reads and sets'} value={w.value} onCommit={sets('value')} placeholder="a variable or settings.music" />
             <BindButton doc={doc} widgetId={widgetId} wrap={false} testId="ui-bind-value" onPick={sets('value')} />
@@ -254,6 +254,13 @@ export function UiInspector({ doc, widgetId }: { doc: UiDoc; widgetId: string | 
         </div>
         <BindButton doc={doc} widgetId={widgetId} wrap={false} label="Insert a condition from the list…" testId="ui-bind-visible" onPick={(t) => edit((n) => (n.visible = n.visible ? `${n.visible} && {${t}}` : `{${t}}`))} />
       </fieldset>
+
+      {['panel', 'list', 'grid', 'hand', 'turnOrder'].includes(w.type) && <ScrollingSection doc={doc} w={w} edit={edit} />}
+      {w.type === 'slider' && <SliderSection doc={doc} w={w} edit={edit} />}
+      {w.type === 'dropdown' && <PopupSection doc={doc} w={w} edit={edit} />}
+      {['toggle', 'keybind', 'tabs'].includes(w.type) && <SimplePartsSection doc={doc} w={w} edit={edit} />}
+      {['textfield', 'numberfield'].includes(w.type) && <FieldSection doc={doc} w={w} edit={edit} />}
+      {w.type === 'map' && <MapSection doc={doc} w={w} edit={edit} />}
 
       <fieldset>
         <legend>How it looks</legend>

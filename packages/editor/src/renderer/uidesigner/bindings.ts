@@ -59,12 +59,58 @@ export function scopeNames(doc: UiDoc, widgetId: string, tables: readonly TableD
   return out;
 }
 
+/** The values the pieces of a control (a slider's thumb, a pop-up's option, a scrollbar, a marker) can read; they are in view only inside those pieces. */
+export const CONTROL_VALUES: [string, string][] = [
+  ['slider.value', 'Slider: its value'],
+  ['slider.value2', 'Slider: the second thumb’s value (a range)'],
+  ['slider.fraction', 'Slider: how far along (0 to 1)'],
+  ['slider.percent', 'Slider: how far along (0 to 100)'],
+  ['slider.text', 'Slider: the value as words'],
+  ['slider.dragging', 'Slider: 1 while it is held'],
+  ['option.label', 'Pop-up option: its words'],
+  ['option.value', 'Pop-up option: its value'],
+  ['option.detail', 'Pop-up option: its description'],
+  ['option.group', 'Pop-up option: its group'],
+  ['option.chosen', 'Pop-up option: 1 when chosen'],
+  ['option.highlight', 'Pop-up option: 1 when it is the highlighted one'],
+  ['popup.text', 'Choice list: what is chosen, as words'],
+  ['popup.open', 'Choice list: 1 while open'],
+  ['popup.query', 'Choice list: the search words typed'],
+  ['scroll.pos', 'Scroller: how far it has gone (0 to 1)'],
+  ['scroll.row', 'Scroller: the first row in view'],
+  ['scroll.rows', 'Scroller: how many rows are in view'],
+  ['scroll.hidden_before', 'Scroller: rows out of view before'],
+  ['scroll.hidden_after', 'Scroller: rows out of view after'],
+  ['scroll.page', 'Scroller: the page in view'],
+  ['scroll.pages', 'Scroller: how many pages'],
+  ['scroll.top', 'Scroller: 1 at the start'],
+  ['scroll.bottom', 'Scroller: 1 at the end'],
+  ['field.text', 'Field: the words typed'],
+  ['field.placeholder', 'Field: the hint'],
+  ['field.empty', 'Field: 1 when nothing is typed'],
+  ['field.editing', 'Field: 1 while being typed in'],
+  ['toggle.on', 'Tick box: 1 when ticked'],
+  ['tab.name', 'Tab: its name'],
+  ['tab.selected', 'Tab: 1 when it is the one showing'],
+  ['bind.name', 'Key binding: the control’s name'],
+  ['bind.key', 'Key binding: the key or button'],
+  ['marker.id', 'Map marker: its id'],
+  ['marker.label', 'Map marker: its words'],
+  ['marker.state', 'Map marker: its state'],
+  ['marker.highlight', 'Map marker: 1 when highlighted'],
+  ['marker.count', 'Map marker: how many a group stands for'],
+  ['marker.revealed', 'Map marker: 1 when its place is known (fog)'],
+  ['map.zoom', 'Map: the zoom'],
+  ['map.distance', 'Map marker: cells from the player'],
+];
+
 export function bindingChoices(doc: UiDoc, widgetId: string | null, facts: BindingFacts): BindingChoice[] {
   const out: BindingChoice[] = widgetId ? scopeNames(doc, widgetId, facts.tables) : [];
   for (const v of [...new Set(facts.variables)].sort()) out.push({ path: v, label: v, group: 'Variables (flags and counters)' });
   for (const v of BUILTIN_VARS) out.push({ path: v, label: v, group: 'Game state' });
   for (const [path, label] of HOST_VALUES) out.push({ path, label, group: 'The game and its screens' });
   for (const s of SETTINGS) out.push({ path: `settings.${s}`, label: `settings.${s}`, group: 'Player settings' });
+  for (const [path, label] of CONTROL_VALUES) out.push({ path, label, group: 'Inside the parts of a control' });
   for (const c of facts.carried) out.push({ path: c.variable, label: `How many "${c.name}" are carried`, group: 'Things carried' });
   for (const t of facts.tables) {
     for (const r of t.rows.slice(0, 60)) {

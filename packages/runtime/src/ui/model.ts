@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import '../project/schema'; // sets up Zod before the schemas below are built
 import { CURRENT_SCHEMA_VERSION } from '../project/schema';
-import { FieldControlSchema, MapSpecSchema, PopupSchema, ScrollerSchema, SliderSchema, UiPartsSchema } from './controls-model';
+import { FieldControlSchema, MapSpecSchema, defaultMapLayer, PopupSchema, ScrollerSchema, SliderSchema, UiPartsSchema } from './controls-model';
 
 /**
  * The UI designer's document: screens made of widgets, reusable UI prefabs, and the map of how screens lead to each other.
@@ -320,6 +320,16 @@ export function newWidget(type: WidgetType, id: string, name?: string): UiNode {
       break;
     case 'instance':
       Object.assign(w, { w: 120, h: 40, wMode: 'auto', hMode: 'auto' });
+      break;
+    case 'textfield':
+      Object.assign(w, { w: 240, h: 36, value: '', field: FieldControlSchema.parse({ placeholder: 'Type here' }) });
+      break;
+    case 'numberfield':
+      Object.assign(w, { w: 160, h: 36, value: '', field: FieldControlSchema.parse({ min: 0, max: 100, step: 1 }) });
+      break;
+    case 'map':
+      // a map of the scene being played, with a marker for the player
+      Object.assign(w, { w: 360, h: 260, style: { fill: 'var(--tw-panel)', border: 'var(--tw-border)', borderWidth: 2, radius: 8 }, map: MapSpecSchema.parse({ layers: [defaultMapLayer('terrain', 'terrain'), defaultMapLayer('markers', 'markers')], markers: [{ id: 'player', name: 'Player', from: 'tags', source: 'player' }] }) });
       break;
   }
   return w;

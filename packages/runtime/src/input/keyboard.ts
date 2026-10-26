@@ -196,7 +196,8 @@ export const DEFAULT_INPUT_MAP = {
 /**
  * The buttons the interface itself uses when the project has the flags uiScroll and uiControls: scrolling, big steps of a slider, paging,
  * zooming a map. They are ordinary actions: a project can give them other keys and buttons (Project settings, Controls), and every
- * scroller, slider and map names the ones it listens to.
+ * scroller, slider and map names the ones it listens to. The plugin host adds them to the buttons the game has (they are not in the
+ * core's own list, so the core's defaults stay as they were).
  */
 export const UI_ACTIONS: Record<string, { label: string; bindings: string[] }> = {
   ui_scroll_up: { label: 'Scroll up (menus, lists)', bindings: ['pad:axis3-'] },
@@ -221,7 +222,7 @@ export function baseInput(extra: Record<string, { label: string; bindings: strin
     map[a] = [...DEFAULT_INPUT_MAP[a]];
     labels[a] = ACTION_LABELS[a]!;
   }
-  for (const [a, d] of Object.entries({ ...UI_ACTIONS, ...extra })) {
+  for (const [a, d] of Object.entries(extra)) {
     map[a] = [...d.bindings];
     labels[a] = d.label;
   }

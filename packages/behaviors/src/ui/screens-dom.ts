@@ -337,6 +337,20 @@ export class UiScreens {
     this.preview = id ? { id, state } : null;
   }
 
+  /** The designer shows a pop-up list open (the widget with this id; null: closed again). */
+  openPopupPreview(id: string | null): void {
+    for (const [key, vn] of this.current) {
+      if (!vn.popup) continue;
+      const run = popupRun(this.sim, key);
+      const want = id !== null && vn.node.id === id;
+      if (run.open !== want) {
+        run.open = want;
+        run.query = '';
+        run.highlight = want ? (vn.popup.chosen[0] ?? vn.popup.all[0]?.value ?? '') : '';
+      }
+    }
+  }
+
   update(): void {
     const sim = this.sim;
     const screens = openScreens(sim);

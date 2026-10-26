@@ -1,4 +1,10 @@
+import { stylePrefabs, styleParts } from '@tilewright/behaviors';
 import {
+  FieldControlSchema,
+  PopupSchema,
+  ScrollBarSchema,
+  ScrollerSchema,
+  SliderSchema,
   findWidget,
   newWidget,
   roleOfScreen,
@@ -394,4 +400,77 @@ export function checkUiDoc(doc: UiDoc, known: { tables?: ReadonlySet<string>; sp
   for (const s of doc.screens) scan(`Screen "${s.name}"`, s.root);
   for (const p of doc.prefabs) scan(`UI prefab "${p.name}"`, p.widget);
   return out;
+}
+
+// ---------- the parts of the controls the engine draws ----------
+
+/** Set (or take away, with undefined) the UI prefab that is one part of a control. `where` is the object that holds the parts: for a slider its `slider`, for a scrollbar `scroller.bar`... */
+export function setPart(doc: UiDoc, widgetId: string, where: 'slider' | 'popup' | 'field' | 'widget' | 'bar', role: string, prefab: string | undefined): UiDoc {
+  return updateWidget(doc, widgetId, (w) => {
+    let holder: { parts?: Record<string, string> | undefined };
+    switch (where) {
+      case 'slider':
+        holder = w.slider ??= SliderSchema.parse({});
+        break;
+      case 'popup':
+        holder = w.popup ??= PopupSchema.parse({});
+        break;
+      case 'field':
+        holder = w.field ??= FieldControlSchema.parse({});
+        break;
+      case 'bar': {
+        const sc = (w.scroller ??= ScrollerSchema.parse({}));
+        holder = sc.bar ??= ScrollBarSchema.parse({});
+        break;
+      }
+      default:
+        holder = w;
+    }
+    const parts = { ...(holder.parts ?? {}) };
+    if (prefab === undefined) delete parts[role];
+    else parts[role] = prefab;
+    holder.parts = parts;
+  });
+}
+
+/** Copy a style's UI prefabs into the project (those it does not have yet, with ids of their own) and name them in the widget's parts. */
+export function applyControlStyle(doc: UiDoc, widgetId: string, styleId: string): UiDoc {
+  const root = rootOf(doc, widgetId);
+  const w = root ? findWidget(root.root, widgetId) : null;
+  if (!w) return doc;
+  const kinds: { kind: string; where: 'slider' | 'popup' | 'field' | 'widget' | 'bar' }[] = [];
+  if (w.type === 'slider') kinds.push({ kind: 'slider', where: 'slider' });
+  if (w.type === 'dropdown') kinds.push({ kind: 'popup', where: 'popup' });
+  if (w.type === 'toggle') kinds.push({ kind: 'toggle', where: 'widget' });
+  if (w.type === 'tabs') kinds.push({ kind: 'tabs', where: 'widget' });
+  if (w.type === 'textfield' || w.type === 'numberfield') kinds.push({ kind: 'textfield', where: 'field' });
+  if (w.scroller || w.style.scroll) kinds.push({ kind: 'scrollbar', where: 'bar' });
+  let next = clone(doc);
+  const have = new Set(next.prefabs.map((p) => p.name));
+  const wanted = new Set<string>();
+  for (const k of kinds) for (const name of Object.values(styleParts(styleId, k.kind))) wanted.add(name);
+  if (w.type === 'map') for (const name of Object.values(styleParts(styleId, 'map'))) wanted.add(name);
+  const used = new Set<string>();
+  for (const s of next.screens) walkWidgets(s.root, (x) => used.add(x.id));
+  for (const q of next.prefabs) walkWidgets(q.widget, (x) => used.add(x.id));
+  let counter = used.size + 1;
+  for (const p of stylePrefabs(styleId)) {
+    if (!wanted.has(p.name) || have.has(p.name)) continue;
+    const widget = clone(p.widget);
+    // every widget of the copy gets an id nothing else in the project has
+    walkWidgets(widget, (x) => {
+      while (used.has(`w${counter}`)) counter++;
+      x.id = `w${counter}`;
+      used.add(x.id);
+    });
+    next.prefabs.push({ name: p.name, widget });
+  }
+  for (const k of kinds) for (const [role, name] of Object.entries(styleParts(styleId, k.kind))) next = setPart(next, widgetId, k.where, role, name);
+  if (w.type === 'map') {
+    const marker = styleParts(styleId, 'map').marker;
+    next = updateWidget(next, widgetId, (x) => {
+      for (const m of x.map?.markers ?? []) m.prefab = marker ?? m.prefab;
+    });
+  }
+  return next;
 }

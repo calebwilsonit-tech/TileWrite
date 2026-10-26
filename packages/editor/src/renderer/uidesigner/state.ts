@@ -18,13 +18,16 @@ export interface DesignerState {
   resolution: string;
   mode: 'layout' | 'focus' | 'flow';
   showSafe: boolean;
+  /** A state a widget only has for a moment, shown in the picture (the selected widget and its parts), and a pop-up list shown open. */
+  previewState: 'normal' | 'hover' | 'pressed' | 'focus' | 'disabled';
+  previewOpen: boolean;
   /** Made-up values for the names the screen reads, so the preview shows something real. */
   preview: Record<string, VariableValue>;
   past: UiDoc[];
   future: UiDoc[];
 }
 
-let state: DesignerState = { screenId: null, prefab: null, selected: null, resolution: '16:9', mode: 'layout', showSafe: false, preview: {}, past: [], future: [] };
+let state: DesignerState = { screenId: null, prefab: null, selected: null, resolution: '16:9', mode: 'layout', showSafe: false, previewState: 'normal', previewOpen: false, preview: {}, past: [], future: [] };
 const listeners = new Set<() => void>();
 
 const emit = (): void => listeners.forEach((l) => l());

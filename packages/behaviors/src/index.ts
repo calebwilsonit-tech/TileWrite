@@ -12,6 +12,7 @@ export * from './custom';
 export * from './docs';
 export * from './ui/screens-logic';
 export * from './ui/scrolling';
+export * from './ui/styles';
 export * from './ui/controls';
 export * from './ui/screens-controls';
 export * from './ui/map/actions';

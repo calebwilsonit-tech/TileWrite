@@ -1,4 +1,4 @@
-import { addPhysicsModifier, baseInput, removePhysicsModifiersOf, setExtraInputActions, type Entity, type SimContext, type System, type SystemMode } from '@tilewright/runtime';
+import { addPhysicsModifier, baseInput, removePhysicsModifiersOf, setExtraInputActions, UI_ACTIONS, type Entity, type SimContext, type System, type SystemMode } from '@tilewright/runtime';
 import { behaviorList, defineBehavior, getBehavior, reshelveBehavior, undefineBehavior, type BehaviorDef } from '../framework';
 import { registerAction, registerCondition, shelvedAction, shelvedCondition, unregisterAction, unregisterCondition, type ActionDef, type ConditionDef } from '../events/sheet';
 import type { ComponentDef, DataEditorProps, EventDef, Extensions, ExtensionKind, InputActionDef, OwnedBy } from './extensions';
@@ -409,7 +409,7 @@ export class PluginHost {
       this.fail(id, `installing it`, e);
       throw new PluginError(`The plugin "${m.name}" could not be turned on: ${message}`, { cause: e });
     }
-    setExtraInputActions(this.inputActions());
+    setExtraInputActions(this.extraInputActions());
     this.emit({ kind: 'installed', plugin: id });
   }
 
@@ -438,7 +438,7 @@ export class PluginHost {
     }
     for (const t of ['dataEditors', 'panels', 'tools', 'importers'] as const) for (const [key, v] of this.editor[t]) if (v.plugin === id) this.editor[t].delete(key);
     this.installed.delete(id);
-    setExtraInputActions(this.inputActions());
+    setExtraInputActions(this.extraInputActions());
     this.emit({ kind: 'removed', plugin: id });
   }
 
@@ -791,8 +791,13 @@ export class PluginHost {
     return out;
   }
 
+  /** What the game has beyond the core's own buttons: the ones the engine's menus, lists and maps use (a plugin may give one of them other keys), then the plugins'. */
+  extraInputActions(): Record<string, InputActionDef> {
+    return { ...UI_ACTIONS, ...this.inputActions() };
+  }
+
   activeInput(): ReturnType<typeof baseInput> {
-    return baseInput(this.inputActions());
+    return baseInput(this.extraInputActions());
   }
 
   ownerOfBehavior(id: string): string | undefined {
@@ -817,5 +822,6 @@ export class PluginHost {
 
 /** The host. There is one; tests that need a clean one call `host.reset()`. */
 export const host = new PluginHost();
+setExtraInputActions(host.extraInputActions());
 
 export type { Entity, SimContext };
