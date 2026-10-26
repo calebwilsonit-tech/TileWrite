@@ -94,7 +94,7 @@ export const ScrollerSchema = z.object({
   lazy: z.boolean().default(false),
   /** A row's height for `lazy` (pixels). */
   rowSize: z.number().min(0).max(2000).default(0),
-  /** Variable names to keep up to date: name (0 to 1), name.row (first row in view), name.rows (rows in view), name.top, name.bottom. */
+  /** Variable names to keep up to date: name (0 to 1), name.row (first row in view), name.rows (rows in view), name.top, name.bottom, name.page, name.pages, name.count. */
   bind: z.string().max(60).default(''),
   /** Things to do when it scrolls, reaches the top, reaches the bottom. */
   on: z.object({ scrolled: Actions, top: Actions, bottom: Actions }).default({ scrolled: [], top: [], bottom: [] }),

@@ -219,6 +219,7 @@ export function UiInspector({ doc, widgetId }: { doc: UiDoc; widgetId: string | 
         {repeater && (
           <>
             <SelectField<string> testId="ui-source" label="Repeats for" value={w.source} options={sourceChoices} onChange={sets('source')} />
+            <TextField testId="ui-source-custom" label="or a source of your own (slots:20 gives 20 rows; var:chat_lines gives as many as that variable says; a plugin's list)" value={w.source} onCommit={sets('source')} />
             <SelectField<string> testId="ui-template" label="Each one looks like" value={w.template} options={[{ value: '', label: w.children.length ? '(the first widget inside)' : '(put a widget inside, or pick a UI prefab)' }, ...prefabNames.map((p) => ({ value: p, label: `UI prefab “${p}”` }))]} onChange={sets('template')} />
             <TextField testId="ui-empty" label="Words when there is nothing to show" value={w.empty ?? ''} onCommit={sets('empty')} />
             {w.type === 'grid' && <CheckField testId="ui-drag" label="Allow dragging a cell onto another (they swap places)" value={w.drag} onChange={sets('drag')} />}

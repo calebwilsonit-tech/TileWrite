@@ -193,7 +193,7 @@ test('Add-on: the Last Storytender parchment map: discovered regions, lit checkp
       (window as unknown as { __travel: string[] }).__travel = [];
       window.__play!.sim.events.on('travel-place-request', (e) => (window as unknown as { __travel: string[] }).__travel.push(String(e.place)));
     },
-    [others[0]!, others[1]!, others[2]!],
+    [others[0]!, others[1]!, others[2]!] as [string, string, string],
   );
   await page.evaluate(() => window.__play!.sim.runtime.ui.stack.push('Parchment map'));
   await fakePad(page);

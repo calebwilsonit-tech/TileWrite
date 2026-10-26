@@ -227,6 +227,25 @@ describe('a scroller, a tick at a time', () => {
     expect(scrollState(sim, 'once').y.o).toBe(600);
   });
 
+  it('a scroller that sticks to pages goes from page to page, even from a last page that is only part of one', () => {
+    const sim = game();
+    Object.assign(scrollState(sim, 'bag').metrics, { viewW: 300, viewH: 276, contentW: 300, contentH: 640, row: 78 });
+    const s = sc({ snap: 'pages', motion: 'instant' });
+    const go = (action: string): number => {
+      sim.uiInput.update({});
+      driveScroller(sim, 'bag', s, { count: 40, inputs: true });
+      sim.uiInput.update({ [action]: 1 });
+      driveScroller(sim, 'bag', s, { count: 40, inputs: true });
+      return scrollState(sim, 'bag').y.o;
+    };
+    expect(go('ui_page_down')).toBe(276);
+    expect(go('ui_page_down')).toBe(364); // the end: the last, short page
+    expect(scrollValues(s, scrollState(sim, 'bag'), 40)).toMatchObject({ page: 3, pages: 3 });
+    expect(go('ui_page_up')).toBe(276);
+    expect(go('ui_scroll_up')).toBe(0); // the arrows go a page too
+    expect(scrollValues(s, scrollState(sim, 'bag'), 40).page).toBe(1);
+  });
+
   it('a horizontal carousel snaps to its rows and does not scroll across', () => {
     const sim = game();
     Object.assign(scrollState(sim, 'car').metrics, { viewW: 300, viewH: 100, contentW: 1200, contentH: 100, row: 150 });

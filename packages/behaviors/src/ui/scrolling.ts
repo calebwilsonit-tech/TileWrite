@@ -297,7 +297,8 @@ export function scrollValues(s: Scroller, st: ScrollState, count: number): Scrol
     count,
     top: o <= r.min + 0.5 ? 1 : 0,
     bottom: o >= r.max - 0.5 ? 1 : 0,
-    page: view > 0 ? clamp(Math.floor((o + 1) / view) + 1, 1, pages) : 1,
+    // (the end of the content is the last page, even when it is only part of one)
+    page: view > 0 ? (o >= r.max - 0.5 && r.max > r.min ? pages : clamp(Math.floor((o + 1) / view) + 1, 1, pages)) : 1,
     pages,
     offset: Math.round(o),
     max: Math.round(r.max),
@@ -358,8 +359,15 @@ export function driveScroller(sim: Simulation, key: string, s: Scroller, d: Scro
       const n = holdSteps(h, ui.down(action), dt, s.holdDelay, s.holdRate, s.holdAccel);
       if (n === 0) continue;
       const view = axis === 'y' ? m.viewH : m.viewW;
-      const step = name === 'pageUp' || name === 'pageDown' ? Math.max(row, view - row) : row;
-      for (let i = 0; i < n; i++) scrollBy(s, st, axis, sign * step * s.speed);
+      // a page leaves a row of the one before in view; a scroller that sticks to pages goes a whole page every time
+      const step = s.snap === 'pages' ? view : name === 'pageUp' || name === 'pageDown' ? Math.max(row, view - row) : row;
+      for (let i = 0; i < n; i++) {
+        if (s.snap === 'pages' && view > 0) {
+          // from page to page: the next boundary, even from the end of a last page that is only part of one
+          const at = st[axis].t / view;
+          scrollTo(s, st, axis, (sign > 0 ? Math.floor(at + 1e-6) + 1 : Math.ceil(at - 1e-6) - 1) * view);
+        } else scrollBy(s, st, axis, sign * step * s.speed);
+      }
     }
   }
   const content = main === 'y' ? m.contentH : m.contentW;
@@ -407,6 +415,9 @@ export function driveScroller(sim: Simulation, key: string, s: Scroller, d: Scro
     vars[`${s.bind}.rows`] = v.rows;
     vars[`${s.bind}.top`] = v.top;
     vars[`${s.bind}.bottom`] = v.bottom;
+    vars[`${s.bind}.page`] = v.page;
+    vars[`${s.bind}.pages`] = v.pages;
+    vars[`${s.bind}.count`] = v.count;
   }
   if (moved && hadPos) {
     sim.events.emit('ui-scrolled', { widget: key, pos: v.pos, row: v.row, rows: v.rows });
