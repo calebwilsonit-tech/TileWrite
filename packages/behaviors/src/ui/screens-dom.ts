@@ -811,7 +811,7 @@ export class UiScreens {
     }
     if (this.design) el.classList.toggle('ghost', !vn.visible);
     const type = vn.node.type;
-    const interactive = !this.design && vn.visible && topScreen && (isFocusable(vn) || type === 'slider' || type === 'dropdown' || type === 'tabs' || type === 'textfield' || type === 'numberfield' || type === 'map' || vn.row !== undefined || vn.tooltip !== '' || vn.node.on.hover.length > 0 || (vn.part?.kind === 'scrollbar' && (vn.part.role === 'thumb' || vn.part.role === 'track')) || vn.scroll !== undefined);
+    const interactive = !this.design && vn.visible && topScreen && (isFocusable(vn) || type === 'slider' || type === 'dropdown' || type === 'tabs' || type === 'textfield' || type === 'numberfield' || type === 'map' || vn.row !== undefined || vn.act !== undefined || vn.tooltip !== '' || vn.node.on.hover.length > 0 || (vn.part?.kind === 'scrollbar' && (vn.part.role === 'thumb' || vn.part.role === 'track')) || vn.scroll !== undefined);
     // a popup list is always above everything of its screen, whichever screen it is on
     el.classList.toggle('hit', interactive || (vn.part?.mount === 'screen' && vn.visible && !this.design));
     el.classList.toggle('clickable', isFocusable(vn));
