@@ -330,14 +330,17 @@ export function startEditing(sim: Simulation, n: ViewNode): void {
   if (!n.field || !n.enabled) return;
   const raw = n.node.value ? readTarget(sim, n.node.value) : undefined;
   const run = fieldRun(sim, n.key);
+  if (sim.tick - run.endedAt < 6) return;
   run.editing = true;
   run.draft = raw === undefined ? '' : String(raw);
 }
 
-export function typeInto(sim: Simulation, n: ViewNode, text: string): void {
-  if (!n.field) return;
+/** Words typed into a field being edited; returns what was kept (what the field allows, no more than it holds). */
+export function typeInto(sim: Simulation, n: ViewNode, text: string): string {
+  if (!n.field) return text;
   const run = fieldRun(sim, n.key);
   run.draft = cleanTyped(text, n.field.number ? 'digits' : n.field.spec.allow, n.field.spec.maxLength);
+  return run.draft;
 }
 
 /** Enter, or leaving the field: the words are kept (a number is made to fit its limits). */
@@ -346,6 +349,7 @@ export function commitEditing(sim: Simulation, n: ViewNode): void {
   const run = fieldRun(sim, n.key);
   if (!run.editing) return;
   run.editing = false;
+  run.endedAt = sim.tick;
   let value: VariableValue = run.draft;
   if (n.field.number) {
     const parsed = parseNumberField(run.draft, n.field.spec.min, n.field.spec.max, n.field.spec.step);
@@ -359,7 +363,9 @@ export function commitEditing(sim: Simulation, n: ViewNode): void {
 }
 
 export function cancelEditing(sim: Simulation, n: ViewNode): void {
-  fieldRun(sim, n.key).editing = false;
+  const run = fieldRun(sim, n.key);
+  run.editing = false;
+  run.endedAt = sim.tick;
 }
 
 /** Step a number field (the arrows, or left and right on it). */

@@ -17,7 +17,7 @@ const game = (children: UiNode[], flags: CompatFlags = currentFlags(), prefabs: 
 };
 const view = (sim: Simulation, name: string): ViewNode => findOnScreens(sim, name)!;
 const sc = (patch: Record<string, unknown> = {}) => ScrollerSchema.parse(patch);
-const rows = (count: number): UiNode => w('list', { name: 'Rows', source: 'var:n', h: 200, children: [w('button', { name: 'Row', text: 'Row {index}', h: 40 })] });
+const rows = (_count: number): UiNode => w('list', { name: 'Rows', source: 'var:n', h: 200, children: [w('button', { name: 'Row', text: 'Row {index}', h: 40 })] });
 const withMetrics = (sim: Simulation, key: string, count: number, view = 200, rowH = 40): void => {
   const m = scrollState(sim, key).metrics;
   Object.assign(m, { viewW: 300, viewH: view, contentW: 300, contentH: count * rowH, row: rowH });

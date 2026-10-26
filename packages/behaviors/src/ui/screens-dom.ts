@@ -192,7 +192,8 @@ function containerCss(n: UiNode): Record<string, string> {
 /** Where a piece of a control goes: its own size from its widget, its position from the control. */
 export function partCss(n: UiNode, part: PartInfo): Record<string, string> {
   const flowing = part.mount === 'content' || part.mount === 'bar';
-  if (flowing) return layoutCss(n, { layout: 'row' } as UiNode);
+  // (a tick box, a key binding and a bar of tabs lay their pieces out in a row; the others stack them)
+  if (flowing) return layoutCss(n, { layout: part.kind === 'toggle' || part.kind === 'keybind' || part.mount === 'bar' ? 'row' : 'column' } as UiNode);
   const css = layoutCss(n, null);
   for (const k of ['left', 'right', 'top', 'bottom', 'transform', 'inset', 'margin']) delete css[k];
   if (part.place.inset === undefined && (part.place.width !== undefined || part.place.left !== undefined || part.place.right !== undefined)) {
@@ -758,7 +759,7 @@ export class UiScreens {
       el.classList.toggle('tw-scroller', vn.scroll !== undefined);
       const own = vn.part ? partCss(n, vn.part) : layoutCss(n, parent);
       const box = containerCss(n);
-      const engineBox = vn.engine && ['toggle', 'keybind'].includes(n.type) ? { display: 'flex', 'flex-direction': 'row', 'align-items': 'center', gap: `${n.gap}px` } : vn.engine && ['dropdown', 'textfield', 'numberfield'].includes(n.type) ? { display: 'flex', 'flex-direction': 'column' } : {};
+      const engineBox: Record<string, string> = vn.engine && ['toggle', 'keybind'].includes(n.type) ? { display: 'flex', 'flex-direction': 'row', 'align-items': 'center', gap: `${n.gap}px` } : vn.engine && ['dropdown', 'textfield', 'numberfield'].includes(n.type) ? { display: 'flex', 'flex-direction': 'column' } : {};
       if (live.content) {
         live.applied = apply(el, live.applied, { ...own, ...(n.type === 'tabs' ? { display: 'flex' } : {}) });
         const dir = vn.scroll!.scroller.dir;
@@ -1075,18 +1076,16 @@ export class UiScreens {
 
   /** Once a tick: the mapped buttons scroll the scroller the focus is in (or the first one on the screen), everything else eases and reports. */
   private driveScrollers(top: ViewNode): void {
-    const scrollers: string[] = [];
+    const scrollers: ViewNode[] = [];
     walkView(top, (v) => {
-      if (v.scroll) scrollers.push(v.key);
+      if (v.scroll) scrollers.push(v);
     });
-    // lists in pop-ups are in the screen's layer, not under the top view
-    for (const [k, v] of this.current) if (v.scroll && !scrollers.includes(k) && v.part?.mount === 'screen') scrollers.push(k);
     if (scrollers.length === 0) return;
     const focusChain = this.focusKey ? this.scrollChain(this.focusKey) : [];
-    const buttonsGoTo = focusChain[0]?.key ?? scrollers[0]!;
+    const buttonsGoTo = focusChain[0]?.key ?? scrollers[0]!.key;
     const reduce = typeof document !== 'undefined' && (document.documentElement.classList.contains('reduce-motion') || (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches));
-    for (const key of scrollers) {
-      const vn = this.current.get(key)!;
+    for (const vn of scrollers) {
+      const key = vn.key;
       driveScroller(this.sim, key, vn.scroll!.scroller, { count: vn.scroll!.values.count, inputs: key === buttonsGoTo && !this.design && editingFieldKey(this.sim) === '', reduceMotion: reduce });
     }
   }
@@ -1100,13 +1099,15 @@ export class UiScreens {
     }
     if (scrollers.length === 0) return;
     const rects = new Map<string, DOMRect>();
-    for (const [key, , l] of scrollers) {
+    for (const [key, vn, l] of scrollers) {
       const st = scrollState(this.sim, key);
       const r = l.el.getBoundingClientRect();
       const cr = l.content!.getBoundingClientRect();
       const m = st.metrics;
-      m.viewW = r.width;
-      m.viewH = r.height;
+      // the window is what is inside the border (the content cannot be seen under it)
+      const k = l.el.offsetWidth > 0 ? r.width / l.el.offsetWidth : 1;
+      m.viewW = l.el.clientWidth * k;
+      m.viewH = l.el.clientHeight * k;
       m.contentW = cr.width;
       m.contentH = cr.height;
       m.items = {};
@@ -1365,8 +1366,8 @@ export class UiScreens {
       input.addEventListener('input', () => {
         const cur = this.current.get(key);
         if (!cur) return;
-        typeInto(this.sim, cur, input.value);
-        if (cur.field && input.value !== cur.field.draft) input.value = cur.field.draft;
+        const kept = typeInto(this.sim, cur, input.value);
+        if (input.value !== kept) input.value = kept;
       });
       input.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
@@ -1390,10 +1391,9 @@ export class UiScreens {
   private navigate(view: ViewNode, screen: UiScreen): void {
     const ui = this.sim.uiInput;
     const all = focusables(view);
-    // the lists that are open hold the focus even when they are drawn in the screen's layer rather than under this view
-    const popups = [...this.current.values()].filter((v) => v.popup?.open);
-    const options = popups.length > 0 ? [...this.current.values()].filter((v) => v.act?.kind === 'option' && v.visible && v.owner === popups[0]) : [];
-    const pool = options.length > 0 ? options : all;
+    // an open list holds the focus: while it is open the only widgets that can be chosen are its options
+    const options = all.filter((f) => f.act?.kind === 'option');
+    const pool = all;
     // (the screens plugins ship, and copies of them, always worked as the game's own menus do; a screen made in the designer does when the project has the flag `menuKeys`)
     const menuKeys = this.sim.compat.menuKeys || screen.from !== undefined;
     // a menu starts with its first row chosen (the keyboard and the pad act on it at once); a heads-up display's buttons are clicked, not walked to with the keyboard:

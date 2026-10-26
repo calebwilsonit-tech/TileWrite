@@ -119,7 +119,9 @@ function route(h: RouterHost, busy: boolean, fresh: ReadonlySet<string>): void {
     const typing = editingFieldKey(sim);
     const popup = openPopupKey(sim);
     if (typing) {
-      fieldRun(sim, typing).editing = false;
+      const field = fieldRun(sim, typing);
+      field.editing = false;
+      field.endedAt = sim.tick;
       ui.consume('pause');
     } else if (popup) {
       const run = popupRun(sim, popup);

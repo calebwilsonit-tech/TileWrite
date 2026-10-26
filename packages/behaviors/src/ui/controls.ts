@@ -31,6 +31,8 @@ export interface FieldRun {
   editing: boolean;
   /** The words as typed so far (committed to the variable on Enter or leaving). */
   draft: string;
+  /** The tick it was last finished on: the Enter that finished it is also a press of Interact, which must not start it again. */
+  endedAt: number;
 }
 
 const STORE = 'ui.controls';
@@ -69,7 +71,7 @@ export function fieldRun(sim: Simulation, key: string): FieldRun {
   const m = store(sim).fields;
   let r = m.get(key);
   if (!r) {
-    r = { editing: false, draft: '' };
+    r = { editing: false, draft: '', endedAt: -100 };
     m.set(key, r);
   }
   return r;
@@ -427,7 +429,7 @@ export function moveHighlight(options: PopupOption[], current: string, delta: -1
 export function placePopup(place: PopupSpec['place'], box: { x: number; y: number; w: number; h: number }, list: { w: number; h: number }, screen: { w: number; h: number }, width: 'box' | 'fit'): { x: number; y: number; w: number; flipped: boolean } {
   const w = width === 'box' ? box.w : Math.max(list.w, 1);
   const room = { below: screen.h - (box.y + box.h), above: box.y };
-  let y = 0;
+  let y: number;
   let x = box.x;
   let flipped = false;
   if (place === 'centred') {
@@ -448,7 +450,7 @@ export function placePopup(place: PopupSpec['place'], box: { x: number; y: numbe
 
 // ---------- fields ----------
 
-const ALLOW: Record<string, RegExp> = { any: /./s, letters: /[\p{L} ]/u, digits: /[0-9.\-]/, name: /[\p{L}\p{N} _-]/u };
+const ALLOW: Record<string, RegExp> = { any: /./s, letters: /[\p{L} ]/u, digits: /[0-9.-]/, name: /[\p{L}\p{N} _-]/u };
 
 /** Keep only what the field allows, and no more than it holds. */
 export function cleanTyped(text: string, allow: 'any' | 'letters' | 'digits' | 'name', max: number): string {

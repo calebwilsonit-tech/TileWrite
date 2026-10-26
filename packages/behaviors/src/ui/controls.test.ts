@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { Simulation, UiDocSchema, currentFlags, legacyFlags, newWidget, openScreen, type CompatFlags, type UiNode, type UiScreen } from '@tilewright/runtime';
 import { activateWidget, findOnScreens, focusables, isFocusable, openScreens, stepWidget, walkView, type ViewNode } from './screens-logic';
-import { buildSlider, choosePopupOption, closePopup, commitEditing, driveSliderKeys, highlightNext, openPopup, setPopupQuery, setSliderThumb, startEditing, stepNumberField, typeInto, wheelSlider } from './screens-controls';
+import { buildSlider, choosePopupOption, closePopup, commitEditing, driveSliderKeys, highlightNext, openPopup, setPopupQuery, setSliderThumb, stepNumberField, typeInto, wheelSlider } from './screens-controls';
 import { curvePairs, filterOptions, formatSlider, moveHighlight, numberList, placePopup, pointerPosition, sliderPositionOf, sliderValueAt, snapSliderValue, stepSliderValue, takeFocusRequest, SLIDER_DEFAULTS, cleanTyped, parseNumberField } from './controls';
 import { routeInput } from './router';
 import { scrollState } from './scrolling';
