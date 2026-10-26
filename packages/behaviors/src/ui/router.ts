@@ -1,3 +1,4 @@
+import { editingFieldKey, fieldRun, openPopupKey, popupRun } from './controls';
 import { closeScreen, openRole, roleOfScreen, openScreen, screenBlocksInput, screenIsOverlay, screenNamed, screenPauses, sync, type Simulation, type UiScreen } from '@tilewright/runtime';
 
 /**
@@ -113,6 +114,21 @@ function route(h: RouterHost, busy: boolean, fresh: ReadonlySet<string>): void {
   const sim = h.sim;
   const ui = sim.uiInput;
   const r = sim.runtime;
+  // Back belongs to what is open on top of a screen first: a field being typed in (it keeps the old words), then a pop-up list (it closes without a change)
+  if (ui.pressed('pause')) {
+    const typing = editingFieldKey(sim);
+    const popup = openPopupKey(sim);
+    if (typing) {
+      fieldRun(sim, typing).editing = false;
+      ui.consume('pause');
+    } else if (popup) {
+      const run = popupRun(sim, popup);
+      run.open = false;
+      run.query = '';
+      sim.runtime.scratch.set('ui.focusRequest', run.returnTo || popup);
+      ui.consume('pause');
+    }
+  }
   if (!busy && ui.pressed('pause')) {
     const by = backFromScreens(sim, fresh);
     if (by !== '') ui.consume('pause');

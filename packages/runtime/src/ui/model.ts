@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import '../project/schema'; // sets up Zod before the schemas below are built
 import { CURRENT_SCHEMA_VERSION } from '../project/schema';
+import { FieldControlSchema, MapSpecSchema, PopupSchema, ScrollerSchema, SliderSchema, UiPartsSchema } from './controls-model';
 
 /**
  * The UI designer's document: screens made of widgets, reusable UI prefabs, and the map of how screens lead to each other.
@@ -27,6 +28,9 @@ export const WIDGET_TYPES = [
   'spacer',
   'instance',
   'plugin',
+  'textfield',
+  'numberfield',
+  'map',
 ] as const;
 export type WidgetType = (typeof WIDGET_TYPES)[number];
 
@@ -49,6 +53,9 @@ export const WIDGET_LABELS: Record<WidgetType, string> = {
   spacer: 'Spacer (empty room)',
   instance: 'UI prefab (a reusable piece)',
   plugin: 'Plugin widget (a kind of widget a plugin added)',
+  textfield: 'Text field (the player types words)',
+  numberfield: 'Number field (the player types or steps a number)',
+  map: 'Map (layers, markers, fog: a minimap, a world map, a dungeon)',
 };
 
 /** Where in its parent a widget is pinned. */
@@ -154,7 +161,7 @@ export const UiNodeSchema = z.object({
   visible: z.string().default(''),
   enabled: z.string().default(''),
   /** What happens when the player clicks it, changes it or points at it. */
-  on: z.object({ click: Actions, hover: Actions, change: Actions }).prefault({}),
+  on: z.object({ click: Actions, hover: Actions, change: Actions, changing: z.array(ActionSchema).optional() }).prefault({}),
   focus: UiFocusSchema.prefault({}),
   tooltip: z.string().default(''),
   /** A second text for a widget with a name and a value: the control a key binding is for ("Jump"). Words, with {name} filled in. */
@@ -167,6 +174,18 @@ export const UiNodeSchema = z.object({
   overrides: z.record(z.string(), z.record(z.string(), z.unknown())).default({}),
   /** For a minimap: the tags to show as dots, as tag:colour pairs separated by commas. */
   marks: z.string().default('player:#6fe08a, enemy:#e05a5a'),
+  /** Scrolling, for a panel, list or grid (the engine's own scroller, never the browser's). */
+  scroller: ScrollerSchema.optional(),
+  /** A slider's direction, thumbs, steps and value curve. */
+  slider: SliderSchema.optional(),
+  /** A choice list's pop-up. */
+  popup: PopupSchema.optional(),
+  /** A text field's or number field's settings. */
+  field: FieldControlSchema.optional(),
+  /** A map's layers, markers, fog and navigation. */
+  map: MapSpecSchema.optional(),
+  /** For a tick box, key binding or tabs: the UI prefabs its parts are drawn with, by role. */
+  parts: UiPartsSchema.optional(),
   get children() {
     return z.array(UiNodeSchema).default([]);
   },

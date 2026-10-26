@@ -35,6 +35,16 @@ export const COMPAT_FLAGS = {
     help: 'Off: the older rule, where the body jumps to its new place at once when gravity turns and only the picture eases. On: the body turns over the time the scene (or the body) says, 0.25 seconds when it does not say, and is kept out of every block while it turns; if something is in the way it waits for room.',
     since: 3,
   },
+  uiScroll: {
+    label: 'Panels, lists and grids scroll with the engine’s own scroller (no browser scrollbar), and the focus keeps what is chosen in view',
+    help: 'Off: a panel set to scroll gets the browser’s own scrollbar and the mouse wheel only, and moving the focus with the keys or the pad can leave the chosen row off screen. On: every scrolling panel, list or grid is scrolled by the engine: the mapped scroll buttons, the wheel, dragging and touch all work, the chosen row is brought into view, and the scrollbar (if any) is made of the parts you pick.',
+    since: 4,
+  },
+  uiControls: {
+    label: 'Sliders, choice lists and the other form controls are drawn by the engine from parts you can replace',
+    help: 'Off: a slider is the browser’s range input, a choice list the browser’s select box (Interact does nothing on it), and tabs are browser buttons. On: they are made of parts (a track, a thumb, a list of options...) that you can replace with your own widgets, the mapped buttons step and open them, and nothing in a game looks like a web page.',
+    since: 4,
+  },
   pauseAction: {
     label: 'The pause button is a Quick Action you can see and change',
     help: 'Off: the pause button opens the screen used as Pause by itself, which nothing in the project shows (the older rule). On: it does nothing by itself; the Quick Action "When the pause button is pressed, open the Pause screen", which every new scene starts with, does it, so you can change or remove it. Back (closing a screen) works either way.',

@@ -15,6 +15,10 @@ import { placeState, type SlotInfo } from '@tilewright/runtime';
 import { runActionList } from '../events/sheet';
 import { host } from '../plugins/host';
 import { contextOf } from '../story/context';
+import { buildMap } from './map/build';
+import { buildField, buildKeybind, buildPopup, buildScroller, buildSlider, buildTabs, buildToggle, choosePopupOption, closePopup, openPopup, startEditing, stepNumberField, stepPopup } from './screens-controls';
+import { lazyWindow, mainAxis, scrollBy, scrollState, scrollerOf } from './scrolling';
+import { sliderRun } from './controls';
 
 /**
  * The thinking part of the interface screens, with no pictures: it turns a screen's widgets into a tree of what is on show
@@ -111,6 +115,85 @@ export interface ViewNode {
   /** The table row behind a repeat (for dragging cells onto each other). */
   row?: { table: string; id: string };
   children: ViewNode[];
+  /** The engine draws this control from parts (the project has the flag for it), instead of the browser's. */
+  engine?: boolean;
+  /** The pieces of a control (a slider's track and thumb, a scrollbar, a pop-up list): ordinary widgets, placed by `part`. */
+  parts?: ViewNode[];
+  /** If this is a piece of a control: which, what it is, and where it goes. */
+  part?: PartInfo;
+  /** What choosing this piece means (an option, a tab, a step arrow, a scrollbar arrow). */
+  act?: PartAct;
+  /** The control a piece belongs to (not listed when a view is written out, so the tree stays a tree). */
+  owner?: ViewNode;
+  /** A slider's numbers. */
+  slider?: SliderInfo;
+  /** A choice list's state: open or not, its options, what is chosen. */
+  popup?: PopupInfo;
+  /** What a scrolling panel, list or grid is doing. */
+  scroll?: ScrollInfo;
+  /** A text or number field. */
+  field?: FieldInfo;
+  /** A map: where the view is, what is on it, the highlighted marker. */
+  map?: import('./map/view').MapInfo;
+}
+
+export interface PartInfo {
+  /** The key of the widget the piece belongs to, the kind of control, the role in it ("thumb"). */
+  of: string;
+  kind: string;
+  role: string;
+  /** Where in the control (CSS: left, top, width... in the control's own space). */
+  place: Record<string, string>;
+  /** Where it is put: along a slider's axis, over the control, in the flow of the control, in the bar of tabs, or in the screen itself (a pop-up list). */
+  mount: 'axis' | 'overlay' | 'content' | 'bar' | 'screen';
+}
+
+/** What choosing a piece means; the control it belongs to is `ViewNode.owner`. */
+export type PartAct = { kind: 'option'; value: string } | { kind: 'tab'; value: string } | { kind: 'step'; delta: -1 | 1 } | { kind: 'scroll'; dir: -1 | 1 };
+
+export interface SliderInfo {
+  spec: import('@tilewright/runtime').SliderSpec;
+  value: number;
+  value2: number | null;
+  at: number;
+  at2: number | null;
+  min: number;
+  max: number;
+  steps: number;
+  text: string;
+  active: 1 | 2;
+  dragging: boolean;
+}
+
+export interface PopupInfo {
+  spec: import('@tilewright/runtime').PopupSpec;
+  open: boolean;
+  query: string;
+  options: import('./controls').PopupOption[];
+  all: import('./controls').PopupOption[];
+  chosen: string[];
+  highlight: string;
+  text: string;
+  listKey: string;
+}
+
+export interface ScrollInfo {
+  scroller: import('@tilewright/runtime').Scroller;
+  values: import('./scrolling').ScrollValues;
+  scrollable: boolean;
+  /** It moved a moment ago (a bar that shows only while scrolling). */
+  recent: boolean;
+  dragging: boolean;
+  /** The bar is on this side, along this axis. */
+  side: 'right' | 'left' | 'top' | 'bottom';
+}
+
+export interface FieldInfo {
+  spec: import('@tilewright/runtime').FieldControl;
+  editing: boolean;
+  draft: string;
+  text: string;
+  number: boolean;
 }
 
 const num = (v: VariableValue | undefined, d = 0): number => (typeof v === 'number' ? v : typeof v === 'boolean' ? (v ? 1 : 0) : Number.isFinite(Number(v)) && v !== '' && v !== undefined ? Number(v) : d);
@@ -253,7 +336,12 @@ export function rowsOf(sim: Simulation, node: UiNode): Row[] {
 
 const REPEATERS = new Set(['list', 'grid', 'hand', 'turnOrder']);
 
-function resolveNode(sim: Simulation, raw: UiNode, key: string, scope: Record<string, VariableValue>, depth: number, parentVisible = true): ViewNode {
+/** The kinds of widget that can scroll when they are given a scroller. */
+const SCROLLABLE = new Set(['panel', 'list', 'grid', 'hand', 'turnOrder']);
+/** Widgets that are always drawn by the engine, because they never existed as browser controls. */
+const ENGINE_ONLY = new Set(['textfield', 'numberfield', 'map']);
+
+export function resolveNode(sim: Simulation, raw: UiNode, key: string, scope: Record<string, VariableValue>, depth: number, parentVisible = true): ViewNode {
   const node = expandInstance(sim, raw);
   return withScope(sim, scope, () => {
     const src = sourceOf(sim);
@@ -301,23 +389,71 @@ function resolveNode(sim: Simulation, raw: UiNode, key: string, scope: Record<st
       out.choice = options.includes(chosen) ? chosen : (options[0] ?? '');
     }
     if (depth > 12) return out;
+    // the controls the engine draws itself, from parts (the project has the flag, or the widget has never been a browser control)
+    const engine = sim.compat.uiControls || ENGINE_ONLY.has(node.type);
+    if (engine) {
+      switch (node.type) {
+        case 'slider':
+          buildSlider(sim, out, node, depth, visible);
+          break;
+        case 'dropdown':
+          buildPopup(sim, out, node, depth, visible);
+          break;
+        case 'toggle':
+          buildToggle(sim, out, node, depth, visible);
+          break;
+        case 'keybind':
+          buildKeybind(sim, out, node, uiBridge(sim)?.bindingText?.(out.text) ?? '', sim.runtime.scratch.get('ui.capturing') === key, depth, visible);
+          break;
+        case 'tabs':
+          buildTabs(sim, out, node, depth, visible);
+          break;
+        case 'textfield':
+        case 'numberfield':
+          buildField(sim, out, node, depth, visible);
+          break;
+        default:
+          break;
+      }
+    }
+    const scroller = SCROLLABLE.has(node.type) ? scrollerOf(node, sim.compat.uiScroll) : null;
+    let rowCount = 0;
     if (REPEATERS.has(node.type)) {
       const template = node.template ? instanceStub(`${node.id}.t`, node.template) : (node.children[0] ?? (node.type === 'turnOrder' ? TURN_CHIP : undefined));
       if (template) {
         const rows = rowsOf(sim, node);
+        rowCount = rows.length;
         if (rows.length === 0 && node.empty) out.children = [resolveNode(sim, { ...instanceStub(`${node.id}.empty`, ''), type: 'text', name: 'Empty', text: node.empty, wMode: 'auto', hMode: 'auto' }, `${key}#empty`, scope, depth + 1, visible)];
-        else out.children = rows.map((r) => {
-          const child = template;
-          const vn = resolveNode(sim, child, `${key}#${r.id}`, { ...scope, ...r.scope }, depth + 1, visible);
-          if (r.table) vn.row = { table: r.table, id: r.id };
-          return vn;
-        });
+        else {
+          // a long list makes only the rows that are in view (and a few either side), with spacers that stand for the rest
+          let from = 0;
+          let to = rows.length;
+          if (scroller?.lazy && scroller.rowSize > 0) {
+            const st = scrollState(sim, key);
+            const w = lazyWindow(st.y.o, st.metrics.viewH || node.h, scroller.rowSize, rows.length);
+            from = w.from;
+            to = w.to;
+          }
+          out.children = rows.slice(from, to).map((r) => {
+            const child = template;
+            const vn = resolveNode(sim, child, `${key}#${r.id}`, { ...scope, ...r.scope }, depth + 1, visible);
+            if (r.table) vn.row = { table: r.table, id: r.id };
+            return vn;
+          });
+          if (from > 0 || to < rows.length) {
+            const gap = (h: number): UiNode => ({ ...instanceStub(`${node.id}.gap`, ''), type: 'spacer', name: 'Rows not made yet', w: 1, h, wMode: 'fill', hMode: 'fixed' });
+            if (from > 0) out.children.unshift(resolveNode(sim, gap(from * scroller!.rowSize), `${key}#gap-before`, scope, depth + 1, visible));
+            if (to < rows.length) out.children.push(resolveNode(sim, gap((rows.length - to) * scroller!.rowSize), `${key}#gap-after`, scope, depth + 1, visible));
+          }
+        }
       }
     } else if (node.type === 'tabs') {
       out.children = node.children.map((c, i) => resolveNode(sim, c, `${key}/${c.id}`, scope, depth + 1, visible && options[i] === out.choice));
-    } else {
+    } else if (!ENGINE_ONLY.has(node.type)) {
       out.children = node.children.map((c) => resolveNode(sim, c, `${key}/${c.id}`, scope, depth + 1, visible));
     }
+    if (scroller) buildScroller(sim, out, scroller, rowCount || out.children.length, depth, visible);
+    if (node.type === 'map') buildMap(sim, out, node, depth, visible);
     return out;
   });
 }
@@ -338,7 +474,7 @@ const TURN_CHIP: UiNode = {
   children: [{ ...instanceStub('turnchip.name', ''), type: 'text', name: 'Unit name', text: '{unit.name}', wMode: 'auto', hMode: 'auto' }],
 };
 
-function instanceStub(id: string, prefab: string): UiNode {
+export function instanceStub(id: string, prefab: string): UiNode {
   return { id, name: 'item', type: 'instance', prefab, anchor: 'tl', x: 0, y: 0, w: 0, h: 0, wMode: 'auto', hMode: 'auto', layout: 'free', gap: 0, padding: 0, align: 'start', columns: 1, style: {}, states: {}, anim: [], text: '', sprite: '', value: '', max: '100', min: 0, step: 1, options: '', source: '', template: '', drag: false, visible: '', enabled: '', on: { click: [], hover: [], change: [] }, focus: { up: '', down: '', left: '', right: '' }, tooltip: '', overrides: {}, marks: '', children: [] };
 }
 
@@ -360,6 +496,7 @@ export function openScreens(sim: Simulation): { screen: UiScreen; view: ViewNode
 export function walkView(v: ViewNode, fn: (n: ViewNode) => void): void {
   fn(v);
   for (const c of v.children) walkView(c, fn);
+  if (v.parts) for (const c of v.parts) walkView(c, fn);
 }
 
 export function findView(v: ViewNode, match: (n: ViewNode) => boolean): ViewNode | null {
@@ -424,11 +561,16 @@ export function worldViews(sim: Simulation): WorldUiView[] {
 
 // ---------- doing things ----------
 
-const INTERACTIVE = new Set(['button', 'toggle', 'slider', 'dropdown', 'keybind', 'tabs']);
+const INTERACTIVE = new Set(['button', 'toggle', 'slider', 'dropdown', 'keybind', 'tabs', 'textfield', 'numberfield']);
 
 /** Can the player aim at it with a key or a gamepad? */
 export function isFocusable(n: ViewNode): boolean {
-  return n.visible && n.enabled && (INTERACTIVE.has(n.node.type) || n.node.on.click.length > 0 || (n.node.type === 'grid' && false));
+  if (!n.visible || !n.enabled) return false;
+  // a piece of a control is reached through the control, except the pieces that mean something on their own (an option, a tab)
+  if (n.part) return n.act !== undefined;
+  // tabs drawn from parts are reached tab by tab
+  if (n.node.type === 'tabs' && n.engine) return false;
+  return INTERACTIVE.has(n.node.type) || n.node.on.click.length > 0;
 }
 
 /**
@@ -441,9 +583,16 @@ export function claimedButtons(snapshot: Readonly<Record<string, number>>, focus
 
 export function focusables(view: ViewNode): ViewNode[] {
   const out: ViewNode[] = [];
+  let open: ViewNode | null = null;
   walkView(view, (n) => {
     if (isFocusable(n) && n.visible) out.push(n);
+    if (n.popup?.open && n.visible && !open) open = n;
   });
+  // an open pop-up list holds the focus: only its options can be chosen until it closes
+  if (open) {
+    const options = out.filter((n) => n.act?.kind === 'option' && n.owner === open);
+    if (options.length > 0) return options;
+  }
   return out;
 }
 
@@ -457,6 +606,56 @@ function run(sim: Simulation, n: ViewNode, which: 'click' | 'hover' | 'change'):
 export function activateWidget(sim: Simulation, n: ViewNode): void {
   if (!n.visible || !n.enabled) return;
   sim.events.emit('ui-click', { widget: n.node.id, name: n.node.name, key: n.key });
+  if (n.act) {
+    const owner = n.owner;
+    if (owner) {
+      switch (n.act.kind) {
+        case 'option':
+          choosePopupOption(sim, owner, n.act.value);
+          break;
+        case 'tab':
+          setChoice(sim, owner, n.act.value);
+          break;
+        case 'step':
+          stepNumberField(sim, owner, n.act.delta);
+          break;
+        case 'scroll':
+          if (owner.scroll) {
+            const sc = owner.scroll.scroller;
+            const st = scrollState(sim, owner.key);
+            scrollBy(sc, st, mainAxis(sc), n.act.dir * (st.metrics.row > 0 ? st.metrics.row : 40) * sc.speed);
+          }
+          break;
+      }
+    }
+    run(sim, n, 'click');
+    return;
+  }
+  if (n.engine) {
+    switch (n.node.type) {
+      case 'dropdown':
+        if (n.popup?.open) closePopup(sim, n.key);
+        else openPopup(sim, n);
+        run(sim, n, 'click');
+        return;
+      case 'textfield':
+      case 'numberfield':
+        startEditing(sim, n);
+        run(sim, n, 'click');
+        return;
+      case 'slider': {
+        // on a range slider the button chooses which thumb the keys move
+        if (n.slider?.value2 !== null && n.slider) {
+          const r = sliderRun(sim, n.key);
+          r.active = r.active === 1 ? 2 : 1;
+        }
+        run(sim, n, 'click');
+        return;
+      }
+      default:
+        break;
+    }
+  }
   switch (n.node.type) {
     case 'toggle':
       if (n.node.value) writeTarget(sim, n.node.value, n.value === 0);
@@ -489,6 +688,8 @@ export function adjustWidget(sim: Simulation, n: ViewNode, delta: -1 | 1): boole
  */
 export function stepWidget(sim: Simulation, n: ViewNode, delta: -1 | 1): boolean {
   if (!n.visible || !n.enabled) return false;
+  if (n.engine && n.node.type === 'dropdown') return n.popup?.spec.stepClosed === false ? false : stepPopup(sim, n, delta);
+  if (n.node.type === 'numberfield') return stepNumberField(sim, n, delta);
   if (n.node.type === 'dropdown' && n.options.length > 0) {
     const i = Math.max(0, n.options.indexOf(n.choice));
     setChoice(sim, n, n.options[(i + delta + n.options.length) % n.options.length]!);
