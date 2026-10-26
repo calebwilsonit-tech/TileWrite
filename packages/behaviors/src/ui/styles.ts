@@ -103,3 +103,10 @@ export function styleParts(styleId: string, kind: string): Record<string, string
       return {};
   }
 }
+
+/** Prefabs of a style that go with a control but are not parts it uses by themselves (the value as words, "more rows" for a scroller): copied too, to pick by hand. */
+export function styleExtras(styleId: string, kind: string): string[] {
+  const n = UI_STYLES.find((s) => s.id === styleId)?.label;
+  if (!n) return [];
+  return kind === 'slider' ? [`${n} slider value`] : kind === 'scrollbar' ? [`${n} more rows`] : [];
+}

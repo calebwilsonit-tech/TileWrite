@@ -268,6 +268,8 @@ export class UiScreens {
   private readonly claim = (snapshot: Readonly<Record<string, number>>): string[] => {
     // while the player types into a field every button is the field's: nothing reaches the game
     if (!this.design && editingFieldKey(this.sim) !== '') return Object.keys(snapshot);
+    // Back belongs to an open pop-up list: it closes the list and the game does not also hear it (a rule that opens Pause on the pause button must not)
+    if (!this.design && openPopupKey(this.sim) !== '') return [...claimedButtons(snapshot, this.focusKey, this.focusableKeys), 'pause'];
     return claimedButtons(snapshot, this.focusKey, this.focusableKeys);
   };
   private lastTick = -1;
@@ -282,7 +284,8 @@ export class UiScreens {
   private topLayer: HTMLElement | null = null;
   private scrollDrag: { key: string; axis: 'x' | 'y'; start: number; offset: number; moved: boolean; id: number; lastT: number; lastPos: number; v: number } | null = null;
   private barDrag: { key: string; axis: 'x' | 'y'; start: number; offset: number; trackPx: number; thumb: number } | null = null;
-  private sliderDrag: { key: string; thumb: 1 | 2 } | null = null;
+  /** thumb 0: the two thumbs are on top of each other, and the first move says which one is meant. */
+  private sliderDrag: { key: string; thumb: 0 | 1 | 2 } | null = null;
 
   constructor(
     private readonly parent: HTMLElement,
@@ -1018,8 +1021,8 @@ export class UiScreens {
     if (!info || !el) return;
     const rect = el.getBoundingClientRect();
     const f = pointerPosition(info.spec.angle, { w: rect.width, h: rect.height }, e.clientX - rect.left, e.clientY - rect.top);
-    let thumb: 1 | 2 = 1;
-    if (info.value2 !== null) thumb = Math.abs(f - info.at) <= Math.abs(f - (info.at2 ?? info.at)) ? 1 : 2;
+    let thumb: 0 | 1 | 2 = 1;
+    if (info.value2 !== null) thumb = Math.abs(info.at - (info.at2 ?? info.at)) < 0.02 ? 0 : Math.abs(f - info.at) <= Math.abs(f - (info.at2 ?? info.at)) ? 1 : 2;
     this.sliderDrag = { key: vn.key, thumb };
     this.autoFocus = false;
     this.focusKey = vn.key;
@@ -1028,7 +1031,7 @@ export class UiScreens {
     } catch {
       /* a synthetic pointer cannot be captured */
     }
-    this.moveSlider(vn, f, thumb, 'changing');
+    if (thumb !== 0) this.moveSlider(vn, f, thumb, 'changing');
   }
 
   private moveSlider(vn: ViewNode, f: number, thumb: 1 | 2, phase: 'changing' | 'changed'): void {
@@ -1276,7 +1279,13 @@ export class UiScreens {
       const el = this.live.get(s.key)?.el;
       if (vn?.slider && el) {
         const rect = el.getBoundingClientRect();
-        this.moveSlider(vn, pointerPosition(vn.slider.spec.angle, { w: rect.width, h: rect.height }, e.clientX - rect.left, e.clientY - rect.top), s.thumb, 'changing');
+        const f = pointerPosition(vn.slider.spec.angle, { w: rect.width, h: rect.height }, e.clientX - rect.left, e.clientY - rect.top);
+        // two thumbs on top of each other: the one that goes the way the pointer goes
+        if (s.thumb === 0) {
+          if (Math.abs(f - vn.slider.at) < 0.01) return;
+          s.thumb = f > vn.slider.at ? 2 : 1;
+        }
+        this.moveSlider(vn, f, s.thumb, 'changing');
       }
     }
   };
@@ -1304,7 +1313,8 @@ export class UiScreens {
       const vn = this.current.get(s.key);
       if (vn?.slider) {
         // let go: the value is final
-        this.moveSlider(vn, sliderPositionOf(vn.slider.spec, vn.slider.min, vn.slider.max, vn.slider.value2 !== null && s.thumb === 2 ? vn.slider.value2 : vn.slider.value), s.thumb, 'changed');
+        const thumb: 1 | 2 = s.thumb === 2 ? 2 : 1;
+        this.moveSlider(vn, sliderPositionOf(vn.slider.spec, vn.slider.min, vn.slider.max, vn.slider.value2 !== null && thumb === 2 ? vn.slider.value2 : vn.slider.value), thumb, 'changed');
         sliderRun(this.sim, s.key).dragging = false;
       }
     }

@@ -147,7 +147,9 @@ test('Add-on: a settings screen longer than the window, a custom scrollbar, keyb
   await page.evaluate(() => {
     const el = document.querySelector('[data-testid="tw-ui-Row"]')!;
     const r = el.getBoundingClientRect();
-    const fire = (type: string, y: number): void => el.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, pointerId: 7, pointerType: 'touch', isPrimary: true, clientX: r.left + 30, clientY: y, buttons: type === 'pointerup' ? 0 : 1 }));
+    const fire = (type: string, y: number): void => {
+      el.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, pointerId: 7, pointerType: 'touch', isPrimary: true, clientX: r.left + 30, clientY: y, buttons: type === 'pointerup' ? 0 : 1 }));
+    };
     fire('pointerdown', r.top + 20);
     for (let i = 1; i <= 8; i++) fire('pointermove', r.top + 20 - i * 12);
     fire('pointerup', r.top - 80);

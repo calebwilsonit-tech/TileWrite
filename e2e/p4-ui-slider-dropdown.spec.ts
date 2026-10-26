@@ -119,7 +119,9 @@ test('Add-on: a styled two-thumb slider and a searchable drop-down, by keys, pad
   await page.evaluate(() => {
     const el = document.querySelector('[data-testid="tw-ui-Price"]')!;
     const r = el.getBoundingClientRect();
-    const fire = (type: string, x: number): void => el.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, pointerId: 3, pointerType: 'touch', isPrimary: true, clientX: x, clientY: r.top + r.height / 2, buttons: type === 'pointerup' ? 0 : 1 }));
+    const fire = (type: string, x: number): void => {
+      el.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, pointerId: 3, pointerType: 'touch', isPrimary: true, clientX: x, clientY: r.top + r.height / 2, buttons: type === 'pointerup' ? 0 : 1 }));
+    };
     fire('pointerdown', r.left + r.width * 0.45);
     fire('pointermove', r.left + r.width * 0.5);
     fire('pointerup', r.left + r.width * 0.5);
@@ -138,9 +140,10 @@ test('Add-on: a styled two-thumb slider and a searchable drop-down, by keys, pad
   await expect(page.locator('[data-popup-list] [data-name="Old paper pop-up option"]')).toHaveCount(1);
   await expect(page.locator('[data-popup-list]')).toContainText('Sweden');
   await page.screenshot({ path: shot('p4-dropdown-search.png') });
-  await tap('p'); // Back
+  await padTap(page, 9); // Back: the pad's Start (P is a letter to search with, and Esc stops the editor's Play)
   await expect(page.locator('[data-popup-list]')).toHaveCount(0);
   expect((await vars()).country).toBeUndefined();
+  expect(await page.evaluate(() => window.__play!.sim.runtime.ui.stack)).toEqual(['HUD', 'Filters']); // Back closed the list and nothing else
   await tap('e');
   await page.keyboard.type('land');
   await page.waitForTimeout(250);
@@ -152,7 +155,7 @@ test('Add-on: a styled two-thumb slider and a searchable drop-down, by keys, pad
   // the mouse: open, click an option; clicking outside closes it
   await page.getByTestId('tw-ui-Country').click();
   await expect(page.locator('[data-popup-list]')).toBeVisible();
-  await page.locator('[data-popup-list]').getByText('Estonia').click();
+  await page.locator('[data-popup-list] [data-name="Old paper pop-up option"]', { hasText: 'Estonia' }).click();
   expect((await vars()).country).toBe('Estonia');
   await page.getByTestId('tw-ui-Country').click();
   await expect(page.locator('[data-popup-list]')).toBeVisible();
@@ -161,7 +164,7 @@ test('Add-on: a styled two-thumb slider and a searchable drop-down, by keys, pad
   expect((await vars()).country).toBe('Estonia');
   // left and right on the closed box step through the options
   await page.getByTestId('tw-ui-Country').click();
-  await page.locator('[data-popup-list]').getByText('Norway').click();
+  await page.locator('[data-popup-list] [data-name="Old paper pop-up option"]', { hasText: 'Norway' }).click();
   await tap('ArrowRight');
   expect((await vars()).country).toBe('Sweden');
 
@@ -176,7 +179,7 @@ test('Add-on: a styled two-thumb slider and a searchable drop-down, by keys, pad
     });
     expect(inside, `${shape.id}: the list stays inside the screen`).toBe(true);
     await page.screenshot({ path: shot(`p4-dropdown-${shape.id.replace(':', 'x')}.png`) });
-    await tap('p');
+    await padTap(page, 9);
   }
   await noBrowserControls(page);
   expect(errors).toEqual([]);

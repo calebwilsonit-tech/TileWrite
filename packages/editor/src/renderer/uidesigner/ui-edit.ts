@@ -1,4 +1,4 @@
-import { stylePrefabs, styleParts } from '@tilewright/behaviors';
+import { stylePrefabs, styleExtras, styleParts } from '@tilewright/behaviors';
 import {
   FieldControlSchema,
   PopupSchema,
@@ -448,7 +448,7 @@ export function applyControlStyle(doc: UiDoc, widgetId: string, styleId: string)
   let next = clone(doc);
   const have = new Set(next.prefabs.map((p) => p.name));
   const wanted = new Set<string>();
-  for (const k of kinds) for (const name of Object.values(styleParts(styleId, k.kind))) wanted.add(name);
+  for (const k of kinds) for (const name of [...Object.values(styleParts(styleId, k.kind)), ...styleExtras(styleId, k.kind)]) wanted.add(name);
   if (w.type === 'map') for (const name of Object.values(styleParts(styleId, 'map'))) wanted.add(name);
   const used = new Set<string>();
   for (const s of next.screens) walkWidgets(s.root, (x) => used.add(x.id));
