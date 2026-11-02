@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { createProjectViaUi, launchEditor, shot } from './helpers';
-import { add, fakePad, noBrowserControls, outline, padTap, setText } from './ui-helpers';
+import { add, fakePad, noBrowserControls, padTap, setText } from './ui-helpers';
 
 /**
  * Add-on, section 1 (maps), the examples besides the Storytender map and the minimap, each built in the UI designer only: a strategy

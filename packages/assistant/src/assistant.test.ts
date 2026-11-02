@@ -93,6 +93,17 @@ describe('tool definitions', () => {
     expect(act).toEqual(['place_objects', 'update_objects', 'delete_objects', 'paint_tiles', 'connect_wires', 'remove_wires', 'set_event_sheet', 'write_dialogue', 'write_cutscene', 'write_skins', 'write_world_map', 'write_mixer', 'write_ui_layout', 'write_controls', 'set_project_settings', 'edit_event_rows', 'create_prefab', 'set_regions', 'write_translation', 'set_plugins', 'write_table', 'set_variables', 'generate_map', 'write_ui_screen', 'write_script', 'write_project_notes', 'submit_plan', 'draw_sprite', 'draw_tile', 'generate_image', 'place_blocks', 'set_gravity']);
   });
 
+  it('tell Claude about every kind of widget the UI designer has, the settings of the new controls and the map actions', () => {
+    // the assistant package imports nothing, so this is the list of WIDGET_TYPES in packages/runtime/src/ui/model.ts
+    const widgetTypes = ['panel', 'text', 'button', 'image', 'bar', 'slider', 'toggle', 'dropdown', 'keybind', 'list', 'grid', 'tabs', 'minimap', 'hand', 'turnOrder', 'spacer', 'instance', 'plugin', 'textfield', 'numberfield', 'map'];
+    const description = TOOLS.find((t) => t.name === 'write_ui_screen')!.description;
+    for (const type of widgetTypes) expect(description, type).toMatch(new RegExp(`\\b${type}\\b`));
+    for (const setting of ['scroller', 'slider', 'popup', 'field', 'map', 'parts']) expect(description, setting).toContain('`' + setting + '`');
+    for (const action of ['mapHighlight', 'mapChoose', 'mapZoom', 'mapCamera', 'mapReveal', 'mapMarker']) expect(description, action).toContain(action);
+    expect(description).toContain('uiControls');
+    expect(SYSTEM_PROMPT).toContain('Map widget');
+  });
+
   it('checks the genre tools\' inputs with messages Claude can act on', () => {
     expect(checkToolInput('set_plugins', { enable: ['turns'] }).ok).toBe(true);
     expect(checkToolInput('generate_map', { kind: 'volcano', width: 40, height: 30 }).ok).toBe(false);

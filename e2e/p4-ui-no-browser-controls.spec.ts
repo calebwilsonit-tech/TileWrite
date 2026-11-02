@@ -33,14 +33,13 @@ test('Add-on: no browser control in any of the game’s screens, at four shapes;
       if (!el) return { ok: false, what: 'nothing has the focus' };
       const r = el.getBoundingClientRect();
       let ok = true;
-      let box: Element | null = document.querySelector('[data-testid="tw-ui"]');
+      const box: Element | null = document.querySelector('[data-testid="tw-ui"]');
       const windows: Element[] = box ? [box] : [];
       for (let p = el.parentElement; p; p = p.parentElement) if (p.classList.contains('tw-scroller')) windows.push(p);
       for (const w of windows) {
         const b = w.getBoundingClientRect();
         if (r.top < b.top - 2 || r.bottom > b.bottom + 2 || r.left < b.left - 2 || r.right > b.right + 2) ok = false;
       }
-      box = null;
       return { ok, what: el.dataset.testid ?? el.className };
     });
 

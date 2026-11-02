@@ -392,7 +392,7 @@ export const MAP_LAYER_FIELDS: Record<string, FieldDef[]> = {
     { key: 'colour', label: 'Colour', type: 'colour', default: '#d9a45a55' },
     { key: 'colours', label: 'Colour of a region (name:colour, ...)', type: 'text' },
     { key: 'only', label: 'Only the regions named (commas, blank: all)', type: 'text' },
-    { key: 'when', label: 'Each region is drawn only when (sees region.*)', type: 'condition' },
+    { key: 'when', label: 'Each region is drawn only when (sees region.name, region.revealed...)', type: 'condition' },
     { key: 'lineWidth', label: 'Outline width', type: 'number', default: 2 },
   ],
   paths: [

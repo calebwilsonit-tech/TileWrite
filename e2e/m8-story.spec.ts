@@ -234,7 +234,9 @@ test('M8: build a small story (items, a conversation, a cutscene, a lantern, a p
   await play(page, {}, 1);
   await play(page, { pause: 1 }, 1);
   await ui(page, 'Settings').click();
-  await ui(page, 'Difficulty choice').locator('select').selectOption('hard'); // normal -> hard
+  // normal -> hard (the choice list is the one the engine draws: open it, pick an option)
+  await ui(page, 'Difficulty choice').click();
+  await page.locator('[data-popup-list] [data-name="popup.option"]', { hasText: 'hard' }).click();
   expect((await state(page)).difficulty).toBe('hard');
   await ui(page, 'Controls').click();
   await ui(page, 'Control', 'attack').click();

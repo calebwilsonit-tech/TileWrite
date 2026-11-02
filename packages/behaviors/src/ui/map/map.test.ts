@@ -444,6 +444,15 @@ describe('a map in a game: highlight, choose, bindings, keys, actions', () => {
     expect(events).toEqual(['h:pins:a', 'c:pins:a']);
   });
 
+  it('starts the highlight when the first markers appear, if there were none when the map was first drawn', () => {
+    const sim = game({ markers: [{ id: 'posts', from: 'tags', source: 'post' }] as never, nav: { start: 'first' }, bind: 'm' });
+    expect(city(sim).map!.highlight).toBe('');
+    sim.world.spawn({ name: 'Post', tags: ['post'], components: { transform: { x: 4, y: 4, h: 0 } } });
+    expect(city(sim).map!.highlight).not.toBe('');
+    city(sim);
+    expect(sim.runtime.vars['m.marker']).not.toBe('');
+  });
+
   it('the mapped buttons move the highlight, page through markers, zoom, centre and choose; each says which it used', () => {
     const sim = game({ markers: pins as never, nav: { actions: { select: 'ui_choose' } }, on: { highlight: [], choose: [{ type: 'setVariable', params: { name: 'went', op: 'set', value: '{marker.label}' } }], reveal: [] } as never });
     const press = (...a: string[]): Set<string> => {
@@ -564,5 +573,25 @@ describe('a map in a game: highlight, choose, bindings, keys, actions', () => {
     const part = (label: string): ViewNode => city(sim).parts!.find((p) => p.scope['marker.label'] === label)!;
     expect(part('Mill').act).toEqual({ kind: 'marker', id: 'pins:b' });
     expect(openScreens(sim).length).toBe(1);
+  });
+});
+
+describe('layers that follow what is known', () => {
+  it('regions and labels can be drawn only once their room has been found', () => {
+    const sim = game({ layers: [layer('fog', 'fog', { reveal: 'regions', follow: 'player' }), layer('regions', 'rooms', { when: '{region.revealed} = 1' }), layer('labels', 'names', { when: '{region.revealed} = 1' })] });
+    sim.runtime.regions = [
+      { id: 'a', name: 'Entry', x: 0, y: 0, w: 4, h: 4, cameraBounds: false, music: '', darkness: 0, bossActive: false },
+      { id: 'b', name: 'Vault', x: 8, y: 8, w: 4, h: 4, cameraBounds: false, music: '', darkness: 0, bossActive: false },
+    ];
+    sim.world.spawn({ name: 'Hero', tags: ['player'], components: { transform: { x: 1, y: 1, h: 0 } } });
+    trackMaps(sim);
+    const shown = (): { rooms: string[]; names: string[] } => {
+      const ls = city(sim).map!.layers;
+      return { rooms: (ls[1]!.data as { items: { name: string }[] }).items.map((i) => i.name), names: (ls[2]!.data as { items: { text: string }[] }).items.map((i) => i.text) };
+    };
+    expect(shown()).toEqual({ rooms: ['Entry'], names: ['Entry'] });
+    sim.world.withTag('player')[0]!.set('transform', { x: 9, y: 9, h: 0 });
+    trackMaps(sim);
+    expect(shown()).toEqual({ rooms: ['Entry', 'Vault'], names: ['Entry', 'Vault'] });
   });
 });

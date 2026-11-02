@@ -84,6 +84,11 @@ export const SCREENS_CSS = `
 .tw-hidden-input { position: fixed; left: -4000px; top: 0; width: 10px; height: 10px; opacity: 0; }
 `;
 
+/** Sets the accessibility attributes of a control the engine draws (only when they change). */
+function aria(el: HTMLElement, attrs: Record<string, string>): void {
+  for (const [k, v] of Object.entries(attrs)) if (el.getAttribute(k) !== v) el.setAttribute(k, v);
+}
+
 /** Words with inline formatting ([b], [i], [u], [s], [color=...]) as spans; text with none is set as plain text. Never parsed as HTML. */
 function setRichText(target: HTMLElement, text: string): void {
   if (!text.includes('[')) {
@@ -884,7 +889,11 @@ export class UiScreens {
         }
         break;
       case 'toggle': {
-        if (vn.engine) break; // a box and a label, made of parts
+        if (vn.engine) {
+          // a box and a label, made of parts; the state is told to screen readers and tests the standard way
+          aria(el, { role: 'checkbox', 'aria-checked': vn.value ? 'true' : 'false' });
+          break;
+        }
         const sig = `${vn.text}|${vn.value}`;
         if (el.dataset.text !== sig) {
           el.dataset.text = sig;
@@ -912,6 +921,7 @@ export class UiScreens {
       }
       case 'slider': {
         if (vn.engine) {
+          aria(el, { role: 'slider', 'aria-valuemin': String(n.min), 'aria-valuemax': String(vn.max), 'aria-valuenow': String(vn.value) });
           this.layoutAxis(vn, live);
           break;
         }
@@ -923,7 +933,11 @@ export class UiScreens {
         break;
       }
       case 'dropdown': {
-        if (vn.engine) break;
+        if (vn.engine) {
+          const at = vn.options.indexOf(vn.choice);
+          aria(el, { role: 'combobox', 'aria-haspopup': 'listbox', 'aria-valuetext': at >= 0 ? (vn.optionLabels[at] ?? vn.choice) : vn.choice });
+          break;
+        }
         const sel = el.querySelector('select')!;
         const sig = `${vn.options.join('|')}|${vn.optionLabels.join('|')}`;
         if (sel.dataset.sig !== sig) {

@@ -35,16 +35,27 @@ Drag one from the **Palette** onto the picture (it lands where you drop it, insi
 | Button | does its actions when clicked or confirmed with a key or gamepad |
 | Image | a sprite from Sprite Studio |
 | Bar | health, progress, resources: fills from a value up to a maximum |
-| Slider | a number the player sets (a volume): reads and writes a variable or a player setting |
+| Slider | a number the player sets (a volume): reads and writes a variable or a player setting. Any direction, two thumbs for a range, steps, a curve, marks; made of parts you can replace |
 | Tick box | on or off |
-| Choice list | one of several choices |
+| Choice list (drop-down) | one of several choices, or many: a pop-up list that opens below, above, beside, in the middle or as a screen of its own, with search, groups and descriptions. Also a context menu or a picker |
+| Text field | words the player types (a name for a save); allowed letters, longest, dots for a secret |
+| Number field | a number typed or stepped, with a lowest, a highest and a step (the pad steps it) |
 | Key binding | press to change a control (`Controls` screens) |
 | List | repeats a piece for every row of a table, every carried item or a number of slots |
 | Grid | the same in rows and columns; with *Allow dragging* the player drags a cell onto another and the two table rows swap (drag-and-drop inventory) |
 | Tabs | pages the player switches between |
 | Minimap | the map with dots for tagged objects (`player:#6fe08a, enemy:#e05a5a`) |
+| Map | a fully flexible map: the scene being played, another scene, several scenes on one layout, a table or a picture; top-down or isometric; layers (terrain, picture, regions, paths, fog, markers, grid, labels, and kinds plugins add) and markers with their own prefabs. See [recipes/the-map-widget.md](recipes/the-map-widget.md) |
 | Card hand | cards fanned out from a table; they lift when pointed at |
 | Turn order bar | the units of a battle in order, whose turn it is lit up |
+
+### Scrolling, form controls and maps
+Three sets of settings in the inspector make a screen behave like a game's and not like a web page. Nothing in a game screen is a browser scrollbar, range input or select box.
+- **Scrolling** (any panel, list or grid: tick *Scrolls when what is inside does not fit*): direction, snapping to rows, pages or a grid, elastic edges, momentum, where the focus brings the view, mapped scroll buttons with held repeat, a scrollbar made of UI prefab parts on any side, "more above / below" widgets, sticking to the end, rolling by itself, lazy rows, and bound values (`name.row`, `.page`...). Needs the flag `uiScroll`. See [recipes/scrolling.md](recipes/scrolling.md).
+- **Form controls** (slider, choice list, tick box, text and number field, key binding, tabs): each is made of **parts** that are ordinary UI prefabs; four starting styles (Flat, Old paper, Sci-fi, Pixel art); *Show it in the picture as* previews the mouse-over, pressed, selected-by-keys, disabled and open states. Needs the flag `uiControls` (text and number fields and the map need none). See [recipes/form-controls.md](recipes/form-controls.md).
+- **Map**: source, projection, view, layers, marker kinds, navigation and events, with the Quick Actions *mapHighlight*, *mapChoose*, *mapZoom*, *mapCamera*, *mapReveal* and *mapMarker*. See [recipes/the-map-widget.md](recipes/the-map-widget.md).
+
+A widget that needs a flag the project has not got says so in its inspector and offers **Switch it on for this project**. Every new project has both flags. The buttons they use (`ui_scroll_*`, `ui_page_up`, `ui_page_down`, `ui_zoom_in`, `ui_zoom_out`, `ui_recentre`) are ordinary controls the player can rebind. Plugins add layers, fog rules, marker sources and parts through the SDK ([plugins/extension-points.md](plugins/extension-points.md)).
 
 ### Placing and sizing
 **Pinned to** is a 3 x 3 grid plus *fill*. Drag a widget in the picture and it pins itself to the nearest of the nine places and keeps the distance you left. A widget inside a row, column or grid is placed by its container; drag it to reorder. Width and height can be **pixels**, **fit the contents** or **fill the room**. The handles on the selected widget resize it. The bar above the picture has **Preview as** (16:9, 16:10, 21:9, 4:3, a sideways phone) and **Safe area** (a margin kept free at the edges, drawn as a green dashed line).

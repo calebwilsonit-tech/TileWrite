@@ -6,6 +6,7 @@ import { coveredRect, fogDraw } from './fog';
 import { parseColour, regionItems, settingBool, settingNumber, settingText, terrainColours, cssOfRgba } from './layers';
 import { collectMarkers, followedCell, type MapMarker } from './markers';
 import { choosable as choosableOf, startMarker } from './nav';
+import { isRevealed } from './fog';
 import { fogCells, liveMaps, mapRun, type MapRun } from './state';
 import type { LayerData, LayerPlan, MapInfo } from './view';
 import { cellToPlane, fitZoom, makeProjection, planeToView, resolveWorld, rotationOf, type MapView, type MapWorld, type Projection } from './world';
@@ -148,6 +149,16 @@ export function buildMap(sim: Simulation, out: ViewNode, node: UiNode, depth: nu
     return spec.layers.length;
   };
   const markers = collectMarkers({ sim, node, spec, run, zoom, fogs, toView, layerOf });
+  /** Is the place known: every fog layer that covers it has revealed it? (1 or 0) */
+  const knownAt = (x: number, y: number): number => {
+    const cx = Math.floor(x);
+    const cy = Math.floor(y);
+    for (const f of fogs) {
+      const outside = f.rect !== null && (cx < f.rect.x0 || cx >= f.rect.x1 || cy < f.rect.y0 || cy >= f.rect.y1);
+      if (!outside && !isRevealed(f.state, cx, cy)) return 0;
+    }
+    return 1;
+  };
   const inLayer = new Set<string>();
   spec.layers.forEach((layer, index) => {
     const shown = withScope(sim, layerScope, () => evalUiCondition(src, layer.visible)) && (layer.zoomMin <= 0 || zoom >= layer.zoomMin) && (layer.zoomMax <= 0 || zoom <= layer.zoomMax);
@@ -160,7 +171,7 @@ export function buildMap(sim: Simulation, out: ViewNode, node: UiNode, depth: nu
           break;
         case 'regions': {
           const when = settingText(s.when);
-          const items = regionItems(world.regions, s, (r) => when === '' || withScope(sim, { ...layerScope, 'region.name': r.name, 'region.id': r.id, 'region.w': r.w, 'region.h': r.h, 'marker.revealed': 1 }, () => evalUiCondition(src, when)));
+          const items = regionItems(world.regions, s, (r) => when === '' || withScope(sim, { ...layerScope, 'region.name': r.name, 'region.id': r.id, 'region.w': r.w, 'region.h': r.h, 'region.revealed': knownAt(r.x + r.w / 2, r.y + r.h / 2) }, () => evalUiCondition(src, when)));
           data = { kind: 'regions', items, style: settingText(s.style, 'fill'), lineWidth: settingNumber(s.lineWidth, 2) };
           break;
         }
@@ -177,7 +188,7 @@ export function buildMap(sim: Simulation, out: ViewNode, node: UiNode, depth: nu
           const when = settingText(s.when);
           const items: { text: string; x: number; y: number }[] = [];
           if (settingText(s.from, 'regions') === 'regions') {
-            for (const r of world.regions) if (r.name && (when === '' || withScope(sim, { ...layerScope, 'region.name': r.name, 'region.id': r.id }, () => evalUiCondition(src, when)))) items.push({ text: sim.assets.strings.t(r.name), x: r.x + r.w / 2, y: r.y + r.h / 2 });
+            for (const r of world.regions) if (r.name && (when === '' || withScope(sim, { ...layerScope, 'region.name': r.name, 'region.id': r.id, 'region.revealed': knownAt(r.x + r.w / 2, r.y + r.h / 2) }, () => evalUiCondition(src, when)))) items.push({ text: sim.assets.strings.t(r.name), x: r.x + r.w / 2, y: r.y + r.h / 2 });
           } else {
             for (const m of markers) if (m.kind === settingText(s.kind) && m.label && !m.cluster && (when === '' || withScope(sim, m.scope, () => evalUiCondition(src, when)))) items.push({ text: m.label, x: m.x, y: m.y });
           }
@@ -197,7 +208,8 @@ export function buildMap(sim: Simulation, out: ViewNode, node: UiNode, depth: nu
   // the highlight
   const here = followedCell(sim, 'player');
   const list = choosableOf(markers);
-  if (!run.started) {
+  // (the start is decided once there is something to start on: markers can appear after the map is first drawn)
+  if (!run.started && list.length > 0) {
     run.started = true;
     run.highlight = startMarker(markers, spec.nav.start, here)?.id ?? '';
   }

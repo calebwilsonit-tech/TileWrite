@@ -51,11 +51,16 @@ export function observeInPage(): Omit<Seen, 'step'> {
       const controls = [...layer.querySelectorAll('.tw-w')].filter((e) => kinds.some((k) => e.classList.contains(k)) && !(e.parentElement?.closest('.tw-w.clickable')) && shown(e));
       const value = (e: Element): string => {
         if (e.classList.contains('slider')) {
+          // (the browser's own range input, or the slider the engine draws, which says its value the standard way)
           const input = e.querySelector('input') as HTMLInputElement | null;
-          return input ? `${Math.round(Number(input.value) * 100)}%` : text(e);
+          const now = input ? input.value : e.getAttribute('aria-valuenow');
+          return now !== null ? `${Math.round(Number(now) * 100)}%` : text(e);
         }
-        if (e.classList.contains('dropdown')) return (e.querySelector('select') as HTMLSelectElement | null)?.selectedOptions[0]?.textContent?.trim() ?? text(e);
-        if (e.classList.contains('toggle')) return text(e).startsWith('☑') ? 'on' : 'off';
+        if (e.classList.contains('dropdown')) return (e.querySelector('select') as HTMLSelectElement | null)?.selectedOptions[0]?.textContent?.trim() ?? e.getAttribute('aria-valuetext') ?? text(e);
+        if (e.classList.contains('toggle')) {
+          const checked = e.getAttribute('aria-checked');
+          return (checked !== null ? checked === 'true' : text(e).startsWith('☑')) ? 'on' : 'off';
+        }
         return text(e);
       };
       out.rows = controls.map((c) => {
@@ -262,6 +267,8 @@ async function sub(r: Recorder, inside: Seen, label: string): Promise<void> {
       if (!/^controls$|volume|zoom/i.test(inside.rows[i]!.label)) {
         await r.press(KEYS.ok);
         await r.look(`settings row ${i + 1}: chosen`);
+        // (E on a choice list opens its list in a build that draws one; Back closes it, so the rest is played from the same place as in an older build)
+        if (await r.page.evaluate(() => document.querySelector('[data-popup-list]') !== null)) await r.press(KEYS.back);
       }
       await r.press(KEYS.down);
     }

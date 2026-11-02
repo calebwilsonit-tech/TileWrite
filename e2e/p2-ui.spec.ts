@@ -141,8 +141,11 @@ test('Phase 2: screens are designed in the UI designer - widgets, layout, bindin
   expect(await page.evaluate(() => window.__play!.sim.runtime.ui.modal)).toBe(true);
   await page.getByTestId('tw-ui-Settings').click();
   await expect(page.getByTestId('tw-screen-Settings')).toBeVisible();
-  const music = page.getByTestId('tw-ui-Music').locator('input');
-  await music.fill('0.3');
+  // (a new project has the slider the engine draws, not the browser's: click the track a third of the way along)
+  const music = page.getByTestId('tw-ui-Music');
+  await expect(music).toHaveAttribute('role', 'slider');
+  const track = (await music.boundingBox())!;
+  await page.mouse.click(track.x + track.width * 0.3, track.y + track.height / 2);
   await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('tilewright.settings') ?? '{}').music)).toBeCloseTo(0.3, 1);
   await page.getByTestId('tw-ui-Back').click();
   await expect(page.getByTestId('tw-screen-Settings')).toHaveCount(0);

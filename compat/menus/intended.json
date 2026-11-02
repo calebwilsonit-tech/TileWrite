@@ -28,5 +28,20 @@
     "step": "^(Esc from the inventory \\(it was opened by its key\\)|Esc from the map)$",
     "note": "^(the game waits: true -> false|title: \"Paused\" -> \"\"|rows gone: Resume, Inventory, Map, Travel to a lit lantern, Save game, Load game, Settings, Restart this area, Quit|focus: Resume -> \\(none\\))$",
     "why": "Back from an inventory or a map that was opened by its own key closes it. The old menu went on to the Pause menu (it always went back to the menu it had not come from), so one more Esc was needed to get back to the game."
+  },
+  {
+    "step": "^settings row \\d+: chosen$",
+    "note": "^(rows new: ✓(, ✓)*|focus: .* -> ✓)$",
+    "why": "E on a choice list (Difficulty) opens its list, which the new menu draws itself (flag uiControls, D060): its options are rows, one of them chosen with a tick, and the focus is in the list. The script closes it with Back straight after, so every later step is played from the same place."
+  },
+  {
+    "step": ".*",
+    "note": "^(\"Difficulty\" says \\[hard\\] -> \\[normal\\]|setting difficulty: \"hard\" -> \"normal\")$",
+    "why": "E on the Difficulty row used to step it to the next choice (normal to hard) without showing a list. It now opens the list (flag uiControls, D060) and the choice is made in it, so the script's E leaves Difficulty as it was. Left and right on the closed box still step through the choices (tested in e2e/p4-ui-slider-dropdown.spec.ts)."
+  },
+  {
+    "step": "^controls: (opened|down)$",
+    "note": "^rows new: Scroll up \\(menus, lists\\), Scroll down \\(menus, lists\\), Scroll left \\(menus, lists\\), Scroll right \\(menus, lists\\), Page up / a big step less, Page down / a big step more, Zoom a map in, Zoom a map out, Centre a map on where you are, Attack$",
+    "why": "A project with uiScroll or uiControls (every new project) lists the buttons the new scrolling, sliders and maps use, so players can rebind them (D062)."
   }
 ]
