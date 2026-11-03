@@ -28,7 +28,7 @@ The new widget types **Text field**, **Number field** and **Map** are always dra
 | Project | Flags on | Why |
 | --- | --- | --- |
 | **The owner's project** (`compat/projects/Demo`, "Upside Down") | none | It was made before the flags. Nothing was switched on for it without the owner's say. The gravity problems found in it are fixed behind `fadeBySight` and `blockPhysics`; `compat/proposals/upside-down.md` and `upside-down-gravity.diff` say what turning them on, and the two changes to its scripts, would do (tested on a copy; **not applied**). |
-| the nine samples in `samples/` (tiles, tactics, colony, roguelike, tower defence, point and click, strategy, UI showcase, gravity room) | `fadeBySight`, `blockPhysics` | The editor saved them with the flags that existed when they were last built or opened. They have `pauseAction`, `loadRestoresHealth`, `timedGravity`, `uiScroll` and `uiControls` off, so they play as they did. |
+| the nine samples in `samples/` (tiles, tactics, colony, roguelike, tower defence, point and click, strategy, UI showcase, gravity room) | `fadeBySight`, `blockPhysics` | The editor saved them with the flags that existed when they were last built or opened. They have `pauseAction`, `loadRestoresHealth`, `timedGravity`, `uiScroll`, `uiControls` and `menuButtonsClose` off, so they play as they did. |
 | the reference game sample (`last-storytender`) | none | It has no `compat` entry. |
 | every new project, and every template | all ten | A new project plays the way the engine plays now. (`uiScroll` and `uiControls` are the two newest.) |
 
