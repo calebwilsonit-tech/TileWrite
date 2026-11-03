@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { InputMap, Simulation, legacyFlags, UiDocSchema, newWidget, openScreen, openStartScreens, pauseButtonRow, physicsSystem, DEFAULT_INPUT_MAP, type UiNode, type UiScreen } from '@tilewright/runtime';
+import { InputMap, Simulation, legacyFlags, UiDocSchema, newWidget, openScreen, openStartScreens, pauseButtonRow, physicsSystem, DEFAULT_INPUT_MAP, type CompatFlags, type UiNode, type UiScreen } from '@tilewright/runtime';
 import { backAction, routeInput, type RouterHost } from './router';
 import { addStandardSystems } from '../index';
 
@@ -29,7 +29,7 @@ const screen = (name: string, extra: Partial<UiScreen> = {}): UiScreen => ({
 });
 
 /** A game with these screens and no built-in menu (a game made in the designer). */
-function game(screens: UiScreen[], compat: { backClosesMenus: boolean } = { backClosesMenus: true }): { sim: Simulation; host: RouterHost; opened: string[]; press(...actions: string[]): void; stack(): string[] } {
+function game(screens: UiScreen[], compat: Partial<CompatFlags> = { backClosesMenus: true }): { sim: Simulation; host: RouterHost; opened: string[]; press(...actions: string[]): void; stack(): string[] } {
   const sim = new Simulation(1);
   sim.compat = { ...legacyFlags(), ...compat };
   sim.assets.ui = UiDocSchema.parse({ screens });
@@ -351,5 +351,63 @@ describe('the pause button as a Quick Action (the pauseAction flag)', () => {
     idle(g);
     g.press('pause');
     expect(g.stack()).toEqual(['Pause']);
+  });
+});
+
+describe('the inventory and map buttons close what they opened (menuButtonsClose)', () => {
+  const screens = (): UiScreen[] => [
+    screen('Hud', { opensOnStart: true, role: 'hud' }),
+    screen('Binder', { role: 'inventory', modal: true }),
+    screen('Map', { role: 'travel', modal: true }),
+    screen('Pause', { role: 'pause', modal: true }),
+  ];
+
+  it('Tab opens the inventory and Tab again closes it, without opening anything else', () => {
+    const g = game(screens(), { backClosesMenus: true, menuButtonsClose: true });
+    openScreen(g.sim, 'Hud');
+    idle(g);
+    g.press('inventory');
+    expect(g.stack()).toEqual(['Hud', 'Binder']);
+    idle(g);
+    g.press('inventory');
+    expect(g.stack()).toEqual(['Hud']);
+    idle(g);
+    expect(g.stack()).toEqual(['Hud']); // it did not open again on the same press
+  });
+
+  it('M opens the travel screen (no world map) and M again closes it', () => {
+    const g = game(screens(), { backClosesMenus: true, menuButtonsClose: true });
+    openScreen(g.sim, 'Hud');
+    idle(g);
+    g.press('map');
+    expect(g.stack()).toEqual(['Hud', 'Map']);
+    idle(g);
+    g.press('map');
+    expect(g.stack()).toEqual(['Hud']);
+  });
+
+  it('only closes its own screen when that screen is on top', () => {
+    const g = game(screens(), { backClosesMenus: true, menuButtonsClose: true });
+    openScreen(g.sim, 'Hud');
+    openScreen(g.sim, 'Binder');
+    idle(g);
+    g.press('map'); // the binder takes the buttons: the map button neither closes it nor opens the map
+    expect(g.stack()).toEqual(['Hud', 'Binder']);
+    openScreen(g.sim, 'Pause');
+    idle(g);
+    g.press('inventory'); // Pause is on top: the binder under it stays
+    expect(g.stack()).toEqual(['Hud', 'Binder', 'Pause']);
+  });
+
+  it('a project from before (no menuButtonsClose) keeps the older rule: the button does nothing while its screen is open', () => {
+    const g = game(screens(), { backClosesMenus: true });
+    openScreen(g.sim, 'Hud');
+    idle(g);
+    g.press('inventory');
+    idle(g);
+    g.press('inventory');
+    expect(g.stack()).toEqual(['Hud', 'Binder']);
+    g.press('pause'); // Back still closes it
+    expect(g.stack()).toEqual(['Hud']);
   });
 });

@@ -45,6 +45,11 @@ export const COMPAT_FLAGS = {
     help: 'Off: a slider is the browser’s range input, a choice list the browser’s select box (Interact does nothing on it), and tabs are browser buttons. On: they are made of parts (a track, a thumb, a list of options...) that you can replace with your own widgets, the mapped buttons step and open them, and nothing in a game looks like a web page.',
     since: 4,
   },
+  menuButtonsClose: {
+    label: 'The inventory and map buttons close the screens they open',
+    help: 'Off: the older rule, where the inventory button (Tab, I) and the map button (M) only open their screens; once one is open, pressing the same button again does nothing and only Back closes it. On: pressing the button again while its screen is on top closes it, and the press goes no further.',
+    since: 4,
+  },
   pauseAction: {
     label: 'The pause button is a Quick Action you can see and change',
     help: 'Off: the pause button opens the screen used as Pause by itself, which nothing in the project shows (the older rule). On: it does nothing by itself; the Quick Action "When the pause button is pressed, open the Pause screen", which every new scene starts with, does it, so you can change or remove it. Back (closing a screen) works either way.',

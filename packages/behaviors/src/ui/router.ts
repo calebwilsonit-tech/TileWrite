@@ -136,6 +136,8 @@ function route(h: RouterHost, busy: boolean, fresh: ReadonlySet<string>): void {
     if (by !== '') ui.consume('pause');
   }
   sync(sim);
+  // the inventory and map buttons close the screen they opened (the project has `menuButtonsClose`)
+  if (!busy && sim.compat.menuButtonsClose) closeByOwnButton(sim, fresh);
   // a screen that blocks input has the buttons: nothing else reacts, not even to a press it did not use
   if (r.ui.blocking || busy) return;
 
@@ -150,6 +152,31 @@ function route(h: RouterHost, busy: boolean, fresh: ReadonlySet<string>): void {
     ui.consume('map');
     // the world map when the project has one, otherwise the screen a plugin offers for travelling
     if (!(sim.assets.worldMap && sim.assets.worldMap.nodes.length > 0 && openRole(sim, 'map'))) openRole(sim, 'travel');
+  }
+}
+
+/** The game's own buttons that open a screen, and the roles of the screens each one opens. */
+const OWN_BUTTONS: readonly (readonly [string, readonly string[]])[] = [
+  ['inventory', ['inventory']],
+  ['map', ['map', 'travel']],
+];
+
+/**
+ * Pressing the inventory button while the inventory is the screen on top closes it; the same for the map button and the
+ * world map (or the travel screen it opens when the project has no world map). A screen opened on this very press is not
+ * closed by it.
+ */
+function closeByOwnButton(sim: Simulation, fresh: ReadonlySet<string>): void {
+  const ui = sim.uiInput;
+  const st = sim.runtime.ui.stack;
+  const top = st.length > 0 ? screenNamed(sim.assets, st[st.length - 1]!) : undefined;
+  if (!top || fresh.has(top.name)) return;
+  for (const [button, roles] of OWN_BUTTONS) {
+    if (!ui.pressed(button) || !roles.includes(roleOfScreen(top))) continue;
+    ui.consume(button);
+    closeScreen(sim, top.name);
+    sim.runtime.ui.last = { tick: sim.tick, action: button, by: top.name, result: `closed "${top.name}"` };
+    return;
   }
 }
 
