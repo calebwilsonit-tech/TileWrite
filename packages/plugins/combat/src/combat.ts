@@ -385,6 +385,8 @@ export interface MeleeAttack {
   hitStop: number;
   /** Pixels the screen shakes when the swing connects. */
   shake: number;
+  /** Show the pale diamond on the ground where the swing lands. A game with its own swing art turns it off. */
+  showSwing: boolean;
 }
 
 interface MeleeState {
@@ -411,7 +413,7 @@ export const meleeAttack = behaviorDef<MeleeAttack>({
   category: 'Combat',
   description: 'Press the Attack button (J) to swing in the direction you face, hurting enemies in front of you. A short wind-up and recovery keep it fair.',
   phase: 'control',
-  defaults: { damage: 1, range: 1.4, arc: 120, windup: 0.08, active: 0.16, cooldown: 0.3, knockback: 7, hurts: 'enemies', hitStop: 0.05, shake: 2 },
+  defaults: { damage: 1, range: 1.4, arc: 120, windup: 0.08, active: 0.16, cooldown: 0.3, knockback: 7, hurts: 'enemies', hitStop: 0.05, shake: 2, showSwing: true },
   fields: [
     { key: 'damage', label: 'Damage', type: 'number', min: 0, max: 99, step: 1 },
     { key: 'range', label: 'Reach (cells)', type: 'number', min: 0.5, max: 6, step: 0.1 },
@@ -432,6 +434,7 @@ export const meleeAttack = behaviorDef<MeleeAttack>({
     },
     { key: 'hitStop', label: 'Freeze on a hit (seconds)', type: 'number', min: 0, max: 0.2, step: 0.01 },
     { key: 'shake', label: 'Screen shake on a hit (pixels)', type: 'number', min: 0, max: 14, step: 0.5 },
+    { key: 'showSwing', label: 'Show the swing marker on the ground', type: 'boolean' },
   ],
   inputs: [],
   outputs: [],
@@ -478,6 +481,7 @@ export const meleeAttack = behaviorDef<MeleeAttack>({
 });
 
 function beginSwing(ctx: SimContext, e: Entity, s: MeleeAttack): void {
+  if (s.showSwing === false) return; // a game that draws its own swing (a strike pose) turns the marker off
   const t = transform(e);
   const f = facingVector(t.facing);
   ctx.world.spawn({
