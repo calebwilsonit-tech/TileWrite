@@ -2,7 +2,7 @@ import { Application, Container, Graphics, Rectangle, Sprite as PixiSprite, Text
 import { ANIMATOR, type Animator } from '../anim/animator';
 import type { CellMark } from '../story/cutscene';
 import type { BlockFace, CellStack } from '../tilemap/tilemap';
-import { DEFAULT_ISO, gridToScreen, relToScreen, rotateGrid, screenToCell, screenToGrid, unrotateVec, type Cell, type IsoConfig, type ViewRotation } from '../iso/math';
+import { DEFAULT_ISO, gridToScreen, relToScreen, rotateGrid, screenToCell, screenToGrid, rotateVec, unrotateVec, type Cell, type IsoConfig, type ViewRotation } from '../iso/math';
 import { ATTACH, C, LABEL, pictureForGravity, type Attach, type Label, type Sprite, type TransformIso } from '../scene/components';
 import { gravityFrame, spriteBox } from '../physics/gravity';
 import type { Body } from '../physics/physics';
@@ -548,7 +548,7 @@ export class IsoRenderer {
       this.drawPit(g);
       box = { ...box, maxZ: height };
     } else if (slope && slope.style === 'stairs') {
-      this.drawStairs(g, slope.dir, bottom, def);
+      if (!this.drawStairArt(g, slope.dir, def)) this.drawStairs(g, slope.dir, bottom, def);
     } else if (slope) {
       this.drawCell(g, slopeCorners(slope.dir), bottom, def);
     } else {
@@ -616,7 +616,9 @@ export class IsoRenderer {
       if (b.shape === 'stairs' || b.shape === 'ramp') {
         // a stair or ramp block: the same pictures a stair or ramp column has, one level tall, turned the way it rises
         const dir = (b.rot ?? 0) + 1;
-        if (b.shape === 'stairs') this.drawStairs(g, dir, 0, own);
+        if (b.shape === 'stairs') {
+          if (!this.drawStairArt(g, dir, own)) this.drawStairs(g, dir, 0, own);
+        }
         else this.drawCell(g, slopeCorners(dir), 0, own, faces);
         add(g, b.z, { id: 0, minX: x, maxX: x + 1, minY: y, maxY: y + 1, minZ: b.z, maxZ: b.z + 1 }, true);
         continue;
@@ -806,6 +808,23 @@ export class IsoRenderer {
       g.poly([n1x, n1y, e1x, e1y, s1x, s1y, w1x, w1y]).fill(shade(def.top, t.light));
       g.poly([n1x, n1y, e1x, e1y, s1x, s1y, w1x, w1y]).stroke({ width: 1, color: shade(def.top, 0.8), alpha: 0.7 });
     }
+  }
+
+  /** Stairs as the tile's own picture (its `stairArt`), the one for the way they rise on screen in this view, drawn with its sprite origin on the centre of the
+   * cell floor. False when the tile has no picture for it (the flat steps are drawn instead). */
+  private drawStairArt(g: Graphics, dir: number, def: TileDef): boolean {
+    if (!def.stairArt) return false;
+    const rise = [{ x: 0, y: -1 }, { x: 1, y: 0 }, { x: 0, y: 1 }, { x: -1, y: 0 }][dir - 1];
+    if (!rise) return false;
+    const s = rotateVec(rise.x, rise.y, this.view);
+    const name = def.stairArt[s.x === 1 ? 'e' : s.x === -1 ? 'w' : s.y === 1 ? 's' : 'n'];
+    const data = name ? this.artSources.get(name.split('#')[0]!) : undefined;
+    const tex = name ? this.artTexture(name) : null;
+    if (!data || !tex) return false;
+    const spr = new PixiSprite(tex);
+    spr.position.set(-data.origin.x, -data.origin.y);
+    g.addChild(spr);
+    return true;
   }
 
   /** A hole: dark floor two levels down and the two far walls you can see into. */
@@ -1127,7 +1146,8 @@ export class IsoRenderer {
   registerSprite(data: SpriteData): void {
     this.unregisterSprite(data.name);
     this.artSources.set(data.name, data);
-    if (Object.values(this.tileset).some((d) => d.art === data.name || d.leftArt === data.name || d.rightArt === data.name || d.anim?.frames.some((f) => f.split('#')[0] === data.name))) this.rebuildTiles();
+    const uses = (n: string | undefined): boolean => n !== undefined && n.split('#')[0] === data.name; // ("floor#3" is a frame of the sprite "floor")
+    if (Object.values(this.tileset).some((d) => uses(d.art) || uses(d.leftArt) || uses(d.rightArt) || (d.stairArt && Object.values(d.stairArt).some(uses)) || d.anim?.frames.some(uses))) this.rebuildTiles();
     const sheet = exportSheet(data, { powerOfTwo: false, padding: 1, png: false });
     const canvas = document.createElement('canvas');
     canvas.width = sheet.width;

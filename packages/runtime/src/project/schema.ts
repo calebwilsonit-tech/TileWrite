@@ -237,6 +237,7 @@ export const TileDefSchema = z.object({
   leftArt: z.string().optional(),
   rightArt: z.string().optional(),
   faceLevels: z.number().min(0.5).max(8).optional(),
+  stairArt: z.object({ n: z.string().optional(), e: z.string().optional(), s: z.string().optional(), w: z.string().optional() }).optional(),
   anim: z.object({ frames: z.array(z.string()).min(1), fps: z.number().min(0.1).max(30) }).optional(),
   variants: z.array(z.object({ tile: z.number().int().min(1), weight: z.number().min(0).max(100) })).optional(),
   props: z

@@ -22,6 +22,8 @@ export interface TileDef {
   rightArt?: string;
   /** How many levels tall the picture on a side face is: a taller face repeats it upwards (1 = a one-level wall picture, 2 = a two-level cliff picture). */
   faceLevels?: number;
+  /** Pictures of this tile as a flight of stairs, one per way it rises on screen (n up-right, e down-right, s down-left, w up-left), drawn instead of the flat steps; each is drawn with its sprite origin on the centre of the cell floor. */
+  stairArt?: { n?: string; e?: string; s?: string; w?: string };
   /** Frames of a moving top (water, lava, torches): sprites shown one after the other, the same on every cell so the map moves together. */
   anim?: { frames: string[]; fps: number };
   /** Other tiles the painter may use instead of this one, chosen at random by weight ("grass with flowers"). */
