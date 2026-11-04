@@ -5,7 +5,7 @@ import * as sdk from '@tilewright/plugin-sdk/legacy'; // (a plugin shipped with 
 import { PluginsBundleSchema } from '@tilewright/exporter';
 import { activate, defaultImporter, evaluatePlugin, host, parseManifest, installScriptGlobals, loadScript, syncCustomBlocks, useProject, type Transpiler } from '@tilewright/behaviors';
 import { GameManifestSchema, ScriptsBundleSchema, type GameManifest } from '@tilewright/exporter';
-import { joinPath } from '../renderer/project/api';
+import { api, joinPath } from '../renderer/project/api';
 import { assetFs } from '../renderer/project/assetFs';
 import { loadScene, openProject } from '../renderer/project/io';
 import { loadAllPrefabs } from '../renderer/project/prefabs';
@@ -27,9 +27,9 @@ interface GameApi {
   setFullscreen(on: boolean): Promise<void>;
 }
 // the door to the computer is handed over once, to this file, before any plugin runs (see game/game-preload.ts)
-const raw = window.tilewright as unknown as { unlock?: () => { game: GameApi } | null; game: GameApi };
-const door = typeof raw.unlock === 'function' ? raw.unlock() : raw;
-const game = (): GameApi => door!.game;
+// The door to the computer is handed over only once, and api.ts (imported above, so it runs first) has already taken it.
+// Asking `window.tilewright` again would get nothing, so the game's part of the door comes from there too.
+const game = (): GameApi => (api() as unknown as { game: GameApi }).game;
 
 const stage = document.getElementById('stage')!;
 let session: PlaySession | null = null;
