@@ -1,7 +1,7 @@
 import type { SimContext } from '../core/simulation';
 import { crossedEvents, findClip, sampleClip } from '../sprites/animation';
 import type { Body } from '../physics/physics';
-import { C, type TransformIso } from '../scene/components';
+import { C, type Sprite, type TransformIso } from '../scene/components';
 
 export const ANIMATOR = 'animator';
 
@@ -34,6 +34,8 @@ export interface AnimatorController {
 export interface Animator {
   /** Sprite asset name, e.g. "hero". */
   asset: string;
+  /** Plays whichever sprite the entity's Sprite names now (a script that swaps the picture swaps the animation too), from the start of its `clip`. */
+  follow?: boolean;
   clip: string;
   /** Milliseconds into the current clip. */
   time: number;
@@ -127,6 +129,15 @@ export function animationSystem(ctx: SimContext): void {
   for (const e of ctx.world.query(C.Transform, ANIMATOR)) {
     const a = e.require<Animator>(ANIMATOR);
     const t = e.require<TransformIso>(C.Transform);
+    const shown = a.follow ? e.get<Sprite>(C.Sprite) : undefined;
+    if (shown && shown.asset && shown.asset !== a.asset) {
+      a.asset = shown.asset;
+      a.state = '';
+      a.time = 0;
+      a.frame = 0;
+      a.pos = 0;
+      a.done = false;
+    }
     const sprite = ctx.assets.sprites.get(a.asset);
     if (!sprite) continue;
 
