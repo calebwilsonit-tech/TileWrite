@@ -25,6 +25,7 @@ interface GameApi {
   quit(): Promise<void>;
   toggleFullscreen(): Promise<void>;
   setFullscreen(on: boolean): Promise<void>;
+  setSize(width: number, height: number): Promise<void>;
 }
 // the door to the computer is handed over once, to this file, before any plugin runs (see game/game-preload.ts)
 // The door to the computer is handed over only once, and api.ts (imported above, so it runs first) has already taken it.
@@ -221,6 +222,7 @@ async function boot(): Promise<void> {
     },
     quit: () => void game().quit(),
     setFullscreen: (on) => void game().setFullscreen(on),
+    setWindowSize: (width, height) => void game().setSize(width, height),
     autoPlay: null,
     ...(project.title?.enabled ? { title: { text: manifest.name, subtitle: project.title.subtitle } } : {}),
     flags: () => ({ ai: false, triggers: false, lights: false, depth: false, profiler: false }),

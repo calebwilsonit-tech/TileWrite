@@ -89,6 +89,11 @@ export function registerPreview(deps: Deps): void {
       },
       quit: () => win.close(),
       fullscreen: (_e, on) => win.setFullScreen(on ?? !win.isFullScreen()),
+      setSize: (_e, width, height) => {
+        if (win.isFullScreen()) win.setFullScreen(false);
+        win.setContentSize(width, height);
+        win.center();
+      },
     };
     const id = win.webContents.id;
     running.set(id, { ctx, win, tmp, projectDir });

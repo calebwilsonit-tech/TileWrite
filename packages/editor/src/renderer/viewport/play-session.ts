@@ -95,6 +95,8 @@ export interface PlayOptions {
   record: boolean;
   /** Switch the window to or from full screen (only a game in its own window can). */
   setFullscreen?: (on: boolean) => void;
+  /** Make the game's window this size (an exported game); absent where the window is not the game's own (the editor's Play). */
+  setWindowSize?: (width: number, height: number) => void;
   /** The project's prefabs, sprites and story as they are now (for hot reload while playing in the editor). */
   liveAssets?: () => { prefabs: ReadonlyMap<string, PrefabData>; sprites: ReadonlyMap<string, SpriteData>; story: PlayOptions['story']; data?: PlayOptions['data']; skins?: readonly SkinData[]; worldMap?: WorldMapData | null; layout?: UiLayout; uiDoc?: UiDoc; input?: ProjectInput; tables?: readonly TableData[] };
   /** The player's other looks. */
@@ -410,6 +412,13 @@ export class PlaySession {
     if (!this.sim.runtime.view.cameraZoom) this.o.renderer.camera.zoom = s.cameraZoom;
     this.fpsEl.style.display = s.showFps ? 'block' : 'none';
     if (initial && s.fullscreen !== undefined) this.o.setFullscreen?.(s.fullscreen);
+    if (initial) this.applyResolution();
+  }
+
+  /** The window's size, when the player chose one ('auto' leaves it alone). */
+  private applyResolution(): void {
+    const m = /^(\d+)x(\d+)$/.exec(this.settings.resolution);
+    if (m) this.o.setWindowSize?.(Number(m[1]), Number(m[2]));
   }
 
   private applyVolumes(): void {
@@ -721,6 +730,7 @@ export class PlaySession {
         this.setSettings({ ...this.settings, ...patch });
         this.sim.runtime.difficulty = this.settings.difficulty;
         if (patch.fullscreen !== undefined) this.o.setFullscreen?.(patch.fullscreen);
+        if (patch.resolution !== undefined) this.applyResolution();
         this.applyFeelSettings();
         this.applyVolumes();
         this.applyLanguage();
@@ -760,6 +770,7 @@ export class PlaySession {
         } else void this.enterScene(scene, spawn !== '' ? { spawn } : {});
       },
       quit: () => this.o.quit(),
+      windowSize: this.o.setWindowSize ? { set: (w, h) => this.o.setWindowSize?.(w, h) } : undefined,
       fullscreen: this.o.setFullscreen ? { get: () => window.outerWidth >= screen.width && window.outerHeight >= screen.height, set: (on) => this.o.setFullscreen?.(on) } : undefined,
     };
     return this.hostObj;

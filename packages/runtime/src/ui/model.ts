@@ -96,6 +96,11 @@ export const UiStyleSchema = z.object({
   scale: z.number().min(0.5).max(3).optional(),
   /** The size setting of the game's theme (Story, Interface) scales it as well. */
   themeScale: z.boolean().optional(),
+  /**
+   * The widget is drawn for a 1280 x 720 window and follows the real one: "stage" grows or shrinks so the whole thing always fits (a menu laid out
+   * on a stage), "hud" does the same and also follows the player's interface size (a piece pinned to a corner of the window).
+   */
+  fit: z.enum(['stage', 'hud']).optional(),
 });
 export type UiStyle = z.infer<typeof UiStyleSchema>;
 

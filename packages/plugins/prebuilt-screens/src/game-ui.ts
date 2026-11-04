@@ -173,7 +173,7 @@ export class GameUi implements GameUiLike {
         Object.entries(host.actionLabels?.() ?? activeActionLabels())
           .filter(([action]) => !(action in UI_ACTIONS) || host.sim.compat.uiScroll || host.sim.compat.uiControls)
           .map(([action, label]) => ({ action, label })),
-      can: (what) => (what === 'quit' ? host.quit !== undefined : what === 'fullscreen' ? host.fullscreen !== undefined : false),
+      can: (what) => (what === 'quit' ? host.quit !== undefined : what === 'fullscreen' ? host.fullscreen !== undefined : what === 'resolution' ? host.windowSize !== undefined : false),
       choices: (what) => this.choicesFor(what),
     });
     this.root.setAttribute('data-testid', 'tw-ui');
@@ -285,6 +285,12 @@ export class GameUi implements GameUiLike {
     const sim = this.host.sim;
     if (what === 'skin') return [{ value: '', label: 'Original' }, ...availableSkins(sim.assets.skins, sim.runtime.vars, carryingOf(contextOf(sim))).map((s) => ({ value: s.id, label: s.name }))];
     if (what === 'language') return languageChoices(sim.assets.strings).map((l) => ({ value: l.code, label: l.name }));
+    // the window sizes that fit this screen, and "let the window decide"
+    if (what === 'resolution') {
+      const sizes: [number, number][] = [[1280, 720], [1366, 768], [1600, 900], [1920, 1080], [2560, 1440], [3840, 2160]];
+      const fits = sizes.filter(([w, h]) => w <= screen.availWidth && h <= screen.availHeight);
+      return [{ value: 'auto', label: 'Window size: free' }, ...fits.map(([w, h]) => ({ value: `${w}x${h}`, label: `${w} x ${h}` }))];
+    }
     return [];
   }
 

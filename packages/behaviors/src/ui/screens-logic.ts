@@ -244,6 +244,7 @@ export function hostScope(sim: Simulation): Record<string, VariableValue> {
   return {
     'host.quit': b?.can?.('quit') ? 1 : 0,
     'host.fullscreen': b?.can?.('fullscreen') ? 1 : 0,
+    'host.resolutions': b?.can?.('resolution') ? 1 : 0,
     'host.skins': b?.choices?.('skin').length ?? 0,
     'host.languages': b?.choices?.('language').length ?? 0,
     'host.hasSave': saves.length > 0 ? 1 : 0,

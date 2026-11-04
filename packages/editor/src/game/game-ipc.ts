@@ -18,6 +18,8 @@ export interface GameContext {
   quit(e: IpcMainInvokeEvent): void;
   /** Switch full screen on, off, or (undefined) the other way. */
   fullscreen(e: IpcMainInvokeEvent, on?: boolean): void;
+  /** Make the picture of the window this size (and leave full screen). */
+  setSize(e: IpcMainInvokeEvent, width: number, height: number): void;
 }
 
 function inside(root: string, file: string): boolean {
@@ -53,6 +55,9 @@ export function registerGameIpc(prefix: string, contextFor: (e: IpcMainInvokeEve
   on('game:crash', (ctx, _e, text: string) => ctx.writeLog('crash', String(text).slice(0, 200_000)));
   on('game:quit', (ctx, e) => ctx.quit(e));
   on('game:fullscreen', (ctx, e, flag?: unknown) => ctx.fullscreen(e, typeof flag === 'boolean' ? flag : undefined));
+  on('game:size', (ctx, e, w: unknown, h: unknown) => {
+    if (typeof w === 'number' && typeof h === 'number' && Number.isFinite(w) && Number.isFinite(h)) ctx.setSize(e, Math.round(Math.min(Math.max(w, 640), 7680)), Math.round(Math.min(Math.max(h, 360), 4320)));
+  }),
   on('fs:read', (ctx, _e, file: string) => fs.readFile(readable(ctx, file), 'utf8'));
   on('fs:readBinary', async (ctx, _e, file: string) => new Uint8Array(await fs.readFile(readable(ctx, file))));
   on('fs:exists', async (ctx, _e, file: string) => {

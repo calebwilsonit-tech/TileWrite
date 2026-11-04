@@ -44,6 +44,7 @@ export const HOST_VALUES: [string, string][] = [
   ['map.title', 'The title of the world map'],
   ['host.quit', 'Can the game quit (1 or 0)'],
   ['host.fullscreen', 'Can it go full screen (1 or 0)'],
+  ['host.resolutions', 'Can the game choose the size of its window (1 or 0)'],
   ['host.hasSave', 'Is there a save to continue from (1 or 0)'],
   ['host.latestSave', 'Where and when the latest save was made'],
   ['host.skins', 'How many looks the player can choose between'],

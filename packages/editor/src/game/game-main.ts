@@ -78,6 +78,14 @@ function registerIpc(): void {
       const win = BrowserWindow.fromWebContents(e.sender);
       win?.setFullScreen(on ?? !win.isFullScreen());
     },
+    setSize: (e, width, height) => {
+      const win = BrowserWindow.fromWebContents(e.sender);
+      if (!win) return;
+      if (win.isFullScreen()) win.setFullScreen(false);
+      if (win.isMaximized()) win.unmaximize();
+      win.setContentSize(width, height);
+      win.center();
+    },
   }));
 }
 function createWindow(): BrowserWindow {

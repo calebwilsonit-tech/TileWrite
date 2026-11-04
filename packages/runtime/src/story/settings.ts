@@ -14,6 +14,10 @@ export const SettingsSchema = z.object({
   screenShake: z.boolean().default(true),
   /** Full screen (exported games only). Unset = whatever the game was exported with. */
   fullscreen: z.boolean().optional(),
+  /** How big the game's own menus and heads-up display are drawn, on top of fitting the window (0.5 to 2; 1 is the normal size). */
+  uiScale: z.number().min(0.5).max(2).default(1),
+  /** The window's size in an exported game: 'auto' leaves it to the player (they can drag it), or 'WIDTHxHEIGHT' of the picture. */
+  resolution: z.string().regex(/^(auto|\d{3,5}x\d{3,5})$/).default('auto'),
   /** How close the camera is: 1 is the normal view. */
   cameraZoom: z.number().min(0.5).max(2).default(1),
   /** Show the frames per second in a corner. */

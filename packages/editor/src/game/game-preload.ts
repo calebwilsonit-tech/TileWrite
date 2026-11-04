@@ -28,6 +28,7 @@ const door = {
     quit: () => invoke<void>('game:quit'),
     toggleFullscreen: () => invoke<void>('game:fullscreen'),
     setFullscreen: (on: boolean) => invoke<void>('game:fullscreen', on),
+    setSize: (width: number, height: number) => invoke<void>('game:size', width, height),
   },
 };
 let handedOver = false;

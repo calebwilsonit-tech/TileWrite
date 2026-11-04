@@ -108,6 +108,10 @@ function setRichText(target: HTMLElement, text: string): void {
   );
 }
 
+/** The window size the game's own screens are drawn for (UiStyle.fit). */
+const FIT_W = 1280;
+const FIT_H = 720;
+
 type StyleKey = 'hover' | 'pressed' | 'disabled' | 'focus';
 
 function cssOf(s: UiStyle, scrollerOn = false): Record<string, string> {
@@ -125,7 +129,9 @@ function cssOf(s: UiStyle, scrollerOn = false): Record<string, string> {
   if (s.shadow) out['box-shadow'] = '0 3px 10px #0008';
   if (s.scroll && !scrollerOn) out.overflow = 'auto';
   if (s.maxH !== undefined) out['max-height'] = `${s.maxH}%`;
-  if (s.themeScale) out.zoom = `calc(${s.scale ?? 1} * var(--tw-scale, 1))`;
+  if (s.fit === 'stage') out.zoom = `calc(${s.scale ?? 1} * var(--tw-fit, 1))`;
+  else if (s.fit === 'hud') out.zoom = `calc(${s.scale ?? 1} * var(--tw-fit, 1) * var(--tw-ui, 1))`;
+  else if (s.themeScale) out.zoom = `calc(${s.scale ?? 1} * var(--tw-scale, 1))`;
   else if (s.scale !== undefined && s.scale !== 1) out.zoom = String(s.scale);
   return out;
 }
@@ -367,6 +373,11 @@ export class UiScreens {
     const wantedLayers = new Set<string>();
     const safe = sim.assets.ui.safeArea;
     this.root.style.inset = safe > 0 ? `${safe * 100}%` : '0';
+    // what a widget drawn for a 1280 x 720 window needs to follow the real one (see UiStyle.fit): the window's ratio, and the player's interface size
+    const fit = Math.min(Math.max(Math.min(this.root.clientWidth / FIT_W, this.root.clientHeight / FIT_H), 0.3), 4);
+    const ui = Math.min(Math.max(Number(uiBridge(sim)?.getSetting('uiScale') ?? 1) || 1, 0.5), 2);
+    if (this.root.style.getPropertyValue('--tw-fit') !== String(fit)) this.root.style.setProperty('--tw-fit', String(fit));
+    if (this.root.style.getPropertyValue('--tw-ui') !== String(ui)) this.root.style.setProperty('--tw-ui', String(ui));
     screens.forEach(({ screen, view }, i) => {
       wantedLayers.add(screen.name);
       let layer = this.layers.get(screen.name);

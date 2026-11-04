@@ -33,6 +33,8 @@ export interface GameUiHost {
   quit?(): void;
   /** Full screen on and off; only a game running in its own window can offer it. */
   fullscreen?: { get(): boolean; set(on: boolean): void };
+  /** Set the size of the game's window (an exported game); absent where the window is not the game's own. */
+  windowSize?: { set(width: number, height: number): void };
   /** A sprite's first picture as an image address, for image widgets. */
   spriteUrl?(name: string): string | null;
   /** Does the pause button open Pause by itself? False when the project has its own rule for it. Default: yes. */
