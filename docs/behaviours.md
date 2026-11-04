@@ -180,6 +180,7 @@ Press the Attack button (J) to swing in the direction you face, hurting enemies 
 | Hurts | `hurts` | select | "enemies" | `enemies`, `anything`, `player` |
 | Freeze on a hit (seconds) | `hitStop` | number | 0.05 | 0 to 0.2 |
 | Screen shake on a hit (pixels) | `shake` | number | 2 | 0 to 14 |
+| Show the swing marker on the ground | `showSwing` | boolean | true |  |
 
 ### Ranged Attack
 
