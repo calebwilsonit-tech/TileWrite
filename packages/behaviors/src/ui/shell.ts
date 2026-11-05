@@ -35,6 +35,8 @@ export interface GameUiHost {
   fullscreen?: { get(): boolean; set(on: boolean): void };
   /** Set the size of the game's window (an exported game); absent where the window is not the game's own. */
   windowSize?: { set(width: number, height: number): void };
+  /** What the player used last (keys and mouse, or a pad) and which kind of pad it is, so prompts can show the right buttons. */
+  device?(): { pad: boolean; kind: 'xbox' | 'ps' | 'switch' };
   /** A sprite's first picture as an image address, for image widgets. */
   spriteUrl?(name: string): string | null;
   /** Does the pause button open Pause by itself? False when the project has its own rule for it. Default: yes. */

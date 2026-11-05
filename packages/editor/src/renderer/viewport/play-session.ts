@@ -770,6 +770,7 @@ export class PlaySession {
         } else void this.enterScene(scene, spawn !== '' ? { spawn } : {});
       },
       quit: () => this.o.quit(),
+      device: () => ({ pad: this.source.device === 'pad', kind: this.source.padKind() }),
       windowSize: this.o.setWindowSize ? { set: (w, h) => this.o.setWindowSize?.(w, h) } : undefined,
       fullscreen: this.o.setFullscreen ? { get: () => window.outerWidth >= screen.width && window.outerHeight >= screen.height, set: (on) => this.o.setFullscreen?.(on) } : undefined,
     };

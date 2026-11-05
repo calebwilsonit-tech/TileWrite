@@ -45,6 +45,8 @@ export interface UiBridge {
   controls?(): { action: string; label: string }[];
   /** The game's name and the line under it, while the title screen is up (null otherwise). */
   title?(): { text: string; subtitle: string } | null;
+  /** What the player used last, and the kind of pad (see GameUiHost.device). */
+  device?(): { pad: boolean; kind: 'xbox' | 'ps' | 'switch' };
   /** Words for what the host can do, so a screen can hide what it cannot ("fullscreen", "quit"). */
   can?(what: string): boolean;
   /** The languages, appearances and so on a settings choice offers: name -> [value, shown name] pairs. */
@@ -245,6 +247,11 @@ export function hostScope(sim: Simulation): Record<string, VariableValue> {
     'host.quit': b?.can?.('quit') ? 1 : 0,
     'host.fullscreen': b?.can?.('fullscreen') ? 1 : 0,
     'host.resolutions': b?.can?.('resolution') ? 1 : 0,
+    // which buttons a prompt shows: the keys (all 0), an Xbox-style pad, a PlayStation pad or a Switch pad
+    'host.pad': b?.device?.().pad ? 1 : 0,
+    'host.xbox': b?.device?.().pad && b.device().kind === 'xbox' ? 1 : 0,
+    'host.ps': b?.device?.().pad && b.device().kind === 'ps' ? 1 : 0,
+    'host.switch': b?.device?.().pad && b.device().kind === 'switch' ? 1 : 0,
     'host.skins': b?.choices?.('skin').length ?? 0,
     'host.languages': b?.choices?.('language').length ?? 0,
     'host.hasSave': saves.length > 0 ? 1 : 0,
@@ -551,12 +558,15 @@ export interface WorldUiView {
 export function worldViews(sim: Simulation): WorldUiView[] {
   const out: WorldUiView[] = [];
   const player = sim.world.withTag('player')[0]?.get<{ x: number; y: number }>('transform');
+  let host: Record<string, VariableValue> | undefined;
   for (const e of sim.world.query('worldUi')) {
     const s = { prefab: '', height: 1.4, showWhen: '', maxDistance: 0, ...(e.get<Record<string, unknown>>('worldUi') ?? {}) } as { prefab: string; height: number; showWhen: string; maxDistance: number };
     if (!s.prefab || !sim.assets.ui.prefabs.some((p) => p.name === s.prefab)) continue;
     const t = e.get<{ x: number; y: number }>('transform');
     if (s.maxDistance > 0 && player && t && Math.hypot(player.x - t.x, player.y - t.y) > s.maxDistance) continue;
-    const scope = selfScope(e);
+    // (what a screen may ask about the host, {host.pad} for one, is there for a piece over an object as well)
+    host ??= hostScope(sim);
+    const scope = { ...host, ...selfScope(e) };
     const shown = withScope(sim, scope, () => evalUiCondition(sourceOf(sim), s.showWhen));
     if (!shown) continue;
     out.push({ entity: e, view: resolveNode(sim, instanceStub(`world${e.id}`, s.prefab), `world${e.id}`, scope, 0), height: s.height });

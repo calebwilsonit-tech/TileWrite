@@ -175,6 +175,7 @@ export class GameUi implements GameUiLike {
           .map(([action, label]) => ({ action, label })),
       can: (what) => (what === 'quit' ? host.quit !== undefined : what === 'fullscreen' ? host.fullscreen !== undefined : what === 'resolution' ? host.windowSize !== undefined : false),
       choices: (what) => this.choicesFor(what),
+      device: host.device ? () => host.device!() : undefined,
     });
     this.root.setAttribute('data-testid', 'tw-ui');
     this.selectBox.setAttribute('data-testid', 'tw-selectbox');

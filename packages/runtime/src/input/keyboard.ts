@@ -2,6 +2,8 @@ import type { RawInput } from './input';
 
 /** The parts of the browser Gamepad object we read (so tests can pass plain objects). */
 export interface PadLike {
+  /** The browser's name for the pad ("Xbox 360 Controller (STANDARD GAMEPAD ...)", "054c-09cc"), to tell the kinds apart. */
+  id?: string;
   connected: boolean;
   buttons: readonly { pressed: boolean; value: number }[];
   axes: readonly number[];
@@ -31,12 +33,27 @@ export function readGamepads(pads: readonly (PadLike | null)[]): RawInput {
 }
 
 /** Browser keyboard + mouse-button + gamepad source. Produces raw bindings "key:<KeyboardEvent.code>", "mouse:<button>" and "pad:...". */
+/** Which family of pad it is, from the name the browser gives it: the button pictures differ (A B X Y, cross circle square triangle). */
+export function padKindOf(id: string | undefined): 'xbox' | 'ps' | 'switch' {
+  const n = (id ?? '').toLowerCase();
+  if (/054c|sony|playstation|dualshock|dualsense|wireless controller|ps[345]/.test(n)) return 'ps';
+  if (/057e|nintendo|switch|joy-con|pro controller/.test(n)) return 'switch';
+  return 'xbox';
+}
+
 export class DomInputSource {
   private readonly raw: RawInput = {};
+  /** What the player touched last: the keys and the mouse, or a pad (a game shows the buttons of that one in its prompts). */
+  device: 'keyboard' | 'pad' = 'keyboard';
+  /** The kind of the pad that is connected (the first one). */
+  padKind(): 'xbox' | 'ps' | 'switch' {
+    return padKindOf(this.pads().find((p) => p && p.connected)?.id);
+  }
   /** Buttons pressed since the last read, so a tap shorter than one frame (a quick click, a touchpad tap) is still seen once. */
   private latched: RawInput = {};
   private readonly onKeyDown = (e: KeyboardEvent): void => {
     if (e.repeat) return;
+    this.device = 'keyboard';
     this.raw[`key:${e.code}`] = 1;
     this.latched[`key:${e.code}`] = 1;
   };
@@ -47,6 +64,7 @@ export class DomInputSource {
     for (const k of Object.keys(this.raw)) delete this.raw[k];
   };
   private readonly onMouseDown = (e: MouseEvent): void => {
+    this.device = 'keyboard';
     this.raw[`mouse:${e.button}`] = 1;
     this.latched[`mouse:${e.button}`] = 1;
     // a click on the game's picture (not on a menu or button drawn over it) is a click on the world
@@ -106,7 +124,9 @@ export class DomInputSource {
   }
 
   read(): RawInput {
-    const out: RawInput = { ...this.raw, ...this.latched, ...readGamepads(this.pads()) };
+    const padState = readGamepads(this.pads());
+    if (Object.keys(padState).length > 0) this.device = 'pad';
+    const out: RawInput = { ...this.raw, ...this.latched, ...padState };
     this.latched = {};
     const el = this.pointerEl;
     if (el && this.probe) {
