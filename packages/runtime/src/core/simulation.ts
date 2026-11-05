@@ -319,7 +319,17 @@ export class Simulation {
     // game time passes only while the world is really moving (not paused, not turn-based, not frozen by a conversation)
     if (modal !== 'freeze' && this.runtime.clock.mode === 'realtime') this.runtime.clock.elapsed++;
     this.input.update(gameplay);
-    this.uiInput.update(snapshot);
+    // the interface also moves its focus on "ui_up", "ui_down", "ui_left" and "ui_right" (a project binds the gamepad's D-pad to them, so the D-pad
+    // can mean something else while playing): to the interface they are the same as the move buttons
+    let seen = snapshot;
+    for (const d of ['up', 'down', 'left', 'right']) {
+      const extra = snapshot[`ui_${d}`];
+      if (extra) {
+        if (seen === snapshot) seen = { ...snapshot };
+        seen[`move_${d}`] = Math.max(seen[`move_${d}`] ?? 0, extra);
+      }
+    }
+    this.uiInput.update(seen);
     this.events.beginTick();
     const ctx: SimContext = {
       world: this.world,

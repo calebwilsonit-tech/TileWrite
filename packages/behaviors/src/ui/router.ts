@@ -115,25 +115,31 @@ function route(h: RouterHost, busy: boolean, fresh: ReadonlySet<string>): void {
   const ui = sim.uiInput;
   const r = sim.runtime;
   // Back belongs to what is open on top of a screen first: a field being typed in (it keeps the old words), then a pop-up list (it closes without a change)
-  if (ui.pressed('pause')) {
+  // (a project can add a "ui_back" action, the gamepad's B for instance, that goes back in menus without opening the Pause screen in play)
+  const backPressed = (): boolean => ui.pressed('pause') || ui.pressed('ui_back');
+  const eatBack = (): void => {
+    ui.consume('pause');
+    ui.consume('ui_back');
+  };
+  if (backPressed()) {
     const typing = editingFieldKey(sim);
     const popup = openPopupKey(sim);
     if (typing) {
       const field = fieldRun(sim, typing);
       field.editing = false;
       field.endedAt = sim.tick;
-      ui.consume('pause');
+      eatBack();
     } else if (popup) {
       const run = popupRun(sim, popup);
       run.open = false;
       run.query = '';
       sim.runtime.scratch.set('ui.focusRequest', run.returnTo || popup);
-      ui.consume('pause');
+      eatBack();
     }
   }
-  if (!busy && ui.pressed('pause')) {
+  if (!busy && backPressed()) {
     const by = backFromScreens(sim, fresh);
-    if (by !== '') ui.consume('pause');
+    if (by !== '') eatBack();
   }
   sync(sim);
   // the inventory and map buttons close the screen they opened (the project has `menuButtonsClose`)
