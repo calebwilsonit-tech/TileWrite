@@ -1,0 +1,191 @@
+# Changelog
+
+## 0.1.0 (2026-11-05)
+
+- Docs index lists releasing.md, behaviours.md regenerated for the lantern post hint, the window-size text is in the list of fixed texts
+- Versions: release script, installed-version check, a version in the editor and a project's engine requirement
+- Lantern post: a hint setting, so a game can hang its own prompt over it instead of the "E: rest" text
+- Prompts can follow the device: {host.pad}, {host.xbox}, {host.ps} and {host.switch}
+- Menus: a ui_back action goes back like Esc, and ui_up/down/left/right move the choice like the move buttons
+- UI fit: a style that makes a screen follow the window, an interface-size setting, and a window-size setting for exported games
+- Exported games and "Run in a window" start again: the game page takes the door from api.ts instead of asking twice
+- docs/behaviours.md: the melee attack's showSwing setting
+- Animator.follow: plays whichever sprite the entity's Sprite names, so a script that swaps the picture swaps the animation
+- Tile stairArt: a picture per way the stairs rise, drawn instead of the flat steps; tile art may name a frame (sprite#n) and the map is redrawn when it loads
+- Melee attack: showSwing option turns the pale ground diamond off
+- compat_flags.md: the samples have menuButtonsClose off
+- The inventory and map buttons close the screens they open
+- Update
+- UI controls: map examples built in the designer (strategy overview with fog and units, a hand-drawn picture with pins from a table, a dungeon that fills in room by room); marker pieces are clickable
+- UI controls: scrolling examples (carousel, credits roll, chat log, paged grid) built in the designer; page buttons go a page at a time; the end of the content is the last page; list sources can be typed in the designer; bound variables carry page, pages and count
+- UI controls: e2e that no game screen shows a browser control at four screen shapes, and that the engine's long screens keep the chosen row in view
+- UI controls: the Storytender parchment map and the corner minimap built in the designer and played with a pad; fog layers cover the part of the map they name; places carry their distance from where the player is; the inspector edits what happens when a widget is pointed at
+- UI controls: styled slider and drop-down e2e (keys, pad, mouse, touch, four screen shapes); two thumbs that overlap pick the one that goes the way the pointer goes; Back belongs to an open list
+- UI controls, step 5: plugin examples and starters for map layers, marker sources, fog rules and control parts; e2e for a long settings screen (keys, pad, mouse, touch, four screen shapes)
+- UI controls, step 4: the designer's inspector for scrolling, sliders, pop-up lists, fields, tick boxes, tabs and the map; four starting styles; part picker; state previews; the canvas plays the project's flags; the engine's UI buttons join the game's controls through the plugin host
+- UI controls, step 3: the Map widget (layers, fog rules, markers, navigation, actions, events, bindings) and the extension points for map layers, marker sources, fog rules and UI parts; UI input actions
+- UI controls, step 2: the engine draws scrolling, sliders, pop-up lists and fields from parts (DOM, pointer, keys, pad, focus follows); smoke tests in the real editor
+- Last for usage
+- UI controls, step 1: the logic of scrolling and of sliders, pop-up lists, text and number fields, tick boxes, key bindings and tabs made of replaceable parts, behind the flags uiScroll and uiControls; nothing changes for a project without them
+- Parchment UI kit: the real pages, built with general tools: a binder inventory, a parchment map with chapters and waypoints, a pause menu with Travel and Restart pages, a title whose New game picks a difficulty locked for the save, a heads-up display; a recipe for each; the Quick Action Change a player setting; choosing a widget with the keys runs its pointed-at actions
+- Cleanup: state machines and behaviour trees leave the same record as every other logic (breakpoints, a What fired panel for all kinds), the case for not merging their executors, deprecated aliases documented, the leftover pack wording, and before/after numbers for startup, load, memory and export
+- Assistant: plans with checkpoints (steps ticked off, stop between steps, back to the start of a step), and tools for the Console, a measured run, the whole-project check and the saved playthroughs; the project is saved quietly before a copy is taken; docs
+- Assistant: what uses what (in the project index and a project_references tool), drawing with layers, editable shapes, SVG and fills that opens in the studio, draw_tile and tile_template for tiles that are painted with at once, and provider pictures that go through the tile import (cut, fitted to the iso template, colours matched)
+- Assistant reads more of the project: PDFs as documents (or their text), BMP/PSD/Aseprite/SVG as PNG and big pictures made smaller with their size and colours in words, a search tool, pictures drawn from scenes, screens, conversations and tiles, sounds as levels and a waveform, MP3 length, loop points; tool results are checked before they go to the API
+- Blocks tool: the hotbar remembers shape, way round and solidity, not only the tile; the ghost is drawn as the real stair or ramp
+- Gravity in the editor and scripts: the turn time in scene settings, a picture for each way gravity pulls, the swept blocks in the debug view, a problem event for a bad gravity direction; the gravity room spec presses the buttons
+- Timed gravity: a body turns over a quarter of a second and waits for room (flag timedGravity, off for older projects); saves keep which way gravity pulls; the nine templates' exported project.json hash gains the flag
+- The plugin SDK is a deliberate list (about 240 names) that every plugin that ships is written against; the old whole-engine SDK is plugin-sdk/legacy; the package builds into a publishable folder; a plugin can say which older id it replaces
+- Plugin manager: install from the hub, an explicit Update, which projects use a plugin, what stops working before one is turned off or removed, an offer to find a missing plugin, and an Inspector placeholder for the settings of a plugin that is not on
+- A starter plugin for every extension point: npm create tilewright-plugin -- --starter <name> makes the matching example as a plugin of its own; --starters lists them; the starters are generated from the examples and tested
+- Plugin platform: the Parchment UI kit is a plugin that ships (and exports), exports follow dependencies, first-party manifests name their editor parts, samples come from the manifest, the Last Storytender sample is format 2, the assistant is given every plugin tool
+- Items, minigames and lighting belong to their plugins: kinds of data (api.dataKind, dataEditor), a carrier for what the player carries, full-screen modals, the plugins' own checks; AI folder is navigation; docs of plugins live with the plugins; e2e specs started with the test handles
+- Collision layers the project names: a list in Project settings (collisionLayers in project.json), joined with the engine's and the plugins' for scripts and the Inspector's new Layer and Meets fields
+- Lighting is a plugin's: the model of lights and shadows and the layer that draws the darkness moved into the lighting plugin; the renderer draws any screen layer a plugin adds (api.screenLayer, data in runtime.plugin); scripts ask isLit of the plugin; the SDK keeps the old names through its legacy list
+- Defeat is asked of the plugins (api.defeatCheck): the engine no longer reads health; the combat plugin says an object is defeated when its health has run out
+- The heads-up display's pieces belong to the plugins that own their data: a widget says it is a piece (hud), the interface layout lists the pieces of the plugins that are on, and the engine knows only messages and the project's own counters, bars and texts
+- Core neutrality: the neutral test reads every text file and every test of the core, follows relative imports into plugins, and knows the reference game's other words; travel and autosave from plugins go through generic events (travel-request, the autosave flag); the reference game's checks and objects are tested with its plugin
+- Compat: every project in the corpus is exported (files copied, scripts compiled, game.json written), the exported game is opened the way the player opens it and played with the same buttons as the project: the checkpoints must match
+- Gravity diagnosis: skipped only when the owner's project or its Gravity Flip script is absent, never by what the walk finds
+- Golden pictures: a missing one fails in CI instead of being written, a system with none says it skipped, and a workflow makes the Linux ones
+- Compat corpus: six older samples as they were (format 1, no flags) and a project with no list of plugins, so the code older projects use stays tested
+- Keys that the engine and its plugins share on purpose are not a warning of the project: older samples load without the new Controls warnings
+- The rebuilt menus are checked against the old ones: the same presses played in 4cd481c and here, every difference listed with a reason; first row chosen on open, wrap-around, next-row navigation and left/right on choices (the menuKeys flag for screens made before); Continue gets the focus; keys listed with commas
+- The first save of a project made in an older format keeps a copy of the old project file in .tilewright/backup-format-<n>, and the person is told
+- Back closes a menu you made even when it does not take the buttons (flag backClosesMenus, on for new projects; the rule has a test for every combination of role, Back setting, takes-buttons and opens-on-start); a screen with the keyboard focus takes the interact press from the game
+- The assistant always asks before deleting, changing plugins or using the network, even at the 'do it' level; a plugin cannot make its own tool skip the question by calling it read
+- The assistant does not read or list files that may hold secrets (.env, *.pem, *.key, SSH and cloud credentials, .git); the person can add patterns in Project settings
+- Picture-provider keys stay in the main process: a provider asks for a request with {{key}} and the main process makes it, to a host the plugin may reach, with the key blanked out of the answer
+- Plugins from outside cannot reach the door to the computer: it is handed over once at startup, test handles exist only in tests, the main process works out who asks to run a program, a try-out in a worker and a watchdog keep a hanging plugin from freezing the editor; a hostile plugin test
+- Gravity diagnosis test: skip when the owner's project no longer has the script it describes
+- Blocks tool: a cell whose floor was taken out can be pointed at, so a block can be put back; nothing to take away there
+- App logo: a block with a tiled top, drawn by scripts/make-icon.mjs; the installer, the zip and the exe use it
+- Project format 2: the list of plugins is called plugins (packs in format 1, migrated); assistant tools list_plugins/set_plugins and the new screen fields; the Pack API is deprecated; manual says plugin and asset pack; perf numbers in the cleanup audit
+- Link the cleanup audit
+- Sandbox: a folder that is new may be written into, and a link to a folder above the project is still refused; the editor's specs know the pause row; dead exports removed; cleanup audit
+- Assistant: pictures you attach, file and project index tools, drawing and picture providers, permission levels with plans and roll back, a cost limit per run, blocks and gravity tools, plugin tools
+- Link the compatibility flags page; keep the cause of a refused path
+- Assistant: a sandbox for every path (links, streams, device names), file readers (sounds honestly), project index and file tools
+- PROGRESS, DECISIONS and a page for the compatibility flags
+- The Parchment UI kit (a plugin that re-skins the game's screens), screen priorities, recipes for screens and plugins
+- Re-baseline the code templates (the loaded game's health)
+- Loading a save restores health (compat flag loadRestoresHealth, on for new projects); the designer offers the new fields
+- Docs: screens that come with plugins
+- The pause button is a visible Quick Action in new projects (compat flag pauseAction); the press that opens a screen is not also Back
+- Keep the core neutral: the designer tests load the plugins through the editor's composition root
+- Customize, compare and revert the plugins' screens in the UI designer; roles; the library keeps whole screens
+- The game's own screens are ordinary designer screens: title, pause, inventory, map, save, load, settings, controls, travel and the heads-up display
+- Screens by role, list sources (saves, controls, places, quick slots, plugin lists) and the requests screens can make
+- Plugin platform docs: guide, every extension point, a test that keeps the api listed
+- npm create tilewright-plugin, a test harness for plugins
+- Exported games carry plugins other people wrote (game part only); the player has no editor parts
+- Script API 1.2.0: collision layers by name, plugin layers included
+- Plugins reach the Inspector, tiles, UI designer and export dialog
+- Example plugins keep their starters out of the New project list
+- Plugins in the editor: manager tab with approval, versions and missing plugins; panels, tools, import and export commands; sandboxed editor parts; end-to-end test
+- Plugin store, manager, permission-checked editor view and a worker sandbox for the editor parts of plugins other people wrote
+- Plugin loader with approval of exact code; one example plugin for every extension point
+- Step 6: starters come from the plugins that need them; the reference game's sample ships with its plugin; templates are not defaults
+- Units walking onto a hill under the block physics stand on the block they overlap (regression test); SDK surface baseline; e2e starters get the packs they were built with
+- JSON import attributes for plugin manifests; the engine is one chunk in the editor build
+- The core is neutral: no plugin imports, none of the reference game's words; assistant notes and wording
+- Playbot: moves, strategies and bridges come from plugins; compat baselines re-taken for the controls check and the new-project default
+- The screens seam: plugins provide the game UI factory, strings and autosave events; travel placement is core
+- Plugin checks for the Problems panel
+- Prefabs come from plugin editor parts; editor loads bundled plugins with their editor parts
+- Core words and legacy plugin list: world-map unlock rules and checkpoints come from plugins
+- Events and buttons come from the plugins that have them; core input is only the buttons every game has
+- Behaviour tree and state machine models become core authoring formats; neutral-core test added
+- First-party game modules move into plugin packages (combat, inventory, story, ai, lighting, storytender, turns, controls, sim, prebuilt screens) on the public SDK
+- Scripts reach combat and story through plugin methods; plugin systems run at named stages
+- Plugin-added groups for plates and zones, ghost layers for gates, echo layer out of the core
+- Prep: story, lighting and interaction code split by owner
+- lint
+- Prep for plugin relocation: path walking, pickups and projectiles in their own files
+- Plugin workspaces: SDK facade, bundled-plugins root, first-party plugin skeletons
+- Plugin host: manifests, semver ranges, permissions, extension tables, crash records
+- Gravity: pictures for other gravities, the fade seen in the real window, the owner's proposal kept out of git
+- The gravity room: a sample of mixed blocks walked under every gravity by the bot, and the fixes it found
+- Blocks tool, Minecraft style: face highlight and ghost, drag lines/walls/floors, Shift-drag boxes, right-click removes, middle-click copies, R turns, hotbar 1-9
+- Block physics: bodies are boxes tested against every solid block, under gravity in any of six directions
+- Gravity on walls, part 1: the fade rule that hid blocks wrongly, compat flags, the diagnosis
+- compat: the ui-showcase sample's screens file gained the new Back fields when the editor saved it (intended)
+- Back works on the screens you made: one press is handled by one screen
+- Compatibility corpus: npm run compat records and checks every sample, template and the owner's projects
+- .
+- Update to packaging files.
+- Regenerated tile sample link records
+- Phase 2 summary in PROGRESS.md; the pit test points until the pointer is really over the pit
+- A game with a player keeps needing one; templates are chosen by clicking the whole card
+- Phase 2: decisions, known issues, samples and recipes, genre audit outcome
+- Phase 2: exported genre samples run with no editor; 200 walking villagers hold 60 fps; villagers walk to the doorstep of solid buildings (they could not reach them before) and failed searches are cheap
+- Phase 2: tile and props showcase (grass edge set, cliff, animated water with a shore, snow recolour, tree, window and guitar, library, a house from the library, a set and a code pack from the hub, credits); animations keep every frame when clipped, edge sets start from an animated tile, canopy fade can be read, library panels refresh together
+- Phase 2: the community Asset Hub - self-hostable hub server (accounts, publishing, search, ratings, reports, moderation, code packs held back), Hub panel, licences and credits file for exported games, docs and hosting steps
+- Phase 2: UI showcase sample (title, settings with sliders and key remap, pause, bound HUD, inventory grid with drag and drop; keyboard, mouse and gamepad); menus react to every simulation step, modal start screens sit on top
+- Phase 2: real-time strategy sample (box select, orders, mine, barracks, enemy camp) built in the editor and won by the playbot
+- Phase 2: point-and-click sample (verbs, hotspots, a conversation, an item, a locked door) built in the editor and played by the playbot
+- Phase 2: tower defence sample (waves from a table, road, build menu, archer towers and cannons, upgrade, lives and gold) built in the editor and won by the playbot; towers can hurt the enemy side; more event choices for simulation events
+- Phase 2: roguelike sample (seeded dungeon each run, loot rolled from a table, permadeath and new run, goal), roll-a-table action, scene-starts condition, generated objects keep their prefab tags, checker fixes, smarter bot turns
+- Phase 2: colony builder sample (build menu from a table, producers, villagers, speed-up clock, goal of 20 people) built in the editor and finished by the playbot; resources made by producers are known to the checker; build menu buttons choose their own row
+- Remove debugging spec
+- Phase 2: tactics sample built in the editor and played by hand and by the playbot; quick clicks and key taps are no longer lost between frames; hearts text fixed
+- Phase 2: PointerBot - the playbot plays with a mouse, screens and turns
+- Phase 2: genre templates (action adventure, tactics, builder, roguelike, point and click), assistant tools for packs, tables, variables, procedural maps and interface screens, mocked four-genre test
+- Phase 2: personal asset library - packs, versions, folders and tags, link or copy, pack files, Library panel
+- Phase 2: tile studio (presets, guides, tiling preview, tile properties, animated tops, side art, variants, 47-piece edge sets, recolour, slicing), tall props with fading canopies and scatter with spacing, wall and floor attachments, structures (box select, fill, hollow, copy, save, place turned)
+- Phase 2: UI designer (screens, widgets, layout, states, animations, bindings picker, UI prefabs, lists and grids with drag-and-drop, minimap, hand, turn bar, focus order, screen flow, in-world UI), interface runtime, table edits in saves, legacy packs for old projects
+- Phase 2: one logic system at three levels - quick actions, wires through event/action/logic nodes with live glow, and a Blueprint-style graph; conversion to and from event sheets, breakpoints, problem fixes, docs and tests
+- Phase 2: simulation helpers (producers and resources, calendar with day/night and seasons, wave spawner from a table, path follower, utility-agent villagers, cellular automata), docs and tests
+- Phase 2: procedural maps (rooms and corridors, caves, islands, towns), scatter rules, seeds and new runs, the Generate panel
+- Phase 2: tiles are drawn in chunks near the camera so very large maps open at once
+- Phase 2: block-by-block cells (gaps, arches, per-face tiles), their physics, drawing, the Blocks tool with slicing and x-ray
+- Phase 2: the pointer as game input, four isometric views, control schemes (click to move, hotspots, grid cursor, RTS selection with flow-field crowds, camera rig, builder with ghost footprints)
+- Phase 2: the scene clock (real time, pause, 2x-8x, by turns) and the turn-based pack: queue, action points, grid movement, attacks with height advantage, unit AI
+- Phase 2: data tables, custom components and behaviours, custom events, shared value names with arithmetic, Data panel
+- Phase 2: packs and the plugin API; Storytender mechanics and the engine's modules are packs; an empty project has nothing in it
+- Phase 2 step 1: genre audit
+- Final pass: docs, known issues, project settings button in the Inspector, steadier story deletes and e2e workers
+- Title screen, project settings, controls editor, interface layout and theme editor, assistant tools for them
+- Inline text formatting in conversations, choices and messages
+- Assistant: tools for minigames, skins, the world map, the sound mix, single event rows and prefabs
+- Sprite studio: turn by any angle and scale a selection
+- Undo and redo for story edits, as steps of the same history
+- Tile art: sprites and imported PNGs cover the top of tiles
+- Puzzle solver: searches echo, plate, lever and crate plans by playing them with the player's buttons
+- Lantern fuel (light as a resource with a HUD bar) and event blocks for echoes, light and word puzzles
+- World map: a drawn map editor (Story -> Map) and a map screen in the game with travel
+- Behaviour trees with an editor, ranged enemy attacks, hearing muffled by walls, guards keeping apart
+- Mixer: buses with a voice bus and ducking, per-sound settings and variants, music loop points, sounds that come from a place
+- Vector layers in the sprite studio: rectangles, ellipses and paths that stay editable
+- Per-height collision: blockers that cover only some levels, overlay seen at any height
+- Minigames: timing bar, repeat the pattern, match the pairs
+- Cosmetic skins, assistant story tools
+- State machines for enemies and bosses, with a graph editor
+- Hot reload while playing, and the game in a window of its own
+- Dialogue graph canvas and cutscene timeline
+- docs: fix a damaged line in the recipes
+- Localization (language files, Translations dialog) and video settings
+- Autotiling with a visual rule editor, and Walls / Decoration / Lights layers
+- PROGRESS: final summary (seven acceptance criteria, what is weak, what next)
+- M14 (part 2): sound and music engine, hit feel (hit-stop, shake, particles), event actions, sound assets, sample game
+- M14 (part 1): tutorial, generated reference docs and recipes, accessibility settings, golden pictures, determinism and speed checks
+- M13: acceptance slice built through the UI and finished by the playbot; multi-scene bot with fighting, bridges in the checks, gates in a row, later-room crate puzzles
+- M12: export to a standalone game (runtime copy, game shell, compiled scripts, crash screen and log), export dialog with project checks, BUILDING.md, CI build job
+- PROGRESS: tick the Explain / Fix buttons
+- M11: Claude assistant (main-process SDK client, keychain key storage, validated tools, approved changes as single undo steps, mock-API tests)
+- M10: code window (Monaco, script behaviours, breakpoints, watch, convert events to code)
+- M9: puzzle checks (bypass, soft-lock), project check, crash reports, debug overlays and speed meter, the playbot and playthroughs
+- M8: story systems - Story panel (items, dialogues, cutscenes), game UI and pause menu, saves, scene travel, remapping and gamepad, hub-and-cave e2e sample
+- M8 (part 1): dialogue graphs, items and inventory, cutscene timeline, save/load format, checkpoints, portals, NPCs, gamepad input, freeze/scripted modes
+- M7: A* pathfinding, health and combat (quill, dodge), patrol/vision/chase guards, boss phases, HUD, patrol path tool, e2e stealth and boss sample
+- Fix flaky e2e specs: pause through the store while stepping, wait for the async save
+- M6: echoes, lighting with shadows, light sensors, growing objects, sentence stones, formattable text blocks, two e2e samples
+- M5: no-code logic - behaviours, signals and wires, event sheets, prefabs with overrides, platforms, plate/gate/crate sample e2e
+- M4: sprite studio, animation system, sprite sheets, Aseprite/PNG import, tweens, animated sprites in the world
+- M3: editor shell, world painter, project manager, undo/redo, play-in-editor, tools, validators, e2e built-through-the-UI sample
+- Fix unused constant in M2 e2e spec (lint)
+- M2: heights, stairs/ramps, cliffs, pits, bridges, ledges, triggers, colliders, occlusion fade, multi-level sample
+- M1: runtime core - iso math, ECS, fixed timestep, input, camera, depth sort, Pixi renderer, walking-square sample
+- M0: verified Electron smoke test, update progress and known issues
+- M0: monorepo scaffold, tooling, Electron shell skeleton, state docs, CI
+
