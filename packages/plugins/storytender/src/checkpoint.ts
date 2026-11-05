@@ -31,6 +31,8 @@ export interface Checkpoint {
   lightRadius: number;
   /** Resting restores all health. */
   heals: boolean;
+  /** Show "E: rest" / "E: light the lantern" as text on the post when the player is close (off when the game hangs its own prompt over it). */
+  hint: boolean;
 }
 
 const litKey = (scene: string, id: string): string => `lit:${scene}:${id}`;
@@ -64,12 +66,13 @@ export const checkpoint = behaviorDef<Checkpoint>({
   description:
     'The player presses Interact (E) next to it to light it and rest. Resting heals, and if the player is defeated they return to the last post they rested at. Lit posts are listed in the Travel menu so the player can fast travel between them.',
   phase: 'control',
-  defaults: { name: 'Lantern', reach: 1.6, lightRadius: 5, heals: true },
+  defaults: { name: 'Lantern', reach: 1.6, lightRadius: 5, heals: true, hint: true },
   fields: [
     { key: 'name', label: 'Name (shown in the travel list)', type: 'text' },
     { key: 'reach', label: 'How close the player must be (cells)', type: 'number', min: 0.5, max: 6, step: 0.1 },
     { key: 'lightRadius', label: 'How far it shines when lit (cells)', type: 'number', min: 1, max: 15, step: 0.5 },
     { key: 'heals', label: 'Resting heals the player fully', type: 'boolean' },
+    { key: 'hint', label: 'Show "E: rest" as text when the player is close', type: 'boolean' },
   ],
   inputs: [],
   outputs: [{ name: 'lit', label: 'Is lit' }],
@@ -84,7 +87,7 @@ export const checkpoint = behaviorDef<Checkpoint>({
     if (lit && !e.has('light')) e.set('light', { radius: s.lightRadius, intensity: 1, color: 'warm', shadows: true, flicker: 0.2, mode: 'always' });
     const sp = e.get<{ color: number }>(C.Sprite);
     if (sp) sp.color = lit ? 0xffc866 : 0x6b6f7a;
-    if (near && !ctx.runtime.dialogue) hint(e, lit ? 'E: rest' : 'E: light the lantern');
+    if (s.hint && near && !ctx.runtime.dialogue) hint(e, lit ? 'E: rest' : 'E: light the lantern');
     else hint(e, null);
     if (interactedBy(ctx, e, s.reach, 'checkpoint') && near) {
       const spot = { x: t.x, y: t.y + 1, h: t.h };
