@@ -304,6 +304,8 @@ export const ProjectSchema = z.object({
   collisionLayers: z.array(ProjectLayerSchema).max(16).optional(),
   /** Compatibility flags (see compat.ts): behaviour that changed after projects were made. Missing flags are off, as the project always played. */
   compat: z.record(z.string(), z.boolean()).optional(),
+  /** The oldest Tilewright (a release such as "0.1.0") this project works with: an older one says so when the project is opened, instead of playing it wrongly. */
+  engine: z.string().regex(/^\d+\.\d+\.\d+$/).optional(),
 });
 export type ProjectData = z.infer<typeof ProjectSchema>;
 

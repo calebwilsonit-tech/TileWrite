@@ -3,3 +3,4 @@ export * from './compat';
 export * from './scene';
 export * from './migrate';
 export * from './prefab';
+export * from './version';

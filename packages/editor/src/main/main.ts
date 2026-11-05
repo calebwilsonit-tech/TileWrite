@@ -54,6 +54,16 @@ async function readJsonFile<T>(file: string, fallback: T): Promise<T> {
   }
 }
 
+/** Which build this is (dist/build-info.json, written by scripts/build-info.mjs): the commit it came from and whether it is a tagged release. */
+function readBuildInfo(): { commit: string; release: boolean; builtAt: string } {
+  try {
+    const raw = JSON.parse(fsSync.readFileSync(path.join(here, '..', 'build-info.json'), 'utf8')) as { commit?: string; release?: boolean; builtAt?: string };
+    return { commit: raw.commit ?? '', release: raw.release === true, builtAt: raw.builtAt ?? '' };
+  } catch {
+    return { commit: '', release: false, builtAt: '' };
+  }
+}
+
 function registerIpc(): void {
   registerExport({ resolveInside, distDir: path.join(here, '..') });
   registerSamples({ resolveInside, distDir: path.join(here, '..') });
@@ -62,8 +72,12 @@ function registerIpc(): void {
   registerAssistant({ pluginPermissions: plugins.permissionsOf });
   // the library folder may always be used by the editor
   allow(libraryDir());
+  const build = readBuildInfo();
   ipcMain.handle('app:info', () => ({
     version: app.getVersion(),
+    commit: build.commit,
+    release: build.release,
+    builtAt: build.builtAt,
     userData: app.getPath('userData'),
     library: libraryDir(),
     testMode: TEST_DIR !== undefined,

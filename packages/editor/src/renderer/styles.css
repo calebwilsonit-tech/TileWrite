@@ -261,6 +261,14 @@ hr {
   cursor: pointer;
 }
 
+.toolbar .build-label {
+  margin-left: -6px;
+  font-size: 11px;
+  opacity: 0.6;
+  align-self: center;
+  white-space: nowrap;
+}
+
 .toolbar .project-name {
   color: var(--muted);
   margin-right: 6px;

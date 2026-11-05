@@ -10,7 +10,8 @@
     "build:renderer": "vite build",
     "build:game": "esbuild src/game/game-main.ts --bundle --platform=node --format=esm --external:electron --outfile=dist/game/game-main.mjs && esbuild src/game/game-preload.ts --bundle --platform=node --format=cjs --external:electron --outfile=dist/game/game-preload.cjs && vite build --config vite.player.config.ts",
     "build:samples": "node scripts/copy-samples.mjs",
-    "build": "npm run build:main && npm run build:renderer && npm run build:game && npm run build:samples",
+    "build:info": "node scripts/build-info.mjs",
+    "build": "npm run build:main && npm run build:renderer && npm run build:game && npm run build:samples && npm run build:info",
     "dev": "node scripts/dev.mjs",
     "start": "electron .",
     "dist:win": "node scripts/dist-win.mjs"
@@ -24,6 +25,12 @@
     "files": [
       "dist/**/*",
       "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "dist/build-info.json",
+        "to": "build-info.json"
+      }
     ],
     "win": {
       "icon": "build/icon.ico",

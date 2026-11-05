@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useRef } from 'react';
+import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { DockviewReact, type DockviewApi, type DockviewReadyEvent, type IDockviewPanelProps } from 'dockview-react';
 import 'dockview-react/dist/styles/dockview.css';
 import { api } from '../project/api';
@@ -87,7 +87,20 @@ function buildDefault(api: DockviewApi): void {
   api.getPanel('problems')?.api.setActive();
 }
 
+/** "v0.1.0" for a tagged release, "v0.1.0 (a1b2c3d)" for a build made between releases: which Tilewright this is. */
+function useBuildLabel(): { text: string; title: string } {
+  const [info, setInfo] = useState<{ version: string; commit?: string; release?: boolean; builtAt?: string } | null>(null);
+  useEffect(() => {
+    void api().info().then(setInfo).catch(() => undefined);
+  }, []);
+  if (!info) return { text: '', title: '' };
+  const text = `v${info.version}${info.release || !info.commit ? '' : ` (${info.commit})`}`;
+  const title = `Tilewright ${info.version}${info.commit ? `, commit ${info.commit}` : ''}${info.release ? ', a release' : ', a build between releases'}${info.builtAt ? `, built ${info.builtAt.slice(0, 16).replace('T', ' ')}` : ''}`;
+  return { text, title };
+}
+
 function Toolbar() {
+  const build = useBuildLabel();
   const project = useApp((s) => s.project);
   const scenePath = useApp((s) => s.scenePath);
   const mode = useApp((s) => s.mode);
@@ -112,6 +125,11 @@ function Toolbar() {
       <strong className="brand" title="Back to the project list" onClick={() => void store.closeProject()}>
         Tilewright
       </strong>
+      {build.text && (
+        <span className="build-label" data-testid="build-label" title={build.title}>
+          {build.text}
+        </span>
+      )}
       <span className="project-name" data-testid="project-name">
         {project?.project.name}
       </span>

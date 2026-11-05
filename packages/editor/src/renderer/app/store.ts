@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react';
-import { SLOPE, extractPrefab, type CrashReport, type InputRecording, resolveInstance, type CutsceneData, type DialogueData, type EntityData, type PrefabData, type SceneData, type SlopeDir } from '@tilewright/runtime';
+import { SLOPE, engineTooOld, extractPrefab, type CrashReport, type InputRecording, resolveInstance, type CutsceneData, type DialogueData, type EntityData, type PrefabData, type SceneData, type SlopeDir } from '@tilewright/runtime';
 import { EditorDoc } from '../model/doc';
 import { isWallTile } from '../model/layers';
 import { cubeSlot, type HotbarSlot } from '../tools/block-edit';
@@ -470,6 +470,9 @@ class AppStore {
     if (p.addedPlugins?.length) {
       this.notify('info', `This project has data that belongs to the ${p.addedPlugins.join(', ')} plugin${p.addedPlugins.length === 1 ? '' : 's'}, which ${p.addedPlugins.length === 1 ? 'was' : 'were'} not on. ${p.addedPlugins.length === 1 ? 'It is' : 'They are'} on now, so that data keeps working as it did; the project file is updated on the next save.`);
     }
+    const running = (await api().info().catch(() => null))?.version;
+    const tooOld = running ? engineTooOld(p.project, running) : null;
+    if (tooOld) this.notify('warn', tooOld);
     useProject(p.project);
     setPlayerRequired(p.project.plugins === undefined);
     await api().recent.add(p.dir, p.project.name);
