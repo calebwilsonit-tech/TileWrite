@@ -723,6 +723,7 @@ The player presses Interact (E) next to it to light it and rest. Resting heals, 
 | How close the player must be (cells) | `reach` | number | 1.6 | 0.5 to 6 |
 | How far it shines when lit (cells) | `lightRadius` | number | 5 | 1 to 15 |
 | Resting heals the player fully | `heals` | boolean | true |  |
+| Show "E: rest" as text when the player is close | `hint` | boolean | true |  |
 
 Sends: **Is lit** (`lit`).
 

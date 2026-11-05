@@ -50,7 +50,7 @@ export const UI_STRINGS: readonly string[] = [
   'No lanterns lit yet. Light one by pressing E beside it.', 'this area', 'Autosave', 'Slot {n}', 'damaged', 'empty',
   'Map', 'you are here', 'Arrows or W A S D: choose a place   E or click: travel   Esc: back', 'Nowhere to go yet.',
   'Master volume', 'Music volume', 'Effects volume', 'Voice volume', 'Difficulty', 'easy', 'normal', 'hard', 'Screen shake and hit freeze', 'on', 'off',
-  'Camera zoom', 'Full screen', 'Show frame rate', 'Appearance', 'Original', 'Language', 'Default', 'Controls', 'press a key or button...', 'not set', 'Reset all controls',
+  'Camera zoom', 'Window size: free', 'Full screen', 'Show frame rate', 'Appearance', 'Original', 'Language', 'Default', 'Controls', 'press a key or button...', 'not set', 'Reset all controls',
   'E: change the selected control, then press the new key or button', 'W / S to choose, E to select, Esc or P to go back', 'W / S to choose, E to select',
   'E / click: continue', 'P / Start: skip', 'Received {item}', 'Used {item}', 'You were defeated.',
   'Echo made.', 'You cannot make echoes yet.', 'Recording... press Echo again to finish.',

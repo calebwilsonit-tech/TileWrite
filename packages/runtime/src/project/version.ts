@@ -9,7 +9,7 @@ export function compareReleases(a: string, b: string): number {
   return 0;
 }
 
-/** The sentence to show when a project needs a newer Tilewright than the one running, or null when this one is new enough (or the project says nothing). */
+/** The message to show when a project needs a newer Tilewright than the one running, or null when this one is new enough (or the project says nothing). */
 export function engineTooOld(project: { engine?: string | undefined }, running: string): string | null {
   if (!project.engine || compareReleases(running, project.engine) >= 0) return null;
   return `This project needs Tilewright ${project.engine} or newer, and this is ${running}. Install the newest Tilewright first: some of its menus, prompts and controls will not work here.`;
