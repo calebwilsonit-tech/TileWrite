@@ -38,6 +38,8 @@ export function openScreen(h: Host, name: string): boolean {
     const i = st.indexOf(s.name);
     if (i >= 0) st.splice(i, 1);
     st.push(s.name);
+    // a number for the screen to show that is new every time it opens: `{host.dice.<screen name>}`, 1 to 99 (a "now serving" sign)
+    h.runtime.scratch.set(`ui.dice.${s.name}`, 1 + Math.floor(Math.random() * 99));
   }
   sync(h);
   return true;

@@ -268,6 +268,8 @@ export class UiScreens {
   private readonly widgetCleanups = new WeakMap<HTMLElement, () => void>();
   private readonly root = document.createElement('div');
   private readonly layers = new Map<string, HTMLElement>();
+  /** Layers of screens that have just closed and are fading out. */
+  private leaving: HTMLElement[] = [];
   private readonly live = new Map<string, Live>();
   private current = new Map<string, ViewNode>();
   private readonly tooltip = document.createElement('div');
@@ -297,6 +299,21 @@ export class UiScreens {
   private barDrag: { key: string; axis: 'x' | 'y'; start: number; offset: number; trackPx: number; thumb: number } | null = null;
   /** thumb 0: the two thumbs are on top of each other, and the first move says which one is meant. */
   private sliderDrag: { key: string; thumb: 0 | 1 | 2 } | null = null;
+
+  /** A screen has closed: its layer fades away (a screen that animates in, `transition` not "none") instead of vanishing. */
+  private leave(name: string, layer: HTMLElement): void {
+    const transition = this.sim.assets.ui.screens.find((x) => x.name === name)?.transition ?? 'none';
+    if (this.design || transition === 'none' || typeof layer.animate !== 'function') {
+      layer.remove();
+      return;
+    }
+    layer.style.pointerEvents = 'none';
+    this.leaving.push(layer);
+    layer.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'scale(0.97)' }], { duration: 160, easing: 'ease-in' }).onfinish = () => {
+      layer.remove();
+      this.leaving = this.leaving.filter((x) => x !== layer);
+    };
+  }
 
   constructor(
     private readonly parent: HTMLElement,
@@ -397,15 +414,16 @@ export class UiScreens {
     });
     for (const [name, layer] of this.layers) {
       if (!wantedLayers.has(name)) {
-        layer.remove();
         this.layers.delete(name);
+        this.leave(name, layer);
       }
     }
     if (!this.design) this.drawWorld();
     // elements whose widgets are gone
     for (const [key, l] of this.live) {
       if (!this.seen.has(key)) {
-        l.el.remove();
+        // (a widget of a screen that is fading out stays until the layer goes)
+        if (!this.leaving.some((layer) => layer.contains(l.el))) l.el.remove();
         this.live.delete(key);
       }
     }
