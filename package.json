@@ -1,6 +1,7 @@
 {
   "name": "tilewright",
   "version": "0.1.0",
+  "license": "MIT",
   "private": true,
   "description": "Tilewright - a no-code 2D isometric game engine",
   "type": "module",

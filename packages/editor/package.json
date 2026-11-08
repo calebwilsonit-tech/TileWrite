@@ -1,6 +1,7 @@
 {
   "name": "@tilewright/editor",
   "version": "0.1.0",
+  "license": "MIT",
   "private": true,
   "description": "Tilewright editor (Electron app)",
   "type": "module",
