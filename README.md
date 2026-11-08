@@ -2,9 +2,9 @@
 
 **Make isometric games without writing code.** Tilewright is a free, open-source game engine and editor for 2D isometric games: paint a world out of blocks, drop in characters and props, wire up what they do, press Play, and export a game anyone can run.
 
-![The Tilewright editor playing The Last Storytender](docs/images/editor-playing.png)
+![The Tilewright editor playing Gravity Courier](docs/images/editor-gravity-courier.png)
 
-*The editor playing "The Last Storytender", a complete game made with it: tools on the left, the running game in the middle, the Inspector on the right, problems and logs below.*
+*The editor playing **Gravity Courier**, a 60-room gravity puzzle game made with Tilewright, mid-flip: tools on the left, the running game in the middle, the Inspector on the right, problems and logs below.*
 
 > **Status:** early (v0.1.0). Windows is the main platform; it also runs on Linux. Things change quickly, and feedback is very welcome.
 
@@ -18,7 +18,9 @@
 - **Export to a real program.** One button turns a game into a folder with an `.exe` that runs with no editor and no internet. ([export](docs/export.md))
 - **Plugins.** Combat and AI, story and items, turn-based play, simulation, lighting and more ship as plugins, and you can write your own. ([plugins](docs/plugins/README.md))
 
-![A game running in Tilewright](docs/images/game-view.png)
+![Four rooms of Gravity Courier](docs/images/gravity-courier-rooms.png)
+
+*Rooms from Gravity Courier. There is no jump button: you walk, flip gravity, and ride arrow pads onto the walls and ceiling, pushing parcels into mailboxes. Every room is checked by a solver and replayed button by button in the real game.*
 
 ## Get started
 
@@ -35,7 +37,7 @@ npm run start -w @tilewright/editor
 Then, on the project screen:
 
 - **Take the tutorial:** build a small playable puzzle room (a crate, a plate and a gate) in about ten minutes, without code.
-- **See a finished game:** open a copy of *The Last Storytender* and look at how it is made.
+- **See a finished game:** open a complete sample game and look at how it is made.
 - **Engine samples:** small games in nine genres (tactics, tower defence, colony sim, roguelike, RTS, point-and-click, a gravity room and more) in [`samples/`](samples). See [samples.md](docs/samples.md).
 
 To build the Windows installer yourself, run `npm run dist:win` (details in [BUILDING.md](docs/BUILDING.md)).
