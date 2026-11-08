@@ -50,6 +50,7 @@ export const HOST_VALUES: [string, string][] = [
   ['host.ps', 'The pad used last is a PlayStation one (1 or 0)'],
   ['host.switch', 'The pad used last is a Nintendo Switch one (1 or 0)'],
   ['host.hasSave', 'Is there a save to continue from (1 or 0)'],
+  ['host.dice.Title', 'A number from 1 to 99 that is new each time the screen of that name opens (write the screen\u2019s name instead of Title)'],
   ['host.latestSave', 'Where and when the latest save was made'],
   ['host.skins', 'How many looks the player can choose between'],
   ['host.languages', 'How many languages the game has'],

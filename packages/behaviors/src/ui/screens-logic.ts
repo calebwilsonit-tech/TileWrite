@@ -243,7 +243,10 @@ export function hostScope(sim: Simulation): Record<string, VariableValue> {
   const b = uiBridge(sim);
   const saves = (b?.saves?.() ?? []).filter((s) => s.exists && !s.damaged).sort((a, c) => c.savedAt.localeCompare(a.savedAt));
   const title = b?.title?.() ?? null;
+  const dice: Record<string, VariableValue> = {};
+  for (const [k, v] of sim.runtime.scratch) if (k.startsWith('ui.dice.') && typeof v === 'number') dice[`host.dice.${k.slice(8)}`] = v;
   return {
+    ...dice,
     'host.quit': b?.can?.('quit') ? 1 : 0,
     'host.fullscreen': b?.can?.('fullscreen') ? 1 : 0,
     'host.resolutions': b?.can?.('resolution') ? 1 : 0,
