@@ -164,12 +164,13 @@ export async function runInWindow(): Promise<string | null> {
 }
 
 /** Make the game. Returns where it is. Throws a UserError-style message if the main process refuses. */
-export async function exportGame(settings: ExportSettings, scripts: ScriptsBundle, outRoot: string): Promise<ExportResult> {
+export async function exportGame(settings: ExportSettings, scripts: ScriptsBundle, outRoot: string, forWeb = false): Promise<ExportResult> {
   const p = store.state.project;
   if (!p) throw new Error('No project is open.');
   const info = await api().exporter.info();
-  if (!info.canExport) throw new Error('This computer cannot export games from this editor (Windows and Linux are supported, and the editor must have been built with `npm run build`).');
-  const platform = info.platform as Platform;
+  if (forWeb && !info.canExportWeb) throw new Error('This editor cannot make games for web browsers: it needs to be built first (npm run build).');
+  if (!forWeb && !info.canExport) throw new Error('This computer cannot export games from this editor (Windows and Linux are supported, and the editor must have been built with `npm run build`).');
+  const platform: Platform = forWeb ? 'web' : (info.platform as Platform);
   await saveExportSettings(settings);
   const files = await listGameFiles(assetFs, p.dir, joinPath);
   const scriptNames = Object.keys(scripts.scripts).sort((a, b) => a.localeCompare(b));

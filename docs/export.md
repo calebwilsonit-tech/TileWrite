@@ -15,6 +15,29 @@ Cave Quest-1.2-windows/
 
 Send the zip to a friend: they unzip it and run the `.exe`. Nothing is installed, and the game keeps its saves, settings and crash reports in its own folder under the player's user data (on Windows: `%AppData%\<Game name>`), so the folder can live anywhere, even somewhere read-only.
 
+## For web browsers (itch.io, a website)
+
+At the top of the dialog, choose **Web browsers** instead of your computer. You get a folder named like `Cave Quest-1.2-web` and a zip
+of it, with `index.html` at the top of the zip:
+
+```
+Cave Quest-1.2-web/
+  index.html            <- the game's page
+  assets/               <- the player
+  data/                 <- your game, and files.json (the list of its files)
+```
+
+- **itch.io:** create a project, set *Kind of project* to **HTML**, upload the zip and tick *This file will be played in the browser*.
+  A viewport of 1280 x 720 matches the default window size. Tick *Fullscreen button* so players can go full screen.
+- **Your own website:** put the folder's contents on the site. The page must be opened from a web server: opening `index.html`
+  straight from the disk does not work, because browsers do not let a page read files beside it.
+- The game starts with a **Click to play** card: browsers keep sound off until the player clicks, and on itch.io the click also
+  gives the game the keyboard.
+- **Saves and settings** are kept in the player's browser, under the game's name, so a new upload keeps them. Clearing the
+  browser's site data removes them.
+- **Quit** shows a "Thanks for playing" card (a page cannot close its own tab), and the window size setting does nothing (the game
+  fills the space the page gives it). Full screen uses the browser's.
+
 ## The settings
 
 | Setting | What it does |

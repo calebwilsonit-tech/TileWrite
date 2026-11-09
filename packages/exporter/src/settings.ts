@@ -64,18 +64,20 @@ export function fileSafeName(name: string): string {
   return n || 'Game';
 }
 
-export type Platform = 'win32' | 'linux' | 'darwin';
+/** The kinds of computer a game is exported for. `web` is a page for web browsers (itch.io, a website), made on any computer. */
+export type Platform = 'win32' | 'linux' | 'darwin' | 'web';
 
-export const PLATFORM_LABEL: Record<Platform, string> = { win32: 'Windows', linux: 'Linux', darwin: 'macOS' };
+export const PLATFORM_LABEL: Record<Platform, string> = { win32: 'Windows', linux: 'Linux', darwin: 'macOS', web: 'web browsers' };
 
 /** Name of the folder (and zip) an export produces. */
 export function exportFolderName(s: ExportSettings, platform: Platform): string {
-  const tag = platform === 'win32' ? 'windows' : platform === 'darwin' ? 'mac' : 'linux';
+  const tag = platform === 'win32' ? 'windows' : platform === 'darwin' ? 'mac' : platform === 'web' ? 'web' : 'linux';
   return `${fileSafeName(s.gameName)}-${s.version}-${tag}`;
 }
 
 /** Name of the program file inside the export. */
 export function exeFileName(s: ExportSettings, platform: Platform): string {
+  if (platform === 'web') return 'index.html'; // (the page a browser opens; itch.io looks for this name)
   const base = fileSafeName(s.gameName);
   return platform === 'win32' ? `${base}.exe` : base;
 }

@@ -103,6 +103,14 @@ export interface PreviewJob {
   height: number;
 }
 
+/**
+ * `data/files.json` of a game exported for web browsers: every file in its data folder, so the page can list folders
+ * (a web server cannot). Paths use forward slashes, relative to the data folder.
+ */
+export function webFileIndex(files: string[]): string {
+  return JSON.stringify([...new Set(files.map((f) => f.replace(/\\/g, '/')))].sort());
+}
+
 /** What the export step is told to do, as plain data (the main process carries it out). */
 export interface ExportJob {
   projectDir: string;

@@ -3,7 +3,7 @@ import { execFile } from 'node:child_process';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { promisify } from 'node:util';
-import type { ExportJob, ExportResult } from '@tilewright/exporter';
+import { webFileIndex, type ExportJob, type ExportResult } from '@tilewright/exporter';
 
 const run = promisify(execFile);
 
@@ -46,15 +46,20 @@ export function registerExport(deps: Deps): void {
       .access(path.join(deps.distDir, 'player', 'index.html'))
       .then(() => true)
       .catch(() => false);
-    return { platform: process.platform, canExport: (process.platform === 'win32' || process.platform === 'linux') && hasResources && hasPlayer, version: app.getVersion() };
+    const hasWeb = await fs
+      .access(path.join(deps.distDir, 'player', 'web.html'))
+      .then(() => true)
+      .catch(() => false);
+    return { platform: process.platform, canExport: (process.platform === 'win32' || process.platform === 'linux') && hasResources && hasPlayer, canExportWeb: hasWeb, version: app.getVersion() };
   });
 
   ipcMain.handle('export:build', async (e, job: ExportJob): Promise<ExportResult> => {
     const say = (text: string): void => {
       if (!e.sender.isDestroyed()) e.sender.send('export:progress', text);
     };
-    if (job.platform !== process.platform) throw new Error('A game can only be exported for the kind of computer this editor is running on (Windows games are made on Windows, Linux games on Linux).');
-    if (process.platform !== 'win32' && process.platform !== 'linux') throw new Error('Exporting from macOS is not supported yet.');
+    const web = job.platform === 'web';
+    if (!web && job.platform !== process.platform) throw new Error('A game can only be exported for the kind of computer this editor is running on (Windows games are made on Windows, Linux games on Linux).');
+    if (!web && process.platform !== 'win32' && process.platform !== 'linux') throw new Error('Exporting from macOS is not supported yet.');
 
     const projectDir = deps.resolveInside(job.projectDir);
     const outRoot = deps.resolveInside(job.outRoot);
@@ -71,6 +76,53 @@ export function registerExport(deps: Deps): void {
       if (!ours) throw new Error(`There is already a folder called "${job.folderName}" in that place that was not made by an export, so it was left alone. Choose another place, or rename the game.`);
       say('Replacing the previous export...');
       await fs.rm(target, { recursive: true, force: true });
+    }
+
+    // the project's own files, into a data folder
+    const copyData = async (dataDir: string): Promise<void> => {
+      say(`Copying ${job.files.length} game files...`);
+      const copyOne = async (rel: string): Promise<void> => {
+        const from = deps.resolveInside(path.join(projectDir, ...rel.split(/[\\/]/)));
+        const to = path.join(dataDir, ...rel.split(/[\\/]/));
+        await fs.mkdir(path.dirname(to), { recursive: true });
+        await fs.copyFile(from, to);
+      };
+      for (const rel of job.files) await copyOne(rel);
+      if (job.icon && !job.files.includes(job.icon)) await copyOne(job.icon);
+      for (const g of job.generated) {
+        const to = path.join(dataDir, ...g.path.split(/[\\/]/));
+        await fs.mkdir(path.dirname(to), { recursive: true });
+        await fs.writeFile(to, g.text, 'utf8');
+      }
+    };
+
+    if (web) {
+      // ---- a game for web browsers: the player page as index.html, its scripts, the data and a list of the data's files ----
+      await fs.mkdir(target, { recursive: true });
+      await fs.writeFile(path.join(target, MARKER), `${job.gameName} ${job.version}\n`, 'utf8');
+      if (job.credits) await fs.writeFile(path.join(target, 'CREDITS.txt'), job.credits, 'utf8');
+      say('Adding the game page...');
+      await copyTree(path.join(deps.distDir, 'player', 'assets'), path.join(target, 'assets'));
+      await fs.copyFile(path.join(deps.distDir, 'player', 'web.html'), path.join(target, 'index.html'));
+      const dataDir = path.join(target, 'data');
+      await copyData(dataDir);
+      const shipped = [...job.files, ...(job.icon && !job.files.includes(job.icon) ? [job.icon] : []), ...job.generated.map((g) => g.path)];
+      await fs.writeFile(path.join(dataDir, 'files.json'), webFileIndex(shipped), 'utf8');
+      // the zip holds the folder's contents, index.html at its top, the way itch.io and most game sites want it
+      say('Making the zip file...');
+      const zipPath = `${target}.zip`;
+      let zip: string | null = zipPath;
+      let zipProblem: string | undefined;
+      try {
+        await fs.rm(zipPath, { force: true });
+        if (process.platform === 'win32') await run(path.join(process.env.SystemRoot ?? 'C:\\Windows', 'System32', 'tar.exe'), ['-a', '-c', '-f', zipPath, '-C', target, '.'], { timeout: 10 * 60_000, windowsHide: true });
+        else await run('zip', ['-r', '-q', zipPath, '.', '-x', MARKER], { cwd: target, timeout: 10 * 60_000 });
+      } catch (err) {
+        zip = null;
+        zipProblem = `The game was made, but the zip file could not be: ${err instanceof Error ? err.message : String(err)}`;
+      }
+      say('Done.');
+      return { folder: target, exe: path.join(target, 'index.html'), zip, ...(zipProblem ? { zipProblem } : {}), files: job.files.length };
     }
 
     // ---- the runtime ----
@@ -108,21 +160,7 @@ export function registerExport(deps: Deps): void {
     await copyTree(path.join(deps.distDir, 'player'), path.join(appDir, 'player'));
 
     // ---- the project's own files ----
-    say(`Copying ${job.files.length} game files...`);
-    const dataDir = path.join(appDir, 'data');
-    const copyOne = async (rel: string): Promise<void> => {
-      const from = deps.resolveInside(path.join(projectDir, ...rel.split(/[\\/]/)));
-      const to = path.join(dataDir, ...rel.split(/[\\/]/));
-      await fs.mkdir(path.dirname(to), { recursive: true });
-      await fs.copyFile(from, to);
-    };
-    for (const rel of job.files) await copyOne(rel);
-    if (job.icon && !job.files.includes(job.icon)) await copyOne(job.icon);
-    for (const g of job.generated) {
-      const to = path.join(dataDir, ...g.path.split(/[\\/]/));
-      await fs.mkdir(path.dirname(to), { recursive: true });
-      await fs.writeFile(to, g.text, 'utf8');
-    }
+    await copyData(path.join(appDir, 'data'));
 
     // ---- a zip beside it ----
     say('Making the zip file...');
