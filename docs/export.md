@@ -24,6 +24,10 @@ Send the zip to a friend: they unzip it and run the `.exe`. Nothing is installed
 | Window width / height | The size of the game picture when it opens. |
 | Start full screen | Opens full screen. Players can always switch with F11 (or Alt+Enter). |
 | Splash screen text | One line shown for a moment before the game starts (empty = none). |
+| Splash picture | A picture in the project, such as your studio's logo (PNG, JPG or WebP, in `assets/`), shown first on the splash screen. Use one with a see-through background: the splash is near-black. |
+| Made with Tilewright | Ends the splash with a short "Made with Tilewright" card. On by default; untick it to leave it out. |
+
+The splash plays while the game loads: the picture, then the text, then the Tilewright card, each for under two seconds. Any key, click or pad button skips to the next card.
 | Window icon | A PNG in your project (for example `assets/icon.png`) used for the window and taskbar. |
 
 They are remembered in `export-settings.json` in your project (which is never exported).

@@ -1,5 +1,5 @@
 import { defaultImporter, loadScript } from '@tilewright/behaviors';
-import { SETTINGS_FILE, buildCredits, buildManifest, creditProblems, creditsOf, exeFileName, exportFolderName, listGameFiles, parseSettings, settingsProblems, type ExportJob, type ExportResult, type ExportSettings, type Platform, type ScriptsBundle } from '@tilewright/exporter';
+import { SETTINGS_FILE, buildCredits, shouldInclude, buildManifest, creditProblems, creditsOf, exeFileName, exportFolderName, listGameFiles, parseSettings, settingsProblems, type ExportJob, type ExportResult, type ExportSettings, type Platform, type ScriptsBundle } from '@tilewright/exporter';
 import { host } from '@tilewright/behaviors';
 import { store } from '../app/store';
 import { pluginManager } from '../plugins/manager';
@@ -58,6 +58,12 @@ export async function checkForExport(settings: ExportSettings): Promise<ExportCh
   if (settings.icon) {
     if (!/\.png$/i.test(settings.icon)) problems.push({ severity: 'error', text: `The icon "${settings.icon}" is not a PNG picture.` });
     else if (!(await assetFs.exists(joinPath(p.dir, ...settings.icon.split('/'))))) problems.push({ severity: 'error', text: `The icon file "${settings.icon}" does not exist in the project.` });
+  }
+
+  if (settings.splashImage) {
+    if (!/\.(png|jpe?g|webp)$/i.test(settings.splashImage)) problems.push({ severity: 'error', text: `The splash picture "${settings.splashImage}" is not a PNG, JPG or WebP picture.` });
+    else if (!shouldInclude(settings.splashImage)) problems.push({ severity: 'error', text: `The splash picture "${settings.splashImage}" is in a folder that is not part of the game. Put it in the project's assets folder.` });
+    else if (!(await assetFs.exists(joinPath(p.dir, ...settings.splashImage.split('/'))))) problems.push({ severity: 'error', text: `The splash picture "${settings.splashImage}" does not exist in the project.` });
   }
 
   const compiled = await compileScripts();

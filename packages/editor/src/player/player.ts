@@ -13,6 +13,7 @@ import { loadComponents, loadCustomBehaviors, loadTables } from '../renderer/pro
 import { loadCutscenes, loadData, loadDialogues, loadProjectInput, loadSkins, loadUiDoc, loadUiLayout, loadWorldMap } from '../renderer/project/story';
 import { loadAllSprites } from '../renderer/studio/assets';
 import { PlaySession } from '../renderer/viewport/play-session';
+import { mimeOf, playSplash, splashCards } from './splash';
 
 /**
  * The game's own window contents: loads the exported data, starts the same PlaySession the editor's Play uses,
@@ -101,30 +102,23 @@ function toast(text: string): void {
   window.setTimeout(() => el.remove(), 5000);
 }
 
-function splash(text: string): { done(minMs: number): Promise<void> } {
-  const el = overlay();
-  el.setAttribute('data-testid', 'game-splash');
-  el.style.zIndex = '99999';
-  const t = document.createElement('div');
-  t.textContent = text;
-  t.style.cssText = 'font-size:28px;letter-spacing:0.04em';
-  el.append(t);
-  const shown = performance.now();
-  return {
-    async done(minMs) {
-      const wait = Math.max(0, minMs - (performance.now() - shown));
-      await new Promise((r) => setTimeout(r, wait));
-      el.remove();
-    },
-  };
-}
-
 async function boot(): Promise<void> {
   const info = await game().info();
   const root = info.dataDir;
   const manifest: GameManifest = GameManifestSchema.parse(JSON.parse(await assetFs.read(joinPath(root, 'game.json'))));
   document.title = manifest.name;
-  const splashScreen = manifest.splashText ? splash(manifest.splashText) : null;
+  // the splash (a studio's picture, a line of text, "Made with Tilewright") plays while the game loads behind it
+  let splashUrl: string | null = null;
+  if (manifest.splashImage) {
+    try {
+      const bytes = await assetFs.readBinary(joinPath(root, ...manifest.splashImage.split('/')));
+      splashUrl = URL.createObjectURL(new Blob([bytes as BlobPart], { type: mimeOf(manifest.splashImage) }));
+    } catch {
+      console.warn(`The splash picture "${manifest.splashImage}" could not be read.`);
+    }
+  }
+  const cards = splashCards(manifest, splashUrl);
+  const splashScreen = cards.length > 0 ? playSplash(stage, cards) : null;
 
   const { project } = await openProject(assetFs, root);
   // plugins other people wrote were shipped inside the game, with the permissions its author allowed
@@ -190,7 +184,8 @@ async function boot(): Promise<void> {
   const scene = await loadScene(assetFs, root, scenePath);
   const tileset = tilesetFromList(project.tileset);
 
-  await splashScreen?.done(1500);
+  await splashScreen?.done();
+  if (splashUrl) URL.revokeObjectURL(splashUrl);
   const s: PlaySession = new PlaySession({
     renderer,
     uiParent: stage,

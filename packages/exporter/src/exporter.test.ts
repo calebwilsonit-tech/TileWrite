@@ -77,12 +77,27 @@ describe('what ships', () => {
   });
 });
 
+describe('splash settings', () => {
+  it('carries a splash picture and the "Made with Tilewright" card into the game', () => {
+    const m = buildManifest({ ...defaultSettings('Cave'), splashImage: 'assets/brand/logo.png', madeWith: false }, 'scenes/main.scene.json', [], '0.0.1');
+    expect(m.splashImage).toBe('assets/brand/logo.png');
+    expect(m.madeWith).toBe(false);
+  });
+  it('turns the card on for settings saved before it existed, and reads games exported before it as without it', () => {
+    expect(parseSettings(JSON.stringify({ gameName: 'Old', splashText: 'Hi' }), 'P').settings).toMatchObject({ madeWith: true, splashImage: '' });
+    const old = { format: 1, name: 'Old', version: '1.0.0', window: { width: 1280, height: 720, fullscreen: false }, splashText: '', icon: '', startScene: 's', scripts: [], builtWith: 'Tilewright 0.1.0' };
+    expect(GameManifestSchema.parse(old)).toMatchObject({ splashImage: '', madeWith: false });
+  });
+});
+
 describe('manifest', () => {
   it('describes how the game starts, and survives a round trip', () => {
     const m = buildManifest({ ...defaultSettings('Cave'), fullscreen: true, splashText: 'Hello' }, 'scenes/main.scene.json', ['Spinner'], '0.0.1');
     expect(GameManifestSchema.parse(JSON.parse(JSON.stringify(m)))).toEqual(m);
     expect(m.window).toEqual({ width: 1280, height: 720, fullscreen: true });
     expect(m.builtWith).toBe('Tilewright 0.0.1');
+    expect(m.splashImage).toBe('');
+    expect(m.madeWith).toBe(true);
     expect(ScriptsBundleSchema.safeParse({ format: 1, scripts: { A: { js: 'export default {}' } } }).success).toBe(true);
     expect(ScriptsBundleSchema.safeParse({ format: 2, scripts: {} }).success).toBe(false);
   });

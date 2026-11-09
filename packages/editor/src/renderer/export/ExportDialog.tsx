@@ -124,6 +124,14 @@ export function ExportDialog() {
             <input data-testid="export-splash" value={settings.splashText} onChange={(e) => change({ splashText: e.target.value })} />
           </label>
           <label className="field wide">
+            <span>Splash picture (a studio logo: PNG, JPG or WebP in the project, optional)</span>
+            <input data-testid="export-splash-image" placeholder="assets/logo.png" value={settings.splashImage} onChange={(e) => change({ splashImage: e.target.value.trim() })} onBlur={() => void recheck(settings)} />
+          </label>
+          <label className="field check">
+            <input data-testid="export-made-with" type="checkbox" checked={settings.madeWith} onChange={(e) => change({ madeWith: e.target.checked })} />
+            <span>End the splash with "Made with Tilewright"</span>
+          </label>
+          <label className="field wide">
             <span>Window icon (a PNG in the project, optional)</span>
             <input data-testid="export-icon" placeholder="assets/icon.png" value={settings.icon} onChange={(e) => change({ icon: e.target.value.trim() })} onBlur={() => void recheck(settings)} />
           </label>

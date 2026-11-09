@@ -15,6 +15,10 @@ export const ExportSettingsSchema = z.object({
   fullscreen: z.boolean().default(false),
   /** A line of text shown on a splash screen before the game starts. Empty means no splash screen. */
   splashText: z.string().max(120).default(''),
+  /** A picture in the project (PNG, JPG or WebP, for example a studio logo) shown on the splash screen before the game starts. Empty means none. */
+  splashImage: z.string().default(''),
+  /** End the splash screen with a short "Made with Tilewright" card. On unless the designer turns it off. */
+  madeWith: z.boolean().default(true),
   /** A PNG in the project (for example `assets/icon.png`) used as the window and taskbar icon. Empty means the default. */
   icon: z.string().default(''),
 });
@@ -23,7 +27,7 @@ export type ExportSettings = z.infer<typeof ExportSettingsSchema>;
 export const SETTINGS_FILE = 'export-settings.json';
 
 export function defaultSettings(projectName: string): ExportSettings {
-  return { gameName: projectName.trim() || 'My Game', version: '1.0.0', windowWidth: 1280, windowHeight: 720, fullscreen: false, splashText: '', icon: '' };
+  return { gameName: projectName.trim() || 'My Game', version: '1.0.0', windowWidth: 1280, windowHeight: 720, fullscreen: false, splashText: '', splashImage: '', madeWith: true, icon: '' };
 }
 
 /** Read saved settings; anything missing or damaged falls back to the defaults, so a bad file never blocks exporting. */

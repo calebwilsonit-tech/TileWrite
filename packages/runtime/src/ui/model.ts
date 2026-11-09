@@ -106,7 +106,8 @@ export type UiStyle = z.infer<typeof UiStyleSchema>;
 
 export const UiAnimSchema = z.object({
   on: z.enum(['show', 'hide', 'hover', 'click']),
-  kind: z.enum(['fade', 'slide', 'pop', 'pulse']),
+  /** wipe: the widget sweeps the whole of its own width or height in from (or out toward) `dir`, like a sheet pulled across. */
+  kind: z.enum(['fade', 'slide', 'pop', 'pulse', 'wipe']),
   ms: z.number().min(50).max(3000).default(200),
   dir: z.enum(['left', 'right', 'up', 'down']).default('up'),
 });
