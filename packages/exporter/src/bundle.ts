@@ -61,6 +61,10 @@ export const GameManifestSchema = z.object({
   version: z.string(),
   window: z.object({ width: z.number(), height: z.number(), fullscreen: z.boolean() }),
   splashText: z.string(),
+  /** Path of the splash picture inside the game's data folder, or ''. */
+  splashImage: z.string().default(''),
+  /** Whether the splash screen ends with a "Made with Tilewright" card. */
+  madeWith: z.boolean().default(false),
   /** Path of the icon inside the game's data folder, or ''. */
   icon: z.string(),
   startScene: z.string(),
@@ -78,6 +82,8 @@ export function buildManifest(s: ExportSettings, startScene: string, scripts: st
     version: s.version,
     window: { width: s.windowWidth, height: s.windowHeight, fullscreen: s.fullscreen },
     splashText: s.splashText,
+    splashImage: s.splashImage,
+    madeWith: s.madeWith,
     icon: s.icon,
     startScene,
     scripts,

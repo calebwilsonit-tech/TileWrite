@@ -249,6 +249,11 @@ const KEYFRAMES = (anim: UiNode['anim'][number]): Keyframe[] => {
       return hide ? [{ opacity: 1 }, { opacity: 0 }] : [{ opacity: 0 }, { opacity: 1 }];
     case 'slide':
       return hide ? [{ transform: 'none', opacity: 1 }, { transform: off, opacity: 0 }] : [{ transform: off, opacity: 0 }, { transform: 'none', opacity: 1 }];
+    case 'wipe': {
+      // the whole width (or height) of the widget: in from `dir` when shown, out toward `dir` when hidden
+      const far = d === 'left' ? 'translateX(-100%)' : d === 'right' ? 'translateX(100%)' : d === 'up' ? 'translateY(-100%)' : 'translateY(100%)';
+      return hide ? [{ transform: 'none' }, { transform: far }] : [{ transform: far }, { transform: 'none' }];
+    }
     case 'pop':
       return hide ? [{ transform: 'scale(1)', opacity: 1 }, { transform: 'scale(0.6)', opacity: 0 }] : [{ transform: 'scale(0.6)', opacity: 0 }, { transform: 'scale(1.08)', opacity: 1, offset: 0.7 }, { transform: 'scale(1)', opacity: 1 }];
     default:

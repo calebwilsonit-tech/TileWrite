@@ -277,8 +277,8 @@ export function UiInspector({ doc, widgetId }: { doc: UiDoc; widgetId: string | 
         {w.anim.map((a, i) => (
           <div className="row wrap" key={i} data-testid={`ui-anim-${i}`}>
             <SelectField<string> label="When" value={a.on} options={[{ value: 'show', label: 'it appears' }, { value: 'hide', label: 'it goes' }, { value: 'hover', label: 'the mouse is over it' }, { value: 'click', label: 'it is clicked' }]} onChange={(v) => setAnim(i, { on: v as UiAnim['on'] })} />
-            <SelectField<string> label="Do" value={a.kind} options={[{ value: 'fade', label: 'fade' }, { value: 'slide', label: 'slide' }, { value: 'pop', label: 'pop' }, { value: 'pulse', label: 'pulse' }]} onChange={(v) => setAnim(i, { kind: v as UiAnim['kind'] })} />
-            {a.kind === 'slide' && <SelectField<string> label="From" value={a.dir} options={[{ value: 'left', label: 'left' }, { value: 'right', label: 'right' }, { value: 'up', label: 'above' }, { value: 'down', label: 'below' }]} onChange={(v) => setAnim(i, { dir: v as UiAnim['dir'] })} />}
+            <SelectField<string> label="Do" value={a.kind} options={[{ value: 'fade', label: 'fade' }, { value: 'slide', label: 'slide' }, { value: 'pop', label: 'pop' }, { value: 'pulse', label: 'pulse' }, { value: 'wipe', label: 'wipe (sweep across)' }]} onChange={(v) => setAnim(i, { kind: v as UiAnim['kind'] })} />
+            {(a.kind === 'slide' || a.kind === 'wipe') && <SelectField<string> label="From" value={a.dir} options={[{ value: 'left', label: 'left' }, { value: 'right', label: 'right' }, { value: 'up', label: 'above' }, { value: 'down', label: 'below' }]} onChange={(v) => setAnim(i, { dir: v as UiAnim['dir'] })} />}
             <NumberField label="Milliseconds" min={50} max={3000} step={50} value={a.ms} onCommit={(v) => setAnim(i, { ms: v })} />
             <button aria-label="Remove movement" onClick={() => edit((n) => void n.anim.splice(i, 1))}>
               ✕
