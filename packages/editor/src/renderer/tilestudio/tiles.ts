@@ -16,10 +16,12 @@ export interface TileForm {
   rightArt: string;
   /** Levels tall the pictures on the sides are (they repeat upwards). */
   faceLevels: number;
+  /** Dark lines along the edges of its blocks where they meet air or another tile (TileDef.outline). */
+  outline: boolean;
   variants: { tile: number; weight: number }[];
 }
 
-export const emptyTileForm = (name: string): TileForm => ({ name, props: {}, animate: false, fps: 4, leftArt: '', rightArt: '', faceLevels: 1, variants: [] });
+export const emptyTileForm = (name: string): TileForm => ({ name, props: {}, animate: false, fps: 4, leftArt: '', rightArt: '', faceLevels: 1, outline: false, variants: [] });
 
 const shadeInt = (c: number, k: number): number => {
   const ch = (shift: number): number => Math.max(0, Math.min(255, Math.round(((c >> shift) & 255) * k)));
@@ -41,6 +43,7 @@ export function formOfTile(t: TileDefData): TileForm {
     leftArt: t.leftArt ?? '',
     rightArt: t.rightArt ?? '',
     faceLevels: t.faceLevels ?? 1,
+    outline: t.outline !== undefined,
     variants: structuredClone(t.variants ?? []),
   };
 }
@@ -81,6 +84,7 @@ export function upsertTile(tiles: readonly TileDefData[], sprite: SpriteData, fo
   if (form.leftArt) base.leftArt = form.leftArt;
   if (form.rightArt) base.rightArt = form.rightArt;
   if (form.faceLevels !== 1 && (form.leftArt || form.rightArt)) base.faceLevels = form.faceLevels;
+  if (form.outline) base.outline = existing?.outline ?? {};
   const props = clean(form.props);
   if (props) base.props = props;
   const variants = form.variants.filter((v) => v.weight > 0);

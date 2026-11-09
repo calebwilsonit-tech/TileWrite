@@ -15,6 +15,11 @@ export interface TileDef {
   wall?: boolean;
   /** An outline along some sides of the top face and dots in some corners (edges and shores). */
   rim?: { sides: number; corners: number; color: number };
+  /**
+   * Dark lines along the edges of this tile's blocks where they meet air or a different tile: around the outline of a shape built
+   * from it, never between two blocks of the same tile (or of tiles in the same `group`). Drawn on block stacks and plain columns.
+   */
+  outline?: { color?: number; width?: number; alpha?: number; group?: string };
   /** A sprite (drawn or imported in the sprite studio) that covers the top face instead of the flat colour. */
   art?: string;
   /** Sprites that cover the left and right faces (cliffs and walls), drawn on the wall-face templates of the tile studio. */

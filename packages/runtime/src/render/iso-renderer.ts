@@ -1,5 +1,6 @@
 import { Application, Container, Graphics, Rectangle, Sprite as PixiSprite, Text, Texture } from 'pixi.js';
 import { ANIMATOR, type Animator } from '../anim/animator';
+import { outlineEdges } from './outline';
 import type { CellMark } from '../story/cutscene';
 import type { BlockFace, CellStack } from '../tilemap/tilemap';
 import { DEFAULT_ISO, gridToScreen, relToScreen, rotateGrid, screenToCell, screenToGrid, rotateVec, unrotateVec, type Cell, type IsoConfig, type ViewRotation } from '../iso/math';
@@ -342,6 +343,19 @@ export class IsoRenderer {
   updateCells(cells: readonly { x: number; y: number }[]): void {
     const map = this.tileMap;
     if (!map) return;
+    // an outline depends on the cells beside it, so with outlined tiles a change redraws the neighbours too
+    if (Object.values(this.tileset).some((d) => d?.outline)) {
+      const seen = new Set<number>();
+      const more: { x: number; y: number }[] = [];
+      for (const c of cells) for (const [dx, dy] of [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]] as const) {
+        const nx = c.x + dx, ny = c.y + dy;
+        const k = ny * map.width + nx;
+        if (!map.inBounds(nx, ny) || seen.has(k)) continue;
+        seen.add(k);
+        more.push({ x: nx, y: ny });
+      }
+      cells = more;
+    }
     for (const c of cells) {
       if (!this.cellBuilt(c.x, c.y)) {
         if (map.inBounds(c.x, c.y)) this.maxLevel = Math.max(this.maxLevel, map.topHeight(c.x, c.y));
@@ -554,6 +568,7 @@ export class IsoRenderer {
     } else {
       this.drawCell(g, { n: 0, e: 0, s: 0, w: 0 }, bottom, def);
       if (def.anim) this.addAnimation(g, def);
+      if (def.outline) for (let z = 0; z < height; z++) this.drawOutline(g, map, x, y, z, tile, def, z + 1 - height);
     }
     add(g, height, box, !(flags & FLAG.PIT));
 
@@ -630,9 +645,21 @@ export class IsoRenderer {
       };
       const skip = { left: hidden(l.x, l.y), right: hidden(r.x, r.y) };
       this.drawCell(g, flat, -1, own, faces, skip);
+      if (own.outline) this.drawOutline(g, map, x, y, b.z, b.tile, own, 0);
       const wall = own.wall === true;
       add(g, b.z + 1, { id: 0, minX: x, maxX: x + 1, minY: y, maxY: y + 1, minZ: b.z, maxZ: b.z + 1 }, true);
       void wall;
+    }
+  }
+
+  /** The outline of one cube (the block at level z of a cell, its top drawn at local height `top`); see outlineEdges. */
+  private drawOutline(g: Graphics, map: TileMap, x: number, y: number, z: number, tile: number, def: TileDef, top: number): void {
+    const o = def.outline!;
+    const style = { width: o.width ?? 2.5, color: o.color ?? 0x15100c, alpha: o.alpha ?? 0.9 };
+    for (const [a, b] of outlineEdges(map, this.tileset, x, y, z, tile, this.view)) {
+      const A = this.local(a[0], a[1], top + a[2]);
+      const B = this.local(b[0], b[1], top + b[2]);
+      g.moveTo(A[0], A[1]).lineTo(B[0], B[1]).stroke(style);
     }
   }
 

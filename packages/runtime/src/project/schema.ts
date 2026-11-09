@@ -232,6 +232,7 @@ export const TileDefSchema = z.object({
   group: z.number().int().min(1).optional(),
   wall: z.boolean().optional(),
   rim: z.object({ sides: z.number().int().min(0).max(15), corners: z.number().int().min(0).max(15), color: z.number().int().min(0).max(0xffffff) }).optional(),
+  outline: z.object({ color: z.number().int().min(0).max(0xffffff).optional(), width: z.number().min(0.5).max(12).optional(), alpha: z.number().min(0).max(1).optional(), group: z.string().max(64).optional() }).optional(),
   /** Name of a sprite that covers the top face. */
   art: z.string().optional(),
   leftArt: z.string().optional(),

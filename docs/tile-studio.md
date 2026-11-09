@@ -26,6 +26,7 @@ Under **Tile properties and the palette**, set everything about the tile once: *
 
 - **Moving top.** Tick *Use all frames of this sprite as the animation* and give a speed: water, lava and torches move in step across the whole map.
 - **Pictures on the sides.** Choose sprites for the left and right faces (made with a wall or cliff canvas) and how many levels each picture is tall; a taller face repeats it upwards. A cliff of three levels shows a one-level picture three times.
+- **Outline its edges.** Draws a dark line along the edges of the tile's blocks where they meet air or a different tile, and none between two of its own blocks, so a wall built from many blocks reads as one shape with a clear edge. Good for puzzle rooms full of blocks. In `project.json` it is `"outline": {}` on the tile, with optional `color` (0xRRGGBB, near-black by default), `width` (2.5), `alpha` (0.9) and `group` (tiles that share a group are not outlined against each other).
 - **Variants.** Add other tiles with weights; the Paint, Rectangle, Line, Fill and Scatter tools then use a variant now and then (the same one for the same cell every time).
 
 ## Edge sets (autotile)

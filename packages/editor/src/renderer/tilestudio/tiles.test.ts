@@ -89,4 +89,14 @@ describe('painting with variants', () => {
     expect(pickTileVariant(tiles, 1, 5, 9)).toBe(pickTileVariant(tiles, 1, 5, 9));
     expect(pickTileVariant(tiles, 7, 3, 3)).toBe(7); // a tile with no variants is itself
   });
+
+  it('keeps the outline of a tile and turns it on and off', () => {
+    const sprite = spriteFromRgba('wood', green());
+    const made = upsertTile(base(), sprite, { ...emptyTileForm('Wood'), outline: true });
+    const tile = made.tiles.find((t) => t.id === made.id)!;
+    expect(tile.outline).toEqual({});
+    expect(formOfTile(tile).outline).toBe(true);
+    const off = upsertTile(made.tiles, sprite, { ...formOfTile(tile), outline: false });
+    expect(off.tiles.find((t) => t.id === made.id)!.outline).toBeUndefined();
+  });
 });

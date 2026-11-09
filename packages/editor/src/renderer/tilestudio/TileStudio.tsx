@@ -398,6 +398,7 @@ function TileSection() {
         <SelectField<string> testId="ts-left-art" label="Left face" value={form.leftArt} options={[{ value: '', label: '(flat colour)' }, ...sprites.map((s) => ({ value: s, label: s }))]} onChange={(v) => setForm((f) => ({ ...f, leftArt: v }))} />
         <SelectField<string> testId="ts-right-art" label="Right face" value={form.rightArt} options={[{ value: '', label: '(flat colour)' }, ...sprites.map((s) => ({ value: s, label: s }))]} onChange={(v) => setForm((f) => ({ ...f, rightArt: v }))} />
         <NumberField testId="ts-face-levels" label="Each picture is this many levels tall" min={0.5} max={8} step={0.5} value={form.faceLevels} onCommit={(v) => setForm((f) => ({ ...f, faceLevels: v }))} />
+        <CheckField testId="ts-outline" label="Outline its edges (a dark line where its blocks meet air or another tile, none between its own blocks)" value={form.outline} onChange={(v) => setForm((f) => ({ ...f, outline: v }))} />
       </fieldset>
       <fieldset>
         <legend>Variants (chosen at random when painting)</legend>
