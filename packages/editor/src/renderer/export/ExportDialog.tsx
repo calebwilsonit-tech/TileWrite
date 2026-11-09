@@ -21,6 +21,9 @@ export function ExportDialog() {
   const [targetNotes, setTargetNotes] = useState<string[]>([]);
   usePlugins();
   const [canExport, setCanExport] = useState(true);
+  const [canExportWeb, setCanExportWeb] = useState(false);
+  /** Made for this computer (a program), or for web browsers (a page for itch.io or a website). */
+  const [forWeb, setForWeb] = useState(false);
   const scripts = useRef<ScriptsBundle>({ format: 1, scripts: {} });
   const run = useRef(0);
 
@@ -45,6 +48,7 @@ export function ExportDialog() {
         setNote(loaded.problem ?? '');
         setPlatform(info.platform as Platform);
         setCanExport(info.canExport);
+        setCanExportWeb(info.canExportWeb === true);
         await recheck(loaded.settings);
       })();
     };
@@ -72,7 +76,7 @@ export function ExportDialog() {
     setBusy(true);
     setTargetNotes([]);
     try {
-      const made = await exportGame(settings, scripts.current, out);
+      const made = await exportGame(settings, scripts.current, out, forWeb);
       setResult(made);
       const notes: string[] = [];
       for (const id of alsoMake) {
@@ -95,8 +99,22 @@ export function ExportDialog() {
   return (
     <div className="modal-backdrop" onMouseDown={close}>
       <div className="dialog export-dialog" role="dialog" aria-label="Export the game" data-testid="export-dialog" onMouseDown={(e) => e.stopPropagation()}>
-        <h2>Export the game for {PLATFORM_LABEL[platform]}</h2>
-        <p className="hint">Makes a folder with a program you can run (and a zip of it). It runs without Tilewright or the internet.</p>
+        <h2>Export the game for {forWeb ? 'web browsers' : PLATFORM_LABEL[platform]}</h2>
+        <div className="row" role="radiogroup" aria-label="Make it for" data-testid="export-for">
+          <label className="field check">
+            <input type="radio" name="export-for" data-testid="export-for-computer" checked={!forWeb} onChange={() => setForWeb(false)} />
+            <span>{PLATFORM_LABEL[platform]} (a program)</span>
+          </label>
+          <label className="field check">
+            <input type="radio" name="export-for" data-testid="export-for-web" checked={forWeb} disabled={!canExportWeb} onChange={() => setForWeb(true)} />
+            <span>Web browsers (itch.io, a website)</span>
+          </label>
+        </div>
+        <p className="hint">
+          {forWeb
+            ? 'Makes a folder with a web page (index.html) and a zip of it. Upload the zip to itch.io as an HTML game, or put the folder on a website. Saves are kept in the player\'s browser.'
+            : 'Makes a folder with a program you can run (and a zip of it). It runs without Tilewright or the internet.'}
+        </p>
         {note && <p className="warn-text">{note}</p>}
         <div className="export-grid">
           <label className="field">
@@ -215,12 +233,12 @@ export function ExportDialog() {
             ))}
           </div>
         )}
-        {!canExport && <p className="warn-text">This editor cannot make games here: it needs to be built first (npm run build), on Windows or Linux.</p>}
+        {!forWeb && !canExport && <p className="warn-text">This editor cannot make games here: it needs to be built first (npm run build), on Windows or Linux.</p>}
         <div className="row end">
           <button onClick={close} disabled={busy} data-testid="export-close">
             Close
           </button>
-          <button className="primary" data-testid="export-go" disabled={busy || problems === null || errors.length > 0 || !canExport} onClick={() => void go()}>
+          <button className="primary" data-testid="export-go" disabled={busy || problems === null || errors.length > 0 || (forWeb ? !canExportWeb : !canExport)} onClick={() => void go()}>
             {busy ? 'Exporting...' : 'Export...'}
           </button>
         </div>

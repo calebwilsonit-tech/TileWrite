@@ -74,7 +74,7 @@ export interface TilewrightApi {
     onToolCall(fn: (call: AssistantToolCall) => void): () => void;
   };
   exporter: {
-    info(): Promise<{ platform: string; canExport: boolean; version: string }>;
+    info(): Promise<{ platform: string; canExport: boolean; canExportWeb?: boolean; version: string }>;
     build(job: ExportJob): Promise<ExportResult>;
     onProgress(fn: (text: string) => void): () => void;
   };
@@ -105,12 +105,17 @@ declare global {
  * holds nothing once the door has been handed over, so plugins that run in this window cannot reach it.
  */
 const given = typeof window === 'undefined' ? undefined : window.tilewright; // (no window when tests and tools import this file)
-const door = (typeof given?.unlock === 'function' ? given.unlock() : given) as TilewrightApi;
+const take = (g: typeof given): TilewrightApi | undefined => (typeof g?.unlock === 'function' ? (g.unlock() ?? undefined) : g);
+let door = take(given);
 
 /** Handles for end-to-end tests (window.__store and the like) exist only when the tests ask for them. */
 export const testHooks: boolean = given?.testHooks === true;
 
-export const api = (): TilewrightApi => door;
+/**
+ * A game exported for web browsers makes its door in the page (player/web-door.ts). The bundler may run this file before that, so
+ * a door that was not there at startup is taken the first time it is asked for: by the player, before any plugin is loaded.
+ */
+export const api = (): TilewrightApi => (door ??= take(typeof window === 'undefined' ? undefined : window.tilewright)) as TilewrightApi;
 
 /** Join path parts with the separator the file already uses (Windows or POSIX). */
 export function joinPath(base: string, ...parts: string[]): string {

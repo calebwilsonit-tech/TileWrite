@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { GameManifestSchema, ScriptsBundleSchema, buildManifest, defaultSettings, exeFileName, exportFolderName, fileSafeName, listGameFiles, parseSettings, settingsProblems, shouldInclude } from './index';
+import { GameManifestSchema, ScriptsBundleSchema, buildManifest, defaultSettings, exeFileName, exportFolderName, fileSafeName, listGameFiles, parseSettings, settingsProblems, shouldInclude, webFileIndex } from './index';
 
 describe('export settings', () => {
   it('start from the project name', () => {
@@ -38,6 +38,8 @@ describe('names', () => {
     expect(exportFolderName(s, 'win32')).toBe('Cave Quest-1.2-windows');
     expect(exportFolderName(s, 'linux')).toBe('Cave Quest-1.2-linux');
     expect(exeFileName(s, 'win32')).toBe('Cave Quest.exe');
+    expect(exportFolderName(s, 'web')).toBe('Cave Quest-1.2-web');
+    expect(exeFileName(s, 'web')).toBe('index.html');
     expect(exeFileName(s, 'linux')).toBe('Cave Quest');
   });
 });
@@ -130,5 +132,11 @@ describe('credits for a game', () => {
     expect(creditProblems(creditsOf(links))[0]!.text).toContain('may not be used in a game that is sold');
     expect(creditProblems([{ name: 'X', author: 'Y', licence: '', source: '' }])[0]!.text).toContain('no licence');
     expect(creditProblems(creditsOf(JSON.stringify({ links: [{ name: 'A', author: 'B', licence: 'CC0-1.0' }] })))).toEqual([]);
+  });
+});
+
+describe('a game for web browsers', () => {
+  it('lists its data files once each, with forward slashes, so the page can list folders', () => {
+    expect(JSON.parse(webFileIndex(['scenes\\b.scene.json', 'project.json', 'scenes/b.scene.json', 'game.json']))).toEqual(['game.json', 'project.json', 'scenes/b.scene.json']);
   });
 });
