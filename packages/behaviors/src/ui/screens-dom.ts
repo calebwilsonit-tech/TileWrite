@@ -261,6 +261,15 @@ const KEYFRAMES = (anim: UiNode['anim'][number]): Keyframe[] => {
   }
 };
 
+/**
+ * A widget placed by its middle (anchors t, b, c...) is moved there with a transform of its own; an animation's transform would replace it,
+ * so the widget would jump while it plays. The animation's movement is put after the widget's own instead.
+ */
+export const onTopOf = (frames: Keyframe[], base: string): Keyframe[] =>
+  base === '' || base === 'none'
+    ? frames
+    : frames.map((f) => (typeof f.transform === 'string' ? { ...f, transform: f.transform === 'none' ? base : `${base} ${f.transform}` } : f));
+
 const POPUP_ANIM = (kind: string): Keyframe[] | null => (kind === 'fade' ? [{ opacity: 0 }, { opacity: 1 }] : kind === 'slide' ? [{ transform: 'translateY(-8px)', opacity: 0 }, { transform: 'none', opacity: 1 }] : kind === 'pop' ? [{ transform: 'scale(0.9)', opacity: 0 }, { transform: 'none', opacity: 1 }] : null);
 
 const apply = (el: HTMLElement, prev: string[], css: Record<string, string>): string[] => {
@@ -677,7 +686,7 @@ export class UiScreens {
       if (vn.visible) hover(this.sim, vn);
       if (vn.tooltip) this.showTip(vn.tooltip, e);
       const anim = vn.node.anim.find((a) => a.on === 'hover');
-      if (anim) el.animate(KEYFRAMES(anim), { duration: anim.ms, easing: 'ease-out' });
+      if (anim) el.animate(onTopOf(KEYFRAMES(anim), el.style.transform), { duration: anim.ms, easing: 'ease-out' });
     });
     el.addEventListener('pointermove', (e) => {
       if (this.tooltip.style.display !== 'none') this.moveTip(e);
@@ -720,7 +729,7 @@ export class UiScreens {
       this.autoFocus = false; // the player chose a row with the mouse
       this.focusKey = key;
       const anim = vn.node.anim.find((a) => a.on === 'click');
-      if (anim) el.animate(KEYFRAMES(anim), { duration: anim.ms, easing: 'ease-out' });
+      if (anim) el.animate(onTopOf(KEYFRAMES(anim), el.style.transform), { duration: anim.ms, easing: 'ease-out' });
       if (vn.node.type === 'keybind') this.capturingKey = key;
       if (vn.node.type === 'keybind') this.sim.runtime.scratch.set('ui.capturing', key);
       activateWidget(this.sim, vn);
@@ -837,13 +846,13 @@ export class UiScreens {
         el.classList.remove('hidden');
       } else if (vn.visible) {
         el.classList.remove('hidden');
-        if (anim) el.animate(KEYFRAMES(anim), { duration: anim.ms, easing: 'ease-out' });
+        if (anim) el.animate(onTopOf(KEYFRAMES(anim), el.style.transform), { duration: anim.ms, easing: 'ease-out' });
         else if (vn.part?.role === 'list' && vn.popup === undefined) {
           const f = POPUP_ANIM(vn.owner?.popup?.spec.animOpen ?? 'none');
           if (f) el.animate(f, { duration: 140, easing: 'ease-out' });
         }
       } else if (anim && !first) {
-        el.animate(KEYFRAMES(anim), { duration: anim.ms, easing: 'ease-in' }).onfinish = () => {
+        el.animate(onTopOf(KEYFRAMES(anim), el.style.transform), { duration: anim.ms, easing: 'ease-in' }).onfinish = () => {
           if (!live.shown) el.classList.add('hidden');
         };
       } else el.classList.add('hidden');
