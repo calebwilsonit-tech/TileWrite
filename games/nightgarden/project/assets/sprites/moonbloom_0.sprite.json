@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "name": "moonbloom_0",
+  "width": 64,
+  "height": 64,
+  "palette": [
+    "#00000000",
+    "#3a2a25ff",
+    "#8a5a3cff",
+    "#2f7a50ff",
+    "#55a868ff",
+    "#8fb8ffff",
+    "#c8dcffff",
+    "#2f6f4eff",
+    "#4a90d9ff",
+    "#2b4c7eff",
+    "#8e7cc3ff",
+    "#c9964aff",
+    "#7b5a3aff",
+    "#a3a7b3ff",
+    "#5c6070ff",
+    "#2a2d38ff"
+  ],
+  "layers": [
+    {
+      "id": "l1",
+      "name": "Layer 1",
+      "visible": true
+    }
+  ],
+  "frames": [
+    {"duration":120,"cels":{"l1":"2206x0 4x2 58x0 2x2 4x1 2x2 54x0 2x2 8x1 2x2 50x0 2x2 12x1 2x2 46x0 2x2 16x1 2x2 42x0 2x2 20x1 2x2 38x0 2x2 24x1 2x2 34x0 2x2 28x1 2x2 30x0 2x2 32x1 2x2 26x0 2x2 14x1 9x3 13x1 2x2 22x0 2x2 12x1 5x3 3x4 1x3 3x4 5x3 11x1 2x2 18x0 2x2 12x1 4x3 5x4 3x5 5x4 4x3 11x1 2x2 14x0 2x2 13x1 4x3 5x4 2x5 1x6 2x5 5x4 4x3 12x1 2x2 10x0 2x2 14x1 4x3 6x4 1x5 1x6 3x5 6x4 4x3 13x1 2x2 8x0 2x2 14x1 4x3 1x4 5x3 5x5 5x3 1x4 4x3 13x1 2x2 10x0 2x2 12x1 4x3 7x4 3x5 7x4 4x3 11x1 2x2 14x0 2x2 10x1 5x3 7x4 1x3 7x4 5x3 9x1 2x2 18x0 2x2 9x1 5x3 6x4 1x3 6x4 5x3 8x1 2x2 22x0 2x2 8x1 7x3 3x4 1x3 3x4 7x3 7x1 2x2 26x0 2x2 8x1 17x3 7x1 2x2 30x0 2x2 10x1 9x3 9x1 2x2 34x0 2x2 24x1 2x2 38x0 2x2 20x1 2x2 42x0 2x2 16x1 2x2 46x0 2x2 12x1 2x2 50x0 2x2 8x1 2x2 54x0 2x2 4x1 2x2 58x0 4x2 158x0"},"boxes":[]}
+  ],
+  "origin": {
+    "x": 32,
+    "y": 48
+  },
+  "clips": [],
+  "procedural": null
+}

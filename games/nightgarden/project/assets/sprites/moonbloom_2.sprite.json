@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "name": "moonbloom_2",
+  "width": 64,
+  "height": 64,
+  "palette": [
+    "#00000000",
+    "#3a2a25ff",
+    "#8a5a3cff",
+    "#1e4d3aff",
+    "#2f7a50ff",
+    "#55a868ff",
+    "#9bd67aff",
+    "#8fb8ffff",
+    "#c8dcffff",
+    "#fff3c4ff",
+    "#8e7cc3ff",
+    "#c9964aff",
+    "#7b5a3aff",
+    "#a3a7b3ff",
+    "#5c6070ff",
+    "#2a2d38ff"
+  ],
+  "layers": [
+    {
+      "id": "l1",
+      "name": "Layer 1",
+      "visible": true
+    }
+  ],
+  "frames": [
+    {"duration":120,"cels":{"l1":"1181x0 6x7 56x0 10x7 53x0 4x7 4x8 4x7 51x0 4x7 6x8 4x7 50x0 3x7 3x8 1x9 4x8 3x7 50x0 3x7 4x8 1x9 3x8 3x7 50x0 3x7 8x8 3x7 50x0 4x7 6x8 4x7 51x0 4x7 4x8 4x7 53x0 10x7 4x4 52x0 6x7 4x4 1x6 3x4 50x0 1x5 13x4 50x0 1x5 13x4 45x0 6x5 4x4 1x3 1x0 5x4 45x0 2x5 1x6 6x5 3x4 1x3 51x0 9x5 3x4 1x3 51x0 9x5 3x4 1x3 53x0 6x5 4x4 1x3 1x2 5x4 49x0 2x2 1x1 1x5 9x4 1x6 3x4 45x0 2x2 3x1 1x5 13x4 43x0 2x2 5x1 1x4 1x5 12x4 41x0 2x2 2x1 5x5 1x4 1x5 3x4 1x3 1x1 5x4 1x1 2x2 38x0 2x2 2x1 2x5 1x6 6x5 3x4 1x3 9x1 2x2 34x0 2x2 4x1 9x5 3x4 1x3 3x4 1x3 7x1 2x2 30x0 2x2 6x1 9x5 3x4 1x3 2x5 5x4 1x3 5x1 2x2 26x0 2x2 5x1 2x3 3x4 5x5 1x4 1x5 3x4 1x3 5x5 4x4 2x3 4x1 2x2 22x0 2x2 6x1 1x3 4x4 6x5 1x4 1x5 3x4 1x3 7x5 4x4 1x3 5x1 2x2 18x0 2x2 6x1 2x3 4x4 7x5 1x4 1x5 3x4 1x3 8x5 4x4 2x3 5x1 2x2 14x0 2x2 7x1 2x3 5x4 7x5 1x4 1x5 3x4 1x3 8x5 5x4 2x3 6x1 2x2 10x0 2x2 9x1 2x3 5x4 7x5 1x4 1x5 3x4 1x3 8x5 5x4 2x3 8x1 2x2 8x0 2x2 8x1 3x3 5x4 7x5 1x4 1x5 3x4 1x3 8x5 5x4 3x3 7x1 2x2 10x0 2x2 6x1 3x3 6x4 19x5 6x4 3x3 5x1 2x2 14x0 2x2 4x1 4x3 7x4 15x5 7x4 4x3 3x1 2x2 18x0 2x2 3x1 4x3 9x4 9x5 9x4 4x3 2x1 2x2 22x0 2x2 1x1 6x3 23x4 6x3 2x2 26x0 2x2 7x3 19x4 7x3 1x2 30x0 2x2 9x3 11x4 9x3 1x2 34x0 1x2 27x3 38x0 2x2 21x3 1x2 42x0 2x2 2x1 13x3 1x1 2x2 46x0 2x2 12x1 2x2 50x0 2x2 8x1 2x2 54x0 2x2 4x1 2x2 58x0 4x2 158x0"},"boxes":[]}
+  ],
+  "origin": {
+    "x": 32,
+    "y": 48
+  },
+  "clips": [],
+  "procedural": null
+}

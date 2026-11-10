@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "name": "exit",
+  "width": 64,
+  "height": 32,
+  "palette": [
+    "#00000000",
+    "#1e4d3aff",
+    "#55a868ff",
+    "#2f7a50ff",
+    "#9bd67aff",
+    "#fff3c4ff",
+    "#6fae5bff",
+    "#2f6f4eff",
+    "#4a90d9ff",
+    "#2b4c7eff",
+    "#8e7cc3ff",
+    "#c9964aff",
+    "#7b5a3aff",
+    "#a3a7b3ff",
+    "#5c6070ff",
+    "#2a2d38ff"
+  ],
+  "layers": [
+    {
+      "id": "l1",
+      "name": "Layer 1",
+      "visible": true
+    }
+  ],
+  "frames": [
+    {"duration":500,"cels":{"l1":"158x0 4x2 58x0 2x2 4x1 2x2 54x0 2x2 8x1 2x2 50x0 2x2 12x1 2x2 46x0 2x2 6x1 4x3 6x1 2x2 42x0 2x2 6x1 8x3 6x1 2x2 38x0 2x2 6x1 12x3 6x1 2x2 34x0 2x2 6x1 6x3 4x4 6x3 6x1 2x2 30x0 2x2 6x1 6x3 2x4 4x3 2x4 6x3 6x1 2x2 26x0 2x2 6x1 6x3 2x4 8x3 2x4 6x3 6x1 2x2 22x0 2x2 6x1 6x3 2x4 12x3 2x4 6x3 6x1 2x2 18x0 2x2 6x1 6x3 2x4 6x3 4x2 6x3 2x4 6x3 6x1 2x2 14x0 2x2 6x1 6x3 2x4 6x3 8x2 6x3 2x4 6x3 6x1 2x2 10x0 2x2 6x1 6x3 2x4 6x3 5x2 2x4 5x2 6x3 2x4 6x3 6x1 2x2 8x0 2x2 6x1 6x3 2x4 6x3 5x2 2x4 5x2 6x3 2x4 6x3 6x1 2x2 10x0 2x2 6x1 6x3 2x4 6x3 8x2 6x3 2x4 6x3 6x1 2x2 14x0 2x2 6x1 6x3 2x4 6x3 4x2 6x3 2x4 6x3 6x1 2x2 18x0 2x2 6x1 6x3 2x4 12x3 2x4 6x3 6x1 2x2 22x0 2x2 6x1 6x3 2x4 8x3 2x4 6x3 6x1 2x2 26x0 2x2 6x1 6x3 2x4 4x3 2x4 6x3 6x1 2x2 30x0 2x2 6x1 6x3 4x4 6x3 6x1 2x2 34x0 2x2 6x1 12x3 6x1 2x2 38x0 2x2 6x1 8x3 6x1 2x2 42x0 2x2 6x1 4x3 6x1 2x2 46x0 2x2 12x1 2x2 50x0 2x2 8x1 2x2 54x0 2x2 4x1 2x2 58x0 4x2 158x0"},"boxes":[]},
+    {"duration":500,"cels":{"l1":"158x0 4x4 58x0 2x4 4x1 2x4 54x0 2x4 8x1 2x4 50x0 2x4 12x1 2x4 46x0 2x4 6x1 4x3 6x1 2x4 42x0 2x4 6x1 8x3 6x1 2x4 38x0 2x4 6x1 12x3 6x1 2x4 34x0 2x4 6x1 6x3 4x5 6x3 6x1 2x4 30x0 2x4 6x1 6x3 2x5 4x3 2x5 6x3 6x1 2x4 26x0 2x4 6x1 6x3 2x5 8x3 2x5 6x3 6x1 2x4 22x0 2x4 6x1 6x3 2x5 12x3 2x5 6x3 6x1 2x4 18x0 2x4 6x1 6x3 2x5 6x3 4x4 6x3 2x5 6x3 6x1 2x4 14x0 2x4 6x1 6x3 2x5 6x3 8x4 6x3 2x5 6x3 6x1 2x4 10x0 2x4 6x1 6x3 2x5 6x3 5x4 2x5 5x4 6x3 2x5 6x3 6x1 2x4 8x0 2x4 6x1 6x3 2x5 6x3 5x4 2x5 5x4 6x3 2x5 6x3 6x1 2x4 10x0 2x4 6x1 6x3 2x5 6x3 8x4 6x3 2x5 6x3 6x1 2x4 14x0 2x4 6x1 6x3 2x5 6x3 4x4 6x3 2x5 6x3 6x1 2x4 18x0 2x4 6x1 6x3 2x5 12x3 2x5 6x3 6x1 2x4 22x0 2x4 6x1 6x3 2x5 8x3 2x5 6x3 6x1 2x4 26x0 2x4 6x1 6x3 2x5 4x3 2x5 6x3 6x1 2x4 30x0 2x4 6x1 6x3 4x5 6x3 6x1 2x4 34x0 2x4 6x1 12x3 6x1 2x4 38x0 2x4 6x1 8x3 6x1 2x4 42x0 2x4 6x1 4x3 6x1 2x4 46x0 2x4 12x1 2x4 50x0 2x4 8x1 2x4 54x0 2x4 4x1 2x4 58x0 4x4 158x0"},"boxes":[]}
+  ],
+  "origin": {
+    "x": 32,
+    "y": 16
+  },
+  "clips": [
+    {
+      "name": "glow",
+      "loop": true,
+      "mirror": false,
+      "all": [
+        0,
+        1
+      ],
+      "dirs": {},
+      "events": []
+    }
+  ],
+  "procedural": null
+}

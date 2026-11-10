@@ -1,0 +1,15 @@
+{
+  "id": "room-camera",
+  "name": "Room camera",
+  "version": "1.0.0",
+  "description": "A camera that holds still on one object at a zoom you choose, for games where a room is one picture (puzzle rooms, board games).",
+  "author": "Tilewright",
+  "license": "MIT",
+  "engine": "^1.0.0",
+  "dependencies": {},
+  "permissions": [],
+  "entry": {
+    "runtime": "src/index.ts"
+  },
+  "builtin": true
+}

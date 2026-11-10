@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "name": "cursor",
+  "width": 16,
+  "height": 10,
+  "palette": [
+    "#00000000",
+    "#ffd76aff",
+    "#fff3c4ff",
+    "#f2a93bff",
+    "#f4a259ff",
+    "#f6d55cff",
+    "#6fae5bff",
+    "#2f6f4eff",
+    "#4a90d9ff",
+    "#2b4c7eff",
+    "#8e7cc3ff",
+    "#c9964aff",
+    "#7b5a3aff",
+    "#a3a7b3ff",
+    "#5c6070ff",
+    "#2a2d38ff"
+  ],
+  "layers": [
+    {
+      "id": "l1",
+      "name": "Layer 1",
+      "visible": true
+    }
+  ],
+  "frames": [
+    {"duration":120,"cels":{"l1":"18x0 1x2 10x0 1x2 4x0 1x1 1x2 8x0 1x2 1x1 4x0 1x3 1x1 1x2 6x0 1x2 1x1 1x3 5x0 1x3 1x1 1x2 4x0 1x2 1x1 1x3 7x0 1x3 1x1 1x2 2x0 1x2 1x1 1x3 9x0 1x3 1x1 2x2 1x1 1x3 11x0 1x3 2x1 1x3 13x0 2x3 23x0"},"boxes":[]}
+  ],
+  "origin": {
+    "x": 8,
+    "y": 10
+  },
+  "clips": [],
+  "procedural": null
+}

@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "name": "hedge_right",
+  "width": 32,
+  "height": 32,
+  "palette": [
+    "#00000000",
+    "#1e4d3aff",
+    "#2f7a50ff",
+    "#141826ff"
+  ],
+  "layers": [
+    {
+      "id": "l1",
+      "name": "Layer 1",
+      "visible": true
+    }
+  ],
+  "frames": [
+    {"duration":100,"cels":{"l1":"31x0 1x1 29x0 1x1 1x2 1x1 27x0 5x1 25x0 7x1 23x0 1x3 8x1 21x0 11x1 19x0 5x1 1x3 2x1 1x3 4x1 17x0 12x1 1x3 2x1 15x0 10x1 1x2 6x1 13x0 18x1 1x3 11x0 17x1 1x3 3x1 9x0 3x1 1x3 9x1 1x3 3x1 1x3 5x1 7x0 1x1 1x3 8x1 1x3 2x1 1x2 9x1 1x3 1x1 5x0 6x1 1x2 19x1 1x3 3x0 7x1 1x2 1x1 1x3 19x1 1x0 1x3 17x1 1x3 5x1 1x2 24x1 1x2 3x1 1x3 6x1 1x3 1x1 1x0 5x1 1x3 4x1 1x3 11x1 1x3 1x2 5x1 3x0 1x1 1x3 13x1 1x3 10x1 1x3 5x0 1x3 3x1 1x3 4x1 1x3 15x1 7x0 21x1 1x2 1x1 9x0 1x3 1x1 1x3 1x1 1x2 2x1 1x3 1x2 1x1 1x3 2x1 1x3 3x1 1x3 3x1 11x0 13x1 1x3 5x1 13x0 17x1 15x0 13x1 1x3 1x1 17x0 7x1 1x3 5x1 19x0 4x1 1x3 6x1 21x0 2x1 1x2 6x1 23x0 7x1 25x0 5x1 27x0 3x1 29x0 1x1 31x0"},"boxes":[]}
+  ],
+  "origin": {
+    "x": 16,
+    "y": 32
+  },
+  "clips": [],
+  "procedural": null,
+  "meta": {
+    "kind": "wall",
+    "preset": "wall-right-1",
+    "footprint": {
+      "w": 1,
+      "d": 1
+    },
+    "heightCells": 1,
+    "collision": null,
+    "fade": null,
+    "sortOffset": 0,
+    "sway": false,
+    "variants": [],
+    "face": "wall",
+    "otherSide": "",
+    "light": 0,
+    "tags": []
+  }
+}

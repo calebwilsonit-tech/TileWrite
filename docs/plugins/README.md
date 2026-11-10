@@ -16,6 +16,7 @@ Each is written the way yours will be. Its guide lives in its own folder.
 | Story and Inventory | Conversations, cutscenes, minigames, the world map, items, quick slots | [story-systems.md](../../packages/plugins/story/docs/story-systems.md) |
 | Turns | Turn-based play | [time-and-turns.md](../../packages/plugins/turns/docs/time-and-turns.md) |
 | Simulation | Resources, production chains, day and night, waves, routes, villagers with needs, fire and growth | [simulation-helpers.md](../../packages/plugins/sim/docs/simulation-helpers.md) |
+| Room camera | A camera that holds still on one object at a chosen zoom, for games where a room is one picture | [room-camera.md](../../packages/plugins/room-camera/docs/room-camera.md) |
 | The reference game (echoes, lanterns, words) | The mechanics of the sample game "The Last Storytender", and how that whole game was built and tested | [echoes-light-words.md](../../packages/plugins/storytender/docs/echoes-light-words.md), [reference_game.md](../../packages/plugins/storytender/docs/reference_game.md), [acceptance.md](../../packages/plugins/storytender/docs/acceptance.md) |
 
 ## Your first plugin

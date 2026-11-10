@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "name": "duskcap_1",
+  "width": 64,
+  "height": 64,
+  "palette": [
+    "#00000000",
+    "#3a2a25ff",
+    "#8a5a3cff",
+    "#4a3a7aff",
+    "#c8dcffff",
+    "#e6ecffff",
+    "#8f96b3ff",
+    "#7a5fc0ff",
+    "#b79cf0ff",
+    "#2b4c7eff",
+    "#8e7cc3ff",
+    "#c9964aff",
+    "#7b5a3aff",
+    "#a3a7b3ff",
+    "#5c6070ff",
+    "#2a2d38ff"
+  ],
+  "layers": [
+    {
+      "id": "l1",
+      "name": "Layer 1",
+      "visible": true
+    }
+  ],
+  "frames": [
+    {"duration":120,"cels":{"l1":"2012x0 8x7 54x0 12x7 51x0 4x7 1x8 9x7 49x0 1x3 9x7 1x8 4x7 1x3 48x0 2x3 12x7 2x3 48x0 4x3 8x7 4x3 48x0 1x2 14x3 1x2 46x0 2x2 2x1 12x3 2x1 2x2 42x0 2x2 6x1 8x3 6x1 2x2 38x0 2x2 8x1 1x4 1x5 4x4 1x6 1x4 8x1 2x2 34x0 2x2 10x1 1x4 1x5 4x4 1x6 1x4 10x1 2x2 30x0 2x2 12x1 1x4 1x5 1x4 1x6 2x4 1x6 1x4 12x1 2x2 26x0 2x2 14x1 1x4 1x5 4x4 1x6 1x4 14x1 2x2 22x0 2x2 16x1 1x4 1x5 4x4 1x6 1x4 16x1 2x2 18x0 2x2 18x1 1x4 1x5 4x4 1x6 1x4 18x1 2x2 14x0 2x2 20x1 1x4 1x5 4x4 1x6 1x4 1x3 19x1 2x2 10x0 2x2 20x1 2x3 1x4 1x5 4x4 1x6 1x4 3x3 19x1 2x2 8x0 2x2 19x1 3x3 1x4 1x5 2x4 1x6 1x4 1x6 1x4 4x3 18x1 2x2 10x0 2x2 16x1 4x3 1x4 1x5 4x4 1x6 1x4 5x3 15x1 2x2 14x0 2x2 14x1 17x3 13x1 2x2 18x0 2x2 13x1 15x3 12x1 2x2 22x0 2x2 12x1 13x3 11x1 2x2 26x0 2x2 12x1 9x3 11x1 2x2 30x0 2x2 13x1 1x6 14x1 2x2 34x0 2x2 24x1 2x2 38x0 2x2 20x1 2x2 42x0 2x2 16x1 2x2 46x0 2x2 12x1 2x2 50x0 2x2 8x1 2x2 54x0 2x2 4x1 2x2 58x0 4x2 158x0"},"boxes":[]}
+  ],
+  "origin": {
+    "x": 32,
+    "y": 48
+  },
+  "clips": [],
+  "procedural": null
+}

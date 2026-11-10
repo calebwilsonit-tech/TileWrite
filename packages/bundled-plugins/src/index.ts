@@ -6,6 +6,7 @@ import { inventoryPlugin } from '@tilewright/plugin-inventory';
 import { lightingPlugin } from '@tilewright/plugin-lighting';
 import { parchmentPlugin } from '@tilewright/plugin-parchment';
 import { prebuiltScreensPlugin } from '@tilewright/plugin-prebuilt-screens';
+import { roomCameraPlugin } from '@tilewright/plugin-room-camera';
 import { simPlugin } from '@tilewright/plugin-sim';
 import { storyPlugin } from '@tilewright/plugin-story';
 import { storytenderPlugin } from '@tilewright/plugin-storytender';
@@ -24,6 +25,7 @@ export const BUNDLED_PLUGINS: readonly PluginDefinition[] = [
   simPlugin,
   prebuiltScreensPlugin,
   parchmentPlugin,
+  roomCameraPlugin,
 ];
 
 /** Make the bundled plugins known to the host (they are not on until a project turns them on). */
@@ -44,6 +46,7 @@ export * from '@tilewright/plugin-inventory';
 export * from '@tilewright/plugin-lighting';
 export * from '@tilewright/plugin-parchment';
 export * from '@tilewright/plugin-prebuilt-screens';
+export * from '@tilewright/plugin-room-camera';
 export * from '@tilewright/plugin-sim';
 export * from '@tilewright/plugin-story';
 export * from '@tilewright/plugin-storytender';

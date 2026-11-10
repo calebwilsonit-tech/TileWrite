@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "name": "plate_up",
+  "width": 64,
+  "height": 32,
+  "palette": [
+    "#00000000",
+    "#454d5eff",
+    "#8f96b3ff",
+    "#e6ecffff",
+    "#6f7a8cff",
+    "#f6d55cff",
+    "#6fae5bff",
+    "#2f6f4eff",
+    "#4a90d9ff",
+    "#2b4c7eff",
+    "#8e7cc3ff",
+    "#c9964aff",
+    "#7b5a3aff",
+    "#a3a7b3ff",
+    "#5c6070ff",
+    "#2a2d38ff"
+  ],
+  "layers": [
+    {
+      "id": "l1",
+      "name": "Layer 1",
+      "visible": true
+    }
+  ],
+  "frames": [
+    {"duration":120,"cels":{"l1":"286x0 4x3 58x0 2x3 4x2 2x3 54x0 2x3 8x2 2x3 50x0 2x3 12x2 2x3 46x0 2x3 16x2 2x3 42x0 2x3 20x2 2x3 38x0 2x3 24x2 2x3 34x0 2x3 12x2 4x4 12x2 2x3 30x0 2x3 12x2 8x4 12x2 2x3 26x0 2x3 12x2 12x4 12x2 2x3 22x0 2x3 12x2 16x4 12x2 2x3 18x0 2x1 2x3 12x2 16x4 12x2 2x3 2x1 14x0 6x1 2x3 12x2 12x4 12x2 2x3 6x1 12x0 8x1 2x3 12x2 8x4 12x2 2x3 8x1 14x0 8x1 2x3 12x2 4x4 12x2 2x3 8x1 18x0 8x1 2x3 24x2 2x3 8x1 22x0 8x1 2x3 20x2 2x3 8x1 26x0 8x1 2x3 16x2 2x3 8x1 30x0 8x1 2x3 12x2 2x3 8x1 34x0 8x1 2x3 8x2 2x3 8x1 38x0 8x1 2x3 4x2 2x3 8x1 42x0 8x1 4x3 8x1 46x0 16x1 50x0 12x1 54x0 8x1 58x0 4x1 158x0"},"boxes":[]}
+  ],
+  "origin": {
+    "x": 32,
+    "y": 17
+  },
+  "clips": [],
+  "procedural": null
+}

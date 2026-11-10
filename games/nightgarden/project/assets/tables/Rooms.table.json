@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 1,
+  "name": "Rooms",
+  "description": "Every room of the game in play order (written by the build; the Rooms screen shows it).",
+  "columns": [
+    {
+      "id": "no",
+      "label": "no",
+      "type": "number",
+      "options": [],
+      "table": ""
+    },
+    {
+      "id": "name",
+      "label": "name",
+      "type": "text",
+      "options": [],
+      "table": ""
+    },
+    {
+      "id": "chapter",
+      "label": "chapter",
+      "type": "text",
+      "options": [],
+      "table": ""
+    },
+    {
+      "id": "scene",
+      "label": "scene",
+      "type": "text",
+      "options": [],
+      "table": ""
+    }
+  ],
+  "rows": [
+    {
+      "id": "r101",
+      "no": 1,
+      "name": "First light",
+      "chapter": "The Potting Shed",
+      "scene": "scenes/r101.scene.json"
+    },
+    {
+      "id": "r102",
+      "no": 2,
+      "name": "Up",
+      "chapter": "The Potting Shed",
+      "scene": "scenes/r102.scene.json"
+    },
+    {
+      "id": "r103",
+      "no": 3,
+      "name": "Two beds",
+      "chapter": "The Potting Shed",
+      "scene": "scenes/r103.scene.json"
+    },
+    {
+      "id": "r104",
+      "no": 4,
+      "name": "The long way down",
+      "chapter": "The Potting Shed",
+      "scene": "scenes/r104.scene.json"
+    },
+    {
+      "id": "r105",
+      "no": 5,
+      "name": "Stepping stones",
+      "chapter": "The Potting Shed",
+      "scene": "scenes/r105.scene.json"
+    },
+    {
+      "id": "r106",
+      "no": 6,
+      "name": "Behind you",
+      "chapter": "The Potting Shed",
+      "scene": "scenes/r106.scene.json"
+    },
+    {
+      "id": "r107",
+      "no": 7,
+      "name": "Either lamp",
+      "chapter": "The Potting Shed",
+      "scene": "scenes/r107.scene.json"
+    },
+    {
+      "id": "r108",
+      "no": 8,
+      "name": "The far corner",
+      "chapter": "The Potting Shed",
+      "scene": "scenes/r108.scene.json"
+    }
+  ]
+}

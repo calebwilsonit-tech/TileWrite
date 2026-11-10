@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "name": "brazier",
+  "width": 64,
+  "height": 52,
+  "palette": [
+    "#00000000",
+    "#343b5cff",
+    "#1f2540ff",
+    "#5b6384ff",
+    "#454d5eff",
+    "#141826ff",
+    "#6f7a8cff",
+    "#e2603aff",
+    "#f2a93bff",
+    "#ffd76aff",
+    "#fff3c4ff",
+    "#c9964aff",
+    "#7b5a3aff",
+    "#a3a7b3ff",
+    "#5c6070ff",
+    "#2a2d38ff"
+  ],
+  "layers": [
+    {
+      "id": "l1",
+      "name": "Layer 1",
+      "visible": true
+    }
+  ],
+  "frames": [
+    {"duration":120,"cels":{"l1":"352x0 1x8 126x0 1x8 64x0 1x9 61x0 4x8 2x0 1x8 54x0 1x8 1x0 6x8 57x0 8x8 55x0 2x8 1x9 7x8 54x0 4x8 2x9 4x8 53x0 1x7 3x8 4x9 3x8 1x7 52x0 3x8 6x9 3x8 51x0 1x7 3x8 6x9 3x8 1x7 50x0 1x7 2x8 8x9 2x8 1x7 49x0 2x7 2x8 3x9 2x10 3x9 2x8 2x7 48x0 2x7 2x8 2x9 4x10 2x9 2x8 2x7 46x0 2x6 2x7 2x8 2x9 4x10 2x9 2x8 2x7 2x6 42x0 4x6 2x7 2x8 2x9 4x10 2x9 2x8 2x7 4x6 38x0 6x6 3x7 1x8 2x9 4x10 2x9 1x8 3x7 6x6 34x0 8x6 3x7 2x8 1x9 4x10 1x9 2x8 3x7 8x6 30x0 8x6 5x7 2x8 1x9 4x10 1x9 2x8 5x7 8x6 26x0 8x6 8x7 2x8 1x9 2x10 1x9 2x8 8x7 8x6 22x0 8x6 11x7 2x8 2x9 2x8 11x7 8x6 18x0 8x6 14x7 4x8 14x7 8x6 16x0 8x6 32x7 8x6 16x0 2x4 8x6 28x7 8x6 2x5 16x0 4x4 8x6 24x7 8x6 4x5 16x0 6x4 8x6 20x7 8x6 6x5 16x0 8x4 8x6 16x7 8x6 8x5 16x0 10x4 8x6 12x7 8x6 10x5 16x0 12x4 8x6 8x7 8x6 12x5 16x0 14x4 8x6 4x7 8x6 14x5 16x0 16x4 16x6 16x5 18x0 16x4 12x6 16x5 22x0 16x4 8x6 16x5 24x0 2x1 16x4 4x6 16x5 2x2 24x0 4x1 16x4 16x5 4x2 24x0 6x1 14x4 14x5 6x2 24x0 8x1 12x4 12x5 8x2 24x0 10x1 10x4 10x5 10x2 24x0 12x1 8x4 8x5 12x2 26x0 12x1 6x4 6x5 12x2 30x0 12x1 4x4 4x5 12x2 34x0 12x1 2x4 2x5 12x2 38x0 12x1 12x2 42x0 10x1 10x2 46x0 8x1 8x2 50x0 6x1 6x2 26x0"},"boxes":[]}
+  ],
+  "origin": {
+    "x": 32,
+    "y": 44
+  },
+  "clips": [],
+  "procedural": null
+}

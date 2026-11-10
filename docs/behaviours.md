@@ -4,11 +4,11 @@
 
 A behaviour is ready-made logic you add to an object in the Inspector (**Behaviours -> Add**). Its settings appear as fields; its signals can be joined to other objects with the Wire tool. Each behaviour has an id (the key under which it is saved) shown in `code`.
 
-There are 58 behaviours. Behaviours made by scripts (see [code-window.md](code-window.md)) appear in the same list under "Scripts".
+There are 59 behaviours. Behaviours made by scripts (see [code-window.md](code-window.md)) appear in the same list under "Scripts".
 
 - [AI](#ai) (Vision Cone, Chase, Patrol, Boss Phases, Behaviour Tree, State Machine)
 - [Combat](#combat) (Health, Damage on Touch, Melee Attack (quill), Ranged Attack, Dodge)
-- [Control schemes](#control-schemes) (Direct Control, Click to Move, Hotspot, Grid Cursor, Commandable Unit, RTS Control, Camera Rig, Builder)
+- [Control schemes](#control-schemes) (Direct Control, Click to Move, Hotspot, Grid Cursor, Commandable Unit, RTS Control, Camera Rig, Builder, Room Camera)
 - [Interface](#interface) (World UI)
 - [Light](#light) (Light, Light Resource (lantern fuel), Light Sensor, Growing Object)
 - [Logic](#logic) (Event Node, Action Node, Clickable, Logic Gate)
@@ -308,6 +308,17 @@ Something to click: with the Look, Use or Talk verb chosen (the variable "verb")
 | How close to stand (cells) | `reach` | number | 1.5 | at least 0.5 |
 
 Sends: **Was used** (`used`).
+
+### Room Camera
+
+Id: `roomCamera`. Each update it reacts to signals (runs last).
+
+The camera holds still on this object (at its height) instead of following the player, at the zoom you choose. Put it on a marker in the middle of a room for a game where each room is one picture.
+
+| Setting | Key | Kind | Starts as | Choices and notes |
+| --- | --- | --- | --- | --- |
+| Zoom | `zoom` | number | 1.5 | 0.25 to 4 |
+| Hold the camera here | `on` | boolean | true |  |
 
 ### RTS Control
 

@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "name": "pond_left",
+  "width": 32,
+  "height": 32,
+  "palette": [
+    "#00000000",
+    "#3a7fb5ff",
+    "#23507aff"
+  ],
+  "layers": [
+    {
+      "id": "l1",
+      "name": "Layer 1",
+      "visible": true
+    }
+  ],
+  "frames": [
+    {"duration":100,"cels":{"l1":"1x1 31x0 1x2 2x1 29x0 3x2 2x1 27x0 5x2 2x1 25x0 7x2 2x1 23x0 9x2 2x1 21x0 11x2 2x1 19x0 13x2 2x1 17x0 15x2 2x1 15x0 17x2 2x1 13x0 19x2 2x1 11x0 21x2 2x1 9x0 23x2 2x1 7x0 25x2 2x1 5x0 27x2 2x1 3x0 29x2 2x1 2x0 30x2 1x1 3x0 29x2 5x0 27x2 7x0 25x2 9x0 23x2 11x0 21x2 13x0 19x2 15x0 17x2 17x0 15x2 19x0 13x2 21x0 11x2 23x0 9x2 25x0 7x2 27x0 5x2 29x0 3x2 31x0 1x2"},"boxes":[]}
+  ],
+  "origin": {
+    "x": 16,
+    "y": 32
+  },
+  "clips": [],
+  "procedural": null,
+  "meta": {
+    "kind": "wall",
+    "preset": "wall-left-1",
+    "footprint": {
+      "w": 1,
+      "d": 1
+    },
+    "heightCells": 1,
+    "collision": null,
+    "fade": null,
+    "sortOffset": 0,
+    "sway": false,
+    "variants": [],
+    "face": "wall",
+    "otherSide": "",
+    "light": 0,
+    "tags": []
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "name": "@tilewright/plugin-room-camera",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A camera that holds still on one object at a chosen zoom.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@tilewright/plugin-sdk": "*"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

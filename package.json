@@ -21,7 +21,11 @@
     "dist:win": "npm run build && npm run dist:win -w @tilewright/editor",
     "release": "node scripts/release.mjs",
     "installed": "node scripts/installed.mjs",
-    "compat": "vitest run --config compat/vitest.config.ts"
+    "compat": "vitest run --config compat/vitest.config.ts",
+    "nightgarden:build": "vitest run --config games/nightgarden/vitest.tools.config.ts games/nightgarden/tools/build",
+    "nightgarden:check": "vitest run --config games/nightgarden/vitest.config.ts",
+    "nightgarden:art": "playwright test --config games/nightgarden/playwright.art.config.ts --trace off",
+    "nightgarden:e2e": "playwright test --config games/nightgarden/playwright.config.ts --trace off"
   },
   "engines": {
     "node": ">=20"

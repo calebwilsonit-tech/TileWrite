@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "name": "soil_right",
+  "width": 32,
+  "height": 32,
+  "palette": [
+    "#00000000",
+    "#3a2a25ff",
+    "#141826ff"
+  ],
+  "layers": [
+    {
+      "id": "l1",
+      "name": "Layer 1",
+      "visible": true
+    }
+  ],
+  "frames": [
+    {"duration":100,"cels":{"l1":"31x0 1x1 29x0 2x1 1x2 27x0 5x1 25x0 7x1 23x0 9x1 21x0 11x1 19x0 13x1 17x0 2x1 1x2 12x1 15x0 10x1 1x2 6x1 13x0 4x1 1x2 14x1 11x0 12x1 1x2 1x1 1x2 6x1 9x0 1x2 9x1 1x2 10x1 1x2 1x1 7x0 25x1 5x0 23x1 1x2 3x1 3x0 9x1 1x2 19x1 1x0 5x1 1x2 10x1 1x2 26x1 1x2 18x1 1x0 29x1 3x0 27x1 5x0 2x1 1x2 22x1 7x0 23x1 9x0 6x1 1x2 9x1 1x2 4x1 11x0 7x1 1x2 6x1 1x2 4x1 13x0 17x1 15x0 15x1 17x0 4x1 1x2 3x1 1x2 4x1 19x0 11x1 21x0 9x1 23x0 5x1 1x2 1x1 25x0 5x1 27x0 3x1 29x0 1x1 31x0"},"boxes":[]}
+  ],
+  "origin": {
+    "x": 16,
+    "y": 32
+  },
+  "clips": [],
+  "procedural": null,
+  "meta": {
+    "kind": "wall",
+    "preset": "wall-right-1",
+    "footprint": {
+      "w": 1,
+      "d": 1
+    },
+    "heightCells": 1,
+    "collision": null,
+    "fade": null,
+    "sortOffset": 0,
+    "sway": false,
+    "variants": [],
+    "face": "wall",
+    "otherSide": "",
+    "light": 0,
+    "tags": []
+  }
+}

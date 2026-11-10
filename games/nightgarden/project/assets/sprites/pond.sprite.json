@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "name": "pond",
+  "width": 64,
+  "height": 48,
+  "palette": [
+    "#00000000",
+    "#23507aff",
+    "#3a7fb5ff",
+    "#7fc4e8ff",
+    "#55a868ff",
+    "#f08fb8ff",
+    "#141826ff"
+  ],
+  "layers": [
+    {
+      "id": "l1",
+      "name": "Layer 1",
+      "visible": true
+    }
+  ],
+  "frames": [
+    {"duration":200,"cels":{"l1":"31x0 2x1 60x0 3x1 1x2 2x1 56x0 3x1 5x2 2x1 52x0 3x1 9x2 2x1 48x0 3x1 13x2 2x1 44x0 3x1 17x2 2x1 40x0 3x1 21x2 2x1 36x0 3x1 25x2 2x1 32x0 3x1 10x2 2x3 17x2 2x1 28x0 3x1 13x2 3x3 17x2 2x1 24x0 3x1 17x2 3x3 17x2 2x1 20x0 3x1 21x2 3x3 17x2 2x1 16x0 3x1 25x2 2x3 18x2 2x1 12x0 3x1 36x2 3x3 10x2 2x1 8x0 3x1 40x2 3x3 10x2 2x1 4x0 3x1 16x2 2x4 1x5 25x2 2x3 11x2 2x1 1x0 1x2 1x1 17x2 3x4 42x2 1x1 62x2 4x1 58x2 8x1 54x2 12x1 20x2 2x3 28x2 16x1 19x2 3x3 24x2 20x1 19x2 3x3 20x2 2x1 1x6 21x1 19x2 3x3 16x2 28x1 19x2 3x3 12x2 1x1 1x6 30x1 19x2 1x3 10x2 36x1 26x2 40x1 22x2 19x1 1x6 24x1 18x2 22x1 1x6 25x1 14x2 3x1 1x6 48x1 10x2 56x1 6x2 26x1 1x6 2x1 1x0 30x1 2x2 2x1 1x6 14x1 1x6 12x1 4x0 30x1 1x6 27x1 8x0 35x1 1x6 18x1 12x0 26x1 1x6 2x1 1x6 9x1 1x6 10x1 16x0 46x1 20x0 35x1 1x6 6x1 24x0 38x1 28x0 34x1 32x0 30x1 36x0 26x1 40x0 22x1 44x0 18x1 48x0 14x1 52x0 10x1 56x0 6x1 60x0 2x1 31x0"},"boxes":[]}
+  ],
+  "origin": {
+    "x": 32,
+    "y": 16
+  },
+  "clips": [],
+  "procedural": null,
+  "meta": {
+    "kind": "tile",
+    "preset": "block",
+    "footprint": {
+      "w": 1,
+      "d": 1
+    },
+    "heightCells": 1,
+    "collision": null,
+    "fade": null,
+    "sortOffset": 0,
+    "sway": false,
+    "variants": [],
+    "face": "wall",
+    "otherSide": "",
+    "light": 0,
+    "tags": []
+  }
+}

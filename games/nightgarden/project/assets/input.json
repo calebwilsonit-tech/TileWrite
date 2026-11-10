@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "overrides": {},
+  "actions": [
+    {
+      "id": "restart",
+      "label": "Start the room again",
+      "bindings": [
+        "key:KeyR",
+        "pad:button2"
+      ]
+    }
+  ]
+}

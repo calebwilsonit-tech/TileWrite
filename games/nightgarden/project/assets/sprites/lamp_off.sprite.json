@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "name": "lamp_off",
+  "width": 24,
+  "height": 48,
+  "palette": [
+    "#00000000",
+    "#141826ff",
+    "#454d5eff",
+    "#6f7a8cff",
+    "#343b5cff",
+    "#f6d55cff",
+    "#6fae5bff",
+    "#2f6f4eff",
+    "#4a90d9ff",
+    "#2b4c7eff",
+    "#8e7cc3ff",
+    "#c9964aff",
+    "#7b5a3aff",
+    "#a3a7b3ff",
+    "#5c6070ff",
+    "#2a2d38ff"
+  ],
+  "layers": [
+    {
+      "id": "l1",
+      "name": "Layer 1",
+      "visible": true
+    }
+  ],
+  "frames": [
+    {"duration":120,"cels":{"l1":"35x0 2x3 22x0 2x3 19x0 8x3 16x0 8x3 14x0 12x2 12x0 12x2 13x0 1x2 3x4 2x2 3x4 1x2 14x0 1x2 8x4 1x2 14x0 1x2 8x4 1x2 14x0 1x2 8x4 1x2 14x0 1x2 8x4 1x2 14x0 1x2 8x4 1x2 14x0 1x2 8x4 1x2 14x0 1x2 8x4 1x2 14x0 1x2 8x4 1x2 14x0 1x2 8x4 1x2 15x0 8x3 16x0 8x3 19x0 2x2 22x0 1x3 1x2 22x0 2x2 22x0 2x2 22x0 2x2 22x0 1x3 1x2 22x0 2x2 22x0 2x2 22x0 2x2 22x0 1x3 1x2 22x0 2x2 22x0 2x2 22x0 2x2 22x0 1x3 1x2 22x0 2x2 22x0 2x2 22x0 2x2 22x0 1x3 1x2 22x0 2x2 22x0 2x2 22x0 2x2 20x0 6x2 16x0 10x2 14x0 10x2 13x0 1x1 10x2 1x1 12x0 3x1 6x2 3x1 13x0 10x1 16x0 6x1 33x0"},"boxes":[]}
+  ],
+  "origin": {
+    "x": 12,
+    "y": 44
+  },
+  "clips": [],
+  "procedural": null
+}

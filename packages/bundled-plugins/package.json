@@ -20,7 +20,8 @@
     "@tilewright/plugin-storytender": "*",
     "@tilewright/plugin-turns": "*",
     "@tilewright/playbot": "*",
-    "@tilewright/behaviors": "*"
+    "@tilewright/behaviors": "*",
+    "@tilewright/plugin-room-camera": "*"
   },
   "exports": {
     ".": "./src/index.ts",

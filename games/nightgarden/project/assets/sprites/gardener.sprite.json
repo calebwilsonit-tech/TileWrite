@@ -1,0 +1,116 @@
+{
+  "schemaVersion": 1,
+  "name": "gardener",
+  "width": 26,
+  "height": 36,
+  "palette": [
+    "#00000000",
+    "#1f2540ff",
+    "#8a5a3cff",
+    "#2d8f8fff",
+    "#5fd0c5ff",
+    "#1e4d3aff",
+    "#f1c9a5ff",
+    "#c9946fff",
+    "#141826ff",
+    "#f08fb8ff",
+    "#ffd76aff",
+    "#f2a93bff",
+    "#c44d4dff",
+    "#fff3c4ff",
+    "#b9834fff",
+    "#2a2d38ff"
+  ],
+  "layers": [
+    {
+      "id": "l1",
+      "name": "Layer 1",
+      "visible": true
+    }
+  ],
+  "frames": [
+    {"duration":130,"cels":{"l1":"62x0 5x11 20x0 1x11 2x13 4x11 18x0 9x11 17x0 9x11 16x0 1x10 9x11 1x10 13x0 3x10 9x12 3x10 1x13 9x0 6x10 5x11 7x10 9x0 16x10 12x0 11x10 2x0 1x14 14x0 7x6 4x0 1x14 14x0 2x6 1x8 2x6 1x8 1x6 4x0 1x14 14x0 1x6 1x9 4x6 1x9 4x0 1x14 14x0 1x7 5x6 1x7 4x0 1x14 13x0 2x4 7x3 3x0 1x14 11x0 2x3 2x4 9x3 1x0 1x14 11x0 2x3 2x4 2x3 1x10 6x3 1x0 1x14 11x0 2x3 2x4 9x3 1x0 1x14 11x0 2x3 2x4 2x3 1x10 6x3 1x0 1x14 11x0 2x3 2x4 9x3 1x0 1x14 11x0 2x3 2x4 9x3 1x0 1x14 11x0 2x3 9x5 2x3 1x0 1x14 11x0 2x6 2x4 7x3 2x6 1x0 1x14 13x0 2x4 7x3 3x0 1x14 13x0 2x4 7x3 3x0 1x14 13x0 9x3 3x0 1x14 14x0 3x1 1x0 3x1 4x0 1x14 14x0 3x1 1x0 3x1 19x0 3x1 1x0 3x1 19x0 3x1 1x0 3x1 19x0 3x1 1x0 3x1 19x0 3x2 1x0 3x2 19x0 3x2 1x0 3x2 62x0"},"boxes":[]},
+    {"duration":130,"cels":{"l1":"88x0 5x11 20x0 1x11 2x13 4x11 18x0 9x11 17x0 9x11 16x0 1x10 9x11 1x10 13x0 3x10 9x12 3x10 1x13 9x0 6x10 5x11 7x10 9x0 16x10 12x0 11x10 2x0 1x14 14x0 7x6 4x0 1x14 14x0 2x6 1x8 2x6 1x8 1x6 4x0 1x14 14x0 1x6 1x9 4x6 1x9 4x0 1x14 14x0 1x7 5x6 1x7 4x0 1x14 13x0 2x4 7x3 3x0 1x14 11x0 2x3 2x4 9x3 1x0 1x14 11x0 2x3 2x4 2x3 1x10 6x3 1x0 1x14 11x0 2x3 2x4 9x3 1x0 1x14 11x0 2x3 2x4 2x3 1x10 6x3 1x0 1x14 11x0 2x3 2x4 9x3 1x0 1x14 11x0 2x3 2x4 9x3 1x0 1x14 11x0 2x3 9x5 2x3 1x0 1x14 11x0 2x6 2x4 7x3 2x6 1x0 1x14 13x0 2x4 7x3 3x0 1x14 13x0 9x3 3x0 1x14 13x0 3x1 2x0 3x1 4x0 1x14 13x0 3x1 2x0 3x1 4x0 1x14 13x0 3x1 2x0 3x1 18x0 3x1 2x0 3x1 17x0 4x2 2x0 3x1 17x0 4x2 2x0 3x2 23x0 3x2 62x0"},"boxes":[]},
+    {"duration":130,"cels":{"l1":"88x0 5x11 20x0 1x11 2x13 4x11 18x0 9x11 17x0 9x11 16x0 1x10 9x11 1x10 13x0 3x10 9x12 3x10 1x13 9x0 6x10 5x11 7x10 9x0 16x10 12x0 11x10 2x0 1x14 14x0 7x6 4x0 1x14 14x0 2x6 1x8 2x6 1x8 1x6 4x0 1x14 14x0 1x6 1x9 4x6 1x9 4x0 1x14 14x0 1x7 5x6 1x7 4x0 1x14 13x0 2x4 7x3 3x0 1x14 11x0 2x3 2x4 9x3 1x0 1x14 11x0 2x3 2x4 2x3 1x10 6x3 1x0 1x14 11x0 2x3 2x4 9x3 1x0 1x14 11x0 2x3 2x4 2x3 1x10 6x3 1x0 1x14 11x0 2x3 2x4 9x3 1x0 1x14 11x0 2x3 2x4 9x3 1x0 1x14 11x0 2x3 9x5 2x3 1x0 1x14 11x0 2x6 2x4 7x3 2x6 1x0 1x14 13x0 2x4 7x3 3x0 1x14 13x0 9x3 3x0 1x14 14x0 3x1 2x0 3x1 3x0 1x14 14x0 3x1 2x0 3x1 3x0 1x14 14x0 3x1 2x0 3x1 18x0 3x1 2x0 3x1 18x0 3x1 2x0 4x2 17x0 3x2 2x0 4x2 17x0 3x2 66x0"},"boxes":[]},
+    {"duration":130,"cels":{"l1":"62x0 5x11 20x0 1x11 2x13 4x11 18x0 9x11 17x0 9x11 16x0 1x10 9x11 1x10 13x0 3x10 9x12 3x10 10x0 6x10 5x11 6x10 10x0 15x10 13x0 11x10 17x0 7x2 19x0 7x2 19x0 7x7 19x0 7x7 18x0 2x4 7x3 15x0 2x3 2x4 2x3 1x5 6x3 13x0 2x3 2x4 2x3 1x5 6x3 13x0 2x3 2x4 2x3 1x5 6x3 13x0 2x3 2x4 2x3 1x5 6x3 13x0 2x3 2x4 2x3 1x5 6x3 13x0 2x3 2x4 2x3 1x5 6x3 13x0 2x3 9x5 2x3 13x0 2x6 2x4 7x3 2x6 15x0 2x4 7x3 17x0 2x4 7x3 17x0 9x3 18x0 3x1 1x0 3x1 19x0 3x1 1x0 3x1 19x0 3x1 1x0 3x1 19x0 3x1 1x0 3x1 19x0 3x1 1x0 3x1 19x0 3x2 1x0 3x2 19x0 3x2 1x0 3x2 62x0"},"boxes":[]},
+    {"duration":130,"cels":{"l1":"88x0 5x11 20x0 1x11 2x13 4x11 18x0 9x11 17x0 9x11 16x0 1x10 9x11 1x10 13x0 3x10 9x12 3x10 10x0 6x10 5x11 6x10 10x0 15x10 13x0 11x10 17x0 7x2 19x0 7x2 19x0 7x7 19x0 7x7 18x0 2x4 7x3 15x0 2x3 2x4 2x3 1x5 6x3 13x0 2x3 2x4 2x3 1x5 6x3 13x0 2x3 2x4 2x3 1x5 6x3 13x0 2x3 2x4 2x3 1x5 6x3 13x0 2x3 2x4 2x3 1x5 6x3 13x0 2x3 2x4 2x3 1x5 6x3 13x0 2x3 9x5 2x3 13x0 2x6 2x4 7x3 2x6 15x0 2x4 7x3 17x0 9x3 17x0 3x1 2x0 3x1 18x0 3x1 2x0 3x1 18x0 3x1 2x0 3x1 18x0 3x1 2x0 3x1 17x0 4x2 2x0 3x1 17x0 4x2 2x0 3x2 23x0 3x2 62x0"},"boxes":[]},
+    {"duration":130,"cels":{"l1":"88x0 5x11 20x0 1x11 2x13 4x11 18x0 9x11 17x0 9x11 16x0 1x10 9x11 1x10 13x0 3x10 9x12 3x10 10x0 6x10 5x11 6x10 10x0 15x10 13x0 11x10 17x0 7x2 19x0 7x2 19x0 7x7 19x0 7x7 18x0 2x4 7x3 15x0 2x3 2x4 2x3 1x5 6x3 13x0 2x3 2x4 2x3 1x5 6x3 13x0 2x3 2x4 2x3 1x5 6x3 13x0 2x3 2x4 2x3 1x5 6x3 13x0 2x3 2x4 2x3 1x5 6x3 13x0 2x3 2x4 2x3 1x5 6x3 13x0 2x3 9x5 2x3 13x0 2x6 2x4 7x3 2x6 15x0 2x4 7x3 17x0 9x3 18x0 3x1 2x0 3x1 18x0 3x1 2x0 3x1 18x0 3x1 2x0 3x1 18x0 3x1 2x0 3x1 18x0 3x1 2x0 4x2 17x0 3x2 2x0 4x2 17x0 3x2 66x0"},"boxes":[]}
+  ],
+  "origin": {
+    "x": 12,
+    "y": 33
+  },
+  "clips": [
+    {
+      "name": "stand",
+      "loop": true,
+      "mirror": true,
+      "all": [
+        0
+      ],
+      "dirs": {
+        "E": [
+          0
+        ],
+        "SE": [
+          0
+        ],
+        "S": [
+          0
+        ],
+        "NE": [
+          3
+        ],
+        "N": [
+          3
+        ]
+      },
+      "events": []
+    },
+    {
+      "name": "walk",
+      "loop": true,
+      "mirror": true,
+      "all": [
+        1,
+        0,
+        2,
+        0
+      ],
+      "dirs": {
+        "E": [
+          1,
+          0,
+          2,
+          0
+        ],
+        "SE": [
+          1,
+          0,
+          2,
+          0
+        ],
+        "S": [
+          1,
+          0,
+          2,
+          0
+        ],
+        "NE": [
+          4,
+          3,
+          5,
+          3
+        ],
+        "N": [
+          4,
+          3,
+          5,
+          3
+        ]
+      },
+      "events": []
+    }
+  ],
+  "procedural": null
+}

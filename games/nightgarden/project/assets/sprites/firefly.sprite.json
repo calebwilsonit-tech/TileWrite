@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "name": "firefly",
+  "width": 16,
+  "height": 16,
+  "palette": [
+    "#00000000",
+    "#f2a93bff",
+    "#ffd76aff",
+    "#fff3c4ff",
+    "#c8dcffff",
+    "#141826ff",
+    "#6fae5bff",
+    "#2f6f4eff",
+    "#4a90d9ff",
+    "#2b4c7eff",
+    "#8e7cc3ff",
+    "#c9964aff",
+    "#7b5a3aff",
+    "#a3a7b3ff",
+    "#5c6070ff",
+    "#2a2d38ff"
+  ],
+  "layers": [
+    {
+      "id": "l1",
+      "name": "Layer 1",
+      "visible": true
+    }
+  ],
+  "frames": [
+    {"duration":160,"cels":{"l1":"50x0 1x4 10x0 1x4 5x0 1x4 3x0 2x5 3x0 1x4 9x0 4x1 11x0 1x1 4x2 1x1 9x0 1x1 2x2 2x3 2x2 1x1 8x0 1x1 1x2 4x3 1x2 1x1 8x0 1x1 1x2 4x3 1x2 1x1 8x0 1x1 2x2 2x3 2x2 1x1 9x0 1x1 4x2 1x1 11x0 4x1 54x0"},"boxes":[]},
+    {"duration":160,"cels":{"l1":"71x0 2x5 13x0 4x1 11x0 1x1 4x2 1x1 7x0 2x4 1x1 2x2 2x3 2x2 1x1 2x4 6x0 1x1 1x2 4x3 1x2 1x1 8x0 1x1 1x2 4x3 1x2 1x1 8x0 1x1 2x2 2x3 2x2 1x1 9x0 1x1 4x2 1x1 11x0 4x1 54x0"},"boxes":[]}
+  ],
+  "origin": {
+    "x": 8,
+    "y": 16
+  },
+  "clips": [
+    {
+      "name": "fly",
+      "loop": true,
+      "mirror": false,
+      "all": [
+        0,
+        1
+      ],
+      "dirs": {},
+      "events": []
+    }
+  ],
+  "procedural": null
+}

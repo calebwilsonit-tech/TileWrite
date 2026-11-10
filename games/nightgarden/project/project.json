@@ -1,0 +1,97 @@
+{
+  "schemaVersion": 2,
+  "name": "Nightgarden",
+  "iso": {
+    "tileW": 64,
+    "tileH": 32,
+    "heightPx": 16
+  },
+  "tileset": [
+    {
+      "id": 1,
+      "name": "path",
+      "top": 5594237,
+      "left": 4343906,
+      "right": 3356491,
+      "art": "path_top",
+      "leftArt": "path_left",
+      "rightArt": "path_right"
+    },
+    {
+      "id": 2,
+      "name": "hedge",
+      "top": 3308625,
+      "left": 2580799,
+      "right": 1985073,
+      "art": "hedge_top",
+      "leftArt": "hedge_left",
+      "rightArt": "hedge_right",
+      "wall": true
+    },
+    {
+      "id": 3,
+      "name": "soil",
+      "top": 5717811,
+      "left": 4469032,
+      "right": 3417631,
+      "art": "soil_top",
+      "leftArt": "soil_left",
+      "rightArt": "soil_right"
+    },
+    {
+      "id": 4,
+      "name": "terrace",
+      "top": 9476020,
+      "left": 7370380,
+      "right": 5659500,
+      "art": "terrace_top",
+      "leftArt": "terrace_left",
+      "rightArt": "terrace_right"
+    },
+    {
+      "id": 5,
+      "name": "pond",
+      "top": 3899058,
+      "left": 3039883,
+      "right": 2313323,
+      "art": "pond_top",
+      "leftArt": "pond_left",
+      "rightArt": "pond_right",
+      "props": {
+        "water": true
+      }
+    }
+  ],
+  "autotile": [],
+  "scenes": [
+    "scenes/r101.scene.json",
+    "scenes/r102.scene.json",
+    "scenes/r103.scene.json",
+    "scenes/r104.scene.json",
+    "scenes/r105.scene.json",
+    "scenes/r106.scene.json",
+    "scenes/r107.scene.json",
+    "scenes/r108.scene.json"
+  ],
+  "startScene": "scenes/r101.scene.json",
+  "plugins": [
+    "lighting",
+    "room-camera"
+  ],
+  "title": {
+    "enabled": true,
+    "subtitle": "A puzzle garden by lamplight"
+  },
+  "compat": {
+    "fadeBySight": true,
+    "blockPhysics": true,
+    "loadRestoresHealth": true,
+    "backClosesMenus": true,
+    "menuKeys": true,
+    "timedGravity": true,
+    "uiScroll": true,
+    "uiControls": true,
+    "menuButtonsClose": true,
+    "pauseAction": true
+  }
+}

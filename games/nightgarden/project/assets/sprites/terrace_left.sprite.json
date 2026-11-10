@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "name": "terrace_left",
+  "width": 32,
+  "height": 32,
+  "palette": [
+    "#00000000",
+    "#8f96b3ff",
+    "#5b6384ff",
+    "#343b5cff"
+  ],
+  "layers": [
+    {
+      "id": "l1",
+      "name": "Layer 1",
+      "visible": true
+    }
+  ],
+  "frames": [
+    {"duration":100,"cels":{"l1":"1x1 31x0 1x2 2x1 29x0 3x2 2x1 27x0 5x2 2x1 25x0 7x2 2x1 23x0 9x2 2x1 21x0 11x2 2x1 19x0 13x2 2x1 17x0 1x3 14x2 2x1 15x0 1x2 2x3 14x2 2x1 13x0 3x2 2x3 14x2 2x1 11x0 5x2 2x3 14x2 2x1 9x0 7x2 2x3 14x2 2x1 7x0 9x2 2x3 14x2 2x1 5x0 11x2 2x3 14x2 2x1 3x0 13x2 2x3 14x2 2x1 2x0 14x2 2x3 14x2 1x1 3x0 14x2 2x3 13x2 5x0 14x2 2x3 11x2 7x0 14x2 2x3 9x2 9x0 14x2 2x3 7x2 11x0 14x2 2x3 5x2 13x0 14x2 2x3 3x2 15x0 14x2 2x3 1x2 17x0 14x2 1x3 19x0 13x2 21x0 11x2 23x0 9x2 25x0 7x2 27x0 5x2 29x0 3x2 31x0 1x2"},"boxes":[]}
+  ],
+  "origin": {
+    "x": 16,
+    "y": 32
+  },
+  "clips": [],
+  "procedural": null,
+  "meta": {
+    "kind": "wall",
+    "preset": "wall-left-1",
+    "footprint": {
+      "w": 1,
+      "d": 1
+    },
+    "heightCells": 1,
+    "collision": null,
+    "fade": null,
+    "sortOffset": 0,
+    "sway": false,
+    "variants": [],
+    "face": "wall",
+    "otherSide": "",
+    "light": 0,
+    "tags": []
+  }
+}

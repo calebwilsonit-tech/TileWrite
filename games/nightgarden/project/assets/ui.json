@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "theme": {
+    "font": "rounded",
+    "text": "#e6ecff",
+    "accent": "#ffd76a",
+    "panel": "#141826",
+    "border": "#343b5c",
+    "highlight": "#f2a93b",
+    "radius": 10,
+    "scale": 1
+  },
+  "widgets": []
+}
