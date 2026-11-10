@@ -11,7 +11,7 @@ import { Rules, describe, reachableCells, solve } from '../src/solver';
  *
  *   NG_GEN="w=7,h=6,things=lbbLc,ground=#^,seed=3,iters=1500" npx vitest run ... lab/gen
  */
-interface Opts { w: number; h: number; things: string; ground: string; seed: number; iters: number; runs: number; minLamps: number }
+interface Opts { w: number; h: number; things: string[]; ground: string; seed: number; iters: number; runs: number; minLamps: number }
 
 function rng(seed: number): () => number {
   let s = seed >>> 0;
@@ -30,12 +30,12 @@ const rows = (g: Grid): string[] => g.map((r) => r.map((t) => t.padEnd(3)).join(
 const STAND = '.^~';
 
 /** Things of one kind share a limit: lamps (l L), blooms (b d), and each other letter by itself. */
-const CLASS = (t: string): string => (t === 'l' || t === 'L' ? 'lamp' : t === 'b' || t === 'd' ? 'bloom' : t);
+const CLASS = (t: string): string => (t[0] === 'l' || t[0] === 'L' ? 'lamp' : t[0] === 'b' || t[0] === 'd' ? 'bloom' : t);
 function withinLimits(g: Grid, o: Opts): boolean {
   const limit = new Map<string, number>();
   for (const t of o.things) limit.set(CLASS(t), (limit.get(CLASS(t)) ?? 0) + 1);
   const have = new Map<string, number>();
-  for (const tok of g.flat()) if (tok.length > 1 && tok[1] !== '@' && tok[1] !== 'E') have.set(CLASS(tok[1]!), (have.get(CLASS(tok[1]!)) ?? 0) + 1);
+  for (const tok of g.flat()) if (tok.length > 1 && tok[1] !== '@' && tok[1] !== 'E') have.set(CLASS(tok.slice(1)), (have.get(CLASS(tok.slice(1))) ?? 0) + 1);
   for (const [k, n] of have) if (n > (limit.get(k) ?? 0)) return false;
   return true;
 }
@@ -59,7 +59,7 @@ function score(g: Grid, o: Opts): { value: number; steps: number; lamps: number;
   const pushes = out.actions.filter((a) => a.kind === 'push').length;
   const things = g.flat().filter((t) => t.length > 1 && t[1] !== '@' && t[1] !== 'E').length;
   if (used < o.minLamps) return { value: out.actions.length * 0.2, steps: out.actions.length, lamps: used, pushes, states: out.states, sol: describe(out.actions) };
-  return { value: out.actions.length + Math.min(used, 6) * 2 + pushes * 1.5 - things * 0.4, steps: out.actions.length, lamps: used, pushes, states: out.states, sol: describe(out.actions) };
+  return { value: out.actions.length * 0.35 + used * 4 + pushes * 2 - things * 0.5, steps: out.actions.length, lamps: used, pushes, states: out.states, sol: describe(out.actions) };
 }
 
 function mutate(g: Grid, o: Opts, r: () => number): Grid {
@@ -137,7 +137,7 @@ it('search for room drafts', () => {
   const spec = process.env.NG_GEN;
   if (!spec) return;
   const kv = Object.fromEntries(spec.split(',').map((p) => p.split('=')));
-  const o: Opts = { w: Number(kv.w ?? 7), h: Number(kv.h ?? 6), things: kv.things ?? 'lLbb', ground: kv.ground ?? '#^', seed: Number(kv.seed ?? 1), iters: Number(kv.iters ?? 1200), runs: Number(kv.runs ?? 4), minLamps: Number(kv.lamps ?? 2) };
+  const o: Opts = { w: Number(kv.w ?? 7), h: Number(kv.h ?? 6), things: (kv.things ?? 'l+L+b+b').includes('+') ? (kv.things ?? 'l+L+b+b').split('+') : (kv.things as string).split(''), ground: kv.ground ?? '#^', seed: Number(kv.seed ?? 1), iters: Number(kv.iters ?? 1200), runs: Number(kv.runs ?? 4), minLamps: Number(kv.lamps ?? 2) };
   const out: string[] = [];
   for (let run = 0; run < o.runs; run++) {
     const r = rng(o.seed * 1000 + run);

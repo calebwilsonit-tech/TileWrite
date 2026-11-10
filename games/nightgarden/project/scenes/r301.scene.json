@@ -1,0 +1,410 @@
+{
+  "schemaVersion": 1,
+  "name": "Weight",
+  "map": {
+    "width": 6,
+    "height": 2,
+    "tiles": [
+      [1,1,1,1,0,0],
+      [1,1,1,1,1,1]
+    ],
+    "heights": [
+      [3,3,3,3,0,0],
+      [3,3,3,3,3,3]
+    ],
+    "slopes": [
+      [0,0,0,0,0,0],
+      [0,0,0,0,0,0]
+    ],
+    "flags": [
+      [0,0,0,0,0,0],
+      [0,0,0,0,0,0]
+    ],
+    "decks": [
+      [0,0,0,0,0,0],
+      [0,0,0,0,0,0]
+    ],
+    "deckTiles": [
+      [0,0,0,0,0,0],
+      [0,0,0,0,0,0]
+    ],
+    "oneWay": [
+      [0,0,0,0,0,0],
+      [0,0,0,0,0,0]
+    ]
+  },
+  "entities": [
+    {
+      "id": "e1",
+      "name": "Gardener",
+      "tags": [
+        "player"
+      ],
+      "components": {
+        "transform": {
+          "x": 0.5,
+          "y": 0.5,
+          "h": 3,
+          "facing": 2
+        },
+        "sprite": {
+          "shape": "box",
+          "color": 16777215,
+          "w": 0.6,
+          "d": 0.6,
+          "height": 1.2,
+          "sortOffset": 0,
+          "visible": true,
+          "asset": "gardener"
+        },
+        "animator": {
+          "asset": "gardener",
+          "clip": "stand",
+          "time": 0,
+          "speed": 1,
+          "playing": true,
+          "frame": 0,
+          "flip": false,
+          "pos": 0,
+          "done": false,
+          "controller": {
+            "initial": "idle",
+            "states": {
+              "idle": {
+                "clip": "stand"
+              },
+              "walk": {
+                "clip": "walk"
+              }
+            },
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "walk",
+                "when": [
+                  {
+                    "param": "speed",
+                    "op": ">",
+                    "value": 0.2
+                  }
+                ]
+              },
+              {
+                "from": "walk",
+                "to": "idle",
+                "when": [
+                  {
+                    "param": "speed",
+                    "op": "<=",
+                    "value": 0.2
+                  }
+                ]
+              }
+            ]
+          },
+          "state": "idle",
+          "params": {}
+        },
+        "body": {
+          "vx": 0,
+          "vy": 0,
+          "vz": 0,
+          "radius": 0.3,
+          "height": 1.2,
+          "state": "ground",
+          "stepUp": 0.35,
+          "stepDown": 0.4,
+          "ledge": "fall",
+          "pits": "fall",
+          "wade": false,
+          "gravity": 1,
+          "peakZ": 0,
+          "layer": 2,
+          "mask": 65535,
+          "noclip": false,
+          "blockedBy": [],
+          "blockedTerrain": false
+        },
+        "script_Gardener": {
+          "speed": 5
+        }
+      }
+    },
+    {
+      "id": "e2",
+      "name": "Crate 1",
+      "tags": [
+        "crate"
+      ],
+      "components": {
+        "transform": {
+          "x": 1.5,
+          "y": 0.5,
+          "h": 3,
+          "facing": 2
+        },
+        "sprite": {
+          "shape": "box",
+          "color": 16777215,
+          "w": 0.9,
+          "d": 0.9,
+          "height": 1,
+          "sortOffset": 0,
+          "visible": true,
+          "asset": "crate"
+        },
+        "collider": {
+          "w": 0.9,
+          "d": 0.9,
+          "height": 1,
+          "solid": true,
+          "trigger": false,
+          "layer": 16,
+          "mask": 65535,
+          "enabled": true,
+          "inside": []
+        },
+        "pushable": {
+          "slideSpeed": 6
+        }
+      }
+    },
+    {
+      "id": "e3",
+      "name": "Plate 1",
+      "tags": [
+        "plate"
+      ],
+      "components": {
+        "transform": {
+          "x": 3.5,
+          "y": 0.5,
+          "h": 3,
+          "facing": 2
+        },
+        "sprite": {
+          "shape": "box",
+          "color": 16777215,
+          "w": 0.8,
+          "d": 0.8,
+          "height": 0.05,
+          "sortOffset": -0.5,
+          "visible": true,
+          "asset": "plate_up",
+          "noShadow": true
+        },
+        "script_Plate": {},
+        "script_Shows": {
+          "signal": "active",
+          "on": "plate_down",
+          "off": "plate_up"
+        }
+      }
+    },
+    {
+      "id": "e4",
+      "name": "Gate 1",
+      "tags": [
+        "gate"
+      ],
+      "components": {
+        "transform": {
+          "x": 4.5,
+          "y": 1.5,
+          "h": 3,
+          "facing": 2
+        },
+        "sprite": {
+          "shape": "box",
+          "color": 16777215,
+          "w": 1,
+          "d": 1,
+          "height": 2,
+          "sortOffset": 0,
+          "visible": true,
+          "asset": "gate_shut"
+        },
+        "collider": {
+          "w": 1,
+          "d": 1,
+          "height": 2,
+          "solid": true,
+          "trigger": false,
+          "layer": 1,
+          "mask": 65535,
+          "enabled": true,
+          "inside": []
+        },
+        "script_Gate": {
+          "openWhenOff": false,
+          "height": 2,
+          "seconds": 0.25
+        }
+      }
+    },
+    {
+      "id": "e5",
+      "name": "Way out",
+      "tags": [
+        "wayout"
+      ],
+      "components": {
+        "transform": {
+          "x": 5.5,
+          "y": 1.5,
+          "h": 3,
+          "facing": 2
+        },
+        "sprite": {
+          "shape": "box",
+          "color": 16777215,
+          "w": 0.9,
+          "d": 0.9,
+          "height": 0.05,
+          "sortOffset": -0.5,
+          "visible": true,
+          "asset": "exit",
+          "noShadow": true
+        },
+        "animator": {
+          "asset": "exit",
+          "clip": "glow",
+          "time": 0,
+          "speed": 1,
+          "playing": true,
+          "frame": 0,
+          "flip": false,
+          "pos": 0,
+          "done": false,
+          "controller": null,
+          "state": "",
+          "params": {}
+        },
+        "script_Exit": {
+          "room": "r301",
+          "next": "scenes/r302.scene.json"
+        }
+      }
+    },
+    {
+      "id": "e6",
+      "name": "Room",
+      "tags": [
+        "room"
+      ],
+      "components": {
+        "transform": {
+          "x": 3,
+          "y": 1,
+          "h": 3,
+          "facing": 2
+        },
+        "roomCamera": {
+          "zoom": 2,
+          "on": true
+        },
+        "script_Room": {
+          "room": "r301",
+          "name": "Weight",
+          "no": 18,
+          "hint": "A gate stays open while something rests on its plate.",
+          "chapter": "The Tool Yard",
+          "chapterNo": 3,
+          "chapterLine": "Crates, trellis screens, iron gates on stone plates. Everything here can be leaned on, and some of it throws a useful shadow.",
+          "chapters": 5,
+          "total": 36,
+          "flyTotal": 16,
+          "width": 6,
+          "ground": "....__......"
+        }
+      }
+    },
+    {
+      "id": "e7",
+      "name": "Lamp mark",
+      "tags": [
+        "cursor"
+      ],
+      "components": {
+        "transform": {
+          "x": 0.5,
+          "y": 0.5,
+          "h": 0,
+          "facing": 2
+        },
+        "sprite": {
+          "shape": "box",
+          "color": 16777215,
+          "w": 0.2,
+          "d": 0.2,
+          "height": 0.2,
+          "sortOffset": 2,
+          "visible": false,
+          "asset": "cursor",
+          "noShadow": true
+        }
+      }
+    }
+  ],
+  "regions": [
+    {
+      "id": "r1",
+      "name": "Weight",
+      "x": 0,
+      "y": 0,
+      "w": 6,
+      "h": 2,
+      "cameraBounds": false,
+      "music": "",
+      "darkness": 0.55,
+      "bossActive": false
+    }
+  ],
+  "wires": [
+    {
+      "id": "w1c1",
+      "from": {
+        "entity": "e3",
+        "output": "active"
+      },
+      "to": {
+        "entity": "e4",
+        "input": "open"
+      }
+    }
+  ],
+  "variables": [],
+  "events": [
+    {
+      "id": "pause-button",
+      "enabled": true,
+      "comment": "The pause button opens the Pause screen. Change or delete this row to do something else with it.",
+      "mode": "all",
+      "once": false,
+      "forEach": "",
+      "breakpoint": false,
+      "repeat": 1,
+      "conditions": [
+        {
+          "type": "action",
+          "params": {
+            "name": "pause",
+            "mode": "pressed"
+          },
+          "negate": false
+        }
+      ],
+      "actions": [
+        {
+          "type": "uiScreen",
+          "params": {
+            "op": "open",
+            "screen": "role:pause"
+          }
+        }
+      ],
+      "children": []
+    }
+  ],
+  "graphs": []
+}

@@ -18,7 +18,7 @@ export interface LightModel {
 
 /* LIGHT-RULE-BEGIN */
 function groundTop(ch: string): number {
-  return ch === '~' ? 0 : ch === '^' ? 4 : 2;
+  return ch === '~' ? 1 : ch === '^' ? 5 : 3;
 }
 
 /** Which cells are lit: one true or false per cell, row by row. */

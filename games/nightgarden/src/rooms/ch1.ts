@@ -89,5 +89,16 @@ export const CH1: Chapter = {
         '.  .  .b .  .  .E',
       ],
     },
+    {
+      id: 'r109',
+      name: 'Night shift',
+      hint: 'Three lamps, three beds. Think before you light.',
+      rows: [
+        '.  _  .E .  .  .',
+        '.  .@ ^  ^  ^  ^',
+        '.  .b .l .  .L .b',
+        '.  .  .L .b ^  .',
+      ],
+    },
   ],
 };

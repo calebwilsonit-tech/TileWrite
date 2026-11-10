@@ -63,7 +63,7 @@ therefore kept a step brighter than they should look in the dark.
 
 ## 4. Drawing rules
 
-- **Grid.** A cell is 64 x 32 pixels, a level is 16. Floors are at level 2, sunken beds at 0, terraces at 4.
+- **Grid.** A cell is 64 x 32 pixels, a level is 16. Paths are at level 3, sunken beds at 1, terraces at 5 (two levels apart; nothing is at level 0).
 - **Light comes from the top left.** Top faces lightest, left faces mid, right faces darkest. Highlights sit top-left.
 - **No black outlines.** Shapes are separated by value. `ink` is for the deepest shadow and for eyes only.
 - **Pixels are whole.** No anti-aliasing, no gradients, no dithering beyond a sparse speckle.

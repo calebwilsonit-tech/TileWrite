@@ -88,6 +88,202 @@
       "name": "The far corner",
       "chapter": "The Potting Shed",
       "scene": "scenes/r108.scene.json"
+    },
+    {
+      "id": "r109",
+      "no": 9,
+      "name": "Night shift",
+      "chapter": "The Potting Shed",
+      "scene": "scenes/r109.scene.json"
+    },
+    {
+      "id": "r201",
+      "no": 10,
+      "name": "Shy things",
+      "chapter": "The Shade Walk",
+      "scene": "scenes/r201.scene.json"
+    },
+    {
+      "id": "r202",
+      "no": 11,
+      "name": "Seesaw",
+      "chapter": "The Shade Walk",
+      "scene": "scenes/r202.scene.json"
+    },
+    {
+      "id": "r203",
+      "no": 12,
+      "name": "Lights out",
+      "chapter": "The Shade Walk",
+      "scene": "scenes/r203.scene.json"
+    },
+    {
+      "id": "r204",
+      "no": 13,
+      "name": "In its shadow",
+      "chapter": "The Shade Walk",
+      "scene": "scenes/r204.scene.json"
+    },
+    {
+      "id": "r205",
+      "no": 14,
+      "name": "The yew hedge",
+      "chapter": "The Shade Walk",
+      "scene": "scenes/r205.scene.json"
+    },
+    {
+      "id": "r206",
+      "no": 15,
+      "name": "Dark stair",
+      "chapter": "The Shade Walk",
+      "scene": "scenes/r206.scene.json"
+    },
+    {
+      "id": "r207",
+      "no": 16,
+      "name": "Yew walk",
+      "chapter": "The Shade Walk",
+      "scene": "scenes/r207.scene.json"
+    },
+    {
+      "id": "r208",
+      "no": 17,
+      "name": "Hide and seek",
+      "chapter": "The Shade Walk",
+      "scene": "scenes/r208.scene.json"
+    },
+    {
+      "id": "r301",
+      "no": 18,
+      "name": "Weight",
+      "chapter": "The Tool Yard",
+      "scene": "scenes/r301.scene.json"
+    },
+    {
+      "id": "r302",
+      "no": 19,
+      "name": "Doorstop",
+      "chapter": "The Tool Yard",
+      "scene": "scenes/r302.scene.json"
+    },
+    {
+      "id": "r303",
+      "no": 20,
+      "name": "Trellis",
+      "chapter": "The Tool Yard",
+      "scene": "scenes/r303.scene.json"
+    },
+    {
+      "id": "r304",
+      "no": 21,
+      "name": "Wired",
+      "chapter": "The Tool Yard",
+      "scene": "scenes/r304.scene.json"
+    },
+    {
+      "id": "r305",
+      "no": 22,
+      "name": "Shade for the shy",
+      "chapter": "The Tool Yard",
+      "scene": "scenes/r305.scene.json"
+    },
+    {
+      "id": "r306",
+      "no": 23,
+      "name": "Two doors",
+      "chapter": "The Tool Yard",
+      "scene": "scenes/r306.scene.json"
+    },
+    {
+      "id": "r307",
+      "no": 24,
+      "name": "Stepping crate",
+      "chapter": "The Tool Yard",
+      "scene": "scenes/r307.scene.json"
+    },
+    {
+      "id": "r308",
+      "no": 25,
+      "name": "Yard work",
+      "chapter": "The Tool Yard",
+      "scene": "scenes/r308.scene.json"
+    },
+    {
+      "id": "r401",
+      "no": 26,
+      "name": "Warm hands",
+      "chapter": "The Brazier Court",
+      "scene": "scenes/r401.scene.json"
+    },
+    {
+      "id": "r402",
+      "no": 27,
+      "name": "Sunken bed",
+      "chapter": "The Brazier Court",
+      "scene": "scenes/r402.scene.json"
+    },
+    {
+      "id": "r403",
+      "no": 28,
+      "name": "Cellar lamp",
+      "chapter": "The Brazier Court",
+      "scene": "scenes/r403.scene.json"
+    },
+    {
+      "id": "r404",
+      "no": 29,
+      "name": "Fire walk",
+      "chapter": "The Brazier Court",
+      "scene": "scenes/r404.scene.json"
+    },
+    {
+      "id": "r405",
+      "no": 30,
+      "name": "Lily pond",
+      "chapter": "The Brazier Court",
+      "scene": "scenes/r405.scene.json"
+    },
+    {
+      "id": "r406",
+      "no": 31,
+      "name": "Not too near",
+      "chapter": "The Brazier Court",
+      "scene": "scenes/r406.scene.json"
+    },
+    {
+      "id": "r501",
+      "no": 32,
+      "name": "Moonstone",
+      "chapter": "The Moonstone Terrace",
+      "scene": "scenes/r501.scene.json"
+    },
+    {
+      "id": "r502",
+      "no": 33,
+      "name": "Shadestone",
+      "chapter": "The Moonstone Terrace",
+      "scene": "scenes/r502.scene.json"
+    },
+    {
+      "id": "r503",
+      "no": 34,
+      "name": "Passing it on",
+      "chapter": "The Moonstone Terrace",
+      "scene": "scenes/r503.scene.json"
+    },
+    {
+      "id": "r504",
+      "no": 35,
+      "name": "Keeps its own light",
+      "chapter": "The Moonstone Terrace",
+      "scene": "scenes/r504.scene.json"
+    },
+    {
+      "id": "r505",
+      "no": 36,
+      "name": "Relay",
+      "chapter": "The Moonstone Terrace",
+      "scene": "scenes/r505.scene.json"
     }
   ]
 }

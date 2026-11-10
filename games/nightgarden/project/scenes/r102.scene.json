@@ -9,8 +9,8 @@
       [1,1,1,1,4,4]
     ],
     "heights": [
-      [0,0,0,2,4,4],
-      [2,2,2,2,4,4]
+      [0,0,0,3,5,5],
+      [3,3,3,3,5,5]
     ],
     "slopes": [
       [0,0,0,0,0,0],
@@ -45,7 +45,7 @@
         "transform": {
           "x": 3.5,
           "y": 0.5,
-          "h": 2,
+          "h": 3,
           "facing": 2
         },
         "sprite": {
@@ -94,7 +94,7 @@
         "transform": {
           "x": 5.5,
           "y": 0.5,
-          "h": 4,
+          "h": 5,
           "facing": 2
         },
         "sprite": {
@@ -138,7 +138,7 @@
         "transform": {
           "x": 0.5,
           "y": 1.5,
-          "h": 2,
+          "h": 3,
           "facing": 2
         },
         "sprite": {
@@ -235,7 +235,7 @@
         "transform": {
           "x": 3.5,
           "y": 1.5,
-          "h": 2,
+          "h": 3,
           "facing": 2
         },
         "sprite": {
@@ -276,7 +276,7 @@
         "transform": {
           "x": 3,
           "y": 1,
-          "h": 2,
+          "h": 3,
           "facing": 2
         },
         "roomCamera": {
@@ -291,9 +291,9 @@
           "chapter": "The Potting Shed",
           "chapterNo": 1,
           "chapterLine": "The lamps are out and the moonblooms have gone to ground. Light makes them rise. Start with one.",
-          "chapters": 1,
-          "total": 8,
-          "flyTotal": 6,
+          "chapters": 5,
+          "total": 36,
+          "flyTotal": 16,
           "width": 6,
           "ground": "___.^^....^^"
         }

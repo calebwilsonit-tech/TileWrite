@@ -1,0 +1,473 @@
+{
+  "schemaVersion": 1,
+  "name": "Yard work",
+  "map": {
+    "width": 6,
+    "height": 4,
+    "tiles": [
+      [1,1,1,0,1,1],
+      [1,1,1,0,1,0],
+      [1,0,1,1,1,1],
+      [1,0,1,1,1,1]
+    ],
+    "heights": [
+      [3,3,3,0,3,3],
+      [3,3,3,0,3,0],
+      [3,0,3,3,3,3],
+      [3,0,3,3,3,3]
+    ],
+    "slopes": [
+      [0,0,0,0,0,0],
+      [0,0,0,0,0,0],
+      [0,0,0,0,0,0],
+      [0,0,0,0,0,0]
+    ],
+    "flags": [
+      [0,0,0,0,0,0],
+      [0,0,0,0,0,0],
+      [0,0,0,0,0,0],
+      [0,0,0,0,0,0]
+    ],
+    "decks": [
+      [0,0,0,0,0,0],
+      [0,0,0,0,0,0],
+      [0,0,0,0,0,0],
+      [0,0,0,0,0,0]
+    ],
+    "deckTiles": [
+      [0,0,0,0,0,0],
+      [0,0,0,0,0,0],
+      [0,0,0,0,0,0],
+      [0,0,0,0,0,0]
+    ],
+    "oneWay": [
+      [0,0,0,0,0,0],
+      [0,0,0,0,0,0],
+      [0,0,0,0,0,0],
+      [0,0,0,0,0,0]
+    ]
+  },
+  "entities": [
+    {
+      "id": "e1",
+      "name": "Way out",
+      "tags": [
+        "wayout"
+      ],
+      "components": {
+        "transform": {
+          "x": 5.5,
+          "y": 0.5,
+          "h": 3,
+          "facing": 2
+        },
+        "sprite": {
+          "shape": "box",
+          "color": 16777215,
+          "w": 0.9,
+          "d": 0.9,
+          "height": 0.05,
+          "sortOffset": -0.5,
+          "visible": true,
+          "asset": "exit",
+          "noShadow": true
+        },
+        "animator": {
+          "asset": "exit",
+          "clip": "glow",
+          "time": 0,
+          "speed": 1,
+          "playing": true,
+          "frame": 0,
+          "flip": false,
+          "pos": 0,
+          "done": false,
+          "controller": null,
+          "state": "",
+          "params": {}
+        },
+        "script_Exit": {
+          "room": "r308",
+          "next": "scenes/r401.scene.json"
+        }
+      }
+    },
+    {
+      "id": "e2",
+      "name": "Crate 1",
+      "tags": [
+        "crate"
+      ],
+      "components": {
+        "transform": {
+          "x": 1.5,
+          "y": 1.5,
+          "h": 3,
+          "facing": 2
+        },
+        "sprite": {
+          "shape": "box",
+          "color": 16777215,
+          "w": 0.9,
+          "d": 0.9,
+          "height": 1,
+          "sortOffset": 0,
+          "visible": true,
+          "asset": "crate"
+        },
+        "collider": {
+          "w": 0.9,
+          "d": 0.9,
+          "height": 1,
+          "solid": true,
+          "trigger": false,
+          "layer": 16,
+          "mask": 65535,
+          "enabled": true,
+          "inside": []
+        },
+        "pushable": {
+          "slideSpeed": 6
+        }
+      }
+    },
+    {
+      "id": "e3",
+      "name": "Lamp 1",
+      "tags": [
+        "lamp",
+        "handlamp"
+      ],
+      "components": {
+        "transform": {
+          "x": 4.5,
+          "y": 2.5,
+          "h": 3,
+          "facing": 2
+        },
+        "sprite": {
+          "shape": "box",
+          "color": 16777215,
+          "w": 0.4,
+          "d": 0.4,
+          "height": 1.1,
+          "sortOffset": 0,
+          "visible": true,
+          "asset": "lamp_on"
+        },
+        "collider": {
+          "w": 0.5,
+          "d": 0.5,
+          "height": 1,
+          "solid": true,
+          "trigger": false,
+          "layer": 16,
+          "mask": 65535,
+          "enabled": true,
+          "inside": []
+        },
+        "light": {
+          "radius": 3.1999999999999997,
+          "intensity": 1,
+          "color": "warm",
+          "shadows": true,
+          "flicker": 0.1,
+          "mode": "whenOn"
+        },
+        "script_Lamp": {
+          "startLit": true,
+          "byHand": true,
+          "look": "lamp"
+        }
+      }
+    },
+    {
+      "id": "e4",
+      "name": "Duskcap 1",
+      "tags": [
+        "bloom",
+        "duskcap"
+      ],
+      "components": {
+        "transform": {
+          "x": 5.5,
+          "y": 2.5,
+          "h": 3,
+          "facing": 2
+        },
+        "sprite": {
+          "shape": "box",
+          "color": 16777215,
+          "w": 0.9,
+          "d": 0.9,
+          "height": 0.2,
+          "sortOffset": 0,
+          "visible": true,
+          "asset": "duskcap_0"
+        },
+        "collider": {
+          "w": 0.9,
+          "d": 0.9,
+          "height": 0.2,
+          "solid": true,
+          "trigger": false,
+          "layer": 16,
+          "mask": 65535,
+          "enabled": true,
+          "inside": []
+        },
+        "script_Bloom": {
+          "kind": "duskcap",
+          "height": 2,
+          "seconds": 0.5
+        }
+      }
+    },
+    {
+      "id": "e5",
+      "name": "Gardener",
+      "tags": [
+        "player"
+      ],
+      "components": {
+        "transform": {
+          "x": 0.5,
+          "y": 3.5,
+          "h": 3,
+          "facing": 2
+        },
+        "sprite": {
+          "shape": "box",
+          "color": 16777215,
+          "w": 0.6,
+          "d": 0.6,
+          "height": 1.2,
+          "sortOffset": 0,
+          "visible": true,
+          "asset": "gardener"
+        },
+        "animator": {
+          "asset": "gardener",
+          "clip": "stand",
+          "time": 0,
+          "speed": 1,
+          "playing": true,
+          "frame": 0,
+          "flip": false,
+          "pos": 0,
+          "done": false,
+          "controller": {
+            "initial": "idle",
+            "states": {
+              "idle": {
+                "clip": "stand"
+              },
+              "walk": {
+                "clip": "walk"
+              }
+            },
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "walk",
+                "when": [
+                  {
+                    "param": "speed",
+                    "op": ">",
+                    "value": 0.2
+                  }
+                ]
+              },
+              {
+                "from": "walk",
+                "to": "idle",
+                "when": [
+                  {
+                    "param": "speed",
+                    "op": "<=",
+                    "value": 0.2
+                  }
+                ]
+              }
+            ]
+          },
+          "state": "idle",
+          "params": {}
+        },
+        "body": {
+          "vx": 0,
+          "vy": 0,
+          "vz": 0,
+          "radius": 0.3,
+          "height": 1.2,
+          "state": "ground",
+          "stepUp": 0.35,
+          "stepDown": 0.4,
+          "ledge": "fall",
+          "pits": "fall",
+          "wade": false,
+          "gravity": 1,
+          "peakZ": 0,
+          "layer": 2,
+          "mask": 65535,
+          "noclip": false,
+          "blockedBy": [],
+          "blockedTerrain": false
+        },
+        "script_Gardener": {
+          "speed": 5
+        }
+      }
+    },
+    {
+      "id": "e6",
+      "name": "Moonbloom 1",
+      "tags": [
+        "bloom",
+        "moonbloom"
+      ],
+      "components": {
+        "transform": {
+          "x": 3.5,
+          "y": 3.5,
+          "h": 3,
+          "facing": 2
+        },
+        "sprite": {
+          "shape": "box",
+          "color": 16777215,
+          "w": 0.9,
+          "d": 0.9,
+          "height": 0.2,
+          "sortOffset": 0,
+          "visible": true,
+          "asset": "moonbloom_0"
+        },
+        "collider": {
+          "w": 0.9,
+          "d": 0.9,
+          "height": 0.2,
+          "solid": true,
+          "trigger": false,
+          "layer": 16,
+          "mask": 65535,
+          "enabled": true,
+          "inside": []
+        },
+        "script_Bloom": {
+          "kind": "moonbloom",
+          "height": 2,
+          "seconds": 0.5
+        }
+      }
+    },
+    {
+      "id": "e7",
+      "name": "Room",
+      "tags": [
+        "room"
+      ],
+      "components": {
+        "transform": {
+          "x": 3,
+          "y": 2,
+          "h": 3,
+          "facing": 2
+        },
+        "roomCamera": {
+          "zoom": 2,
+          "on": true
+        },
+        "script_Room": {
+          "room": "r308",
+          "name": "Yard work",
+          "no": 25,
+          "hint": "A crate is a weight, a doorstop and a step.",
+          "chapter": "The Tool Yard",
+          "chapterNo": 3,
+          "chapterLine": "Crates, trellis screens, iron gates on stone plates. Everything here can be leaned on, and some of it throws a useful shadow.",
+          "chapters": 5,
+          "total": 36,
+          "flyTotal": 16,
+          "width": 6,
+          "ground": "..._....._._._....._...."
+        }
+      }
+    },
+    {
+      "id": "e8",
+      "name": "Lamp mark",
+      "tags": [
+        "cursor"
+      ],
+      "components": {
+        "transform": {
+          "x": 0.5,
+          "y": 0.5,
+          "h": 0,
+          "facing": 2
+        },
+        "sprite": {
+          "shape": "box",
+          "color": 16777215,
+          "w": 0.2,
+          "d": 0.2,
+          "height": 0.2,
+          "sortOffset": 2,
+          "visible": false,
+          "asset": "cursor",
+          "noShadow": true
+        }
+      }
+    }
+  ],
+  "regions": [
+    {
+      "id": "r1",
+      "name": "Yard work",
+      "x": 0,
+      "y": 0,
+      "w": 6,
+      "h": 4,
+      "cameraBounds": false,
+      "music": "",
+      "darkness": 0.55,
+      "bossActive": false
+    }
+  ],
+  "wires": [],
+  "variables": [],
+  "events": [
+    {
+      "id": "pause-button",
+      "enabled": true,
+      "comment": "The pause button opens the Pause screen. Change or delete this row to do something else with it.",
+      "mode": "all",
+      "once": false,
+      "forEach": "",
+      "breakpoint": false,
+      "repeat": 1,
+      "conditions": [
+        {
+          "type": "action",
+          "params": {
+            "name": "pause",
+            "mode": "pressed"
+          },
+          "negate": false
+        }
+      ],
+      "actions": [
+        {
+          "type": "uiScreen",
+          "params": {
+            "op": "open",
+            "screen": "role:pause"
+          }
+        }
+      ],
+      "children": []
+    }
+  ],
+  "graphs": []
+}

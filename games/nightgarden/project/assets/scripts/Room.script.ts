@@ -2,7 +2,7 @@
 // for the Rooms screen, and the chapter card the first time a chapter is entered. R starts the room again.
 /* The light rule (written here by the build from src/light.ts: change it there, never here). */
 function groundTop(ch: string): number {
-  return ch === '~' ? 0 : ch === '^' ? 4 : 2;
+  return ch === '~' ? 1 : ch === '^' ? 5 : 3;
 }
 
 /** Which cells are lit: one true or false per cell, row by row. */

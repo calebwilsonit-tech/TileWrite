@@ -10,9 +10,10 @@
  *            o  pressure plate (feeds its channel)   s / S  moonstone (feeds its channel while lit / dark)
  *            g / G  gate (open while its channel is on / off)          E  the way out       *  firefly
  */
-export const FLOOR = 2;
-export const TRENCH = 0;
-export const TERRACE = 4;
+/** Levels of the ground. Nothing is at level 0: the editor's own check takes unreachable ground at level 0 for a mistake, and a sunken bed is meant to be out of reach until a bloom lifts you. */
+export const FLOOR = 3;
+export const TRENCH = 1;
+export const TERRACE = 5;
 export const BLOOM_HEIGHT = 2;
 /** How far a lamp's light reaches, in cells (see src/light.ts: two cells every way, less the far corners). */
 export const LAMP_RANGE = 2.3;

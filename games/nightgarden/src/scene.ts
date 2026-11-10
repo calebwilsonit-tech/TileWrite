@@ -11,7 +11,6 @@ export const FIREFLY_HOVER = 0.9;
 export const scenePath = (roomId: string): string => `scenes/${roomId}.scene.json`;
 
 const solid = (w: number, height: number, layer = 16): Record<string, unknown> => ({ w, d: w, height, solid: true, trigger: false, layer, mask: 65535, enabled: true, inside: [] });
-const trigger = (w: number, height: number): Record<string, unknown> => ({ w, d: w, height, solid: false, trigger: true, layer: 1, mask: 65535, enabled: true, inside: [] });
 const box = (color: number, w: number, height: number, extra: Record<string, unknown> = {}): Record<string, unknown> => ({ shape: 'box', color, w, d: w, height, sortOffset: 0, visible: true, ...extra });
 /** A drawn picture from the sprite studio (the box is what it is sorted and shaded as). */
 const pic = (asset: string, w: number, height: number, extra: Record<string, unknown> = {}): Record<string, unknown> => box(0xffffff, w, height, { asset, ...extra });
@@ -142,7 +141,7 @@ export function roomScene(room: Room, opts: SceneOptions): SceneData {
           id: e,
           name: name('Plate'),
           tags: ['plate'],
-          components: { transform, sprite: pic('plate_up', 0.8, 0.05, { noShadow: true, sortOffset: -0.5 }), collider: trigger(0.38, 0.4), pressurePlate: { activatedBy: 'anyone', latch: false, needs: 1, pressedHeight: 0.05 }, script_Shows: { signal: 'active', on: 'plate_down', off: 'plate_up' } },
+          components: { transform, sprite: pic('plate_up', 0.8, 0.05, { noShadow: true, sortOffset: -0.5 }), script_Plate: {}, script_Shows: { signal: 'active', on: 'plate_down', off: 'plate_up' } },
         });
         feed(t.channel!, e, 'active');
         break;

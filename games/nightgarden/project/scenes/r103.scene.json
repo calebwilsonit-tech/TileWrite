@@ -10,9 +10,9 @@
       [0,0,4,0,0,0,0]
     ],
     "heights": [
-      [0,2,2,0,2,0,0],
-      [2,2,2,2,2,4,4],
-      [0,0,4,0,0,0,0]
+      [0,3,3,0,3,0,0],
+      [3,3,3,3,3,5,5],
+      [0,0,5,0,0,0,0]
     ],
     "slopes": [
       [0,0,0,0,0,0,0],
@@ -52,7 +52,7 @@
         "transform": {
           "x": 2.5,
           "y": 0.5,
-          "h": 2,
+          "h": 3,
           "facing": 2
         },
         "sprite": {
@@ -102,7 +102,7 @@
         "transform": {
           "x": 4.5,
           "y": 0.5,
-          "h": 2,
+          "h": 3,
           "facing": 2
         },
         "sprite": {
@@ -151,7 +151,7 @@
         "transform": {
           "x": 0.5,
           "y": 1.5,
-          "h": 2,
+          "h": 3,
           "facing": 2
         },
         "sprite": {
@@ -248,7 +248,7 @@
         "transform": {
           "x": 2.5,
           "y": 1.5,
-          "h": 2,
+          "h": 3,
           "facing": 2
         },
         "sprite": {
@@ -290,7 +290,7 @@
         "transform": {
           "x": 4.5,
           "y": 1.5,
-          "h": 2,
+          "h": 3,
           "facing": 2
         },
         "sprite": {
@@ -331,7 +331,7 @@
         "transform": {
           "x": 6.5,
           "y": 1.5,
-          "h": 4,
+          "h": 5,
           "facing": 2
         },
         "sprite": {
@@ -375,7 +375,7 @@
         "transform": {
           "x": 2.5,
           "y": 2.5,
-          "h": 4.9,
+          "h": 5.9,
           "facing": 2
         },
         "sprite": {
@@ -419,7 +419,7 @@
         "transform": {
           "x": 3.5,
           "y": 1.5,
-          "h": 2,
+          "h": 3,
           "facing": 2
         },
         "roomCamera": {
@@ -434,9 +434,9 @@
           "chapter": "The Potting Shed",
           "chapterNo": 1,
           "chapterLine": "The lamps are out and the moonblooms have gone to ground. Light makes them rise. Start with one.",
-          "chapters": 1,
-          "total": 8,
-          "flyTotal": 6,
+          "chapters": 5,
+          "total": 36,
+          "flyTotal": 16,
           "width": 7,
           "ground": "_.._.__.....^^__^____"
         }
